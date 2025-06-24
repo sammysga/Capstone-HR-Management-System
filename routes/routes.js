@@ -276,7 +276,6 @@ router.get('/linemanager/get-feedback-questionnaire/:userId', lineManagerControl
 // Route for saving feedback questionnaire
 router.post('/linemanager/save-feedback-questionnaire/:userId', lineManagerController.save360Questionnaire);
 
-
 router.post('/linemanager/records-performance-tracker/questionnaire/:userId', lineManagerController.save360Questionnaire);
 router.post('/linemanager/offboarding/update', lineManagerController.updateOffboardingRequest);
 
@@ -352,6 +351,7 @@ router.get('/linemanager/records-performance-tracker/:userId/midyear-aggregates'
 // Final-year IDP routes
 router.get('/linemanager/finalyear-idp/:userId', lineManagerController.getFinalYearIDP);
 router.post('/linemanager/finalyear-idp/:userId', lineManagerController.saveFinalYearIDP);
+router.get('/linemanager/finalyear-idp-trainings/:userId', lineManagerController.getFinalYearIDPWithTrainings);
 
 router.get('/linemanager/get-feedback-data/:userId', lineManagerController.getFeedbackData);
 // In your routes file

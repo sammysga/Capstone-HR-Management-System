@@ -3420,34 +3420,67 @@ function removeSelectedCategory(categoryId) {
     
     showCategoryNotification('Category removed', 'info');
 }
-
-// Load existing selected categories (for edit/view mode)
 async function loadExistingSelectedCategories() {
     try {
+        console.log('Loading existing selected categories for user:', userId);
+        
         const response = await fetch(`/linemanager/midyear-idp-trainings/${userId}`);
-        
-        if (!response.ok) {
-            console.log('No existing categories found or error loading');
-            return;
-        }
-        
         const result = await response.json();
         
-        if (result.success && result.data.trainingCategories) {
-            selectedCategories = result.data.trainingCategories || [];
+        if (result.success && result.data) {
+            // Clear existing selected categories
+            selectedCategories = [];
+            
+            // FIXED: Handle trainingCategories from JSONB field
+            if (result.data.trainingCategories && Array.isArray(result.data.trainingCategories)) {
+                console.log('Found training categories from JSONB:', result.data.trainingCategories);
+                
+                // Convert array of strings to proper category objects
+                result.data.trainingCategories.forEach((categoryName, index) => {
+                    selectedCategories.push({
+                        id: `category_${index}`, // Generate ID for display purposes
+                        name: categoryName,
+                        category: categoryName,
+                        isNew: false // These are saved categories, not new
+                    });
+                });
+                
+                console.log('Processed selected categories:', selectedCategories);
+            }
+            
+            // Also check for legacy suggestedTrainings format (fallback)
+            else if (result.data.suggestedTrainings && result.data.suggestedTrainings.length > 0) {
+                console.log('Found legacy training data:', result.data.suggestedTrainings);
+                
+                result.data.suggestedTrainings.forEach(item => {
+                    selectedCategories.push({
+                        id: item.trainingId.toString(),
+                        name: item.trainings.trainingName,
+                        category: item.trainings.trainingName,
+                        isNew: false
+                    });
+                });
+            }
+            
             updateSelectedCategoriesDisplay();
             
-            // Load training remarks
+            // Load training remarks if available
             const remarksField = document.getElementById('trainingRemarks');
             if (remarksField && result.data.trainingRemarks) {
                 remarksField.value = result.data.trainingRemarks;
                 updateCharCounter('trainingRemarks');
             }
             
-            console.log('Loaded existing selected categories:', selectedCategories);
+            console.log('Successfully loaded existing selected categories:', selectedCategories);
+        } else {
+            console.log('No existing categories found or error:', result.message);
+            selectedCategories = [];
+            updateSelectedCategoriesDisplay();
         }
     } catch (error) {
         console.error('Error loading existing selected categories:', error);
+        selectedCategories = [];
+        updateSelectedCategoriesDisplay();
     }
 }
 
@@ -3631,6 +3664,7 @@ function getSelectedCategoriesForSubmission() {
     console.log('Returning category names for submission:', categoryNames);
     return categoryNames;
 }
+
 
 // Set training categories to view-only mode
 function setTrainingCategoriesViewOnly(isViewOnly) {
@@ -5021,8 +5055,6 @@ function validateIDPForm(formType) {
     return isValid;
 }
 
-
-// Fixed function to submit Mid-Year IDP form with training categories
 async function submitMidYearIDPFormWithTrainingCategories(event) {
     event.preventDefault();
     
@@ -5732,6 +5764,8 @@ async function getFeedbackQuestionnaire(quarter) {
         }
         
         console.log("Successfully fetched questionnaire data:", data);
+        window.currentQuestionnaireData = data;
+
         
         // Clear existing content
         if (feedbackTableBody) feedbackTableBody.innerHTML = '';
@@ -5860,6 +5894,9 @@ async function getFeedbackQuestionnaire(quarter) {
         console.log(`Is New Feedback: ${data.isNewFeedback}`);
         console.log(`=== END QUESTIONNAIRE FETCH ===`);
         
+        updateFormStateBasedOnData(data);
+
+        
     } catch (error) {
         console.error("Error fetching questionnaire data:", error);
         
@@ -5892,7 +5929,6 @@ async function getFeedbackQuestionnaire(quarter) {
         }
     }
 }
-// Function to add questionnaire objective row with guide question display
 function addQuestionnaireObjectiveRow(objective, quarter) {
     const tbody = document.getElementById('feedback-table-body');
     if (!tbody) {
@@ -5900,16 +5936,22 @@ function addQuestionnaireObjectiveRow(objective, quarter) {
         return;
     }
 
-    // Check if we're in view-only mode for this quarter
+    // FIXED: Proper view-only status detection
     const quarterKey = quarter.replace('Q', '');
-    const isViewOnly = viewState.viewOnlyStatus[`feedbacks_Q${quarterKey}`];
-
-    console.log("Adding objective row:", {
-        objectiveId: objective.objectiveId,
-        description: objective.objectiveDescrpt,
-        guideQuestion: objective.guideQuestion || objective.objectiveQualiQuestion,
-        isViewOnly: isViewOnly
-    });
+    let isViewOnly = false;
+    
+    // Method 1: Check viewState
+    if (viewState && viewState.viewOnlyStatus) {
+        isViewOnly = viewState.viewOnlyStatus[`feedbacks_Q${quarterKey}`];
+    }
+    
+    // Method 2: Check if the questionnaire data indicates view-only
+    if (window.currentQuestionnaireData && window.currentQuestionnaireData.isViewOnly) {
+        isViewOnly = true;
+    }
+    
+    console.log(`Creating objective row for ${quarter} - isViewOnly: ${isViewOnly}`);
+    console.log(`Objective data:`, objective);
 
     // Create and append the objective row
     const row = document.createElement('tr');
@@ -5923,20 +5965,20 @@ function addQuestionnaireObjectiveRow(objective, quarter) {
     tbody.appendChild(row);
 
     // FIXED: Get the guide question from multiple possible sources
-    let guideQuestion = '';
+    let existingGuideQuestion = '';
     
     // Try different property names for guide question
-    if (objective.guideQuestion && objective.guideQuestion !== 'No guide question available') {
-        guideQuestion = objective.guideQuestion;
-    } else if (objective.objectiveQualiQuestion && objective.objectiveQualiQuestion !== 'No guide question available') {
-        guideQuestion = objective.objectiveQualiQuestion;
-    } else if (objective.questionText) {
-        guideQuestion = objective.questionText;
+    if (objective.guideQuestion && objective.guideQuestion.trim() !== '' && objective.guideQuestion !== 'No guide question available') {
+        existingGuideQuestion = objective.guideQuestion;
+    } else if (objective.objectiveQualiQuestion && objective.objectiveQualiQuestion.trim() !== '' && objective.objectiveQualiQuestion !== 'No guide question available') {
+        existingGuideQuestion = objective.objectiveQualiQuestion;
+    } else if (objective.questionText && objective.questionText.trim() !== '') {
+        existingGuideQuestion = objective.questionText;
     } else {
-        guideQuestion = 'No guide question submitted';
+        existingGuideQuestion = ''; // Start with empty string in edit mode
     }
 
-    console.log(`Guide question for objective ${objective.objectiveId}:`, guideQuestion);
+    console.log(`Guide question for objective ${objective.objectiveId}:`, existingGuideQuestion);
 
     // Create and append the guide question row
     const inputRow = document.createElement('tr');
@@ -5950,20 +5992,24 @@ function addQuestionnaireObjectiveRow(objective, quarter) {
                 </label>
                 ${isViewOnly ? 
                     `<div style="padding: 8px; background-color: #f5f5f5; border-radius: 4px; border: 1px solid #e1e5eb; min-height: 40px;">
-                        ${guideQuestion}
+                        ${existingGuideQuestion || 'No guide question provided'}
                     </div>` : 
-                    `<input id="${inputId}" type="text" 
-                        style="width: 100%; padding: 8px; border: 1px solid #ddd; border-radius: 4px;"
-                        value="${guideQuestion}"  
-                        placeholder="Enter guide question for feedback" 
-                        data-objective-id="${objective.objectiveId}" 
-                        class="guide-question-input"
-                    >`
+                    `<input id="${inputId}" 
+                           type="text" 
+                           style="width: 100%; padding: 8px; border: 1px solid #ddd; border-radius: 4px;"
+                           value="${existingGuideQuestion || ''}"  
+                           placeholder="Enter guide question for feedback reviewers to assess this objective" 
+                           data-objective-id="${objective.objectiveId}" 
+                           class="guide-question-input"
+                           name="guideQuestion_${objective.objectiveId}"
+                    />`
                 }
             </div>
         </td>
     `;
     tbody.appendChild(inputRow);
+
+    console.log(`Created ${isViewOnly ? 'view-only' : 'editable'} guide question field for objective ${objective.objectiveId}`);
 
     // Only add rater interface for edit mode
     if (!isViewOnly) {
@@ -6023,6 +6069,102 @@ function addQuestionnaireObjectiveRow(objective, quarter) {
                 });
             });
         }, 100);
+    }
+}
+
+async function debugSavedGuideQuestions() {
+    try {
+        const response = await fetch(`/linemanager/debug-guide-questions/${userId}?quarter=Q1`);
+        const result = await response.json();
+        
+        console.log("=== DEBUG GUIDE QUESTIONS RESULT ===");
+        console.log("Success:", result.success);
+        console.log("Total Questions:", result.summary?.totalQuestions);
+        console.log("Empty Questions:", result.summary?.emptyQuestions);
+        console.log("Default Questions:", result.summary?.defaultQuestions);
+        
+        if (result.questions) {
+            result.questions.forEach((q, index) => {
+                console.log(`${index + 1}. ${q.objectivesettings_objectives.objectiveDescrpt}`);
+                console.log(`   Saved Question: "${q.objectiveQualiQuestion}"`);
+            });
+        }
+        
+        return result;
+    } catch (error) {
+        console.error("Debug error:", error);
+    }
+}
+
+
+// Function to update form state based on submission status
+function updateFormStateBasedOnData(data) {
+    const isViewOnly = data.isViewOnly;
+    const saveButton = document.getElementById('save360Questionnaire');
+    const formHeader = document.querySelector('#questionnaireContent .form-header h2');
+    
+    console.log(`Updating form state - isViewOnly: ${isViewOnly}`);
+    
+    if (isViewOnly) {
+        // Hide the save button completely
+        if (saveButton) {
+            saveButton.style.display = 'none';
+        }
+        
+        // Update header to indicate view-only
+        if (formHeader) {
+            const quarter = window.currentQuestionnaireData?.quarter || 'Q1';
+            formHeader.innerHTML = `<i class="fas fa-comment-dots"></i> 360 Degree Feedback Questionnaire - ${quarter} (Submitted - View Only)`;
+        }
+        
+        // Add view-only indicator
+        let viewOnlyIndicator = document.getElementById('viewOnlyIndicator');
+        if (!viewOnlyIndicator) {
+            viewOnlyIndicator = document.createElement('div');
+            viewOnlyIndicator.id = 'viewOnlyIndicator';
+            viewOnlyIndicator.style.cssText = `
+                background-color: #e8f5e8;
+                border-left: 4px solid #4CAF50;
+                padding: 15px;
+                margin: 20px 0;
+                border-radius: 4px;
+                color: #2e7d32;
+                font-weight: 500;
+            `;
+            viewOnlyIndicator.innerHTML = `
+                <i class="fas fa-check-circle"></i> 
+                This questionnaire has been submitted and is now in view-only mode.
+                <br><small>Submitted on: ${data.startDate} to ${data.endDate}</small>
+            `;
+            
+            const questionnaireContent = document.getElementById('questionnaireContent');
+            if (questionnaireContent) {
+                questionnaireContent.insertBefore(viewOnlyIndicator, questionnaireContent.firstChild.nextSibling);
+            }
+        }
+        
+        console.log('Form set to view-only mode');
+    } else {
+        // Show the save button
+        if (saveButton) {
+            saveButton.style.display = 'inline-block';
+            saveButton.disabled = false;
+            saveButton.innerHTML = '<i class="fas fa-save"></i> Save Questionnaire';
+        }
+        
+        // Update header for edit mode
+        if (formHeader) {
+            const quarter = window.currentQuestionnaireData?.quarter || 'Q1';
+            formHeader.innerHTML = `<i class="fas fa-comment-dots"></i> 360 Degree Feedback Questionnaire - ${quarter}`;
+        }
+        
+        // Remove view-only indicator if it exists
+        const viewOnlyIndicator = document.getElementById('viewOnlyIndicator');
+        if (viewOnlyIndicator) {
+            viewOnlyIndicator.remove();
+        }
+        
+        console.log('Form set to edit mode');
     }
 }
 
@@ -6461,8 +6603,6 @@ function navigateToMidYearIDP() {
     midYearIDPForm.scrollIntoView({ behavior: "smooth" });
     console.log("Navigated to the Mid-Year IDP form with training categories system.", isViewOnly ? "(View-Only Mode)" : "(Edit Mode)");
 }
-
-
 function createViewOnlyMidYearIDPWithCategories(data) {
     if (!data) {
         console.error("No Mid-Year IDP data available for view-only mode");
@@ -6506,11 +6646,33 @@ function createViewOnlyMidYearIDPWithCategories(data) {
     // Set values for view-only
     setIDPFormValues(data);
     
-    // Set training categories to view-only mode
+    // FIXED: Set training categories to view-only mode and load categories
     setTrainingCategoriesViewOnly(true);
     
-    // Load existing selected categories for view-only display
-    loadExistingSelectedCategories();
+    // FIXED: Load and display training categories from JSONB field
+    if (data.trainingCategories && Array.isArray(data.trainingCategories)) {
+        console.log('Displaying training categories from JSONB:', data.trainingCategories);
+        
+        selectedCategories = data.trainingCategories.map((categoryName, index) => ({
+            id: `category_${index}`,
+            name: categoryName,
+            category: categoryName,
+            isNew: false
+        }));
+        
+        updateSelectedCategoriesDisplay();
+    } else {
+        // Fallback to loading via API
+        loadExistingSelectedCategories();
+    }
+    
+    // Set training remarks
+    if (data.trainingRemarks) {
+        const remarksField = document.getElementById('trainingRemarks');
+        if (remarksField) {
+            remarksField.value = data.trainingRemarks;
+        }
+    }
     
     // Show last updated info
     let lastUpdatedInfo = document.querySelector("#midYearIDPForm .last-updated-info");
@@ -6521,6 +6683,8 @@ function createViewOnlyMidYearIDPWithCategories(data) {
     }
     
     const lastUpdatedDate = data.created_at ? new Date(data.created_at).toLocaleString() : 'Unknown';
+    const categoriesCount = data.trainingCategories ? data.trainingCategories.length : 0;
+    
     lastUpdatedInfo.innerHTML = `
         <div style="margin-top: 20px; padding: 15px; background-color: #e8f5e8; border-radius: 8px; border-left: 4px solid #4CAF50;">
             <div style="display: flex; align-items: center; gap: 8px; color: #2e7d32;">
@@ -6530,9 +6694,9 @@ function createViewOnlyMidYearIDPWithCategories(data) {
             <div style="margin-top: 8px; font-size: 14px; color: #555;">
                 Last updated: ${lastUpdatedDate}
             </div>
-            ${data.trainingCategories && data.trainingCategories.length > 0 ? `
+            ${categoriesCount > 0 ? `
                 <div style="margin-top: 8px; font-size: 14px; color: #555;">
-                    Training categories selected: ${data.trainingCategories.length}
+                    Training categories selected: ${categoriesCount}
                 </div>
             ` : ''}
         </div>
@@ -6540,43 +6704,6 @@ function createViewOnlyMidYearIDPWithCategories(data) {
     
     console.log("View-only Mid-Year IDP with training categories created successfully");
 }
-
-
-// Updated function to load Mid-Year IDP data with categories
-async function loadMidYearIDPDataWithCategories(userId) {
-    try {
-        console.log("Loading Mid-Year IDP data with categories for user:", userId);
-        
-        const response = await fetch(`/linemanager/midyear-idp/${userId}`, {
-            method: "GET",
-            headers: {
-                "Accept": "application/json"
-            }
-        });
-        
-        if (!response.ok) {
-            throw new Error(`Server responded with status ${response.status}`);
-        }
-        
-        const data = await response.json();
-        
-        if (data.success) {
-            midYearIDPData = data.viewState.midYearData;
-            console.log("Loaded Mid-Year IDP data with categories:", midYearIDPData);
-            
-            // If the mid-year IDP form is currently displayed, update it
-            const midYearIDPForm = document.getElementById("midYearIDPForm");
-            if (midYearIDPForm && midYearIDPForm.style.display === 'block') {
-                createViewOnlyMidYearIDPWithCategories(midYearIDPData);
-            }
-        } else {
-            console.error("Error loading Mid-Year IDP data:", data.message);
-        }
-    } catch (error) {
-        console.error("Error fetching Mid-Year IDP data:", error);
-    }
-}
-
 
 // Function to hide all sections
 function hideAllSections() {
@@ -6924,33 +7051,225 @@ function updateFeedbackButtons(isEditMode) {
         `;
     }
 }
-
-// Function to switch feedback to view-only mode
 function switchToViewOnlyMode() {
-    console.log("Switching feedback form to view-only mode");
+    console.log("Switching feedback form to view-only mode without refresh");
     
     // Get elements
     const startDateInput = document.getElementById("startDate");
     const endDateInput = document.getElementById("endDate");
     
     // Make date inputs view-only
-    if (startDateInput && !startDateInput.disabled) {
+    if (startDateInput) {
         startDateInput.disabled = true;
         startDateInput.readOnly = true;
         startDateInput.style.backgroundColor = "#f5f5f5";
         startDateInput.style.border = "1px solid #e1e5eb";
+        startDateInput.style.cursor = "not-allowed";
     }
 
-    if (endDateInput && !endDateInput.disabled) {
+    if (endDateInput) {
         endDateInput.disabled = true;
         endDateInput.readOnly = true;
         endDateInput.style.backgroundColor = "#f5f5f5";
         endDateInput.style.border = "1px solid #e1e5eb";
+        endDateInput.style.cursor = "not-allowed";
     }
+
+    // Make all guide question inputs read-only
+    const guideQuestionInputs = document.querySelectorAll('.guide-question-input, input[data-objective-id], input[id^="qualitativeInput_"]');
+    guideQuestionInputs.forEach(input => {
+        input.disabled = true;
+        input.readOnly = true;
+        input.style.backgroundColor = "#f5f5f5";
+        input.style.border = "1px solid #e1e5eb";
+        input.style.cursor = "not-allowed";
+    });
 
     // Update the buttons to view-only mode
     updateFeedbackButtons(false);
+    
+    // Add view-only indicator if it doesn't exist
+    addViewOnlyIndicator();
+    
+    console.log("✅ Form switched to view-only mode");
 }
+
+
+// Function to add view-only indicator to the form
+function addViewOnlyIndicator() {
+    // Check if indicator already exists
+    let viewOnlyIndicator = document.getElementById('viewOnlyIndicator');
+    if (viewOnlyIndicator) {
+        return; // Already exists
+    }
+    
+    viewOnlyIndicator = document.createElement('div');
+    viewOnlyIndicator.id = 'viewOnlyIndicator';
+    viewOnlyIndicator.style.cssText = `
+        background-color: #e8f5e8;
+        border-left: 4px solid #4CAF50;
+        padding: 15px;
+        margin: 20px 0;
+        border-radius: 4px;
+        color: #2e7d32;
+        font-weight: 500;
+        animation: slideInFromTop 0.5s ease-out;
+    `;
+    viewOnlyIndicator.innerHTML = `
+        <i class="fas fa-check-circle"></i> 
+        This questionnaire has been submitted and is now in view-only mode.
+        <br><small>You can no longer edit the guide questions or dates.</small>
+    `;
+    
+    const questionnaireContent = document.getElementById('questionnaireContent');
+    if (questionnaireContent) {
+        // Insert after the form header
+        const formHeader = questionnaireContent.querySelector('.form-header');
+        if (formHeader) {
+            formHeader.parentNode.insertBefore(viewOnlyIndicator, formHeader.nextSibling);
+        } else {
+            questionnaireContent.insertBefore(viewOnlyIndicator, questionnaireContent.firstChild);
+        }
+    }
+}
+
+// Function to show success notification
+function showSuccessNotification(message, duration = 5000) {
+    // Remove any existing notifications
+    const existingNotifications = document.querySelectorAll('.success-notification');
+    existingNotifications.forEach(notification => {
+        if (document.body.contains(notification)) {
+            document.body.removeChild(notification);
+        }
+    });
+    
+    const notification = document.createElement('div');
+    notification.className = 'success-notification';
+    notification.style.cssText = `
+        position: fixed;
+        top: 20px;
+        right: 20px;
+        background: linear-gradient(135deg, #4CAF50, #45a049);
+        color: white;
+        padding: 16px 24px;
+        border-radius: 8px;
+        box-shadow: 0 6px 20px rgba(0, 0, 0, 0.15);
+        z-index: 10000;
+        font-weight: 500;
+        transform: translateX(100%);
+        transition: all 0.4s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+        max-width: 400px;
+        border: 2px solid rgba(255, 255, 255, 0.2);
+        backdrop-filter: blur(10px);
+    `;
+    
+    notification.innerHTML = `
+        <div style="display: flex; align-items: center; gap: 12px;">
+            <i class="fas fa-check-circle" style="font-size: 18px; flex-shrink: 0;"></i>
+            <div style="flex: 1; line-height: 1.4;">
+                ${message}
+            </div>
+            <button onclick="this.parentElement.parentElement.style.transform='translateX(100%)'" 
+                    style="background: none; border: none; color: white; cursor: pointer; padding: 4px; border-radius: 4px; opacity: 0.8; transition: opacity 0.2s;"
+                    onmouseover="this.style.opacity='1'; this.style.backgroundColor='rgba(255,255,255,0.1)'"
+                    onmouseout="this.style.opacity='0.8'; this.style.backgroundColor='transparent'">
+                <i class="fas fa-times" style="font-size: 12px;"></i>
+            </button>
+        </div>
+    `;
+    
+    document.body.appendChild(notification);
+    
+    // Animate in
+    setTimeout(() => {
+        notification.style.transform = 'translateX(0)';
+    }, 100);
+    
+    // Auto-remove after specified duration
+    setTimeout(() => {
+        if (document.body.contains(notification)) {
+            notification.style.transform = 'translateX(100%)';
+            setTimeout(() => {
+                if (document.body.contains(notification)) {
+                    document.body.removeChild(notification);
+                }
+            }, 400);
+        }
+    }, duration);
+}
+
+// Enhanced function to update form state without refresh
+function updateFormStateBasedOnDataNoRefresh(data) {
+    const isViewOnly = data.isViewOnly;
+    const saveButton = document.getElementById('save360Questionnaire');
+    const formHeader = document.querySelector('#questionnaireContent .form-header h2');
+    
+    console.log(`Updating form state without refresh - isViewOnly: ${isViewOnly}`);
+    
+    if (isViewOnly) {
+        // Hide the save button completely
+        if (saveButton) {
+            saveButton.style.display = 'none';
+        }
+        
+        // Update header to indicate view-only
+        if (formHeader) {
+            const quarter = data.quarter || 'Q1';
+            formHeader.innerHTML = `<i class="fas fa-comment-dots"></i> 360 Degree Feedback Questionnaire - ${quarter} (Submitted - View Only)`;
+        }
+        
+        // Add view-only indicator
+        addViewOnlyIndicator();
+        
+        console.log('Form set to view-only mode without refresh');
+    }
+}
+
+// Add CSS animation for smooth transitions
+function addTransitionStyles() {
+    if (document.getElementById('transitionStyles')) {
+        return; // Already added
+    }
+    
+    const style = document.createElement('style');
+    style.id = 'transitionStyles';
+    style.textContent = `
+        @keyframes slideInFromTop {
+            0% { 
+                opacity: 0; 
+                transform: translateY(-20px); 
+            }
+            100% { 
+                opacity: 1; 
+                transform: translateY(0); 
+            }
+        }
+        
+        .form-transition {
+            transition: all 0.3s ease-in-out;
+        }
+        
+        .input-readonly {
+            transition: all 0.3s ease-in-out;
+            background-color: #f5f5f5 !important;
+            border: 1px solid #e1e5eb !important;
+            cursor: not-allowed !important;
+        }
+    `;
+    document.head.appendChild(style);
+}
+
+// Initialize transition styles when the page loads
+document.addEventListener('DOMContentLoaded', function() {
+    addTransitionStyles();
+});
+
+// Make functions globally available
+window.switchToViewOnlyMode = switchToViewOnlyMode;
+window.addViewOnlyIndicator = addViewOnlyIndicator;
+window.showSuccessNotification = showSuccessNotification;
+window.updateFormStateBasedOnDataNoRefresh = updateFormStateBasedOnDataNoRefresh;
+window.addTransitionStyles = addTransitionStyles;
 
 // Function to ensure guide questions remain editable
 function updateGuideQuestionEditability() {
@@ -7148,10 +7467,174 @@ function toggleFeedbackView(view) {
     }
 }
 
+function debugGuideQuestionCollection() {
+    console.log("=== COMPREHENSIVE DEBUG ===");
+    
+    // Check if userId is available
+    console.log("UserId:", typeof userId !== 'undefined' ? userId : 'NOT DEFINED');
+    
+    // Check form elements
+    const elements = {
+        feedbackSection: document.getElementById('feedback-section'),
+        feedbackTableBody: document.getElementById('feedback-table-body'),
+        startDate: document.getElementById('startDate'),
+        endDate: document.getElementById('endDate'),
+        saveButton: document.getElementById('save360Questionnaire'),
+        activeQuarter: document.getElementById('activeQuarterField')
+    };
+    
+    console.log("Form elements status:");
+    Object.entries(elements).forEach(([name, element]) => {
+        console.log(`  ${name}: ${element ? 'EXISTS' : 'MISSING'}`);
+        if (element && name === 'feedbackTableBody') {
+            console.log(`    Children count: ${element.children.length}`);
+            console.log(`    Content length: ${element.innerHTML.length}`);
+        }
+    });
+    
+    // Check for inputs
+    const selectors = [
+        '.guide-question-input',
+        'input[data-objective-id]',
+        'input[id^="qualitativeInput_"]',
+        '#feedback-table-body input',
+        'input[type="text"]'
+    ];
+    
+    console.log("Input search results:");
+    selectors.forEach(selector => {
+        const inputs = document.querySelectorAll(selector);
+        console.log(`  "${selector}": ${inputs.length} found`);
+        inputs.forEach((input, i) => {
+            console.log(`    ${i+1}. ID: ${input.id}, ObjectiveId: ${input.getAttribute('data-objective-id')}, Value: "${input.value}"`);
+        });
+    });
+    
+    // Check global variables
+    console.log("Global variables:");
+    console.log("  viewState:", typeof viewState !== 'undefined' ? viewState : 'NOT DEFINED');
+    console.log("  currentQuestionnaireData:", typeof window.currentQuestionnaireData !== 'undefined' ? window.currentQuestionnaireData : 'NOT DEFINED');
+    
+    console.log("=== END COMPREHENSIVE DEBUG ===");
+}
 
-// FIXED: Frontend function to save 360 questionnaire
+// STEP 4: Force create test inputs if none exist
+function forceCreateTestInputs() {
+    console.log("Force creating test inputs...");
+    
+    const tbody = document.getElementById('feedback-table-body');
+    if (!tbody) {
+        console.error("Cannot create test inputs - table body not found");
+        return;
+    }
+    
+    // Clear existing content
+    tbody.innerHTML = '';
+    
+    // Create test objectives
+    const testObjectives = [
+        { id: 73, name: "Test Objective 1", kpi: "Test KPI 1" },
+        { id: 74, name: "Test Objective 2", kpi: "Test KPI 2" }
+    ];
+    
+    testObjectives.forEach(obj => {
+        const row = document.createElement('tr');
+        row.innerHTML = `
+            <td colspan="5" style="padding: 15px; background-color: #f0f8ff; border: 1px solid #ddd;">
+                <div style="margin-bottom: 10px;">
+                    <strong>🎯 ${obj.name}</strong> - ${obj.kpi}
+                </div>
+                <label style="display: block; margin-bottom: 5px; font-weight: 500;">
+                    Guide Question for Feedback:
+                </label>
+                <input type="text" 
+                       id="qualitativeInput_${obj.id}"
+                       class="guide-question-input"
+                       data-objective-id="${obj.id}"
+                       placeholder="Enter guide question for ${obj.name}"
+                       style="width: 100%; padding: 8px; border: 1px solid #ddd; border-radius: 4px;">
+            </td>
+        `;
+        tbody.appendChild(row);
+    });
+    
+    console.log("✅ Created test inputs");
+}
+
+
+function debugFormState() {
+    console.log("=== FORM STATE DEBUG ===");
+    console.log("viewState:", viewState);
+    console.log("currentQuestionnaireData:", window.currentQuestionnaireData);
+    console.log("userId:", userId);
+    
+    const activeQuarterField = document.getElementById('activeQuarterField');
+    console.log("activeQuarter:", activeQuarterField ? activeQuarterField.value : 'NOT FOUND');
+    
+    const feedbackSection = document.getElementById("feedback-section");
+    console.log("feedbackSection display:", feedbackSection ? feedbackSection.style.display : 'NOT FOUND');
+    
+    const feedbackTableBody = document.getElementById('feedback-table-body');
+    console.log("feedbackTableBody exists:", !!feedbackTableBody);
+    if (feedbackTableBody) {
+        console.log("Table rows count:", feedbackTableBody.children.length);
+    }
+    
+    console.log("=== END FORM STATE DEBUG ===");
+}
+// Test function to add a sample objective row
+function testAddObjectiveRow() {
+    console.log("Testing addQuestionnaireObjectiveRow function...");
+    
+    const testObjective = {
+        objectiveId: 999,
+        objectiveDescrpt: "Test Objective",
+        objectiveKPI: "Test KPI",
+        objectiveTarget: "100",
+        objectiveUOM: "%",
+        objectiveAssignedWeight: 0.25
+    };
+    
+    // Make sure the function exists
+    if (typeof addQuestionnaireObjectiveRow === 'function') {
+        addQuestionnaireObjectiveRow(testObjective, 'Q1');
+        console.log("✅ Test objective row added");
+    } else {
+        console.error("❌ addQuestionnaireObjectiveRow function not found");
+    }
+}
+
+// Manually add a test input to verify collection works
+function manuallyAddTestInput() {
+    console.log("Manually adding test input...");
+    
+    const tbody = document.getElementById('feedback-table-body');
+    if (!tbody) {
+        console.error("Table body not found!");
+        return;
+    }
+    
+    const testRow = document.createElement('tr');
+    testRow.innerHTML = `
+        <td colspan="5">
+            <div style="padding: 10px; background-color: #e8f4fd; border-radius: 4px;">
+                <label><strong>🧪 Test Guide Question Input:</strong></label>
+                <input type="text" 
+                       id="testInput_123" 
+                       class="guide-question-input"
+                       data-objective-id="123"
+                       placeholder="Type something here to test..."
+                       style="width: 100%; padding: 8px; margin-top: 5px; border: 1px solid #ddd; border-radius: 4px;">
+            </div>
+        </td>
+    `;
+    
+    tbody.appendChild(testRow);
+    console.log("✅ Test input added manually");
+}
 async function save360Questionnaire() {
-    console.log("Saving 360 degree feedback...");
+    console.log("=== STARTING save360Questionnaire ===");
+    console.log("Function called successfully");
     
     // Get form values
     const startDateElement = document.getElementById('startDate');
@@ -7159,11 +7642,37 @@ async function save360Questionnaire() {
     const saveFeedbackButton = document.getElementById("save360Questionnaire");
     const activeQuarterField = document.getElementById('activeQuarterField');
 
-    if (!startDateElement || !endDateElement || !activeQuarterField) {
-        console.error("One or more required form elements not found.");
-        alert("Form error: Required fields are missing.");
+    console.log("Form elements found:", {
+        startDate: !!startDateElement,
+        endDate: !!endDateElement,
+        saveButton: !!saveFeedbackButton,
+        quarterField: !!activeQuarterField
+    });
+
+    if (!startDateElement || !endDateElement) {
+        console.error("Date elements not found!");
+        alert("Form error: Date fields are missing.");
         return;
     }
+
+    // Check if we have an active quarter
+    let quarter = 'Q1'; // default
+    if (activeQuarterField && activeQuarterField.value) {
+        quarter = activeQuarterField.value;
+    } else {
+        // Try to get quarter from other sources
+        const currentFeedbackData = window.currentFeedbackData;
+        if (currentFeedbackData && currentFeedbackData.quarter) {
+            quarter = currentFeedbackData.quarter;
+        }
+        
+        // Set the quarter field if it exists
+        if (activeQuarterField) {
+            activeQuarterField.value = quarter;
+        }
+    }
+    
+    console.log("Using quarter:", quarter);
 
     // Show loading state
     if (saveFeedbackButton) {
@@ -7173,21 +7682,8 @@ async function save360Questionnaire() {
 
     const startDate = startDateElement.value;
     const endDate = endDateElement.value;
-
-    // Get the quarter from the active field
-    const quarter = activeQuarterField.value || 'Q1';
     
-    // FIXED: Ensure userId is available
-    if (!userId) {
-        console.error("UserId is not available");
-        alert("Error: User ID is not available. Please refresh the page and try again.");
-        
-        if (saveFeedbackButton) {
-            saveFeedbackButton.disabled = false;
-            saveFeedbackButton.innerHTML = '<i class="fas fa-save"></i> Save Questionnaire';
-        }
-        return;
-    }
+    console.log("Form values:", { startDate, endDate, quarter });
     
     // Validate dates
     if (!startDate || !endDate) {
@@ -7208,107 +7704,189 @@ async function save360Questionnaire() {
         return;
     }
     
-    console.log("Saving questionnaire with the following data:");
-    console.log("User ID:", userId);
-    console.log("Job ID:", jobId);
-    console.log("Start Date:", startDate);
-    console.log("End Date:", endDate);
-    console.log("Quarter:", quarter);
+    console.log("Date validation passed. Collecting feedback data...");
 
-    // Collect feedback data
-    const feedbackData = {
-        questions: [],
-        skills: []
-    };
-
-    // Collect qualitative questions from input fields
-    const guideQuestionInputs = document.querySelectorAll('.guide-question-input');
-    guideQuestionInputs.forEach(input => {
-        const objectiveId = input.getAttribute('data-objective-id');
-        if (objectiveId && input.value.trim()) {
-            feedbackData.questions.push({
-                objectiveId: parseInt(objectiveId), // Ensure it's an integer
-                questionText: input.value.trim()
+    // ENHANCED: Collect guide questions from form data using FormData
+    const feedbackData = { questions: [], skills: [] };
+    
+    // Method 1: Try to collect from specific input elements
+    const guideQuestionInputs = document.querySelectorAll('.guide-question-input, input[data-objective-id], input[id^="qualitativeInput_"]');
+    
+    console.log(`Found ${guideQuestionInputs.length} guide question inputs using selectors`);
+    
+    if (guideQuestionInputs.length > 0) {
+        // Use the input elements we found
+        guideQuestionInputs.forEach((input, index) => {
+            const objectiveId = input.getAttribute('data-objective-id');
+            const questionText = input.value ? input.value.trim() : '';
+            
+            console.log(`Input ${index + 1}:`);
+            console.log(`  ID: ${input.id}`);
+            console.log(`  ObjectiveId: ${objectiveId}`);
+            console.log(`  Value: "${questionText}"`);
+            
+            if (objectiveId) {
+                feedbackData.questions.push({
+                    objectiveId: parseInt(objectiveId),
+                    questionText: questionText
+                });
+                console.log(`✅ Added from input: objectiveId=${objectiveId}, text="${questionText}"`);
+            }
+        });
+    } else {
+        // Method 2: Fallback - collect from form fields by iterating through common objective IDs
+        console.log("No input elements found, trying form field approach...");
+        
+        // Get all form data
+        const formData = new FormData(document.getElementById('feedbackForm') || document.querySelector('form'));
+        const formEntries = Object.fromEntries(formData.entries());
+        
+        console.log("All form data:", formEntries);
+        
+        // Look for guideQuestion_ fields
+        Object.keys(formEntries).forEach(key => {
+            if (key.startsWith('guideQuestion_')) {
+                const objectiveId = key.replace('guideQuestion_', '');
+                const questionText = formEntries[key] ? formEntries[key].trim() : '';
+                
+                console.log(`Found form field: ${key} = "${questionText}"`);
+                
+                if (objectiveId) {
+                    feedbackData.questions.push({
+                        objectiveId: parseInt(objectiveId),
+                        questionText: questionText
+                    });
+                    console.log(`✅ Added from form field: objectiveId=${objectiveId}, text="${questionText}"`);
+                }
+            }
+        });
+        
+        // Method 3: Manual collection by searching for known patterns
+        if (feedbackData.questions.length === 0) {
+            console.log("Still no questions found, trying manual collection...");
+            
+            // Try to find inputs by various methods
+            const allInputs = document.querySelectorAll('input[type="text"], textarea');
+            allInputs.forEach((input, index) => {
+                // Check if this input looks like a guide question field
+                if (input.id && (input.id.includes('qualitative') || input.id.includes('guide'))) {
+                    const objectiveIdMatch = input.id.match(/(\d+)/);
+                    if (objectiveIdMatch) {
+                        const objectiveId = objectiveIdMatch[1];
+                        const questionText = input.value ? input.value.trim() : '';
+                        
+                        console.log(`Manual collection - Input ${index}: ${input.id} = "${questionText}"`);
+                        
+                        feedbackData.questions.push({
+                            objectiveId: parseInt(objectiveId),
+                            questionText: questionText
+                        });
+                        console.log(`✅ Added manually: objectiveId=${objectiveId}, text="${questionText}"`);
+                    }
+                }
             });
         }
+    }
+
+    console.log("Final feedbackData object:", feedbackData);
+    console.log(`Total questions collected: ${feedbackData.questions.length}`);
+    
+    // ENHANCED: Create dual payload for backward compatibility
+    const requestData = {
+        startDate: startDate,
+        endDate: endDate,
+        feedbackData: feedbackData,
+        quarter: quarter,
+        activeQuarter: quarter
+    };
+    
+    // Add individual guide question fields as fallback
+    feedbackData.questions.forEach(q => {
+        requestData[`guideQuestion_${q.objectiveId}`] = q.questionText;
     });
+    
+    console.log("=== REQUEST DATA BEING SENT ===");
+    console.log("Full request data:", JSON.stringify(requestData, null, 2));
+    console.log("===================================");
 
-    console.log("Feedback data to save:", feedbackData);
-
-    // FIXED: Send data to server using the correct endpoint with userId in URL
+    // Send to server
     try {
-        const requestData = {
-            startDate,
-            endDate,
-            feedbackData,
-            quarter,
-            activeQuarter: quarter, // Include as backup
-            jobId // Include jobId if available
-        };
-
-        console.log("Sending request data:", requestData);
-
-        // FIXED: Include userId in the URL path
         const response = await fetch(`/linemanager/save-feedback-questionnaire/${userId}`, {
             method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
+            headers: { 
+                'Content-Type': 'application/json',
+                'Accept': 'application/json'
+            },
             body: JSON.stringify(requestData)
         });
 
-        console.log("Response from server:", response.status);
+        console.log(`Server response status: ${response.status}`);
 
         if (!response.ok) {
             const errorText = await response.text();
             console.error("Server error response:", errorText);
-            throw new Error(`Server responded with status ${response.status}: ${errorText}`);
+            throw new Error(`Server error ${response.status}: ${errorText}`);
         }
 
-        // FIXED: Handle both JSON responses and redirects
-        let result;
-        const contentType = response.headers.get('content-type');
-        
-        if (contentType && contentType.includes('application/json')) {
-            // JSON response
-            result = await response.json();
-            console.log("Result from server:", result);
+        const result = await response.json();
+        console.log("Server response:", result);
 
-            if (result.success) {
-                // Show success message and redirect
-                alert("Feedback questionnaire saved successfully!");
-                
-                // Update viewState to reflect the new status
-                const quarterKey = `feedbacks_${quarter}`;
-                if (typeof viewState !== 'undefined') {
-                    viewState.viewOnlyStatus[quarterKey] = true;
-                }
-                
-                // Update the UI based on the new state
+        if (result.success) {
+            console.log("✅ Save successful!");
+            
+            const successMessage = `Feedback questionnaire saved successfully!
+            
+Details:
+- Quarter: ${result.quarter || quarter}
+- Total objectives: ${result.totalObjectives || 'N/A'}
+- Guide questions saved: ${result.savedQuestions || feedbackData.questions.length}
+- Start Date: ${startDate}
+- End Date: ${endDate}`;
+
+            alert(successMessage);
+            
+            // Update view state
+            const quarterKey = `feedbacks_${quarter}`;
+            if (typeof viewState !== 'undefined') {
+                viewState.viewOnlyStatus[quarterKey] = true;
                 if (typeof updateStepperAccessibility === 'function') {
                     updateStepperAccessibility();
                 }
-                
-                // FIXED: Redirect to refresh the page
-                window.location.href = `/linemanager/records-performance-tracker/${userId}`;
-            } else {
-                console.error("Server returned error:", result);
-                alert("Failed to save feedback: " + (result.message || "Unknown error"));
-                
-                // Reset button state
-                if (saveFeedbackButton) {
-                    saveFeedbackButton.disabled = false;
-                    saveFeedbackButton.innerHTML = '<i class="fas fa-save"></i> Save Questionnaire';
-                }
             }
+            
+            // FIXED: Instead of reloading, just update the UI to show view-only mode
+            console.log("Updating UI to show view-only mode...");
+            
+            // Switch form to view-only mode
+            switchToViewOnlyMode();
+            
+            // Update the form state to reflect that it's been saved
+            updateFormStateBasedOnDataNoRefresh({ 
+                isViewOnly: true, 
+                quarter: quarter,
+                startDate: startDate,
+                endDate: endDate 
+            });
+            
+            // Update the save button to show it's been submitted
+            if (saveFeedbackButton) {
+                saveFeedbackButton.disabled = true;
+                saveFeedbackButton.innerHTML = '<i class="fas fa-check-circle"></i> Questionnaire Saved';
+                saveFeedbackButton.style.backgroundColor = '#28a745';
+            }
+            
+            // Show success notification instead of just alert
+            showSuccessNotification('Feedback questionnaire saved successfully!', 5000);
         } else {
-            // HTML response (redirect) - follow the redirect
-            console.log("Server redirected, following redirect...");
-            window.location.href = `/linemanager/records-performance-tracker/${userId}`;
+            console.error("❌ Server returned error:", result);
+            throw new Error(result.message || "Unknown server error");
         }
     } catch (error) {
-        console.error("Error saving feedback:", error);
-        alert("An error occurred while saving feedback. Please try again later.\n\nError: " + error.message);
+        console.error("❌ Error saving feedback:", error);
         
-        // Reset button state
+        alert(`Error saving feedback questionnaire: ${error.message}`);
+        
+        // Reset button
         if (saveFeedbackButton) {
             saveFeedbackButton.disabled = false;
             saveFeedbackButton.innerHTML = '<i class="fas fa-save"></i> Save Questionnaire';
@@ -7316,201 +7894,42 @@ async function save360Questionnaire() {
     }
 }
 
-// Function to fetch year data
-function fetchYearData() {
-    const yearSelect = document.getElementById('yearSelect');
-    if (!yearSelect) {
-        console.error("Year select element not found.");
-        return;
+// Enhanced debug function to help troubleshoot
+function debugGuideQuestionInputsDetailed() {
+    console.log("=== DETAILED GUIDE QUESTION DEBUG ===");
+    
+    const selectors = [
+        '.guide-question-input',
+        'input[data-objective-id]',
+        'input[id^="qualitativeInput_"]',
+        '#feedback-table-body input[type="text"]',
+        '#feedback-table-body input',
+        'input'
+    ];
+    
+    selectors.forEach(selector => {
+        const inputs = document.querySelectorAll(selector);
+        console.log(`Selector "${selector}": ${inputs.length} found`);
+        inputs.forEach((input, i) => {
+            if (i < 5) { // Show first 5 only
+                console.log(`  ${i + 1}. ID: ${input.id}, Type: ${input.type}, ObjectiveId: ${input.getAttribute('data-objective-id')}, Value: "${input.value}"`);
+            }
+        });
+    });
+    
+    // Check table structure
+    const tableBody = document.getElementById('feedback-table-body');
+    if (tableBody) {
+        console.log("Table body children:", tableBody.children.length);
+        console.log("Table body HTML preview:", tableBody.innerHTML.substring(0, 1000));
     }
     
-    const selectedYear = yearSelect.value;
-    if (selectedYear) {
-        // Show loading indicator
-        const stepperContainer = document.querySelector('.stepper-container');
-        if (stepperContainer) {
-            stepperContainer.classList.add('loading');
-        }
-        
-        // Redirect to the same page with the selected year as a query parameter
-        window.location.href = `?year=${selectedYear}`;
-    }
+    console.log("=== END DETAILED DEBUG ===");
 }
 
-// Function to save objectives
-async function saveObjectives(event) {
-    event.preventDefault(); // Prevent default form submission
-    
-    // Get form values
-    const userIdField = document.querySelector('input[name="userId"]');
-    if (!userIdField) {
-        console.error("User ID field not found in the form.");
-        alert("Form error: User ID field not found.");
-        return;
-    }
-    
-    const userId = userIdField.value;
-    let jobId = document.getElementById("jobId")?.value;
-    
-    // If jobId is not set in the form, try to get it from viewState
-    if (!jobId && viewState && viewState.jobId) {
-        jobId = viewState.jobId;
-        console.log("Using jobId from viewState:", jobId);
-    }
-    
-    console.log("Saving objectives for User ID:", userId);
-    console.log("Job ID:", jobId);
-
-    // Validate required IDs
-    if (!userId) {
-        console.error("User ID is missing.");
-        alert("Please ensure all fields are filled out correctly before saving.");
-        return;
-    }
-
-    // Ensure confirmation checkbox is checked
-    const confirmationCheckbox = document.getElementById("confirmationCheckbox");
-    if (!confirmationCheckbox || !confirmationCheckbox.checked) {
-        alert("Please confirm that you have reviewed the objectives before saving.");
-        return;
-    }
-
-    // Calculate total weight
-    let totalWeight = 0;
-
-    // Collect objectives from the form
-    const objectiveDescrpt = [];
-    const objectiveKPI = [];
-    const objectiveTarget = [];
-    const objectiveUOM = [];
-    const objectiveAssignedWeight = [];
-
-    const rows = document.querySelectorAll("#progress-table-body tr");
-    rows.forEach(row => {
-        const descriptionInput = row.querySelector('input[name="objectiveDescrpt"]');
-        const kpiInput = row.querySelector('input[name="objectiveKPI"]');
-        const targetInput = row.querySelector('input[name="objectiveTarget"]');
-        const uomInput = row.querySelector('input[name="objectiveUOM"]');
-        const weightInput = row.querySelector('input[name="objectiveAssignedWeight"]');
-
-        if (descriptionInput && kpiInput && targetInput && uomInput && weightInput) {
-            const weight = parseFloat(weightInput.value) || 0;
-            totalWeight += weight;
-
-            objectiveDescrpt.push(descriptionInput.value.trim());
-            objectiveKPI.push(kpiInput.value.trim());
-            objectiveTarget.push(targetInput.value.trim());
-            objectiveUOM.push(uomInput.value.trim());
-            objectiveAssignedWeight.push(weight);
-        }
-    });
-
-    console.log("Total weight:", totalWeight);
-    console.log("Objectives to save:", {
-        objectiveDescrpt,
-        objectiveKPI,
-        objectiveTarget,
-        objectiveUOM,
-        objectiveAssignedWeight
-    });
-
-    // Validate total weight
-    if (Math.abs(totalWeight - 100) > 0.01) { // Allow for small floating point differences
-        alert("Total assigned weight must be exactly 100% to save.");
-        return;
-    }
-
-    // Proceed if objectives are present
-    if (objectiveDescrpt.length > 0) {
-        try {
-            // Show loading state
-            const saveButton = document.getElementById("saveButton");
-            if (saveButton) {
-                saveButton.disabled = true;
-                saveButton.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Saving...';
-            }
-
-            // Construct the request payload
-            const payload = {
-                userId,
-                jobId,
-                objectiveDescrpt,
-                objectiveKPI,
-                objectiveTarget,
-                objectiveUOM,
-                objectiveAssignedWeight
-            };
-            
-            console.log("Sending payload to server:", payload);
-
-            // Send data to server
-            const response = await fetch(`/linemanager/records-performance-tracker/${userId}`, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify(payload)
-            });
-
-            console.log("Response status:", response.status);
-
-            // Get the response text first to debug
-            const responseText = await response.text();
-            console.log("Raw response:", responseText);
-            
-            let result;
-            try {
-                // Try to parse it as JSON (if it is JSON)
-                result = JSON.parse(responseText);
-            } catch (e) {
-                console.error("Response is not valid JSON:", e);
-                // Handle non-JSON response
-                if (responseText.includes("Redirect")) {
-                    console.log("Redirect detected in response");
-                    // The server is trying to redirect, follow the redirect
-                    window.location.href = `/linemanager/records-performance-tracker/${userId}`;
-                    return;
-                }
-                throw new Error("Invalid response format from server");
-            }
-
-            console.log("Parsed result:", result);
-
-            if (result.success) {
-                // Display a success alert
-                alert("Objectives saved successfully.");
-                
-                // Update viewState to reflect the new status
-                viewState.submittedObjectives = result.objectives || submittedObjectives;
-                viewState.viewOnlyStatus.objectivesettings = true;
-                
-                // Update the UI based on the new state
-                updateStepperAccessibility();
-                
-                // Reload the page to show the updated view
-                window.location.reload();
-            } else {
-                alert("Failed to save objectives: " + (result.message || "Unknown error"));
-                
-                // Reset button state
-                if (saveButton) {
-                    saveButton.disabled = false;
-                    saveButton.innerHTML = '<i class="fas fa-save"></i> Save Objectives';
-                }
-            }
-        } catch (error) {
-            console.error("Error saving objectives:", error);
-            alert("An error occurred while saving objectives. Please try again later.");
-            
-            // Reset button state
-            const saveButton = document.getElementById("saveButton");
-            if (saveButton) {
-                saveButton.disabled = false;
-                saveButton.innerHTML = '<i class="fas fa-save"></i> Save Objectives';
-            }
-        }
-    } else {
-        alert("No objectives to save. Please add at least one objective.");
-    }
-}
+// Make functions globally available
+window.save360Questionnaire = save360Questionnaire;
+window.debugGuideQuestionInputsDetailed = debugGuideQuestionInputsDetailed;
 
 // Function to save feedback draft
 async function saveFeedbackDraft(event) {
@@ -7561,25 +7980,43 @@ async function saveFeedbackDraft(event) {
         return;
     }
     
-    // Collect feedback data
-    const feedbackData = {
-        questions: [],
-        skills: [],
-        isDraft: true // Flag to indicate this is a draft
-    };
+// ENHANCED: Collect feedback data with better validation
+const feedbackData = {
+    questions: [],
+    skills: []
+};
+
+// Enhanced guide question collection with better error handling
+const guideQuestionInputs = document.querySelectorAll('.guide-question-input');
+console.log("Found guide question inputs:", guideQuestionInputs.length);
+
+// Debug: Also check for other possible selectors
+const alternativeInputs = document.querySelectorAll('input[data-objective-id]');
+console.log("Found alternative inputs with data-objective-id:", alternativeInputs.length);
+
+guideQuestionInputs.forEach((input, index) => {
+    const objectiveId = input.getAttribute('data-objective-id');
+    const questionText = input.value; // Don't trim here, let server decide
     
-    // Collect guide questions
-    const guideQuestionInputs = document.querySelectorAll('.guide-question-input');
-    guideQuestionInputs.forEach(input => {
-        const objectiveId = input.getAttribute('data-objective-id');
-        if (objectiveId) {
-            feedbackData.questions.push({
-                objectiveId: objectiveId,
-                questionText: input.value.trim()
-            });
-        }
-    });
+    console.log(`Processing guide question ${index + 1}:`);
+    console.log(`  Objective ID: ${objectiveId}`);
+    console.log(`  Question Text: "${questionText}"`);
+    console.log(`  Input Element:`, input);
     
+    if (objectiveId) {
+        // Always add the question, even if empty - let server handle it
+        feedbackData.questions.push({
+            objectiveId: parseInt(objectiveId),
+            questionText: questionText || '' // Use empty string if no text
+        });
+        console.log(`✅ Added guide question for objective ${objectiveId}`);
+    } else {
+        console.warn(`❌ Skipping input without objectiveId:`, input);
+    }
+});
+
+console.log("Final collected feedbackData:", feedbackData);
+
     try {
         // Send draft data to server
         const response = await fetch(`/linemanager/save-feedback-draft/${userId}`, {
@@ -9298,7 +9735,7 @@ function loadFinalYearIDPData(userId, year) {
             
             if (midYearIDPForm && midYearIDPForm.style.display === 'block' && 
                 formTitle && formTitle.textContent.includes("Final-Year")) {
-                createViewOnlyFinalYearIDP(finalYearIDPData);
+                createViewOnlyFinalYearIDPWithCategories(finalYearIDPData);
             }
         } else {
             console.error("Error loading Final-Year IDP data:", data.message);
@@ -9382,13 +9819,13 @@ function createViewOnlyMidYearIDP(data) {
     console.log("View-only Mid-Year IDP created successfully");
 }
 
-
-// Function to create view-only Final-Year IDP
-function createViewOnlyFinalYearIDP(data) {
+function createViewOnlyFinalYearIDPWithCategories(data) {
     if (!data) {
         console.error("No Final-Year IDP data available for view-only mode");
         return;
     }
+    
+    console.log("Creating view-only Final-Year IDP with training categories:", data);
     
     // Create view-only form (reusing the Mid-Year form layout)
     const form = document.getElementById("midYearIDPFormDetails");
@@ -9405,6 +9842,9 @@ function createViewOnlyFinalYearIDP(data) {
     inputs.forEach(input => {
         input.disabled = true;
         input.setAttribute('readonly', 'readonly');
+        input.style.backgroundColor = '#f5f5f5';
+        input.style.border = '1px solid #e1e5eb';
+        input.style.cursor = 'not-allowed';
     });
     
     // Update the title to indicate view-only mode
@@ -9422,6 +9862,30 @@ function createViewOnlyFinalYearIDP(data) {
     // Set values for view-only
     setIDPFormValues(data);
     
+    // FIXED: Display training categories for Final-Year IDP if available
+    if (data.trainingCategories && Array.isArray(data.trainingCategories)) {
+        console.log('Displaying Final-Year training categories from JSONB:', data.trainingCategories);
+        
+        setTrainingCategoriesViewOnly(true);
+        
+        selectedCategories = data.trainingCategories.map((categoryName, index) => ({
+            id: `category_${index}`,
+            name: categoryName,
+            category: categoryName,
+            isNew: false
+        }));
+        
+        updateSelectedCategoriesDisplay();
+        
+        // Set training remarks if available
+        if (data.trainingRemarks) {
+            const remarksField = document.getElementById('trainingRemarks');
+            if (remarksField) {
+                remarksField.value = data.trainingRemarks;
+            }
+        }
+    }
+    
     // Show last updated info
     let lastUpdatedInfo = document.querySelector("#midYearIDPForm .last-updated-info");
     if (!lastUpdatedInfo) {
@@ -9431,7 +9895,26 @@ function createViewOnlyFinalYearIDP(data) {
     }
     
     const lastUpdatedDate = data.lastUpdated ? new Date(data.lastUpdated).toLocaleString() : 'Unknown';
-    lastUpdatedInfo.textContent = `Last updated: ${lastUpdatedDate}`;
+    const categoriesCount = data.trainingCategories ? data.trainingCategories.length : 0;
+    
+    lastUpdatedInfo.innerHTML = `
+        <div style="margin-top: 20px; padding: 15px; background-color: #e8f5e8; border-radius: 8px; border-left: 4px solid #4CAF50;">
+            <div style="display: flex; align-items: center; gap: 8px; color: #2e7d32;">
+                <i class="fas fa-check-circle"></i>
+                <strong>Final-Year IDP Completed</strong>
+            </div>
+            <div style="margin-top: 8px; font-size: 14px; color: #555;">
+                Last updated: ${lastUpdatedDate}
+            </div>
+            ${categoriesCount > 0 ? `
+                <div style="margin-top: 8px; font-size: 14px; color: #555;">
+                    Training categories selected: ${categoriesCount}
+                </div>
+            ` : ''}
+        </div>
+    `;
+    
+    console.log("View-only Final-Year IDP with training categories created successfully");
 }
 
 // Function to enable Mid-Year IDP form for editing
@@ -9936,9 +10419,7 @@ function showFeedbackError(message) {
             container.innerHTML = errorHTML;
         }
     });
-}
-
-document.addEventListener("DOMContentLoaded", function() {
+}document.addEventListener("DOMContentLoaded", function() {
     console.log("Initializing performance tracker stepper system...");
     
     // Initialize data from viewState
@@ -10066,9 +10547,81 @@ document.addEventListener("DOMContentLoaded", function() {
             }
         }
     }, 500);
+
+    // FIXED: Enhanced 360 Feedback Form Event Listeners
+    console.log('Setting up 360 feedback form handlers...');
     
-    console.log("Performance tracker stepper system with enhanced training dropdown and fixed tabs initialized.");
+    // FIXED: Attach event listener to the save button with better error handling
+    const saveButton = document.getElementById('save360Questionnaire');
+    if (saveButton) {
+        console.log('Found save button, attaching event listeners...');
+        
+        // Remove any existing event listeners to prevent duplicates
+        saveButton.removeEventListener('click', save360Questionnaire);
+        
+        // Add click event listener with proper error handling
+        saveButton.addEventListener('click', function(event) {
+            event.preventDefault();
+            event.stopPropagation();
+            console.log('Save button clicked! Calling save360Questionnaire...');
+            
+            // Check if function exists before calling
+            if (typeof save360Questionnaire === 'function') {
+                save360Questionnaire();
+            } else {
+                console.error('save360Questionnaire function not found!');
+                alert('Error: Save function not loaded. Please refresh the page.');
+            }
+        });
+        
+        console.log('✅ Save button click event listener attached');
+    } else {
+        console.warn('❌ Save button (#save360Questionnaire) not found during initialization');
+    }
+    
+    // FIXED: Attach to form submission as backup (only once)
+    const feedbackForm = document.getElementById('feedbackForm');
+    if (feedbackForm) {
+        console.log('Found feedback form, attaching submit listener...');
+        
+        // Remove any existing listeners
+        feedbackForm.removeEventListener('submit', handleFeedbackFormSubmit);
+        
+        // Add submit event listener
+        feedbackForm.addEventListener('submit', handleFeedbackFormSubmit);
+        
+        console.log('✅ Form submit event listener attached');
+    } else {
+        console.warn('❌ Feedback form (#feedbackForm) not found during initialization');
+    }
+    
+    // FIXED: Set up debug functions for development
+    if (typeof window !== 'undefined') {
+        // Make debug functions globally available
+        window.debugGuideQuestionCollection = debugGuideQuestionCollection;
+        window.forceCreateTestInputs = forceCreateTestInputs;
+        window.testSaveWithInput = testSaveWithInput;
+        
+        console.log('✅ Debug functions made globally available');
+    }
+    
+    console.log("Performance tracker stepper system with enhanced feedback handling initialized.");
 });
+
+// Separate form submit handler to avoid conflicts
+function handleFeedbackFormSubmit(event) {
+    event.preventDefault();
+    event.stopPropagation();
+    console.log('Form submitted! Calling save360Questionnaire...');
+    
+    // Check if function exists before calling
+    if (typeof save360Questionnaire === 'function') {
+        save360Questionnaire();
+    } else {
+        console.error('save360Questionnaire function not found!');
+        alert('Error: Save function not loaded. Please refresh the page.');
+    }
+}
 
 // Enhanced function to setup stepper events
 function setupStepperEvents() {
