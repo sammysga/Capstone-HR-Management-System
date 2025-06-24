@@ -344,40 +344,72 @@ getEmployeeNotifications: async function(req, res) {
 
 // Password reset controller function
 resetPassword: async function(req, res) {
-    try {
-        const userId = req.session.user.userId; // Assuming userId is stored in session
-        const { newPassword, confirmPassword } = req.body;
+    // Check if user is logged in as employee
+    if (!req.session.user) {
+        return res.status(401).json({ error: 'Unauthorized access' });
+    }
 
-        // Ensure passwords match
-        if (newPassword !== confirmPassword) {
-            req.flash('errors', { passwordError: 'Passwords do not match.' });
-            return res.redirect('/staff/employee/useracc');
+    const { newPassword, confirmPassword } = req.body;
+    const userId = req.session.user.userId; // Get current user's ID from session
+
+    console.log('Password reset attempt for user:', userId);
+
+    try {
+        // Validate input
+        if (!newPassword || !confirmPassword) {
+            return res.status(400).json({ error: 'Both password fields are required' });
         }
+
+        if (newPassword !== confirmPassword) {
+            return res.status(400).json({ error: 'Passwords do not match' });
+        }
+
+        // Basic password strength validation (you can enhance this)
+        if (newPassword.length < 6) {
+            return res.status(400).json({ error: 'Password must be at least 6 characters long' });
+        }
+
+        console.log('Validation passed, hashing new password...');
 
         // Hash the new password
-        const saltRounds = 10;
-        const hashedPassword = await bcrypt.hash(newPassword, saltRounds);
+        const hashedPassword = await bcrypt.hash(newPassword, 10);
+        console.log('Password hashed successfully');
 
-        // Update password in database
-        const { error } = await supabase
+        // Update password in useraccounts table
+        const { data, error } = await supabase
             .from('useraccounts')
-            .update({ userPass: hashedPassword })
-            .eq('userId', userId);
+            .update({
+                userPass: hashedPassword,
+                userStaffOgPass: newPassword // Update the original password field as well
+            })
+            .eq('userId', userId)
+            .select();
 
         if (error) {
-            console.error('Error updating password:', error);
-            req.flash('errors', { dbError: 'Error updating password.' });
-            return res.redirect('/staff/employee/useracc');
+            console.error('Supabase update error:', error);
+            throw error;
         }
 
-        req.flash('success', 'Password updated successfully!');
-        res.redirect('/staff/employee/useracc');
-    } catch (err) {
-        console.error('Error in resetPassword controller:', err);
-        req.flash('errors', { dbError: 'An error occurred while updating the password.' });
-        res.redirect('/staff/employee/useracc');
+        if (!data || data.length === 0) {
+            throw new Error('User not found or update failed');
+        }
+
+        console.log('Password updated successfully for user:', userId);
+
+        res.status(200).json({ 
+            success: true, 
+            message: 'Password updated successfully' 
+        });
+
+    } catch (error) {
+        console.error('Error updating password:', error.message);
+        res.status(500).json({ 
+            error: 'Failed to update password. Please try again.',
+            details: error.message 
+        });
     }
 },
+
 
 updateUserInfo: async function(req, res) {
     try {

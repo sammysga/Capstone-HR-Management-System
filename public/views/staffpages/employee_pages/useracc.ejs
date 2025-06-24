@@ -560,18 +560,30 @@
         </div>
     </div>
 
-    <!-- Password reset section -->
-    <div class="password-reset-container">
-        <h4 class="password-reset-info">Reset Password</h4>
-        <form id="reset-password-form" action="#" method="POST">
-            <label>Set New Password:</label>
-            <input type="password" name="newPassword" id="new-password" required>
-            <label>Confirm New Password:</label>
-            <input type="password" name="confirmPassword" id="confirm-password" required>
-            <button type="submit" class="update-password-btn">Update Password</button>
-        </form>
+<div class="password-reset-container">
+    <h4 class="password-reset-info">Reset Password</h4>
+    <form id="reset-password-form">
+        <label for="new-password">New Password:</label>
+        <input type="password" name="newPassword" id="new-password" 
+               placeholder="Enter new password (minimum 6 characters)" required>
+        
+        <label for="confirm-password">Confirm New Password:</label>
+        <input type="password" name="confirmPassword" id="confirm-password" 
+               placeholder="Re-enter new password" required>
+        
+        <button type="submit" class="update-password-btn">Update Password</button>
+    </form>
+    
+    <div class="password-requirements" style="margin-top: 10px; font-size: 0.9em; color: #666;">
+        <p><strong>Password Requirements:</strong></p>
+        <ul style="margin: 5px 0; padding-left: 20px;">
+            <li>Minimum 6 characters</li>
+            <li>Both fields must match</li>
+        </ul>
     </div>
-   </div>
+</div>
+
+
 
    <!-- Clearance Modal -->
 <div id="clearanceModal" class="modal-overlay">
@@ -676,20 +688,69 @@
         }
 
         // Handle password reset validation
-        const resetPasswordForm = document.getElementById('reset-password-form');
-        if (resetPasswordForm) {
-            resetPasswordForm.addEventListener('submit', function(event) {
-                const newPassword = document.getElementById('new-password').value;
-                const confirmPassword = document.getElementById('confirm-password').value;
-
-                if (newPassword !== confirmPassword) {
-                    alert('Passwords do not match!');
-                    event.preventDefault();
-                } else {
-                    alert('Password has been successfully updated!');
-                }
-            });
+       const resetPasswordForm = document.getElementById('reset-password-form');
+if (resetPasswordForm) {
+    resetPasswordForm.addEventListener('submit', async function(event) {
+        event.preventDefault(); // Prevent default form submission
+        
+        const newPassword = document.getElementById('new-password').value;
+        const confirmPassword = document.getElementById('confirm-password').value;
+        const submitButton = this.querySelector('.update-password-btn');
+        
+        // Client-side validation
+        if (!newPassword || !confirmPassword) {
+            alert('Please fill in both password fields.');
+            return;
         }
+        
+        if (newPassword !== confirmPassword) {
+            alert('Passwords do not match!');
+            return;
+        }
+        
+        if (newPassword.length < 6) {
+            alert('Password must be at least 6 characters long.');
+            return;
+        }
+        
+        // Disable submit button and show loading state
+        submitButton.disabled = true;
+        submitButton.textContent = 'Updating...';
+        
+        try {
+            // Send password reset request
+            const response = await fetch('/employee/reset-password', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({
+                    newPassword: newPassword,
+                    confirmPassword: confirmPassword
+                })
+            });
+            
+            const data = await response.json();
+            
+            if (response.ok && data.success) {
+                alert('Password has been successfully updated!');
+                // Clear the form
+                document.getElementById('new-password').value = '';
+                document.getElementById('confirm-password').value = '';
+            } else {
+                alert('Error: ' + (data.error || 'Failed to update password'));
+            }
+            
+        } catch (error) {
+            console.error('Error:', error);
+            alert('An error occurred while updating password. Please try again.');
+        } finally {
+            // Re-enable submit button
+            submitButton.disabled = false;
+            submitButton.textContent = 'Update Password';
+        }
+    });
+}
         
         // Cancel offboarding request
         document.querySelectorAll('.cancel-request-btn').forEach(button => {

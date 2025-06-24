@@ -136,6 +136,52 @@
             background-color: #6c757d;
             cursor: not-allowed;
         }
+        /* Style for the date input placeholder */
+.birthdate-input:not(:focus):invalid {
+    color: #999;
+}
+
+/* WebKit browsers (Chrome, Safari) */
+.birthdate-input::-webkit-datetime-edit {
+    color: transparent;
+}
+.birthdate-input:focus::-webkit-datetime-edit,
+.birthdate-input:valid::-webkit-datetime-edit {
+    color: inherit;
+}
+
+/* Firefox */
+.birthdate-input:invalid::-moz-placeholder {
+    color: #999;
+    content: "Birthday";
+    display: block;
+}
+
+input[type="date"]:not(:focus):invalid:before {
+    content: attr(data-placeholder);
+    color: #999;
+    padding-right: 5px;
+}
+
+/* Phone number input specific styles */
+.phone-input-container {
+    position: relative;
+}
+
+.phone-status {
+    font-size: 0.8em;
+    margin-top: -5px;
+    margin-bottom: 5px;
+    text-align: left;
+}
+
+.phone-valid {
+    border-color: #28a745 !important;
+}
+
+.phone-invalid {
+    border-color: #dc3545 !important;
+}
     </style>
 </head>
 <body>
@@ -147,8 +193,14 @@
             <input type="text" name="lastName" placeholder="Last Name" required>
             <input type="text" name="firstName" placeholder="First Name" required>
             <input type="text" name="middleInitial" placeholder="M.I." maxlength="1" required>
-            <input type="date" name="birthDate" placeholder="Birthdate" required>
-            <input type="tel" name="phoneNo" placeholder="Phone Number" required>
+            <input type="date" id="birthDate" name="birthDate" required onfocus="this.removeAttribute('data-placeholder')" data-placeholder="Birthday">
+            
+            <!-- Added phone number field here -->
+            <div class="phone-input-container">
+                <input type="tel" name="phoneNo" id="phoneInput" placeholder="Phone Number (e.g., 09123456789)" 
+                       pattern="[0-9]{10,11}" title="Please enter 10-11 digit phone number" required>
+                <div id="phoneStatus" class="phone-status"></div>
+            </div>
             
             <div class="email-input-container">
                 <input type="email" name="email" id="emailInput" placeholder="Email Address" required>
@@ -174,9 +226,12 @@
     <script>
         let emailCheckTimeout;
         let isEmailValid = false;
+        let isPhoneValid = false;
 
         const emailInput = document.getElementById('emailInput');
+        const phoneInput = document.getElementById('phoneInput');
         const emailStatus = document.getElementById('emailStatus');
+        const phoneStatus = document.getElementById('phoneStatus');
         const submitBtn = document.getElementById('submitBtn');
         const signupForm = document.getElementById('signupForm');
 
@@ -186,9 +241,15 @@
             return emailRegex.test(email);
         }
 
+        // Phone validation function
+        function isValidPhone(phone) {
+            const phoneRegex = /^\d{10,11}$/;
+            return phoneRegex.test(phone);
+        }
+
         // Update submit button state
         function updateSubmitButton() {
-            if (isEmailValid && emailInput.value.trim() !== '') {
+            if (isEmailValid && emailInput.value.trim() !== '' && isPhoneValid && phoneInput.value.trim() !== '') {
                 submitBtn.disabled = false;
             } else {
                 submitBtn.disabled = true;
@@ -242,6 +303,31 @@
             updateSubmitButton();
         }
 
+        // Validate phone number
+        function validatePhoneNumber(phone) {
+            if (phone === '') {
+                phoneStatus.textContent = '';
+                phoneStatus.className = 'phone-status';
+                phoneInput.className = '';
+                isPhoneValid = false;
+                return;
+            }
+            
+            if (!isValidPhone(phone)) {
+                phoneStatus.textContent = 'Please enter 10-11 digits';
+                phoneStatus.className = 'phone-status email-invalid';
+                phoneInput.className = 'phone-invalid';
+                isPhoneValid = false;
+            } else {
+                phoneStatus.textContent = 'Phone number is valid ✓';
+                phoneStatus.className = 'phone-status email-available';
+                phoneInput.className = 'phone-valid';
+                isPhoneValid = true;
+            }
+            
+            updateSubmitButton();
+        }
+
         // Email input event listener
         emailInput.addEventListener('input', function() {
             const email = this.value.trim();
@@ -278,11 +364,21 @@
             }, 500);
         });
 
+        // Phone input event listener
+        phoneInput.addEventListener('input', function() {
+            const phone = this.value.trim();
+            validatePhoneNumber(phone);
+        });
+
         // Form submission handler
         signupForm.addEventListener('submit', function(e) {
-            if (!isEmailValid) {
+            if (!isEmailValid || !isPhoneValid) {
                 e.preventDefault();
-                alert('Please enter a valid and available email address.');
+                if (!isEmailValid) {
+                    alert('Please enter a valid and available email address.');
+                } else if (!isPhoneValid) {
+                    alert('Please enter a valid phone number (10-11 digits).');
+                }
                 return false;
             }
         });
