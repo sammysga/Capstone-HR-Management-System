@@ -220,7 +220,7 @@
                             <th>Email</th>
                             <th>Training Progress</th>
                             <th>Status</th>
-                            <th>Hire Date</th>
+                            
                             <th>Actions</th>
                         </tr>
                     </thead>
@@ -286,12 +286,10 @@
                                         <% } %>
                                     </div>
                                 </td>
-                                <td><%= employee.hireDate ? new Date(employee.hireDate).toLocaleDateString() : 'N/A' %></td>
+                                
                                 <td>
                                     <div class="employee-actions">
-                                        <button class="btn btn-small btn-outline" onclick="viewEmployeeDetails('<%= employee.userId %>')">
-                                            View Profile
-                                        </button>
+                                        
                                         <button class="btn btn-small btn-view" onclick="viewEmployeeTrainings('<%= employee.userId %>')">
                                             View Trainings
                                         </button>
