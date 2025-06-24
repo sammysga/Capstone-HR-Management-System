@@ -9739,7 +9739,6 @@ determineResponderType: function(reviewerUserId, targetUserId, departmentStaff) 
     // For now, we'll return 'Peer' as default
     return 'Peer';
 },
-
 save360Questionnaire: async function(req, res) {
     try {
         console.log("=== ENTERING save360Questionnaire ===");
@@ -9770,20 +9769,29 @@ save360Questionnaire: async function(req, res) {
         // Validate userId first
         if (!userId) {
             console.error("❌ User ID is missing from both params and body");
-            return res.status(400).json({ 
-                success: false, 
-                message: "User ID is required. Please check the request URL or body." 
-            });
+            // Check if this is an AJAX request
+            if (req.headers.accept && req.headers.accept.includes('application/json')) {
+                return res.status(400).json({ 
+                    success: false, 
+                    message: "User ID is required. Please check the request URL or body." 
+                });
+            } else {
+                return res.redirect('back');
+            }
         }
 
         // Convert userId to integer if it's a string
         userId = parseInt(userId);
         if (isNaN(userId)) {
             console.error("❌ Invalid userId format:", req.params.userId || req.body.userId);
-            return res.status(400).json({ 
-                success: false, 
-                message: "Invalid User ID format." 
-            });
+            if (req.headers.accept && req.headers.accept.includes('application/json')) {
+                return res.status(400).json({ 
+                    success: false, 
+                    message: "Invalid User ID format." 
+                });
+            } else {
+                return res.redirect('back');
+            }
         }
 
         console.log("✅ Valid userId:", userId);
@@ -9800,18 +9808,26 @@ save360Questionnaire: async function(req, res) {
 
             if (error) {
                 console.error("❌ Error fetching jobId:", error);
-                return res.status(500).json({ 
-                    success: false, 
-                    message: `Error fetching job information: ${error.message}` 
-                });
+                if (req.headers.accept && req.headers.accept.includes('application/json')) {
+                    return res.status(500).json({ 
+                        success: false, 
+                        message: `Error fetching job information: ${error.message}` 
+                    });
+                } else {
+                    return res.redirect('back');
+                }
             }
 
             if (!staffAccountData || !staffAccountData.jobId) {
                 console.error("❌ No jobId found for the user.");
-                return res.status(400).json({ 
-                    success: false, 
-                    message: "Job ID not found for the user. Please ensure the user has a valid job assignment." 
-                });
+                if (req.headers.accept && req.headers.accept.includes('application/json')) {
+                    return res.status(400).json({ 
+                        success: false, 
+                        message: "Job ID not found for the user. Please ensure the user has a valid job assignment." 
+                    });
+                } else {
+                    return res.redirect('back');
+                }
             }
 
             completeJobId = staffAccountData.jobId;
@@ -9827,10 +9843,14 @@ save360Questionnaire: async function(req, res) {
                 quarter,
                 hasFeedbackData: !!feedbackData
             });
-            return res.status(400).json({ 
-                success: false, 
-                message: 'Missing required fields: userId, jobId, startDate, endDate, and quarter are required.' 
-            });
+            if (req.headers.accept && req.headers.accept.includes('application/json')) {
+                return res.status(400).json({ 
+                    success: false, 
+                    message: 'Missing required fields: userId, jobId, startDate, endDate, and quarter are required.' 
+                });
+            } else {
+                return res.redirect('back');
+            }
         }
 
         // FIXED: Better handling of feedbackData
@@ -9876,10 +9896,14 @@ save360Questionnaire: async function(req, res) {
 
         if (existingError) {
             console.error("❌ Error checking existing feedback:", existingError);
-            return res.status(500).json({ 
-                success: false, 
-                message: `Error checking existing feedback: ${existingError.message}` 
-            });
+            if (req.headers.accept && req.headers.accept.includes('application/json')) {
+                return res.status(500).json({ 
+                    success: false, 
+                    message: `Error checking existing feedback: ${existingError.message}` 
+                });
+            } else {
+                return res.redirect('back');
+            }
         }
 
         let feedbackId;
@@ -9902,11 +9926,15 @@ save360Questionnaire: async function(req, res) {
 
             if (updateError) {
                 console.error(`❌ Error updating feedback in ${feedbackTable}:`, updateError);
-                return res.status(500).json({ 
-                    success: false, 
-                    message: 'Error updating feedback. Please try again.',
-                    error: updateError.message 
-                });
+                if (req.headers.accept && req.headers.accept.includes('application/json')) {
+                    return res.status(500).json({ 
+                        success: false, 
+                        message: 'Error updating feedback. Please try again.',
+                        error: updateError.message 
+                    });
+                } else {
+                    return res.redirect('back');
+                }
             }
 
             feedbackId = existingFeedback[feedbackKey];
@@ -9928,19 +9956,27 @@ save360Questionnaire: async function(req, res) {
 
             if (feedbackInsertError) {
                 console.error(`❌ Error inserting into ${feedbackTable}:`, feedbackInsertError);
-                return res.status(500).json({ 
-                    success: false, 
-                    message: 'Error saving feedback. Please try again.',
-                    error: feedbackInsertError.message 
-                });
+                if (req.headers.accept && req.headers.accept.includes('application/json')) {
+                    return res.status(500).json({ 
+                        success: false, 
+                        message: 'Error saving feedback. Please try again.',
+                        error: feedbackInsertError.message 
+                    });
+                } else {
+                    return res.redirect('back');
+                }
             }
 
             if (!feedbackInsertData || feedbackInsertData.length === 0) {
                 console.error("❌ No data returned from feedback insert");
-                return res.status(500).json({ 
-                    success: false, 
-                    message: 'Error saving feedback - no data returned.' 
-                });
+                if (req.headers.accept && req.headers.accept.includes('application/json')) {
+                    return res.status(500).json({ 
+                        success: false, 
+                        message: 'Error saving feedback - no data returned.' 
+                    });
+                } else {
+                    return res.redirect('back');
+                }
             }
 
             feedbackId = feedbackInsertData[0][feedbackKey];
@@ -9959,10 +9995,14 @@ save360Questionnaire: async function(req, res) {
 
         if (objectiveSettingsError) {
             console.error("❌ Error fetching objective settings:", objectiveSettingsError);
-            return res.status(500).json({ 
-                success: false, 
-                message: `Error fetching objective settings: ${objectiveSettingsError.message}` 
-            });
+            if (req.headers.accept && req.headers.accept.includes('application/json')) {
+                return res.status(500).json({ 
+                    success: false, 
+                    message: `Error fetching objective settings: ${objectiveSettingsError.message}` 
+                });
+            } else {
+                return res.redirect('back');
+            }
         }
 
         console.log("📋 Found objective settings:", objectiveSettings);
@@ -9982,10 +10022,14 @@ save360Questionnaire: async function(req, res) {
 
             if (objectivesError) {
                 console.error("❌ Error fetching objectives:", objectivesError);
-                return res.status(500).json({ 
-                    success: false, 
-                    message: `Error fetching objectives: ${objectivesError.message}` 
-                });
+                if (req.headers.accept && req.headers.accept.includes('application/json')) {
+                    return res.status(500).json({ 
+                        success: false, 
+                        message: `Error fetching objectives: ${objectivesError.message}` 
+                    });
+                } else {
+                    return res.redirect('back');
+                }
             }
 
             allObjectives = objectives || [];
@@ -10062,11 +10106,15 @@ save360Questionnaire: async function(req, res) {
 
                 if (mappingInsertError) {
                     console.error(`❌ Error inserting guide question for objectiveId=${objectiveId}:`, mappingInsertError);
-                    return res.status(500).json({ 
-                        success: false,
-                        message: `Error inserting guide question: ${mappingInsertError.message}`,
-                        error: mappingInsertError 
-                    });
+                    if (req.headers.accept && req.headers.accept.includes('application/json')) {
+                        return res.status(500).json({ 
+                            success: false,
+                            message: `Error inserting guide question: ${mappingInsertError.message}`,
+                            error: mappingInsertError 
+                        });
+                    } else {
+                        return res.redirect('back');
+                    }
                 }
                 
                 console.log(`✅ Successfully inserted guide question for objectiveId=${objectiveId}:`, insertedData);
@@ -10078,7 +10126,7 @@ save360Questionnaire: async function(req, res) {
             console.log("⚠️ No objectives found for this user/job");
         }
 
-        // Step 5: Handle skills mapping (unchanged)
+        // Step 5: Handle skills mapping
         console.log("🔧 Fetching job skills...");
         const { data: jobReqSkills, error: skillFetchError } = await supabase
             .from('jobreqskills')
@@ -10087,11 +10135,15 @@ save360Questionnaire: async function(req, res) {
 
         if (skillFetchError) {
             console.error("❌ Error fetching jobReqSkills:", skillFetchError);
-            return res.status(500).json({ 
-                success: false, 
-                message: "Error fetching job skills.",
-                error: skillFetchError.message 
-            });
+            if (req.headers.accept && req.headers.accept.includes('application/json')) {
+                return res.status(500).json({ 
+                    success: false, 
+                    message: "Error fetching job skills.",
+                    error: skillFetchError.message 
+                });
+            } else {
+                return res.redirect('back');
+            }
         }
 
         if (jobReqSkills && jobReqSkills.length > 0) {
@@ -10120,11 +10172,15 @@ save360Questionnaire: async function(req, res) {
 
                 if (skillMappingInsertError) {
                     console.error("❌ Error inserting skill mapping:", skillMappingInsertError);
-                    return res.status(500).json({ 
-                        success: false, 
-                        message: "Error inserting skill mapping.",
-                        error: skillMappingInsertError.message 
-                    });
+                    if (req.headers.accept && req.headers.accept.includes('application/json')) {
+                        return res.status(500).json({ 
+                            success: false, 
+                            message: "Error inserting skill mapping.",
+                            error: skillMappingInsertError.message 
+                        });
+                    } else {
+                        return res.redirect('back');
+                    }
                 }
                 console.log(`✅ Inserted skill mapping for jobReqSkillId=${jobReqSkillId}`);
             }
@@ -10134,30 +10190,40 @@ save360Questionnaire: async function(req, res) {
 
         console.log("=== save360Questionnaire COMPLETED SUCCESSFULLY ===");
         
-        // Return enhanced JSON response for AJAX calls
-        return res.status(200).json({ 
-            success: true, 
-            message: 'Feedback questionnaire saved successfully!',
-            feedbackId: feedbackId,
-            quarter: formattedQuarter,
-            savedQuestions: savedQuestionsCount,
-            totalObjectives: allObjectives.length,
-            details: {
-                startDate: startDate,
-                endDate: endDate,
-                userId: userId,
-                jobId: completeJobId
-            }
-        });
+        // FIXED: Check if this is an AJAX request or form submission
+        if (req.headers.accept && req.headers.accept.includes('application/json')) {
+            // Return JSON for AJAX calls
+            return res.status(200).json({ 
+                success: true, 
+                message: 'Feedback questionnaire saved successfully!',
+                feedbackId: feedbackId,
+                quarter: formattedQuarter,
+                savedQuestions: savedQuestionsCount,
+                totalObjectives: allObjectives.length,
+                details: {
+                    startDate: startDate,
+                    endDate: endDate,
+                    userId: userId,
+                    jobId: completeJobId
+                }
+            });
+        } else {
+            // Redirect for form submissions
+            return res.redirect(`/linemanager/records-performance-tracker/${userId}`);
+        }
 
     } catch (error) {
         console.error('❌ CRITICAL ERROR in save360Questionnaire:', error);
         
-        return res.status(500).json({ 
-            success: false, 
-            message: 'An error occurred while saving the questionnaire.',
-            error: error.message 
-        });
+        if (req.headers.accept && req.headers.accept.includes('application/json')) {
+            return res.status(500).json({ 
+                success: false, 
+                message: 'An error occurred while saving the questionnaire.',
+                error: error.message 
+            });
+        } else {
+            return res.redirect('back');
+        }
     }
 },
     getOffboardingRequestsDash: async function (req, res) {

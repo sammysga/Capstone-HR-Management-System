@@ -7631,8 +7631,7 @@ function manuallyAddTestInput() {
     
     tbody.appendChild(testRow);
     console.log("✅ Test input added manually");
-}
-async function save360Questionnaire() {
+}async function save360Questionnaire() {
     console.log("=== STARTING save360Questionnaire ===");
     console.log("Function called successfully");
     
@@ -7854,29 +7853,9 @@ Details:
                 }
             }
             
-            // FIXED: Instead of reloading, just update the UI to show view-only mode
-            console.log("Updating UI to show view-only mode...");
-            
-            // Switch form to view-only mode
-            switchToViewOnlyMode();
-            
-            // Update the form state to reflect that it's been saved
-            updateFormStateBasedOnDataNoRefresh({ 
-                isViewOnly: true, 
-                quarter: quarter,
-                startDate: startDate,
-                endDate: endDate 
-            });
-            
-            // Update the save button to show it's been submitted
-            if (saveFeedbackButton) {
-                saveFeedbackButton.disabled = true;
-                saveFeedbackButton.innerHTML = '<i class="fas fa-check-circle"></i> Questionnaire Saved';
-                saveFeedbackButton.style.backgroundColor = '#28a745';
-            }
-            
-            // Show success notification instead of just alert
-            showSuccessNotification('Feedback questionnaire saved successfully!', 5000);
+            // Reload to show updated data
+            console.log("Reloading page to show updated data...");
+            window.location.reload();
         } else {
             console.error("❌ Server returned error:", result);
             throw new Error(result.message || "Unknown server error");
