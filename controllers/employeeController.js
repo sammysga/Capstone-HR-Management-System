@@ -5656,39 +5656,83 @@ createNewTrainingRequest: async function(req, res) {
         }
 
         // Get training categories from the selected IDP
-        let idpTrainingCategories = [];
-        try {
-            if (midyearidpId) {
-                const { data: midyearIDP, error: midyearError } = await supabase
-                    .from('midyearidps')
-                    .select('trainingCategories')
-                    .eq('midyearidpId', midyearidpId)
-                    .single();
+        // Get training categories from the selected IDP
+let idpTrainingCategories = [];
+try {
+    if (midyearidpId) {
+        console.log(`Fetching midyear IDP categories for ID: ${midyearidpId}`);
+        const { data: midyearIDP, error: midyearError } = await supabase
+            .from('midyearidps')
+            .select('trainingCategories')
+            .eq('midyearidpId', midyearidpId)
+            .single();
 
-                if (!midyearError && midyearIDP && midyearIDP.trainingCategories) {
-                    idpTrainingCategories = Array.isArray(midyearIDP.trainingCategories) 
-                        ? midyearIDP.trainingCategories 
-                        : [];
-                }
-            } else if (finalyearidpId) {
-                const { data: finalyearIDP, error: finalyearError } = await supabase
-                    .from('finalyearidps')
-                    .select('trainingCategories')
-                    .eq('finalyearidpId', finalyearidpId)
-                    .single();
-
-                if (!finalyearError && finalyearIDP && finalyearIDP.trainingCategories) {
-                    idpTrainingCategories = Array.isArray(finalyearIDP.trainingCategories) 
-                        ? finalyearIDP.trainingCategories 
-                        : [];
+        if (!midyearError && midyearIDP) {
+            console.log('Raw midyear IDP trainingCategories:', midyearIDP.trainingCategories);
+            
+            // Handle JSONB field properly
+            if (midyearIDP.trainingCategories) {
+                if (Array.isArray(midyearIDP.trainingCategories)) {
+                    idpTrainingCategories = midyearIDP.trainingCategories;
+                } else if (typeof midyearIDP.trainingCategories === 'string') {
+                    try {
+                        idpTrainingCategories = JSON.parse(midyearIDP.trainingCategories);
+                    } catch (parseError) {
+                        console.error('Error parsing trainingCategories JSON:', parseError);
+                        idpTrainingCategories = [];
+                    }
+                } else {
+                    // Might be an object, extract values or handle as needed
+                    idpTrainingCategories = Object.values(midyearIDP.trainingCategories).filter(val => typeof val === 'string');
                 }
             }
-        } catch (idpError) {
-            console.error('Error fetching IDP training categories:', idpError);
-            // Continue without categories if there's an error
+        } else {
+            console.error('Error fetching midyear IDP:', midyearError);
         }
+    } else if (finalyearidpId) {
+        console.log(`Fetching finalyear IDP categories for ID: ${finalyearidpId}`);
+        const { data: finalyearIDP, error: finalyearError } = await supabase
+            .from('finalyearidps')
+            .select('trainingCategories')
+            .eq('finalyearidpId', finalyearidpId)
+            .single();
 
-        console.log('Training categories from IDP:', idpTrainingCategories);
+        if (!finalyearError && finalyearIDP) {
+            console.log('Raw finalyear IDP trainingCategories:', finalyearIDP.trainingCategories);
+            
+            // Handle JSONB field properly
+            if (finalyearIDP.trainingCategories) {
+                if (Array.isArray(finalyearIDP.trainingCategories)) {
+                    idpTrainingCategories = finalyearIDP.trainingCategories;
+                } else if (typeof finalyearIDP.trainingCategories === 'string') {
+                    try {
+                        idpTrainingCategories = JSON.parse(finalyearIDP.trainingCategories);
+                    } catch (parseError) {
+                        console.error('Error parsing trainingCategories JSON:', parseError);
+                        idpTrainingCategories = [];
+                    }
+                } else {
+                    // Might be an object, extract values or handle as needed
+                    idpTrainingCategories = Object.values(finalyearIDP.trainingCategories).filter(val => typeof val === 'string');
+                }
+            }
+        } else {
+            console.error('Error fetching finalyear IDP:', finalyearError);
+        }
+    }
+    
+    // Ensure it's an array and filter out any non-string values
+    if (!Array.isArray(idpTrainingCategories)) {
+        idpTrainingCategories = [];
+    }
+    idpTrainingCategories = idpTrainingCategories.filter(cat => typeof cat === 'string' && cat.trim() !== '');
+    
+} catch (idpError) {
+    console.error('Error fetching IDP training categories:', idpError);
+    idpTrainingCategories = [];
+}
+
+console.log('Final processed training categories from IDP:', idpTrainingCategories);
 
         // FIXED: Create the training record with correct status and dateRequested
         const trainingRecordData = {
@@ -5728,57 +5772,68 @@ createNewTrainingRequest: async function(req, res) {
         console.log(`Training record created with ID: ${trainingRecordId}`);
 
         // Create training category records based on IDP categories and training_categories table
-        let categoriesCreated = 0;
-        let categoriesFailed = 0;
+        // Create training category records based on IDP categories and training_categories table
+let categoriesCreated = 0;
+let categoriesFailed = 0;
 
-        if (idpTrainingCategories && idpTrainingCategories.length > 0) {
-            // Get all training categories from the training_categories table
-            const { data: allTrainingCategories, error: categoriesError } = await supabase
-                .from('training_categories')
-                .select('trainingCategoriesId, trainingCategoriesName');
+if (idpTrainingCategories && idpTrainingCategories.length > 0) {
+    console.log('Processing IDP training categories:', idpTrainingCategories);
+    
+    // Get all training categories from the training_categories table
+    const { data: allTrainingCategories, error: categoriesError } = await supabase
+        .from('training_categories')
+        .select('trainingCategoriesId, category'); // FIXED: Use 'category' instead of 'trainingCategoriesName'
 
-            if (!categoriesError && allTrainingCategories) {
-                // Match IDP categories with training_categories table
-                for (const idpCategory of idpTrainingCategories) {
-                    const matchingCategory = allTrainingCategories.find(
-                        cat => cat.trainingCategoriesName.toLowerCase().trim() === idpCategory.toLowerCase().trim()
-                    );
+    if (categoriesError) {
+        console.error('Error fetching training categories:', categoriesError);
+    } else if (allTrainingCategories && allTrainingCategories.length > 0) {
+        console.log('Available training categories:', allTrainingCategories);
+        
+        // Match IDP categories with training_categories table
+        for (const idpCategory of idpTrainingCategories) {
+            const matchingCategory = allTrainingCategories.find(
+                cat => cat.category.toLowerCase().trim() === idpCategory.toLowerCase().trim() // FIXED: Use 'category' field
+            );
 
-                    if (matchingCategory) {
-                        try {
-                            const categoryRecordData = {
-                                trainingRecordId: trainingRecordId,
-                                trainingCategoriesId: matchingCategory.trainingCategoriesId,
-                                created_at: new Date().toISOString()
-                            };
+            if (matchingCategory) {
+                try {
+                    const categoryRecordData = {
+                        trainingRecordId: trainingRecordId,
+                        trainingCategoriesId: matchingCategory.trainingCategoriesId,
+                        created_at: new Date().toISOString()
+                    };
 
-                            const { data: categoryRecord, error: categoryError } = await supabase
-                                .from('training_records_categories')
-                                .insert([categoryRecordData])
-                                .select()
-                                .single();
+                    console.log(`Creating category record for "${idpCategory}":`, categoryRecordData);
 
-                            if (categoryError) {
-                                console.error(`Error creating category record for ${idpCategory}:`, categoryError);
-                                categoriesFailed++;
-                            } else {
-                                categoriesCreated++;
-                                console.log(`Successfully created category record: ${categoryRecord.trainingRecordCategoriesId}`);
-                            }
-                        } catch (categoryError) {
-                            console.error(`Exception creating category record for ${idpCategory}:`, categoryError);
-                            categoriesFailed++;
-                        }
-                    } else {
-                        console.warn(`No matching training category found for IDP category: ${idpCategory}`);
+                    const { data: categoryRecord, error: categoryError } = await supabase
+                        .from('training_records_categories')
+                        .insert([categoryRecordData])
+                        .select()
+                        .single();
+
+                    if (categoryError) {
+                        console.error(`Error creating category record for ${idpCategory}:`, categoryError);
                         categoriesFailed++;
+                    } else {
+                        categoriesCreated++;
+                        console.log(`✅ Successfully created category record: ${categoryRecord.trainingRecordCategoriesId} for "${idpCategory}"`);
                     }
+                } catch (categoryError) {
+                    console.error(`Exception creating category record for ${idpCategory}:`, categoryError);
+                    categoriesFailed++;
                 }
             } else {
-                console.error('Error fetching training categories:', categoriesError);
+                console.warn(`❌ No matching training category found for IDP category: "${idpCategory}"`);
+                console.log('Available categories:', allTrainingCategories.map(cat => cat.category));
+                categoriesFailed++;
             }
         }
-
+    } else {
+        console.warn('No training categories found in database');
+    }
+} else {
+    console.log('No training categories from IDP to process');
+}
         // Create activity records with proper activity type handling
         let activitiesCreated = 0;
         let activitiesFailed = 0;

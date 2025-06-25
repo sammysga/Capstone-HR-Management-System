@@ -11690,7 +11690,7 @@ staffFeedbackList: async function (req, res) {
         
         console.log("\n✅ Rendering page...");
         
-        return res.render('staffpages/employee_pages/employee-quarterlyfeedbackquestionnaire.ejs', {
+        return res.render('staffpages/linemanager_pages/linemanager-quarterlyfeedbackquestionnaire.ejs', {
             title: '360 Degree Feedback Questionnaires',
             quarter: quarter,
             staffList: filteredStaffList,
