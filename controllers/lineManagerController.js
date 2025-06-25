@@ -2,6 +2,7 @@ const supabase = require('../public/config/supabaseClient');
 const bcrypt = require('bcrypt');
 const { getISOWeek } = require('date-fns');
 const { getEmailTemplateData } = require('../utils/emailService');
+const PDFDocument = require('pdfkit');
 
 
 
@@ -7274,12 +7275,20 @@ addTrainingCategory: async function(req, res) {
     }
 },
 
-// FIXED: saveMidYearIDP function to properly handle training categories
 saveMidYearIDP: async function(req, res) {
     try {
         const userId = req.params.userId || req.body.userId;
+        
+        console.log("=== STARTING saveMidYearIDP DEBUG ===");
         console.log("Starting saveMidYearIDP for userId:", userId);
-        console.log("Request body:", req.body);
+        console.log("Request method:", req.method);
+        console.log("Content-Type:", req.headers['content-type']);
+        console.log("Request body keys:", Object.keys(req.body));
+        
+        // Log full request body with pretty printing
+        console.log("=== FULL REQUEST BODY ===");
+        console.log(JSON.stringify(req.body, null, 2));
+        console.log("=== END FULL REQUEST BODY ===");
 
         if (!userId) {
             console.error("User ID is missing");
@@ -7302,46 +7311,152 @@ saveMidYearIDP: async function(req, res) {
             year
         } = req.body;
 
-        // FIXED: Handle training categories - ensure it's properly formatted as an array of strings
+        // ENHANCED DEBUG: Log each field before processing
+        console.log("=== RAW FIELD VALUES ===");
+        console.log("profStrengths type:", typeof profStrengths, "length:", profStrengths?.length);
+        console.log("profAreasForDevelopment type:", typeof profAreasForDevelopment, "length:", profAreasForDevelopment?.length);
+        console.log("profActionsToTake type:", typeof profActionsToTake, "length:", profActionsToTake?.length);
+        console.log("leaderStrengths type:", typeof leaderStrengths, "length:", leaderStrengths?.length);
+        console.log("leaderAreasForDevelopment type:", typeof leaderAreasForDevelopment, "length:", leaderAreasForDevelopment?.length);
+        console.log("leaderActionsToTake type:", typeof leaderActionsToTake, "length:", leaderActionsToTake?.length);
+        console.log("nextRoleShortTerm type:", typeof nextRoleShortTerm, "length:", nextRoleShortTerm?.length);
+        console.log("nextRoleLongTerm type:", typeof nextRoleLongTerm, "length:", nextRoleLongTerm?.length);
+        console.log("nextRoleMobility type:", typeof nextRoleMobility, "length:", nextRoleMobility?.length);
+        console.log("trainingRemarks type:", typeof trainingRemarks, "length:", trainingRemarks?.length);
+        console.log("year type:", typeof year, "value:", year);
+        
+        // CRITICAL DEBUG FOR TRAINING CATEGORIES
+        console.log("=== TRAINING CATEGORIES CRITICAL DEBUG ===");
+        console.log("trainingCategories RAW value:", trainingCategories);
+        console.log("trainingCategories type:", typeof trainingCategories);
+        console.log("trainingCategories constructor:", trainingCategories?.constructor?.name);
+        console.log("trainingCategories isArray:", Array.isArray(trainingCategories));
+        console.log("trainingCategories length:", trainingCategories?.length);
+        console.log("trainingCategories JSON:", JSON.stringify(trainingCategories));
+        
+        // Log each item if it's an array
+        if (Array.isArray(trainingCategories)) {
+            trainingCategories.forEach((item, index) => {
+                console.log(`trainingCategories[${index}]:`, {
+                    value: item,
+                    type: typeof item,
+                    length: item?.length,
+                    json: JSON.stringify(item)
+                });
+            });
+        }
+        console.log("=== END TRAINING CATEGORIES CRITICAL DEBUG ===");
+
+        // FIXED: Enhanced training categories processing with detailed debugging
         let processedTrainingCategories = [];
         
-        console.log("Raw trainingCategories received:", trainingCategories, typeof trainingCategories);
+        console.log("=== TRAINING CATEGORIES PROCESSING ===");
         
-        if (trainingCategories) {
+        if (trainingCategories !== null && trainingCategories !== undefined) {
             if (Array.isArray(trainingCategories)) {
-                // If it's already an array, process each item
+                console.log("✅ Processing as array with", trainingCategories.length, "items");
+                
                 processedTrainingCategories = trainingCategories
-                    .map(cat => {
+                    .map((cat, index) => {
+                        console.log(`Processing item ${index}:`, {
+                            value: cat,
+                            type: typeof cat,
+                            constructor: cat?.constructor?.name
+                        });
+                        
                         if (typeof cat === 'string') {
-                            return cat.trim();
+                            const trimmed = cat.trim();
+                            console.log(`  ✅ String item ${index}: "${trimmed}"`);
+                            return trimmed;
                         } else if (typeof cat === 'object' && cat !== null) {
                             // Handle objects with name/category properties
-                            return (cat.name || cat.category || '').trim();
+                            const name = (cat.name || cat.category || '').toString().trim();
+                            console.log(`  ✅ Object item ${index}: "${name}" (from ${cat.name ? 'name' : 'category'} property)`);
+                            return name;
+                        } else {
+                            console.log(`  ❌ Invalid item ${index}:`, cat, typeof cat);
+                            return '';
                         }
-                        return '';
                     })
-                    .filter(cat => cat.length > 0); // Remove empty strings
+                    .filter((cat, index) => {
+                        const isValid = cat && cat.length > 0;
+                        console.log(`  Filter result ${index}: "${cat}" (valid: ${isValid})`);
+                        return isValid;
+                    });
+                    
+                console.log("✅ Processed array result:", processedTrainingCategories);
+                
             } else if (typeof trainingCategories === 'string') {
+                console.log("Processing as string:", trainingCategories);
+                
                 // If it's a string, try to parse as JSON or treat as single item
                 try {
                     const parsed = JSON.parse(trainingCategories);
+                    console.log("✅ Parsed JSON successfully:", parsed);
+                    
                     if (Array.isArray(parsed)) {
                         processedTrainingCategories = parsed
-                            .map(cat => typeof cat === 'string' ? cat.trim() : '')
+                            .map(cat => typeof cat === 'string' ? cat.trim() : (cat?.name || cat?.category || '').toString().trim())
                             .filter(cat => cat.length > 0);
+                        console.log("✅ Processed parsed array:", processedTrainingCategories);
                     } else {
-                        processedTrainingCategories = [trainingCategories.trim()];
+                        console.log("Parsed result is not array, treating as single item");
+                        const singleItem = trainingCategories.trim();
+                        if (singleItem) {
+                            processedTrainingCategories = [singleItem];
+                        }
                     }
                 } catch (e) {
+                    console.log("Not valid JSON, treating as single category");
                     // Not JSON, treat as single category
-                    if (trainingCategories.trim() !== '') {
-                        processedTrainingCategories = [trainingCategories.trim()];
+                    const singleItem = trainingCategories.trim();
+                    if (singleItem) {
+                        processedTrainingCategories = [singleItem];
                     }
                 }
+            } else {
+                console.log("❌ Unexpected type for trainingCategories:", typeof trainingCategories);
+                console.log("Value:", trainingCategories);
+                processedTrainingCategories = [];
             }
+        } else {
+            console.log("trainingCategories is null/undefined");
+            processedTrainingCategories = [];
         }
 
-        console.log("Processed trainingCategories:", processedTrainingCategories);
+        console.log("=== FINAL PROCESSED TRAINING CATEGORIES ===");
+        console.log("Final processedTrainingCategories:", processedTrainingCategories);
+        console.log("Length:", processedTrainingCategories.length);
+        console.log("Type:", typeof processedTrainingCategories);
+        console.log("Is array:", Array.isArray(processedTrainingCategories));
+        console.log("Each item:");
+        processedTrainingCategories.forEach((item, index) => {
+            console.log(`  ${index}: "${item}" (type: ${typeof item}, length: ${item.length})`);
+        });
+        console.log("JSON for database:", JSON.stringify(processedTrainingCategories));
+        console.log("=== END TRAINING CATEGORIES PROCESSING ===");
+
+        // Validate processed training categories
+        if (!Array.isArray(processedTrainingCategories)) {
+            console.error("❌ processedTrainingCategories is not an array!");
+            return res.status(400).json({ 
+                success: false, 
+                message: "Invalid training categories format" 
+            });
+        }
+
+        // Check for invalid items
+        const invalidItems = processedTrainingCategories.filter(item => 
+            typeof item !== 'string' || item.trim() === ''
+        );
+        
+        if (invalidItems.length > 0) {
+            console.error("❌ Invalid items found in processedTrainingCategories:", invalidItems);
+            return res.status(400).json({ 
+                success: false, 
+                message: "Some training categories contain invalid data" 
+            });
+        }
 
         // Clean text fields
         profStrengths = (profStrengths || '').toString().trim();
@@ -7357,23 +7472,28 @@ saveMidYearIDP: async function(req, res) {
 
         const currentYear = year || new Date().getFullYear();
 
-        console.log("Final processed data:", {
+        console.log("=== CLEANED FINAL DATA ===");
+        console.log("Final processed data summary:", {
             userId,
-            profStrengths,
-            profAreasForDevelopment,
-            profActionsToTake,
-            leaderStrengths,
-            leaderAreasForDevelopment,
-            leaderActionsToTake,
-            nextRoleShortTerm,
-            nextRoleLongTerm,
-            nextRoleMobility,
+            profStrengths: profStrengths.substring(0, 50) + (profStrengths.length > 50 ? '...' : ''),
+            profAreasForDevelopment: profAreasForDevelopment.substring(0, 50) + (profAreasForDevelopment.length > 50 ? '...' : ''),
+            profActionsToTake: profActionsToTake.substring(0, 50) + (profActionsToTake.length > 50 ? '...' : ''),
+            leaderStrengths: leaderStrengths.substring(0, 50) + (leaderStrengths.length > 50 ? '...' : ''),
+            leaderAreasForDevelopment: leaderAreasForDevelopment.substring(0, 50) + (leaderAreasForDevelopment.length > 50 ? '...' : ''),
+            leaderActionsToTake: leaderActionsToTake.substring(0, 50) + (leaderActionsToTake.length > 50 ? '...' : ''),
+            nextRoleShortTerm: nextRoleShortTerm.substring(0, 50) + (nextRoleShortTerm.length > 50 ? '...' : ''),
+            nextRoleLongTerm: nextRoleLongTerm.substring(0, 50) + (nextRoleLongTerm.length > 50 ? '...' : ''),
+            nextRoleMobility: nextRoleMobility.substring(0, 50) + (nextRoleMobility.length > 50 ? '...' : ''),
             trainingCategories: processedTrainingCategories,
-            trainingRemarks,
+            trainingRemarks: trainingRemarks.substring(0, 100) + (trainingRemarks.length > 100 ? '...' : ''),
             year: currentYear
         });
+        console.log("CRITICAL - trainingCategories for DB:", processedTrainingCategories);
+        console.log("CRITICAL - trainingCategories JSON string:", JSON.stringify(processedTrainingCategories));
+        console.log("=== END CLEANED FINAL DATA ===");
 
         // Check if there's already an entry for this user
+        console.log("Checking for existing record...");
         const { data: existingRecord, error: checkError } = await supabase
             .from("midyearidps")
             .select("midyearidpId")
@@ -7385,6 +7505,10 @@ saveMidYearIDP: async function(req, res) {
             return res.status(500).json({ success: false, message: "Error checking for existing record" });
         }
 
+        console.log("Existing record check result:", existingRecord);
+
+        // Prepare data for database insertion
+        // CRITICAL: Use the array directly for JSONB, don't stringify it here
         const dataToSave = {
             profStrengths,
             profAreasForDevelopment,
@@ -7395,18 +7519,44 @@ saveMidYearIDP: async function(req, res) {
             nextRoleShortTerm,
             nextRoleLongTerm,
             nextRoleMobility,
-            trainingCategories: JSON.stringify(processedTrainingCategories), // FIXED: Ensure JSONB format
+            trainingCategories: processedTrainingCategories, // FIXED: Use array directly for JSONB
             trainingRemarks: trainingRemarks || null,
             year: currentYear
         };
 
-        console.log("Data to save to database:", dataToSave);
+        console.log("=== DATA TO SAVE TO DATABASE ===");
+        console.log("Data structure to save:");
+        console.log("- profStrengths length:", dataToSave.profStrengths.length);
+        console.log("- profAreasForDevelopment length:", dataToSave.profAreasForDevelopment.length);
+        console.log("- profActionsToTake length:", dataToSave.profActionsToTake.length);
+        console.log("- leaderStrengths length:", dataToSave.leaderStrengths.length);
+        console.log("- leaderAreasForDevelopment length:", dataToSave.leaderAreasForDevelopment.length);
+        console.log("- leaderActionsToTake length:", dataToSave.leaderActionsToTake.length);
+        console.log("- nextRoleShortTerm length:", dataToSave.nextRoleShortTerm.length);
+        console.log("- nextRoleLongTerm length:", dataToSave.nextRoleLongTerm.length);
+        console.log("- nextRoleMobility length:", dataToSave.nextRoleMobility.length);
+        console.log("- trainingRemarks length:", dataToSave.trainingRemarks?.length || 0);
+        console.log("- year:", dataToSave.year);
+        
+        // CRITICAL DEBUG FOR TRAINING CATEGORIES
+        console.log("=== CRITICAL - TRAINING CATEGORIES FOR DATABASE ===");
+        console.log("trainingCategories value:", dataToSave.trainingCategories);
+        console.log("trainingCategories type:", typeof dataToSave.trainingCategories);
+        console.log("trainingCategories isArray:", Array.isArray(dataToSave.trainingCategories));
+        console.log("trainingCategories length:", dataToSave.trainingCategories.length);
+        console.log("trainingCategories items:");
+        dataToSave.trainingCategories.forEach((item, index) => {
+            console.log(`  ${index}: "${item}" (${typeof item})`);
+        });
+        console.log("trainingCategories JSON.stringify:", JSON.stringify(dataToSave.trainingCategories));
+        console.log("=== END CRITICAL DEBUG ===");
 
         let result;
 
         if (existingRecord) {
             // Update existing record
             console.log("Updating existing midyearidp record:", existingRecord.midyearidpId);
+            
             const { data, error } = await supabase
                 .from("midyearidps")
                 .update(dataToSave)
@@ -7414,14 +7564,22 @@ saveMidYearIDP: async function(req, res) {
                 .select();
 
             if (error) {
-                console.error("Error updating midyearidp:", error);
-                return res.status(500).json({ success: false, message: error.message });
+                console.error("❌ Error updating midyearidp:", error);
+                console.error("Error details:", JSON.stringify(error, null, 2));
+                console.error("Data that failed to save:", JSON.stringify(dataToSave, null, 2));
+                return res.status(500).json({ 
+                    success: false, 
+                    message: `Database update error: ${error.message}`,
+                    errorDetails: error
+                });
             }
             
             result = data;
+            console.log("✅ Update successful. Result:", result);
         } else {
             // Create new record
             console.log("Creating new midyearidp record for userId:", userId);
+            
             const { data, error } = await supabase
                 .from("midyearidps")
                 .insert({
@@ -7431,14 +7589,44 @@ saveMidYearIDP: async function(req, res) {
                 .select();
 
             if (error) {
-                console.error("Error inserting midyearidp:", error);
-                return res.status(500).json({ success: false, message: error.message });
+                console.error("❌ Error inserting midyearidp:", error);
+                console.error("Error details:", JSON.stringify(error, null, 2));
+                console.error("Data that failed to save:", JSON.stringify({ userId, ...dataToSave }, null, 2));
+                return res.status(500).json({ 
+                    success: false, 
+                    message: `Database insert error: ${error.message}`,
+                    errorDetails: error
+                });
             }
             
             result = data;
+            console.log("✅ Insert successful. Result:", result);
         }
 
-        console.log("Mid-Year IDP saved successfully with categories:", processedTrainingCategories);
+        // Verify the saved data
+        console.log("=== VERIFICATION: CHECKING SAVED DATA ===");
+        const { data: verificationData, error: verificationError } = await supabase
+            .from("midyearidps")
+            .select("trainingCategories")
+            .eq("userId", userId)
+            .single();
+
+        if (verificationError) {
+            console.warn("⚠️ Could not verify saved data:", verificationError);
+        } else {
+            console.log("✅ VERIFICATION: Saved trainingCategories in database:", verificationData.trainingCategories);
+            console.log("✅ VERIFICATION: Type:", typeof verificationData.trainingCategories);
+            console.log("✅ VERIFICATION: IsArray:", Array.isArray(verificationData.trainingCategories));
+            console.log("✅ VERIFICATION: Length:", verificationData.trainingCategories?.length);
+            console.log("✅ VERIFICATION: JSON:", JSON.stringify(verificationData.trainingCategories));
+        }
+        console.log("=== END VERIFICATION ===");
+
+        console.log("=== OPERATION COMPLETED SUCCESSFULLY ===");
+        console.log("✅ Mid-Year IDP saved successfully with categories:", processedTrainingCategories);
+        console.log("✅ Total categories saved:", processedTrainingCategories.length);
+        console.log("✅ Categories saved:", processedTrainingCategories);
+        console.log("=== END OPERATION ===");
 
         // If it's an API request (AJAX), return JSON
         if (req.xhr || req.headers.accept?.includes('application/json')) {
@@ -7446,7 +7634,13 @@ saveMidYearIDP: async function(req, res) {
                 success: true, 
                 message: "Mid-Year IDP saved successfully",
                 data: result,
-                savedCategories: processedTrainingCategories
+                savedCategories: processedTrainingCategories,
+                totalCategories: processedTrainingCategories.length,
+                debug: {
+                    originalTrainingCategories: trainingCategories,
+                    processedTrainingCategories: processedTrainingCategories,
+                    verificationData: verificationData?.trainingCategories || null
+                }
             });
         }
 
@@ -7455,14 +7649,24 @@ saveMidYearIDP: async function(req, res) {
         return res.redirect(`/linemanager/records-performance-tracker/${userId}`);
 
     } catch (error) {
-        console.error("Error in saveMidYearIDP:", error);
+        console.error("=== ERROR IN saveMidYearIDP ===");
+        console.error("❌ Error:", error);
+        console.error("❌ Error stack:", error.stack);
+        console.error("❌ Error message:", error.message);
+        console.error("❌ Error name:", error.name);
+        console.error("=== END ERROR ===");
         
         // If it's an API request (AJAX), return JSON error
         if (req.xhr || req.headers.accept?.includes('application/json')) {
             return res.status(500).json({ 
                 success: false, 
                 message: "An error occurred while saving the Mid-Year IDP",
-                error: error.message 
+                error: error.message,
+                debug: {
+                    errorType: error.constructor.name,
+                    errorMessage: error.message,
+                    errorStack: error.stack
+                }
             });
         }
 
@@ -7471,15 +7675,17 @@ saveMidYearIDP: async function(req, res) {
         return res.redirect(`/linemanager/midyear-idp/${req.params.userId || req.body.userId}`);
     }
 },
+
 getMidYearIDPWithTrainings: async function(req, res) {
     try {
         const userId = req.params.userId;
         
+        console.log("=== getMidYearIDPWithTrainings DEBUG ===");
+        console.log('Fetching Mid-Year IDP with training categories for userId:', userId);
+
         if (!userId) {
             return res.status(400).json({ success: false, message: "User ID is required" });
         }
-
-        console.log('Fetching Mid-Year IDP with training categories for userId:', userId);
 
         // Get Mid-Year IDP data including trainingCategories JSONB field
         const { data: midyearData, error: midyearError } = await supabase
@@ -7493,6 +7699,8 @@ getMidYearIDPWithTrainings: async function(req, res) {
             return res.status(500).json({ success: false, message: "Error fetching Mid-Year IDP data" });
         }
 
+        console.log("Raw midyear data from database:", midyearData);
+
         let responseData = {
             midYearData: midyearData,
             trainingCategories: [],
@@ -7501,14 +7709,40 @@ getMidYearIDPWithTrainings: async function(req, res) {
         };
 
         if (midyearData) {
-            // FIXED: Extract training categories from JSONB field
-            if (midyearData.trainingCategories && Array.isArray(midyearData.trainingCategories)) {
-                console.log('Found training categories in JSONB:', midyearData.trainingCategories);
-                responseData.trainingCategories = midyearData.trainingCategories;
+            console.log("Processing midyear data...");
+            console.log("Raw trainingCategories from DB:", midyearData.trainingCategories);
+            console.log("Type of trainingCategories:", typeof midyearData.trainingCategories);
+            
+            // ENHANCED: Extract training categories from JSONB field with debugging
+            if (midyearData.trainingCategories) {
+                try {
+                    // Parse if it's a string, or use directly if already parsed
+                    let categories = midyearData.trainingCategories;
+                    
+                    if (typeof categories === 'string') {
+                        console.log("Parsing categories from JSON string");
+                        categories = JSON.parse(categories);
+                    }
+                    
+                    if (Array.isArray(categories)) {
+                        console.log('Found training categories in JSONB:', categories);
+                        responseData.trainingCategories = categories;
+                    } else {
+                        console.log('Training categories is not an array:', categories);
+                        responseData.trainingCategories = [];
+                    }
+                } catch (parseError) {
+                    console.error('Error parsing training categories:', parseError);
+                    console.error('Raw value:', midyearData.trainingCategories);
+                    responseData.trainingCategories = [];
+                }
+            } else {
+                console.log('No training categories found in database');
             }
 
             // Extract training remarks
             if (midyearData.trainingRemarks) {
+                console.log('Found training remarks:', midyearData.trainingRemarks);
                 responseData.trainingRemarks = midyearData.trainingRemarks;
             }
 
@@ -7526,23 +7760,35 @@ getMidYearIDPWithTrainings: async function(req, res) {
                 .eq("midyearidpId", midyearData.midyearidpId);
 
             if (!trainingsError && trainingsData) {
+                console.log('Found legacy training data:', trainingsData);
                 responseData.suggestedTrainings = trainingsData;
             }
         }
 
-        console.log('Returning training data:', {
+        console.log('Final response data structure:', {
             categoriesCount: responseData.trainingCategories.length,
+            categories: responseData.trainingCategories,
             hasRemarks: !!responseData.trainingRemarks,
             legacyTrainingsCount: responseData.suggestedTrainings.length
         });
+        console.log("=== END getMidYearIDPWithTrainings DEBUG ===");
 
         return res.status(200).json({
             success: true,
-            data: responseData
+            data: responseData,
+            debug: {
+                rawTrainingCategories: midyearData?.trainingCategories,
+                processedCategories: responseData.trainingCategories,
+                categoriesType: typeof midyearData?.trainingCategories
+            }
         });
 
     } catch (error) {
-        console.error("Error in getMidYearIDPWithTrainings:", error);
+        console.error("=== ERROR in getMidYearIDPWithTrainings ===");
+        console.error("Error:", error);
+        console.error("Error stack:", error.stack);
+        console.error("=== END ERROR ===");
+        
         return res.status(500).json({ 
             success: false, 
             message: "An error occurred while fetching Mid-Year IDP data",
@@ -12239,7 +12485,490 @@ submitFeedback: async function (req, res) {
         });
     }
 },
+generatePDFReport: async function(data) {
+        return new Promise((resolve, reject) => {
+            try {
+                console.log('Starting PDF generation...');
+                
+                const doc = new PDFDocument({
+                    margin: 50,
+                    size: 'A4',
+                    info: {
+                        Title: `Quarterly 360 Feedback Report - ${data.employee.firstName} ${data.employee.lastName}`,
+                        Author: 'Performance Management System',
+                        Subject: `${data.quarter} ${data.year} Performance Report`,
+                        Creator: 'PDF Generator'
+                    }
+                });
+                
+                const buffers = [];
+                doc.on('data', buffers.push.bind(buffers));
+                doc.on('end', () => {
+                    try {
+                        const pdfBuffer = Buffer.concat(buffers);
+                        console.log('PDF generation completed, buffer size:', pdfBuffer.length);
+                        resolve(pdfBuffer);
+                    } catch (bufferError) {
+                        console.error('Error concatenating PDF buffers:', bufferError);
+                        reject(bufferError);
+                    }
+                });
+                
+                doc.on('error', (error) => {
+                    console.error('PDF document error:', error);
+                    reject(error);
+                });
+                
+                try {
+                    // PDF Content Generation
+                    this.addPDFHeader(doc, data);
+                    this.addEmployeeInformation(doc, data);
+                    this.addRespondentSummary(doc, data);
+                    this.addObjectivesAssessment(doc, data);
+                    this.addSkillsAssessment(doc, data);
+                    this.addPerformanceSummary(doc, data);
+                    this.addPDFFooter(doc, data);
+                    
+                    console.log('PDF content added successfully');
+                    doc.end();
+                    
+                } catch (contentError) {
+                    console.error('Error adding PDF content:', contentError);
+                    reject(contentError);
+                }
+                
+            } catch (error) {
+                console.error('Error in PDF generation setup:', error);
+                reject(error);
+            }
+        });
+    },
+addPDFHeader: function(doc, data) {
+        try {
+            doc.fontSize(20)
+               .font('Helvetica-Bold')
+               .fillColor('#2c3e50')
+               .text('Performance Management System', 50, 50, {
+                   align: 'center',
+                   width: doc.page.width - 100
+               });
+            
+            doc.fontSize(16)
+               .fillColor('#34495e')
+               .text('Quarterly 360° Feedback Report', 50, 80, {
+                   align: 'center',
+                   width: doc.page.width - 100
+               });
+            
+            doc.moveTo(50, 110)
+               .lineTo(doc.page.width - 50, 110)
+               .strokeColor('#bdc3c7')
+               .lineWidth(2)
+               .stroke();
+            
+            doc.moveDown(3);
+            console.log('PDF header added successfully');
+            
+        } catch (error) {
+            console.error('Error adding PDF header:', error);
+            throw error;
+        }
+    },
+ addEmployeeInformation: function(doc, data) {
+        try {
+            const startY = doc.y;
+            
+            doc.fontSize(14)
+               .font('Helvetica-Bold')
+               .fillColor('#2c3e50')
+               .text('Employee Information', 50, startY);
+            
+            const tableTop = startY + 30;
+            const leftCol = 50;
+            const rightCol = 250;
+            const tableWidth = 450;
+            const tableHeight = 150;
+            
+            doc.rect(leftCol, tableTop, tableWidth, tableHeight)
+               .strokeColor('#34495e')
+               .lineWidth(1)
+               .stroke();
+            
+            const rowHeight = 25;
+            const rows = [
+                ['Employee Name:', `${data.employee.firstName} ${data.employee.lastName}`],
+                ['Position:', data.employee.jobpositions?.jobTitle || 'N/A'],
+                ['Department:', data.employee.departments?.deptName || 'N/A'],
+                ['Email:', data.employee.useraccounts?.userEmail || 'N/A'],
+                ['Line Manager:', data.lineManager ? `${data.lineManager.firstName} ${data.lineManager.lastName}` : 'N/A'],
+                ['Reporting Period:', `${this.formatDate(data.reportingPeriod.start)} - ${this.formatDate(data.reportingPeriod.end)}`]
+            ];
+            
+            rows.forEach((row, index) => {
+                const y = tableTop + (index * rowHeight);
+                
+                if (index > 0) {
+                    doc.moveTo(leftCol, y)
+                       .lineTo(leftCol + tableWidth, y)
+                       .strokeColor('#bdc3c7')
+                       .lineWidth(0.5)
+                       .stroke();
+                }
+                
+                if (index === 0) {
+                    doc.moveTo(rightCol, tableTop)
+                       .lineTo(rightCol, tableTop + tableHeight)
+                       .strokeColor('#bdc3c7')
+                       .lineWidth(0.5)
+                       .stroke();
+                }
+                
+                doc.fontSize(11)
+                   .font('Helvetica-Bold')
+                   .fillColor('#2c3e50')
+                   .text(row[0], leftCol + 10, y + 8, { width: rightCol - leftCol - 20 });
+                
+                doc.font('Helvetica')
+                   .fillColor('#34495e')
+                   .text(row[1], rightCol + 10, y + 8, { width: tableWidth - (rightCol - leftCol) - 20 });
+            });
+            
+            doc.y = tableTop + tableHeight + 20;
+            console.log('Employee information section added successfully');
+            
+        } catch (error) {
+            console.error('Error adding employee information:', error);
+            throw error;
+        }
+    },
+ addRespondentSummary: function(doc, data) {
+        try {
+            const startY = doc.y;
+            
+            doc.fontSize(14)
+               .font('Helvetica-Bold')
+               .fillColor('#2c3e50')
+               .text('Respondent Summary', 50, startY);
+            
+            doc.moveDown(1);
+            
+            const boxTop = doc.y;
+            const boxHeight = 60;
+            
+            doc.rect(50, boxTop, doc.page.width - 100, boxHeight)
+               .fillColor('#ecf0f1')
+               .fill()
+               .rect(50, boxTop, doc.page.width - 100, boxHeight)
+               .strokeColor('#bdc3c7')
+               .lineWidth(1)
+               .stroke();
+            
+            doc.fontSize(12)
+               .font('Helvetica')
+               .fillColor('#2c3e50')
+               .text(`Q1: ${data.respondentCounts.Q1} respondents`, 70, boxTop + 15)
+               .text(`Q2: ${data.respondentCounts.Q2} respondents`, 200, boxTop + 15)
+               .text(`Q3: ${data.respondentCounts.Q3} respondents`, 330, boxTop + 15)
+               .text(`Q4: ${data.respondentCounts.Q4} respondents`, 460, boxTop + 15);
+            
+            doc.fontSize(13)
+               .font('Helvetica-Bold')
+               .fillColor('#e74c3c')
+               .text(`Total Unique Respondents: ${data.respondentCounts.total}`, 70, boxTop + 35);
+            
+            doc.y = boxTop + boxHeight + 20;
+            console.log('Respondent summary added successfully');
+            
+        } catch (error) {
+            console.error('Error adding respondent summary:', error);
+            throw error;
+        }
+    },
 
+addObjectivesAssessment: function(doc, data) {
+        try {
+            if (doc.y > 600) {
+                doc.addPage();
+                doc.y = 50;
+            }
+            
+            const startY = doc.y;
+            
+            doc.fontSize(14)
+               .font('Helvetica-Bold')
+               .fillColor('#2c3e50')
+               .text('Objectives Assessment', 50, startY);
+            
+            doc.moveDown(1);
+            
+            if (!data.objectives || data.objectives.length === 0) {
+                doc.fontSize(11)
+                   .font('Helvetica')
+                   .fillColor('#7f8c8d')
+                   .text('No objectives data available for this reporting period.', 70, doc.y);
+                doc.moveDown(2);
+                console.log('No objectives data to display');
+                return;
+            }
+            
+            // Simple table for objectives
+            data.objectives.forEach((objective, index) => {
+                if (doc.y > 700) {
+                    doc.addPage();
+                    doc.y = 50;
+                }
+                
+                doc.fontSize(11)
+                   .font('Helvetica-Bold')
+                   .fillColor('#2c3e50')
+                   .text(`Objective ${index + 1}: ${this.truncateText(objective.objective || 'N/A', 60)}`, 70, doc.y);
+                
+                doc.moveDown(0.3);
+                
+                doc.font('Helvetica')
+                   .text(`KPI: ${objective.kpi || 'N/A'}`, 70, doc.y)
+                   .text(`Target: ${objective.target || 'N/A'}`, 250, doc.y)
+                   .text(`Weight: ${(objective.assignedWeight * 100).toFixed(1)}%`, 350, doc.y)
+                   .text(`Score: ${objective.weightedScore}`, 450, doc.y);
+                
+                doc.moveDown(0.3);
+                
+                doc.text(`Average Rating: ${objective.averageRating}/5.0`, 70, doc.y);
+                
+                doc.moveDown(0.8);
+            });
+            
+            doc.moveDown(1);
+            console.log('Objectives assessment added successfully');
+            
+        } catch (error) {
+            console.error('Error adding objectives assessment:', error);
+            throw error;
+        }
+    },
+
+    addSkillsAssessment: function(doc, data) {
+        try {
+            if (doc.y > 650) {
+                doc.addPage();
+                doc.y = 50;
+            }
+            
+            // Hard Skills Section
+            doc.fontSize(14)
+               .font('Helvetica-Bold')
+               .fillColor('#e67e22')
+               .text('Hard Skills Assessment', 50, doc.y);
+            
+            doc.moveDown(0.5);
+            
+            if (data.skills.hardSkills.length > 0) {
+                data.skills.hardSkills.forEach((skill) => {
+                    doc.fontSize(11)
+                       .font('Helvetica')
+                       .fillColor('#2c3e50')
+                       .text(`${this.truncateText(skill.skillName, 40)}: ${skill.averageRating}/5.0`, 70, doc.y);
+                    doc.moveDown(0.3);
+                });
+            } else {
+                doc.fontSize(11)
+                   .font('Helvetica')
+                   .fillColor('#7f8c8d')
+                   .text('No hard skills data available.', 70, doc.y);
+            }
+            
+            doc.moveDown(0.8);
+            
+            // Soft Skills Section
+            doc.fontSize(14)
+               .font('Helvetica-Bold')
+               .fillColor('#9b59b6')
+               .text('Soft Skills Assessment', 50, doc.y);
+            
+            doc.moveDown(0.5);
+            
+            if (data.skills.softSkills.length > 0) {
+                data.skills.softSkills.forEach((skill) => {
+                    doc.fontSize(11)
+                       .font('Helvetica')
+                       .fillColor('#2c3e50')
+                       .text(`${this.truncateText(skill.skillName, 40)}: ${skill.averageRating}/5.0`, 70, doc.y);
+                    doc.moveDown(0.3);
+                });
+            } else {
+                doc.fontSize(11)
+                   .font('Helvetica')
+                   .fillColor('#7f8c8d')
+                   .text('No soft skills data available.', 70, doc.y);
+            }
+            
+            doc.moveDown(1);
+            console.log('Skills assessment added successfully');
+            
+        } catch (error) {
+            console.error('Error adding skills assessment:', error);
+            throw error;
+        }
+    },
+addPerformanceSummary: function(doc, data) {
+        try {
+            if (doc.y > 600) {
+                doc.addPage();
+                doc.y = 50;
+            }
+            
+            doc.fontSize(14)
+               .font('Helvetica-Bold')
+               .fillColor('#2c3e50')
+               .text('Performance Summary', 50, doc.y);
+            
+            doc.moveDown(1);
+            
+            const summary = data.summary;
+            const boxTop = doc.y;
+            const boxHeight = 120;
+            
+            doc.rect(50, boxTop, doc.page.width - 100, boxHeight)
+               .fillColor('#f8f9fa')
+               .fill()
+               .rect(50, boxTop, doc.page.width - 100, boxHeight)
+               .strokeColor('#34495e')
+               .lineWidth(1)
+               .stroke();
+            
+            doc.fontSize(12)
+               .font('Helvetica')
+               .fillColor('#2c3e50')
+               .text(`Objectives Evaluated: ${summary.objectivesCount}`, 70, boxTop + 15)
+               .text(`Average Objective Rating: ${summary.averageObjectiveRating}/5.0`, 300, boxTop + 15)
+               
+               .text(`Hard Skills Evaluated: ${summary.hardSkillsCount}`, 70, boxTop + 35)
+               .text(`Average Hard Skills Rating: ${summary.averageHardSkillRating}/5.0`, 300, boxTop + 35)
+               
+               .text(`Soft Skills Evaluated: ${summary.softSkillsCount}`, 70, boxTop + 55)
+               .text(`Average Soft Skills Rating: ${summary.averageSoftSkillRating}/5.0`, 300, boxTop + 55);
+            
+            doc.fontSize(16)
+               .font('Helvetica-Bold')
+               .fillColor('#e74c3c')
+               .text(`Overall Performance Score: ${summary.overallPerformanceScore}/5.0`, 70, boxTop + 85);
+            
+            doc.y = boxTop + boxHeight + 20;
+            console.log('Performance summary added successfully');
+            
+        } catch (error) {
+            console.error('Error adding performance summary:', error);
+            throw error;
+        }
+    },
+
+    addPDFFooter: function(doc, data) {
+        try {
+            const footerY = doc.page.height - 100;
+            
+            doc.moveTo(50, footerY)
+               .lineTo(doc.page.width - 50, footerY)
+               .strokeColor('#bdc3c7')
+               .lineWidth(1)
+               .stroke();
+            
+            doc.fontSize(9)
+               .font('Helvetica')
+               .fillColor('#7f8c8d')
+               .text(`Generated on: ${new Date().toLocaleString()}`, 50, footerY + 10)
+               .text(`Report Period: ${data.quarter} ${data.year}`, 50, footerY + 25)
+               .text('Performance Management System', doc.page.width - 200, footerY + 10, {
+                   align: 'right',
+                   width: 150
+               });
+            
+            console.log('PDF footer added successfully');
+            
+        } catch (error) {
+            console.error('Error adding PDF footer:', error);
+            throw error;
+        }
+    },
+// Helper function to add skills section
+addSkillsSection: function(doc, title, skills, color) {
+    try {
+        doc.fontSize(14)
+           .font('Helvetica-Bold')
+           .fillColor(color)
+           .text(title, 50, doc.y);
+        
+        doc.moveDown(1);
+        
+        if (!skills || skills.length === 0) {
+            doc.fontSize(11)
+               .font('Helvetica')
+               .fillColor('#7f8c8d')
+               .text(`No ${title.toLowerCase()} data available.`, 70, doc.y);
+            doc.moveDown(1);
+            return;
+        }
+        
+        // Create a grid layout for skills
+        const skillsPerRow = 2;
+        const skillWidth = 200;
+        const skillHeight = 30;
+        
+        skills.forEach((skill, index) => {
+            if (doc.y > 700) {
+                doc.addPage();
+                doc.y = 50;
+            }
+            
+            const row = Math.floor(index / skillsPerRow);
+            const col = index % skillsPerRow;
+            const x = 70 + (col * 250);
+            const y = doc.y + (row * skillHeight) - (Math.floor(index / skillsPerRow) * skillHeight);
+            
+            if (col === 0) {
+                doc.y += skillHeight;
+            }
+            
+            // Skill name and rating
+            doc.fontSize(10)
+               .font('Helvetica')
+               .fillColor('#2c3e50')
+               .text(`${this.truncateText(skill.skillName, 25)}:`, x, y + 8);
+            
+            doc.font('Helvetica-Bold')
+               .fillColor(color)
+               .text(`${skill.averageRating}/5.0`, x + 140, y + 8);
+        });
+        
+        // Adjust y position after the grid
+        const totalRows = Math.ceil(skills.length / skillsPerRow);
+        if (skills.length % skillsPerRow !== 0) {
+            doc.y += skillHeight * (totalRows - Math.floor(skills.length / skillsPerRow));
+        }
+        
+    } catch (error) {
+        console.error('Error adding skills section:', error);
+        throw error;
+    }
+},
+ formatDate: function(dateString) {
+        if (!dateString) return 'N/A';
+        try {
+            return new Date(dateString).toLocaleDateString('en-US', {
+                year: 'numeric',
+                month: 'long',
+                day: 'numeric'
+            });
+        } catch (error) {
+            console.error('Date formatting error:', error);
+            return 'Invalid Date';
+        }
+    },
+
+    truncateText: function(text, maxLength) {
+        if (!text || typeof text !== 'string') return 'N/A';
+        if (text.length <= maxLength) return text;
+        return text.substring(0, maxLength - 3) + '...';
+    },
 // ============================
 // TRAINING MODULE CONTROLLER FUNCTIONS
 // ============================
@@ -14793,94 +15522,390 @@ getDepartmentEmployeesForFeedbackReports: async function(req, res) {
     }
 },
 
-// Generate quarterly feedback report (view or PDF)
 generateQuarterlyFeedbackReport: async function(req, res) {
-    try {
-        console.log('🔄 [Line Manager] Generating quarterly feedback report...');
-        
-        const { employeeId, quarter, year, format } = req.query;
-        const lineManagerId = req.session.user?.userId;
-
-        // Validate required parameters
-        if (!employeeId || !quarter || !year) {
-            return res.status(400).json({
+        try {
+            const { userId } = req.params;
+            const { quarter, year = new Date().getFullYear() } = req.query;
+            
+            console.log(`🎯 Generating quarterly feedback report for user ${userId}, ${quarter} ${year}`);
+            console.log('📋 Request params:', req.params);
+            console.log('📋 Request query:', req.query);
+            
+            // Validation
+            if (!userId) {
+                console.error('❌ Missing userId parameter');
+                return res.status(400).json({
+                    success: false,
+                    message: "User ID is required."
+                });
+            }
+            
+            if (!quarter) {
+                console.error('❌ Missing quarter parameter');
+                return res.status(400).json({
+                    success: false,
+                    message: "Quarter parameter is required."
+                });
+            }
+            
+            if (!['Q1', 'Q2', 'Q3', 'Q4'].includes(quarter)) {
+                console.error('❌ Invalid quarter format:', quarter);
+                return res.status(400).json({
+                    success: false,
+                    message: "Quarter must be Q1, Q2, Q3, or Q4."
+                });
+            }
+            
+            const yearNum = parseInt(year);
+            if (isNaN(yearNum) || yearNum < 2020 || yearNum > 2030) {
+                console.error('❌ Invalid year:', year);
+                return res.status(400).json({
+                    success: false,
+                    message: "Invalid year provided."
+                });
+            }
+            
+            // Get employee data
+            console.log('📊 Fetching employee data for userId:', userId);
+            const { data: employeeData, error: employeeError } = await supabase
+                .from('staffaccounts')
+                .select(`
+                    firstName,
+                    lastName,
+                    jobId,
+                    departmentId,
+                    hireDate,
+                    jobpositions!inner (jobTitle),
+                    departments!inner (deptName),
+                    useraccounts!inner (userEmail)
+                `)
+                .eq('userId', userId)
+                .single();
+                
+            if (employeeError) {
+                console.error('❌ Employee data fetch error:', employeeError);
+                return res.status(404).json({
+                    success: false,
+                    message: "Employee not found.",
+                    error: employeeError.message
+                });
+            }
+            
+            if (!employeeData) {
+                console.error('❌ No employee data found for userId:', userId);
+                return res.status(404).json({
+                    success: false,
+                    message: "Employee not found."
+                });
+            }
+            
+            console.log('✅ Employee data found:', employeeData.firstName, employeeData.lastName);
+            
+            // Get line manager data (optional)
+            let lineManagerData = null;
+            if (req.session?.user?.userId) {
+                const { data: lmData } = await supabase
+                    .from('staffaccounts')
+                    .select(`
+                        firstName,
+                        lastName,
+                        jobpositions!inner (jobTitle)
+                    `)
+                    .eq('userId', req.session.user.userId)
+                    .single();
+                
+                if (lmData) {
+                    lineManagerData = lmData;
+                    console.log('✅ Line manager data found:', lineManagerData.firstName, lineManagerData.lastName);
+                }
+            }
+            
+            // Get feedback data
+            const feedbackIdField = `feedback${quarter.toLowerCase()}_Id`;
+            const feedbackTable = `feedbacks_${quarter}`;
+            
+            console.log('📊 Looking for feedback in table:', feedbackTable, 'with field:', feedbackIdField);
+            
+            const { data: feedbackRecord, error: feedbackError } = await supabase
+                .from(feedbackTable)
+                .select(`
+                    ${feedbackIdField},
+                    setStartDate,
+                    setEndDate,
+                    year
+                `)
+                .eq('userId', userId)
+                .eq('year', yearNum)
+                .single();
+                
+            if (feedbackError) {
+                console.error('❌ Feedback record fetch error:', feedbackError);
+                return res.status(404).json({
+                    success: false,
+                    message: `No ${quarter} feedback found for ${year}.`,
+                    error: feedbackError.message
+                });
+            }
+            
+            if (!feedbackRecord) {
+                console.log('❌ No feedback record found for:', { userId, quarter, year: yearNum });
+                return res.status(404).json({
+                    success: false,
+                    message: `No ${quarter} feedback record found for ${year}.`
+                });
+            }
+            
+            const feedbackId = feedbackRecord[feedbackIdField];
+            console.log('✅ Feedback ID found:', feedbackId);
+            
+            // Get objectives and skills data
+            console.log('📊 Fetching objectives and skills data...');
+            
+            // Simple objectives data fetch
+            let objectivesData = [];
+            try {
+                const { data: objData } = await supabase
+                    .from('feedbacks_answers')
+                    .select('objectiveAnswers')
+                    .eq(feedbackIdField, feedbackId)
+                    .not('objectiveAnswers', 'is', null);
+                
+                if (objData && objData.length > 0) {
+                    const objectivesMap = new Map();
+                    
+                    objData.forEach(response => {
+                        if (response.objectiveAnswers && Array.isArray(response.objectiveAnswers)) {
+                            response.objectiveAnswers.forEach(obj => {
+                                if (obj.objectiveId) {
+                                    const key = obj.objectiveId;
+                                    
+                                    if (!objectivesMap.has(key)) {
+                                        objectivesMap.set(key, {
+                                            objective: obj.objectiveName || obj.objectiveDescrpt || 'Unknown Objective',
+                                            kpi: obj.objectiveKPI || 'N/A',
+                                            target: obj.objectiveTarget || 'N/A',
+                                            weight: obj.objectiveWeight || 0,
+                                            ratings: []
+                                        });
+                                    }
+                                    
+                                    if (obj.rating && obj.rating > 0) {
+                                        objectivesMap.get(key).ratings.push(obj.rating);
+                                    }
+                                }
+                            });
+                        }
+                    });
+                    
+                    objectivesData = Array.from(objectivesMap.values()).map(obj => ({
+                        ...obj,
+                        averageRating: obj.ratings.length > 0 
+                            ? parseFloat((obj.ratings.reduce((sum, r) => sum + r, 0) / obj.ratings.length).toFixed(2))
+                            : 0
+                    }));
+                }
+                
+                console.log('✅ Processed objectives:', objectivesData.length);
+            } catch (objError) {
+                console.error('⚠️ Error fetching objectives:', objError);
+            }
+            
+            // Simple skills data fetch
+            let skillsData = { hardSkills: [], softSkills: [] };
+            try {
+                const { data: skillData } = await supabase
+                    .from('feedbacks_answers')
+                    .select('skillRatings')
+                    .eq(feedbackIdField, feedbackId)
+                    .not('skillRatings', 'is', null);
+                
+                if (skillData && skillData.length > 0) {
+                    const skillsMap = new Map();
+                    
+                    skillData.forEach(response => {
+                        if (response.skillRatings && typeof response.skillRatings === 'object') {
+                            Object.entries(response.skillRatings).forEach(([skillName, skillInfo]) => {
+                                if (skillInfo && skillInfo.rating) {
+                                    if (!skillsMap.has(skillName)) {
+                                        skillsMap.set(skillName, {
+                                            skillName: skillName,
+                                            skillType: skillInfo.skillType || 'Soft',
+                                            ratings: []
+                                        });
+                                    }
+                                    
+                                    skillsMap.get(skillName).ratings.push(skillInfo.rating);
+                                }
+                            });
+                        }
+                    });
+                    
+                    skillsMap.forEach(skill => {
+                        const averageRating = skill.ratings.length > 0 
+                            ? parseFloat((skill.ratings.reduce((sum, r) => sum + r, 0) / skill.ratings.length).toFixed(2))
+                            : 0;
+                        
+                        const processedSkill = {
+                            skillName: skill.skillName,
+                            averageRating: averageRating
+                        };
+                        
+                        if (skill.skillType === 'Hard') {
+                            skillsData.hardSkills.push(processedSkill);
+                        } else {
+                            skillsData.softSkills.push(processedSkill);
+                        }
+                    });
+                }
+                
+                console.log('✅ Processed skills:', {
+                    hardSkills: skillsData.hardSkills.length,
+                    softSkills: skillsData.softSkills.length
+                });
+            } catch (skillError) {
+                console.error('⚠️ Error fetching skills:', skillError);
+            }
+            
+            // Calculate summary
+            const objectivesCount = objectivesData.length;
+            const averageObjectiveRating = objectivesCount > 0 
+                ? objectivesData.reduce((sum, obj) => sum + obj.averageRating, 0) / objectivesCount 
+                : 0;
+            
+            const hardSkillsCount = skillsData.hardSkills.length;
+            const averageHardSkillRating = hardSkillsCount > 0 
+                ? skillsData.hardSkills.reduce((sum, skill) => sum + skill.averageRating, 0) / hardSkillsCount 
+                : 0;
+            
+            const softSkillsCount = skillsData.softSkills.length;
+            const averageSoftSkillRating = softSkillsCount > 0 
+                ? skillsData.softSkills.reduce((sum, skill) => sum + skill.averageRating, 0) / softSkillsCount 
+                : 0;
+            
+            // Simple overall score calculation
+            let overallScore = 0;
+            let components = 0;
+            
+            if (objectivesCount > 0) {
+                overallScore += averageObjectiveRating * 0.5;
+                components += 0.5;
+            }
+            if (hardSkillsCount > 0) {
+                overallScore += averageHardSkillRating * 0.3;
+                components += 0.3;
+            }
+            if (softSkillsCount > 0) {
+                overallScore += averageSoftSkillRating * 0.2;
+                components += 0.2;
+            }
+            
+            if (components > 0) {
+                overallScore = overallScore / components;
+            }
+            
+            const summary = {
+                objectivesCount,
+                averageObjectiveRating: parseFloat(averageObjectiveRating.toFixed(2)),
+                hardSkillsCount,
+                averageHardSkillRating: parseFloat(averageHardSkillRating.toFixed(2)),
+                softSkillsCount,
+                averageSoftSkillRating: parseFloat(averageSoftSkillRating.toFixed(2)),
+                overallPerformanceScore: parseFloat(overallScore.toFixed(2))
+            };
+            
+            // Prepare report data
+            const reportData = {
+                employee: employeeData,
+                lineManager: lineManagerData,
+                quarter,
+                year: yearNum,
+                reportingPeriod: {
+                    start: feedbackRecord.setStartDate,
+                    end: feedbackRecord.setEndDate
+                },
+                objectives: objectivesData,
+                skills: skillsData,
+                summary: summary,
+                respondentCounts: { Q1: 0, Q2: 0, Q3: 0, Q4: 0, total: 0 } // Simplified for now
+            };
+            
+            console.log('📄 Generating PDF...');
+            
+            // Generate PDF
+            const pdfBuffer = await this.generateSimplePDF(reportData);
+            
+            if (!pdfBuffer || pdfBuffer.length === 0) {
+                console.error('❌ PDF generation failed - empty buffer');
+                return res.status(500).json({
+                    success: false,
+                    message: "Failed to generate PDF report."
+                });
+            }
+            
+            console.log('✅ PDF generated successfully, size:', pdfBuffer.length, 'bytes');
+            
+            // Send PDF response
+            const fileName = `Quarterly_Feedback_Report_${employeeData.firstName}_${employeeData.lastName}_${quarter}_${year}.pdf`;
+            
+            res.setHeader('Content-Type', 'application/pdf');
+            res.setHeader('Content-Disposition', `attachment; filename="${fileName}"`);
+            res.setHeader('Content-Length', pdfBuffer.length);
+            res.setHeader('Cache-Control', 'no-cache, no-store, must-revalidate');
+            res.setHeader('Pragma', 'no-cache');
+            res.setHeader('Expires', '0');
+            
+            console.log('📤 Sending PDF response...');
+            return res.end(pdfBuffer);
+            
+        } catch (error) {
+            console.error('❌ Error in generateQuarterlyFeedbackReport:', error);
+            return res.status(500).json({
                 success: false,
-                message: 'Employee ID, quarter, and year are required'
+                message: "An error occurred while generating the report.",
+                error: error.message
             });
         }
+    },
 
-        // Verify employee is in line manager's department
-        const isAuthorized = await lineManagerController.verifyEmployeeInDepartment(lineManagerId, employeeId);
-        if (!isAuthorized) {
-            return res.status(403).json({
-                success: false,
-                message: 'You can only generate reports for employees in your department'
-            });
-        }
-
-        // Get employee information
-        const employeeInfo = await lineManagerController.getEmployeeBasicInfo(employeeId);
-        if (!employeeInfo.success) {
-            return res.status(404).json({
-                success: false,
-                message: 'Employee not found'
-            });
-        }
-
-        // Get line manager information
-        const lineManagerInfo = await lineManagerController.getEmployeeBasicInfo(lineManagerId);
-
-        // Get feedback data for the specified quarter
-        const feedbackData = await lineManagerController.getQuarterlyFeedbackData(employeeId, quarter, year);
-        if (!feedbackData.success) {
-            return res.status(404).json({
-                success: false,
-                message: 'No feedback data found for the specified period'
-            });
-        }
-
-        // Prepare the complete report data
-        const reportData = {
-            employee: employeeInfo.data,
-            lineManager: lineManagerInfo.data,
-            reportingPeriod: {
-                quarter: quarter,
-                year: parseInt(year),
-                startDate: feedbackData.data.startDate,
-                endDate: feedbackData.data.endDate
-            },
-            objectives: feedbackData.data.objectives,
-            hardSkills: feedbackData.data.hardSkills,
-            softSkills: feedbackData.data.softSkills,
-            summary: feedbackData.data.summary,
-            generatedDate: new Date().toISOString(),
-            generatedBy: `${lineManagerInfo.data.firstName} ${lineManagerInfo.data.lastName}`
-        };
-
-        if (format === 'pdf') {
-            // Return data for PDF generation on frontend
-            return res.json({
-                success: true,
-                data: reportData,
-                generatePDF: true,
-                filename: `360_Feedback_Report_${employeeInfo.data.firstName}_${employeeInfo.data.lastName}_${quarter}_${year}.pdf`
-            });
-        } else {
-            // Return JSON data for view
-            return res.json({
-                success: true,
-                data: reportData
-            });
-        }
-
-    } catch (error) {
-        console.error('❌ [Line Manager] Error generating feedback report:', error);
-        return res.status(500).json({
-            success: false,
-            message: 'Failed to generate feedback report: ' + error.message
+    // Simple PDF generation function
+    generateSimplePDF: function(data) {
+        return new Promise((resolve, reject) => {
+            try {
+                console.log('📄 Starting PDF generation...');
+                
+                const doc = new PDFDocument({
+                    margin: 50,
+                    size: 'A4'
+                });
+                
+                const buffers = [];
+                doc.on('data', buffers.push.bind(buffers));
+                doc.on('end', () => {
+                    try {
+                        const pdfBuffer = Buffer.concat(buffers);
+                        console.log('✅ PDF buffer created, size:', pdfBuffer.length);
+                        resolve(pdfBuffer);
+                    } catch (bufferError) {
+                        console.error('❌ Error creating PDF buffer:', bufferError);
+                        reject(bufferError);
+                    }
+                });
+                doc.on('error', (error) => {
+                    console.error('❌ PDF generation error:', error);
+                    reject(error);
+                });
+                
+                // Add content to PDF
+                this.addSimplePDFContent(doc, data);
+                
+                doc.end();
+                
+            } catch (error) {
+                console.error('❌ Error in PDF generation setup:', error);
+                reject(error);
+            }
         });
-    }
-},
+    },
 
 // Generate mid-year feedback report (Q1 + Q2)
 generateMidYearFeedbackReport: async function(req, res) {
@@ -15596,183 +16621,354 @@ calculateCombinedSummary: function(objectives, hardSkills, softSkills) {
 },
 
 // Helper function: Get objectives report data
-getObjectivesReportData: async function(feedbackId, feedbackIdField) {
-    try {
-        // Get objective questions
-        const { data: objectiveQuestions, error: objQError } = await supabase
-            .from('feedbacks_questions-objectives')
-            .select(`
-                feedback_qObjectivesId,
-                objectiveId,
-                objectiveQualiQuestion,
-                ${feedbackIdField}
-            `)
-            .eq(feedbackIdField, feedbackId);
-
-        if (objQError || !objectiveQuestions) {
+ getObjectivesReportData: async function(feedbackId, feedbackIdField) {
+        try {
+            console.log('Getting objectives data for feedbackId:', feedbackId);
+            
+            const { data: objectivesData, error } = await supabase
+                .from('feedbacks_answers')
+                .select(`
+                    objectiveAnswers,
+                    reviewerUserId,
+                    submittedDate
+                `)
+                .eq(feedbackIdField, feedbackId)
+                .not('objectiveAnswers', 'is', null);
+            
+            if (error) {
+                console.error('Error fetching objectives data:', error);
+                return [];
+            }
+            
+            if (!objectivesData || objectivesData.length === 0) {
+                console.log('No objectives data found');
+                return [];
+            }
+            
+            console.log('Raw objectives data count:', objectivesData.length);
+            
+            // Process and aggregate objectives data
+            const objectivesMap = new Map();
+            
+            objectivesData.forEach(response => {
+                if (response.objectiveAnswers && Array.isArray(response.objectiveAnswers)) {
+                    response.objectiveAnswers.forEach(obj => {
+                        if (obj.objectiveId) {
+                            const key = obj.objectiveId;
+                            
+                            if (!objectivesMap.has(key)) {
+                                objectivesMap.set(key, {
+                                    objectiveId: obj.objectiveId,
+                                    objective: obj.objectiveName || obj.objectiveDescrpt || 'Unknown Objective',
+                                    kpi: obj.objectiveKPI || 'N/A',
+                                    target: obj.objectiveTarget || 'N/A',
+                                    uom: obj.objectiveUOM || '',
+                                    assignedWeight: obj.objectiveWeight || 0,
+                                    ratings: [],
+                                    comments: []
+                                });
+                            }
+                            
+                            const objectiveData = objectivesMap.get(key);
+                            
+                            if (obj.rating && obj.rating > 0) {
+                                objectiveData.ratings.push(obj.rating);
+                            }
+                            
+                            if (obj.comment) {
+                                objectiveData.comments.push(obj.comment);
+                            }
+                        }
+                    });
+                }
+            });
+            
+            // Calculate averages and scores
+            const processedObjectives = Array.from(objectivesMap.values()).map(obj => {
+                const averageRating = obj.ratings.length > 0 
+                    ? obj.ratings.reduce((sum, rating) => sum + rating, 0) / obj.ratings.length 
+                    : 0;
+                
+                const weightedScore = (averageRating * obj.assignedWeight).toFixed(2);
+                
+                return {
+                    ...obj,
+                    averageRating: parseFloat(averageRating.toFixed(2)),
+                    weightedScore: parseFloat(weightedScore),
+                    responseCount: obj.ratings.length
+                };
+            });
+            
+            console.log('Processed objectives count:', processedObjectives.length);
+            return processedObjectives;
+            
+        } catch (error) {
+            console.error('Error in getObjectivesReportData:', error);
             return [];
         }
-
-        const objectivesReport = [];
-
-        for (const objQuestion of objectiveQuestions) {
-            // Get objective details
-            const { data: objectiveDetail, error: objDetailError } = await supabase
-                .from('objectivesettings_objectives')
-                .select('*')
-                .eq('objectiveId', objQuestion.objectiveId)
-                .single();
-
-            // Get all answers for this objective
-            const { data: answers, error: answersError } = await supabase
-                .from('feedbacks_answers-objectives')
-                .select('objectiveQuantInput, objectiveQualInput')
-                .eq('feedback_qObjectivesId', objQuestion.feedback_qObjectivesId);
-
-            if (!answersError && answers && answers.length > 0) {
-                // Calculate average rating
-                const validRatings = answers.filter(a => a.objectiveQuantInput).map(a => a.objectiveQuantInput);
-                const averageRating = validRatings.length > 0 
-                    ? (validRatings.reduce((sum, rating) => sum + rating, 0) / validRatings.length) 
-                    : 0;
-
-                // Calculate weighted score
-                const weight = objectiveDetail?.objectiveAssignedWeight || 0;
-                const weightedScore = (averageRating * weight);
-
-                // Combine qualitative feedback
-                const qualitativeFeedback = answers
-                    .map(a => a.objectiveQualInput)
-                    .filter(feedback => feedback && feedback.trim())
-                    .join('; ');
-
-                objectivesReport.push({
-                    objective: objectiveDetail?.objectiveDescrpt || 'Unknown Objective',
-                    kpi: objectiveDetail?.objectiveKPI || 'N/A',
-                    target: objectiveDetail?.objectiveTarget || 'N/A',
-                    uom: objectiveDetail?.objectiveUOM || 'N/A',
-                    assignedWeight: weight,
-                    weightedScore: weightedScore.toFixed(2),
-                    averageRating: averageRating.toFixed(1),
-                    qualitativeFeedback: qualitativeFeedback || 'No feedback provided',
-                    responseCount: validRatings.length
+    },
+    getSkillsReportData: async function(feedbackId, feedbackIdField, jobId) {
+        try {
+            console.log('Getting skills data for feedbackId:', feedbackId, 'jobId:', jobId);
+            
+            const { data: skillsData, error } = await supabase
+                .from('feedbacks_answers')
+                .select(`
+                    skillRatings,
+                    skillComments,
+                    reviewerUserId,
+                    submittedDate
+                `)
+                .eq(feedbackIdField, feedbackId)
+                .not('skillRatings', 'is', null);
+            
+            if (error) {
+                console.error('Error fetching skills data:', error);
+                return { hardSkills: [], softSkills: [] };
+            }
+            
+            if (!skillsData || skillsData.length === 0) {
+                console.log('No skills data found');
+                return { hardSkills: [], softSkills: [] };
+            }
+            
+            console.log('Raw skills data count:', skillsData.length);
+            
+            // Get job skills information
+            const { data: jobSkills, error: jobSkillsError } = await supabase
+                .from('jobrequiredskills')
+                .select(`
+                    jobReqSkillId,
+                    jobReqSkillName,
+                    jobReqSkillType
+                `)
+                .eq('jobId', jobId);
+            
+            if (jobSkillsError) {
+                console.error('Error fetching job skills:', jobSkillsError);
+            }
+            
+            const jobSkillsMap = new Map();
+            if (jobSkills) {
+                jobSkills.forEach(skill => {
+                    jobSkillsMap.set(skill.jobReqSkillId, skill);
                 });
             }
-        }
-
-        return objectivesReport;
-
-    } catch (error) {
-        console.error('Error getting objectives report data:', error);
-        return [];
-    }
-},
-
-// Helper function: Get skills report data
-getSkillsReportData: async function(feedbackId, feedbackIdField, jobId) {
-    try {
-        // Get all job skills
-        const { data: jobSkills, error: skillsError } = await supabase
-            .from('jobreqskills')
-            .select('*')
-            .eq('jobId', jobId);
-
-        if (skillsError || !jobSkills) {
-            return { hardSkills: [], softSkills: [] };
-        }
-
-        // Get skill questions
-        const { data: skillQuestions, error: skillQError } = await supabase
-            .from('feedbacks_questions-skills')
-            .select(`
-                feedback_qSkillsId,
-                jobReqSkillId,
-                ${feedbackIdField}
-            `)
-            .eq(feedbackIdField, feedbackId);
-
-        if (skillQError || !skillQuestions) {
-            return { hardSkills: [], softSkills: [] };
-        }
-
-        const hardSkills = [];
-        const softSkills = [];
-
-        for (const skillQuestion of skillQuestions) {
-            // Find the skill details
-            const skill = jobSkills.find(s => s.jobReqSkillId === skillQuestion.jobReqSkillId);
-            if (!skill) continue;
-
-            // Get answers for this skill
-            const { data: answers, error: answersError } = await supabase
-                .from('feedbacks_answers-skills')
-                .select('skillsQuantInput, skillsQualInput')
-                .eq('feedback_qSkillsId', skillQuestion.feedback_qSkillsId);
-
-            if (!answersError && answers && answers.length > 0) {
-                // Calculate average rating
-                const validRatings = answers.filter(a => a.skillsQuantInput).map(a => a.skillsQuantInput);
-                const averageRating = validRatings.length > 0 
-                    ? (validRatings.reduce((sum, rating) => sum + rating, 0) / validRatings.length) 
+            
+            // Process skills data
+            const skillsMap = new Map();
+            
+            skillsData.forEach(response => {
+                if (response.skillRatings && typeof response.skillRatings === 'object') {
+                    Object.entries(response.skillRatings).forEach(([skillName, skillData]) => {
+                        if (skillData && skillData.rating) {
+                            if (!skillsMap.has(skillName)) {
+                                // Try to find skill info from job skills
+                                const jobSkill = Array.from(jobSkillsMap.values())
+                                    .find(js => js.jobReqSkillName === skillName);
+                                
+                                skillsMap.set(skillName, {
+                                    skillName: skillName,
+                                    skillType: jobSkill?.jobReqSkillType || skillData.skillType || 'Unknown',
+                                    ratings: [],
+                                    comments: []
+                                });
+                            }
+                            
+                            const skill = skillsMap.get(skillName);
+                            skill.ratings.push(skillData.rating);
+                            
+                            // Add comment if available
+                            if (response.skillComments && response.skillComments[skillName]) {
+                                skill.comments.push(response.skillComments[skillName].comment || response.skillComments[skillName]);
+                            }
+                        }
+                    });
+                }
+            });
+            
+            // Calculate averages and separate by skill type
+            const hardSkills = [];
+            const softSkills = [];
+            
+            skillsMap.forEach(skill => {
+                const averageRating = skill.ratings.length > 0 
+                    ? skill.ratings.reduce((sum, rating) => sum + rating, 0) / skill.ratings.length 
                     : 0;
-
-                // Combine qualitative feedback
-                const qualitativeFeedback = answers
-                    .map(a => a.skillsQualInput)
-                    .filter(feedback => feedback && feedback.trim())
-                    .join('; ');
-
-                const skillData = {
-                    skillName: skill.jobReqSkillName,
-                    averageRating: averageRating.toFixed(1),
-                    qualitativeFeedback: qualitativeFeedback || 'No feedback provided',
-                    responseCount: validRatings.length
+                
+                const processedSkill = {
+                    ...skill,
+                    averageRating: parseFloat(averageRating.toFixed(2)),
+                    responseCount: skill.ratings.length
                 };
-
-                if (skill.jobReqSkillType === 'Hard') {
-                    hardSkills.push(skillData);
+                
+                if (skill.skillType === 'Hard') {
+                    hardSkills.push(processedSkill);
+                } else if (skill.skillType === 'Soft') {
+                    softSkills.push(processedSkill);
                 } else {
-                    softSkills.push(skillData);
+                    // Default to soft skills if type is unknown
+                    softSkills.push(processedSkill);
+                }
+            });
+            
+            console.log('Processed skills:', {
+                hardSkills: hardSkills.length,
+                softSkills: softSkills.length
+            });
+            
+            return { hardSkills, softSkills };
+            
+        } catch (error) {
+            console.error('Error in getSkillsReportData:', error);
+            return { hardSkills: [], softSkills: [] };
+        }
+    },
+calculateFeedbackSummary: function(objectivesData, skillsData) {
+        try {
+            console.log('Calculating feedback summary...');
+            
+            const objectivesCount = objectivesData.length;
+            const averageObjectiveRating = objectivesCount > 0 
+                ? objectivesData.reduce((sum, obj) => sum + obj.averageRating, 0) / objectivesCount 
+                : 0;
+            
+            const hardSkillsCount = skillsData.hardSkills.length;
+            const averageHardSkillRating = hardSkillsCount > 0 
+                ? skillsData.hardSkills.reduce((sum, skill) => sum + skill.averageRating, 0) / hardSkillsCount 
+                : 0;
+            
+            const softSkillsCount = skillsData.softSkills.length;
+            const averageSoftSkillRating = softSkillsCount > 0 
+                ? skillsData.softSkills.reduce((sum, skill) => sum + skill.averageRating, 0) / softSkillsCount 
+                : 0;
+            
+            // Calculate overall performance score (weighted average)
+            let overallPerformanceScore = 0;
+            let totalComponents = 0;
+            
+            if (objectivesCount > 0) {
+                overallPerformanceScore += averageObjectiveRating * 0.5; // 50% weight for objectives
+                totalComponents += 0.5;
+            }
+            
+            if (hardSkillsCount > 0) {
+                overallPerformanceScore += averageHardSkillRating * 0.3; // 30% weight for hard skills
+                totalComponents += 0.3;
+            }
+            
+            if (softSkillsCount > 0) {
+                overallPerformanceScore += averageSoftSkillRating * 0.2; // 20% weight for soft skills
+                totalComponents += 0.2;
+            }
+            
+            // Normalize the score if we have any components
+            if (totalComponents > 0) {
+                overallPerformanceScore = overallPerformanceScore / totalComponents;
+            }
+            
+            const summary = {
+                objectivesCount,
+                averageObjectiveRating: parseFloat(averageObjectiveRating.toFixed(2)),
+                hardSkillsCount,
+                averageHardSkillRating: parseFloat(averageHardSkillRating.toFixed(2)),
+                softSkillsCount,
+                averageSoftSkillRating: parseFloat(averageSoftSkillRating.toFixed(2)),
+                overallPerformanceScore: parseFloat(overallPerformanceScore.toFixed(2))
+            };
+            
+            console.log('Calculated summary:', summary);
+            return summary;
+            
+        } catch (error) {
+            console.error('Error calculating feedback summary:', error);
+            return {
+                objectivesCount: 0,
+                averageObjectiveRating: 0,
+                hardSkillsCount: 0,
+                averageHardSkillRating: 0,
+                softSkillsCount: 0,
+                averageSoftSkillRating: 0,
+                overallPerformanceScore: 0
+            };
+        }
+    },
+
+
+    getRespondentCounts: async function(userId, year) {
+        const counts = {
+            Q1: 0,
+            Q2: 0,
+            Q3: 0,
+            Q4: 0,
+            total: 0
+        };
+        
+        try {
+            console.log('Getting respondent counts for userId:', userId, 'year:', year);
+            const quarters = ['Q1', 'Q2', 'Q3', 'Q4'];
+            const uniqueRespondents = new Set();
+            
+            for (const quarter of quarters) {
+                try {
+                    const feedbackTable = `feedbacks_${quarter}`;
+                    const feedbackIdField = `feedback${quarter.toLowerCase()}_Id`;
+                    
+                    console.log(`Checking ${quarter} respondents...`);
+                    
+                    // Get feedback record for this quarter
+                    const { data: feedbackRecord, error: feedbackError } = await supabase
+                        .from(feedbackTable)
+                        .select(feedbackIdField)
+                        .eq('userId', userId)
+                        .eq('year', year)
+                        .single();
+                    
+                    if (feedbackError || !feedbackRecord) {
+                        console.log(`No ${quarter} feedback found:`, feedbackError?.message);
+                        continue;
+                    }
+                    
+                    // Count unique respondents for this quarter
+                    const { data: respondents, error: respondentsError } = await supabase
+                        .from('feedbacks_answers')
+                        .select('reviewerUserId')
+                        .eq(feedbackIdField, feedbackRecord[feedbackIdField])
+                        .not('reviewerUserId', 'is', null);
+                    
+                    if (respondentsError) {
+                        console.error(`Error getting ${quarter} respondents:`, respondentsError);
+                        continue;
+                    }
+                    
+                    if (respondents && respondents.length > 0) {
+                        const quarterUniqueRespondents = new Set(respondents.map(r => r.reviewerUserId));
+                        counts[quarter] = quarterUniqueRespondents.size;
+                        
+                        // Add to total unique respondents across all quarters
+                        quarterUniqueRespondents.forEach(id => uniqueRespondents.add(id));
+                        
+                        console.log(`${quarter} respondents: ${counts[quarter]}`);
+                    } else {
+                        console.log(`No respondents found for ${quarter}`);
+                    }
+                    
+                } catch (quarterError) {
+                    console.error(`Error processing ${quarter}:`, quarterError);
+                    continue;
                 }
             }
+            
+            counts.total = uniqueRespondents.size;
+            console.log('Final respondent counts:', counts);
+            
+            return counts;
+            
+        } catch (error) {
+            console.error('Error getting respondent counts:', error);
+            return counts;
         }
-
-        return { hardSkills, softSkills };
-
-    } catch (error) {
-        console.error('Error getting skills report data:', error);
-        return { hardSkills: [], softSkills: [] };
-    }
-},
-
-// Helper function: Calculate feedback summary
-calculateFeedbackSummary: function(objectives, skills) {
-    const allObjectiveRatings = objectives.map(obj => parseFloat(obj.averageRating)).filter(rating => rating > 0);
-    const allHardSkillRatings = skills.hardSkills.map(skill => parseFloat(skill.averageRating)).filter(rating => rating > 0);
-    const allSoftSkillRatings = skills.softSkills.map(skill => parseFloat(skill.averageRating)).filter(rating => rating > 0);
-
-    const totalWeightedScore = objectives.reduce((sum, obj) => sum + parseFloat(obj.weightedScore), 0);
-    const totalWeight = objectives.reduce((sum, obj) => sum + obj.assignedWeight, 0);
-
-    return {
-        objectivesCount: objectives.length,
-        hardSkillsCount: skills.hardSkills.length,
-        softSkillsCount: skills.softSkills.length,
-        averageObjectiveRating: allObjectiveRatings.length > 0 
-            ? (allObjectiveRatings.reduce((sum, rating) => sum + rating, 0) / allObjectiveRatings.length).toFixed(1)
-            : '0.0',
-        averageHardSkillRating: allHardSkillRatings.length > 0 
-            ? (allHardSkillRatings.reduce((sum, rating) => sum + rating, 0) / allHardSkillRatings.length).toFixed(1)
-            : '0.0',
-        averageSoftSkillRating: allSoftSkillRatings.length > 0 
-            ? (allSoftSkillRatings.reduce((sum, rating) => sum + rating, 0) / allSoftSkillRatings.length).toFixed(1)
-            : '0.0',
-        totalWeightedScore: totalWeightedScore.toFixed(2),
-        totalWeight: totalWeight,
-        overallPerformanceScore: totalWeight > 0 ? (totalWeightedScore / totalWeight).toFixed(1) : '0.0'
-    };
-},
-
+    },
 // DEBUGGING ENDPOINT - Add this to test your database
 testDatabaseConnection: async function(req, res) {
     try {

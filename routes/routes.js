@@ -330,8 +330,22 @@ router.get('/linemanager/api/getQuestionnaireData', lineManagerController.getQue
 router.post('/linemanager/api/submitFeedback', lineManagerController.submitFeedback);
 
 
-
+router.use((error, req, res, next) => {
+    console.error('Route error:', error);
+    if (error.code === 'LIMIT_FILE_SIZE') {
+        return res.status(413).json({
+            success: false,
+            message: 'File too large'
+        });
+    }
+    return res.status(500).json({
+        success: false,
+        message: 'Internal server error',
+        error: process.env.NODE_ENV === 'development' ? error.message : 'Something went wrong'
+    });
+});
 // Mid-year IDP routes
+router.get('/linemanager/quarterly-feedback-report/:userId', lineManagerController.generateQuarterlyFeedbackReport);
 router.get('/linemanager/midyear-idp/:userId', lineManagerController.getMidYearIDP);
 router.post('/linemanager/midyear-idp/:userId', lineManagerController.saveMidYearIDP);
 router.get('/linemanager/midyear-idp-trainings/:userId', lineManagerController.getMidYearIDPWithTrainings);

@@ -599,6 +599,44 @@
     color: var(--primary-color);
 }
 
+/* Responsive design for IDP header */
+@media (max-width: 768px) {
+    .idp-header > div:first-child {
+        flex-direction: column !important;
+        align-items: stretch !important;
+    }
+    
+    .idp-header > div:first-child > div:last-child {
+        margin-left: 0 !important;
+        margin-top: 15px !important;
+    }
+    
+    #exportQuarterlyReportBtn {
+        width: 100% !important;
+        min-width: auto !important;
+        justify-content: center !important;
+    }
+}
+
+/* Enhanced export button hover effects */
+#exportQuarterlyReportBtn:hover {
+    background-color: #218838 !important;
+    transform: translateY(-2px) !important;
+    box-shadow: 0 4px 8px rgba(40, 167, 69, 0.4) !important;
+}
+
+#exportQuarterlyReportBtn:active {
+    transform: translateY(0) !important;
+    box-shadow: 0 2px 4px rgba(40, 167, 69, 0.3) !important;
+}
+
+#exportQuarterlyReportBtn:disabled {
+    background-color: #6c757d !important;
+    cursor: not-allowed !important;
+    transform: none !important;
+    box-shadow: none !important;
+}
+
 .progress-bar-container {
     width: 100%;
     height: 10px;
@@ -2116,14 +2154,15 @@
     <section id="feedback-section" class="fade-out section" style="display: none;">
         <input type="hidden" id="userId" value="<%= user.userId %>">
         <!-- Add the buttons container -->
-        <div class="feedback-view-buttons" style="display: flex; gap: 15px; margin-bottom: 20px;">
-            <button type="button" id="viewQuestionnaireBtn" class="primary-btn" style="flex: 1; background-color: var(--primary-color); color: white; border: none; padding: 12px 15px; border-radius: var(--border-radius); cursor: pointer; font-weight: 500; display: flex; align-items: center; justify-content: center; gap: 8px;">
-                <i class="fas fa-list-ul"></i> View Questionnaire
-            </button>
-            <button type="button" id="viewFeedbackBtn" class="secondary-btn" style="flex: 1; background-color: var(--secondary-color); color: white; border: none; padding: 12px 15px; border-radius: var(--border-radius); cursor: pointer; font-weight: 500; display: flex; align-items: center; justify-content: center; gap: 8px;">
-                <i class="fas fa-comments"></i> View Feedback
-            </button>
-        </div>
+<div class="feedback-view-buttons" style="display: flex; gap: 15px; margin-bottom: 20px;">
+    <button type="button" id="viewQuestionnaireBtn" class="primary-btn" style="flex: 1; background-color: var(--primary-color); color: white; border: none; padding: 12px 15px; border-radius: var(--border-radius); cursor: pointer; font-weight: 500; display: flex; align-items: center; justify-content: center; gap: 8px;">
+        <i class="fas fa-list-ul"></i> View Questionnaire
+    </button>
+    <button type="button" id="viewFeedbackBtn" class="secondary-btn" style="flex: 1; background-color: var(--secondary-color); color: white; border: none; padding: 12px 15px; border-radius: var(--border-radius); cursor: pointer; font-weight: 500; display: flex; align-items: center; justify-content: center; gap: 8px;">
+        <i class="fas fa-comments"></i> View Feedback
+    </button>
+   
+</div>
         
 <!-- Questionnaire content container -->
 <div id="questionnaireContent">
@@ -2226,9 +2265,9 @@
         <button type="button" id="summaryTab" class="tab-button active" style="padding: 12px 20px; background-color: var(--primary-color); color: white; border: none; border-radius: 8px 8px 0 0; cursor: pointer; font-weight: 500; transition: all 0.3s ease;">
             <i class="fas fa-chart-pie"></i> Summary
         </button>
-        <button type="button" id="answersTab" class="tab-button" style="padding: 12px 20px; background-color: #f1f1f1; color: #333; border: none; border-radius: 8px 8px 0 0; cursor: pointer; font-weight: 500; transition: all 0.3s ease;">
+        <!-- <button type="button" id="answersTab" class="tab-button" style="padding: 12px 20px; background-color: #f1f1f1; color: #333; border: none; border-radius: 8px 8px 0 0; cursor: pointer; font-weight: 500; transition: all 0.3s ease;">
             <i class="fas fa-list-alt"></i> Individual Answers
-        </button>
+        </button> -->
     </div>
 </div>
 
@@ -2322,7 +2361,7 @@
     </section>
 </form>
 
-<!-- Enhanced Mid-Year IDP Form with Circular Feedback Display -->
+<!-- Enhanced Mid-Year IDP Form with Export Button and Fixed Functionality -->
 <section id="midYearIDPForm" class="fade-out section" style="display: none;">
     <div class="idp-progress">
         <h3><i class="fas fa-chart-line"></i> Development Plan Progress</h3>
@@ -2336,12 +2375,42 @@
         </div>
     </div>
 
+    <!-- UPDATED HEADER WITH EXPORT BUTTON -->
     <div class="idp-header" style="background: linear-gradient(to right, rgba(18, 74, 92, 0.1), rgba(5, 156, 164, 0.05)); padding: 20px; border-radius: var(--border-radius); margin-bottom: 25px;">
-        <h2><i class="fas fa-clipboard-check"></i> Mid-Year Individual Development Plan (IDP)</h2>
-        <p style="margin-top: 10px; color: #555;">
-            The Mid-Year IDP serves as a checkpoint to evaluate progress on professional goals and career development.
-            Use this opportunity to identify strengths, areas for improvement, and establish a clear path forward.
-        </p>
+        <!-- Header with Title and Export Button -->
+        <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 15px;">
+            <div style="flex: 1;">
+                <h2 style="margin: 0 0 10px 0;"><i class="fas fa-clipboard-check"></i> Mid-Year Individual Development Plan (IDP)</h2>
+                <p style="margin: 0; color: #555;">
+                    The Mid-Year IDP serves as a checkpoint to evaluate progress on professional goals and career development.
+                    Use this opportunity to identify strengths, areas for improvement, and establish a clear path forward.
+                </p>
+            </div>
+            
+            <!-- EXPORT BUTTON IN HEADER -->
+            <div style="margin-left: 20px; flex-shrink: 0;">
+                <button type="button" id="exportQuarterlyReportBtn" class="export-btn" style="
+                    background-color: #28a745; 
+                    color: white; 
+                    border: none; 
+                    padding: 12px 20px; 
+                    border-radius: var(--border-radius); 
+                    cursor: pointer; 
+                    font-weight: 500; 
+                    display: flex; 
+                    align-items: center; 
+                    justify-content: center; 
+                    gap: 8px;
+                    box-shadow: 0 2px 4px rgba(40, 167, 69, 0.3);
+                    transition: all 0.3s ease;
+                    min-width: 180px;
+                " 
+                onmouseover="this.style.backgroundColor='#218838'; this.style.transform='translateY(-2px)'; this.style.boxShadow='0 4px 8px rgba(40, 167, 69, 0.4)'"
+                onmouseout="this.style.backgroundColor='#28a745'; this.style.transform='translateY(0)'; this.style.boxShadow='0 2px 4px rgba(40, 167, 69, 0.3)'">
+                    <i class="fas fa-file-pdf"></i> Export PDF Report
+                </button>
+            </div>
+        </div>
     </div>
 
     <!-- Loading indicator for feedback data -->
@@ -2564,119 +2633,121 @@
                 <div class="char-counter"><span id="nextRoleMobilityCount">0</span> characters</div>
             </div>
         </fieldset>
-<!-- Make sure your training categories section looks like this -->
-<fieldset class="suggested-trainings-fieldset">
-    <legend><i class="fas fa-briefcase"></i> SUGGESTED POTENTIAL JOB CATEGORIES TO TAKE</legend>
-    
-    <div class="form-group">
-        <div class="training-selection-container">
-            <div class="training-header" style="margin-bottom: 15px;">
-                <h4 style="margin: 0 0 8px 0; color: var(--primary-color); font-size: 16px;">
-                    <i class="fas fa-search"></i> Select and Add Training Categories
-                </h4>
-                <p style="margin: 0; color: #666; font-size: 14px; line-height: 1.4;">
-                    Choose training categories that align with your career development goals.
-                </p>
-            </div>
+
+        <!-- Make sure your training categories section looks like this -->
+        <fieldset class="suggested-trainings-fieldset">
+            <legend><i class="fas fa-briefcase"></i> SUGGESTED POTENTIAL JOB CATEGORIES TO TAKE</legend>
             
-            <!-- Category Selection -->
-            <div class="category-dropdown-container" style="position: relative; margin-bottom: 20px;">
-                <label for="categorySearchInput" style="display: block; font-weight: 600; color: var(--primary-color); margin-bottom: 8px; font-size: 14px;">
-                    <i class="fas fa-search"></i> Search or Add New Category:
-                </label>
-                
-                <div style="display: flex; align-items: flex-start; gap: 10px;">
-                    <!-- Search Input -->
-                    <div style="flex: 1; position: relative;">
-                        <input type="text" 
-                               id="categorySearchInput" 
-                               placeholder="Type to search categories or click to browse all..." 
-                               style="width: 100%; padding: 12px 15px; border: 2px solid #ddd; border-radius: var(--border-radius); background-color: white; color: var(--primary-color); font-weight: 500; transition: var(--transition); font-size: 13px; line-height: 1.3; height: auto; min-height: 45px;" 
-                               onkeyup="filterCategories()" 
-                               onkeydown="handleCategoryKeydown(event)" 
-                               onfocus="showAllCategoriesOnFocus()" 
-                               onclick="showAllCategoriesOnFocus()">
+            <div class="form-group">
+                <div class="training-selection-container">
+                    <div class="training-header" style="margin-bottom: 15px;">
+                        <h4 style="margin: 0 0 8px 0; color: var(--primary-color); font-size: 16px;">
+                            <i class="fas fa-search"></i> Select and Add Training Categories
+                        </h4>
+                        <p style="margin: 0; color: #666; font-size: 14px; line-height: 1.4;">
+                            Choose training categories that align with your career development goals.
+                        </p>
                     </div>
                     
-                    <!-- Add Category Button -->
-                    <button type="button" 
-                            id="addCategoryBtn" 
-                            style="background-color: var(--success-color); color: white; border: none; padding: 12px 20px; border-radius: var(--border-radius); cursor: pointer; font-weight: 500; transition: var(--transition); white-space: nowrap; min-height: 45px;" 
-                            onclick="addSelectedCategory()">
-                        <i class="fas fa-plus"></i> Add Category
-                    </button>
-                </div>
-                
-                <!-- Search Results Dropdown -->
-                <div id="categorySearchResults" style="position: absolute; top: 100%; left: 0; right: 0; background: white; border: 2px solid var(--secondary-color); border-radius: var(--border-radius); box-shadow: 0 8px 25px rgba(0, 0, 0, 0.15); z-index: 1000; display: none; max-height: 300px; overflow-y: auto; margin-top: 5px;">
-                    <div id="categorySearchList" style="padding: 10px;">
-                        <!-- Categories will be populated here -->
+                    <!-- Category Selection -->
+                    <div class="category-dropdown-container" style="position: relative; margin-bottom: 20px;">
+                        <label for="categorySearchInput" style="display: block; font-weight: 600; color: var(--primary-color); margin-bottom: 8px; font-size: 14px;">
+                            <i class="fas fa-search"></i> Search or Add New Category:
+                        </label>
+                        
+                        <div style="display: flex; align-items: flex-start; gap: 10px;">
+                            <!-- Search Input -->
+                            <div style="flex: 1; position: relative;">
+                                <input type="text" 
+                                       id="categorySearchInput" 
+                                       placeholder="Type to search categories or click to browse all..." 
+                                       style="width: 100%; padding: 12px 15px; border: 2px solid #ddd; border-radius: var(--border-radius); background-color: white; color: var(--primary-color); font-weight: 500; transition: var(--transition); font-size: 13px; line-height: 1.3; height: auto; min-height: 45px;" 
+                                       onkeyup="filterCategories()" 
+                                       onkeydown="handleCategoryKeydown(event)" 
+                                       onfocus="showAllCategoriesOnFocus()" 
+                                       onclick="showAllCategoriesOnFocus()">
+                            </div>
+                            
+                            <!-- Add Category Button -->
+                            <button type="button" 
+                                    id="addCategoryBtn" 
+                                    style="background-color: var(--success-color); color: white; border: none; padding: 12px 20px; border-radius: var(--border-radius); cursor: pointer; font-weight: 500; transition: var(--transition); white-space: nowrap; min-height: 45px;" 
+                                    onclick="addSelectedCategory()">
+                                <i class="fas fa-plus"></i> Add Category
+                            </button>
+                        </div>
+                        
+                        <!-- Search Results Dropdown -->
+                        <div id="categorySearchResults" style="position: absolute; top: 100%; left: 0; right: 0; background: white; border: 2px solid var(--secondary-color); border-radius: var(--border-radius); box-shadow: 0 8px 25px rgba(0, 0, 0, 0.15); z-index: 1000; display: none; max-height: 300px; overflow-y: auto; margin-top: 5px;">
+                            <div id="categorySearchList" style="padding: 10px;">
+                                <!-- Categories will be populated here -->
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Selected Categories Display -->
+                    <div id="selectedCategoriesContainer" style="margin-top: 20px;">
+                        <h5 style="margin: 0 0 15px 0; color: var(--primary-color); font-size: 14px;">
+                            <i class="fas fa-list-check"></i> Selected Training Categories:
+                        </h5>
+                        <div id="selectedCategoriesList" style="min-height: 60px; padding: 15px; background-color: rgba(255, 255, 255, 0.8); border-radius: 8px; border: 1px dashed #ddd;">
+                            <div class="no-categories-message" style="text-align: center; color: #666; font-style: italic; padding: 20px;">
+                                <i class="fas fa-info-circle"></i> No training categories selected yet. Use the search above to add categories.
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Training Remarks Section -->
+                    <div style="margin-top: 20px;">
+                        <label for="trainingRemarks" style="display: block; font-weight: 600; color: var(--primary-color); margin-bottom: 8px; font-size: 14px;">
+                            <i class="fas fa-comment"></i> Training Remarks & Development Goals:
+                        </label>
+                        <textarea id="trainingRemarks" 
+                                  name="trainingRemarks" 
+                                  style="width: 100%; min-height: 100px; padding: 12px; border: 2px solid #ddd; border-radius: var(--border-radius); background-color: white; color: var(--primary-color); font-weight: 400; transition: var(--transition); font-size: 13px; line-height: 1.4; resize: vertical;" 
+                                  placeholder="Describe your training goals, preferred learning methods, timeline expectations, and how these categories align with your career development plan..."></textarea>
+                        <div class="char-counter" style="text-align: right; font-size: 12px; color: #666; margin-top: 5px;">
+                            <span id="trainingRemarksCount">0</span> characters
+                        </div>
                     </div>
                 </div>
             </div>
 
-            <!-- Selected Categories Display -->
-            <div id="selectedCategoriesContainer" style="margin-top: 20px;">
-                <h5 style="margin: 0 0 15px 0; color: var(--primary-color); font-size: 14px;">
-                    <i class="fas fa-list-check"></i> Selected Training Categories:
+            <!-- KEEP YOUR EXISTING DEVELOPMENT AREAS LEGEND -->
+            <div class="training-match-info" style="margin-top: 15px; font-size: 12px; color: #666;">
+                <h5 style="margin: 5px 0; color: var(--primary-color); font-size: 13px;">
+                    <i class="fas fa-target"></i> Top 5 Development Areas (Based on Q1-Q2 Feedback):
                 </h5>
-                <div id="selectedCategoriesList" style="min-height: 60px; padding: 15px; background-color: rgba(255, 255, 255, 0.8); border-radius: 8px; border: 1px dashed #ddd;">
-                    <div class="no-categories-message" style="text-align: center; color: #666; font-style: italic; padding: 20px;">
-                        <i class="fas fa-info-circle"></i> No training categories selected yet. Use the search above to add categories.
-                    </div>
+                <div id="developmentAreasLegend" style="font-style: italic; color: #888; font-size: 11px;">
+                    Complete Q1 and Q2 feedback to see personalized training priorities based on your development areas.
                 </div>
             </div>
+        </fieldset>
 
-            <!-- Training Remarks Section -->
-            <div style="margin-top: 20px;">
-                <label for="trainingRemarks" style="display: block; font-weight: 600; color: var(--primary-color); margin-bottom: 8px; font-size: 14px;">
-                    <i class="fas fa-comment"></i> Training Remarks & Development Goals:
-                </label>
-                <textarea id="trainingRemarks" 
-                          name="trainingRemarks" 
-                          style="width: 100%; min-height: 100px; padding: 12px; border: 2px solid #ddd; border-radius: var(--border-radius); background-color: white; color: var(--primary-color); font-weight: 400; transition: var(--transition); font-size: 13px; line-height: 1.4; resize: vertical;" 
-                          placeholder="Describe your training goals, preferred learning methods, timeline expectations, and how these categories align with your career development plan..."></textarea>
-                <div class="char-counter" style="text-align: right; font-size: 12px; color: #666; margin-top: 5px;">
-                    <span id="trainingRemarksCount">0</span> characters
-                </div>
-            </div>
+        <!-- Submit Button Container - Right Side -->
+        <div class="submit-button-container" style="text-align: right; margin-top: 30px;">
+            <button id="submitMidYearIDP" type="submit" class="save-btn" disabled style="
+                background-color: var(--primary-color);
+                color: white;
+                border: none;
+                padding: 15px 30px;
+                border-radius: var(--border-radius);
+                cursor: pointer;
+                font-weight: 600;
+                transition: var(--transition);
+                display: inline-flex;
+                align-items: center;
+                gap: 10px;
+                font-size: 16px;
+                min-width: 220px;
+                justify-content: center;
+                box-shadow: 0 4px 8px rgba(18, 74, 92, 0.3);
+            ">
+                <i class="fas fa-paper-plane"></i> Submit Mid-Year IDP
+            </button>
         </div>
-    </div>
-
-    <!-- KEEP YOUR EXISTING DEVELOPMENT AREAS LEGEND -->
-    <div class="training-match-info" style="margin-top: 15px; font-size: 12px; color: #666;">
-        <h5 style="margin: 5px 0; color: var(--primary-color); font-size: 13px;">
-            <i class="fas fa-target"></i> Top 5 Development Areas (Based on Q1-Q2 Feedback):
-        </h5>
-        <div id="developmentAreasLegend" style="font-style: italic; color: #888; font-size: 11px;">
-            Complete Q1 and Q2 feedback to see personalized training priorities based on your development areas.
-        </div>
-    </div>
-</fieldset>
-
-
-<!-- Submit Button Container - Right Side -->
-<div class="submit-button-container" style="text-align: right; margin-top: 30px;">
-    <button id="submitMidYearIDP" type="submit" class="save-btn" disabled style="
-        background-color: var(--primary-color);
-        color: white;
-        border: none;
-        padding: 15px 30px;
-        border-radius: var(--border-radius);
-        cursor: pointer;
-        font-weight: 600;
-        transition: var(--transition);
-        display: inline-flex;
-        align-items: center;
-        gap: 10px;
-        font-size: 16px;
-        min-width: 220px;
-        justify-content: center;
-        box-shadow: 0 4px 8px rgba(18, 74, 92, 0.3);
-    ">
-        <i class="fas fa-paper-plane"></i> Submit Mid-Year IDP
-    </button>
-</div>
+    </form>
+</section>
 
 
 <!-- Final-Year IDP Form with Improved Frontend -->
@@ -2868,7 +2939,40 @@ let availableCategories = [];
 let selectedCategories = [];
 let userDepartmentId = null;
 let isSearchMode = false;
+let currentQuarter = null;
+let currentYear = new Date().getFullYear();
+let currentUserId = '<%= user.userId %>';
 
+// Enhanced debug function
+function debugCategoryState() {
+    console.log("=== COMPREHENSIVE CATEGORY DEBUG ===");
+    console.log("selectedCategories array:", selectedCategories);
+    console.log("selectedCategories length:", selectedCategories.length);
+    console.log("selectedCategories type:", typeof selectedCategories);
+    console.log("availableCategories length:", availableCategories.length);
+    console.log("userDepartmentId:", userDepartmentId);
+    
+    selectedCategories.forEach((cat, index) => {
+        console.log(`Category ${index}:`, {
+            id: cat.id,
+            name: cat.name,
+            category: cat.category,
+            isNew: cat.isNew,
+            fullObject: cat
+        });
+    });
+    
+    const submissionData = getSelectedCategoriesForSubmission();
+    console.log("getSelectedCategoriesForSubmission() result:", submissionData);
+    console.log("Submission data type:", typeof submissionData);
+    console.log("Submission data length:", submissionData.length);
+    console.log("JSON.stringify result:", JSON.stringify(submissionData));
+    console.log("=== END CATEGORY DEBUG ===");
+}
+// Initialize when DOM is ready
+document.addEventListener('DOMContentLoaded', function() {
+    initializeTrainingCategories();
+});
 
 // Initialize training categories functionality
 async function initializeTrainingCategories() {
@@ -3072,30 +3176,54 @@ function navigateSearchResults(direction) {
         }, 5000);
     }
 }
-
-// Select category from search results
 function selectCategoryFromSearch(element) {
-    if (element.classList.contains('disabled')) return;
+    if (element.classList.contains('disabled')) {
+        console.log('Category already selected, skipping');
+        return;
+    }
     
     const categoryId = element.getAttribute('data-category-id');
     const categoryName = element.getAttribute('data-category-name');
     
-    console.log('Selecting category from search:', categoryId, categoryName);
+    console.log('=== SELECTING CATEGORY FROM SEARCH ===');
+    console.log('Element clicked:', element);
+    console.log('Category ID:', categoryId);
+    console.log('Category Name:', categoryName);
+    console.log('Current selectedCategories before addition:', selectedCategories);
+    
+    // Validate inputs
+    if (!categoryId || !categoryName) {
+        console.error('Missing category ID or name');
+        showCategoryNotification('Error: Invalid category data', 'error');
+        return;
+    }
     
     // Check if already selected
-    if (selectedCategories.find(cat => cat.id === categoryId)) {
+    const alreadySelected = selectedCategories.find(cat => 
+        cat.id === categoryId.toString() || cat.name === categoryName
+    );
+    
+    if (alreadySelected) {
+        console.log('Category already selected:', alreadySelected);
         showCategoryNotification('Category already selected', 'warning');
         return;
     }
     
-    // Add to selected categories
-    selectedCategories.push({
-        id: categoryId,
-        name: categoryName,
+    // FIXED: Create proper category object with consistent structure
+    const newCategory = {
+        id: categoryId.toString(),
+        name: categoryName.trim(),
+        category: categoryName.trim(), // Ensure both name and category are set
         isNew: false
-    });
+    };
     
-    console.log('Updated selectedCategories:', selectedCategories);
+    console.log('Creating new category object:', newCategory);
+    
+    // Add to selectedCategories array
+    selectedCategories.push(newCategory);
+    
+    console.log('Updated selectedCategories after addition:', selectedCategories);
+    console.log('New selectedCategories length:', selectedCategories.length);
     
     // Update display
     updateSelectedCategoriesDisplay();
@@ -3105,8 +3233,12 @@ function selectCategoryFromSearch(element) {
     
     // Show success message
     showCategoryNotification(`Added category: ${categoryName}`, 'success');
+    
+    // Debug after addition
+    debugCategoryState();
+    
+    console.log('=== END SELECTING CATEGORY FROM SEARCH ===');
 }
-
 
 // FIXED: Function to select new category from search results
 function selectNewCategoryFromSearch(element) {
@@ -3117,15 +3249,33 @@ function selectNewCategoryFromSearch(element) {
 // FIXED: Enhanced function to create and select a new category
 async function createAndSelectNewCategory(categoryName) {
     if (!categoryName || !userDepartmentId) {
+        console.error('Missing category name or department ID');
         showCategoryNotification('Invalid category name or department', 'error');
         return;
     }
     
     const cleanedCategoryName = categoryName.trim().replace(/\s+/g, ' ');
     
+    if (cleanedCategoryName.length < 2) {
+        showCategoryNotification('Category name must be at least 2 characters long', 'warning');
+        return;
+    }
+    
+    console.log('=== CREATING NEW CATEGORY ===');
+    console.log('Original name:', categoryName);
+    console.log('Cleaned name:', cleanedCategoryName);
+    console.log('Department ID:', userDepartmentId);
+    
+    // Show loading state
+    const addBtn = document.getElementById('addCategoryBtn');
+    const searchInput = document.getElementById('categorySearchInput');
+    
+    if (addBtn) {
+        addBtn.disabled = true;
+        addBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Creating...';
+    }
+    
     try {
-        console.log('Creating new category:', cleanedCategoryName);
-        
         const response = await fetch('/linemanager/training-categories', {
             method: 'POST',
             headers: {
@@ -3139,18 +3289,24 @@ async function createAndSelectNewCategory(categoryName) {
         
         const result = await response.json();
         
+        console.log('Server response for new category:', result);
+        
         if (result.success) {
-            console.log('Successfully created category:', result.category);
-            
             // Add to available categories
             availableCategories.push(result.category);
             
-            // Add to selected categories
-            selectedCategories.push({
+            // FIXED: Create proper category object for selection
+            const newCategory = {
                 id: result.category.trainingCategoriesId.toString(),
-                name: result.category.category,
+                name: result.category.category.trim(),
+                category: result.category.category.trim(), // Ensure consistency
                 isNew: true
-            });
+            };
+            
+            console.log('New category created:', newCategory);
+            
+            // Add to selected categories
+            selectedCategories.push(newCategory);
             
             console.log('Updated selectedCategories after creation:', selectedCategories);
             
@@ -3161,22 +3317,36 @@ async function createAndSelectNewCategory(categoryName) {
             clearCategorySelection();
             
             showCategoryNotification(`Successfully created and added: "${cleanedCategoryName}"`, 'success');
+            
+            // Debug after creation
+            debugCategoryState();
         } else {
             throw new Error(result.message || 'Failed to create category');
         }
     } catch (error) {
         console.error('Error creating new category:', error);
         showCategoryNotification('Failed to create new category: ' + error.message, 'error');
+    } finally {
+        // Reset UI state
+        if (addBtn) {
+            addBtn.disabled = false;
+            addBtn.innerHTML = '<i class="fas fa-plus"></i> Add Category';
+        }
     }
+    
+    console.log('=== END CREATING NEW CATEGORY ===');
 }
 
 
 // Select an existing category
 function selectExistingCategory(categoryId, categoryName) {
+    console.log("=== SELECTING EXISTING CATEGORY ===");
     console.log("Selecting existing category:", categoryId, categoryName);
+    console.log("Current selectedCategories before:", selectedCategories);
     
     // Check if already selected
     if (selectedCategories.find(cat => cat.id === categoryId.toString())) {
+        console.log('Category already selected');
         showCategoryNotification('Category already selected', 'warning');
         return;
     }
@@ -3191,7 +3361,8 @@ function selectExistingCategory(categoryId, categoryName) {
     
     selectedCategories.push(newCategory);
     
-    console.log("Updated selectedCategories:", selectedCategories);
+    console.log("Updated selectedCategories after addition:", selectedCategories);
+    console.log("Added category:", newCategory);
     
     // Update display
     updateSelectedCategoriesDisplay();
@@ -3201,7 +3372,13 @@ function selectExistingCategory(categoryId, categoryName) {
     
     // Show success message
     showCategoryNotification(`Added category: ${categoryName}`, 'success');
+    
+    // Debug current state
+    debugSelectedCategories();
+    
+    console.log("=== END SELECTING EXISTING CATEGORY ===");
 }
+
 
 async function createAndSelectNewCategory(categoryName) {
     if (!categoryName || !userDepartmentId) {
@@ -3290,30 +3467,64 @@ async function createAndSelectNewCategory(categoryName) {
     }
 }
 
-
 function addSelectedCategory() {
     const searchInput = document.getElementById('categorySearchInput');
     const searchTerm = searchInput.value.trim();
+    
+    console.log('=== ADDING SELECTED CATEGORY ===');
+    console.log('Search term:', searchTerm);
+    console.log('Current selectedCategories:', selectedCategories);
     
     if (!searchTerm) {
         showCategoryNotification('Please enter a category name', 'warning');
         return;
     }
     
-    console.log("Adding category:", searchTerm);
-    
-    // Try to find exact match first
+    // Try to find exact match in available categories
     const exactMatch = availableCategories.find(cat => 
         cat.category.toLowerCase() === searchTerm.toLowerCase()
     );
     
     if (exactMatch) {
-        console.log("Found existing category:", exactMatch);
-        selectExistingCategory(exactMatch.trainingCategoriesId.toString(), exactMatch.category);
+        console.log('Found existing category:', exactMatch);
+        
+        // FIXED: Use proper selectCategoryFromSearch equivalent for existing categories
+        const categoryId = exactMatch.trainingCategoriesId.toString();
+        const categoryName = exactMatch.category;
+        
+        // Check if already selected
+        const alreadySelected = selectedCategories.find(cat => 
+            cat.id === categoryId || cat.name === categoryName
+        );
+        
+        if (alreadySelected) {
+            showCategoryNotification('Category already selected', 'warning');
+            return;
+        }
+        
+        // Add existing category
+        const newCategory = {
+            id: categoryId,
+            name: categoryName.trim(),
+            category: categoryName.trim(),
+            isNew: false
+        };
+        
+        selectedCategories.push(newCategory);
+        updateSelectedCategoriesDisplay();
+        clearCategorySelection();
+        showCategoryNotification(`Added category: ${categoryName}`, 'success');
+        
+        console.log('Added existing category:', newCategory);
     } else {
-        console.log("Creating new category:", searchTerm);
+        console.log('Creating new category:', searchTerm);
         createAndSelectNewCategory(searchTerm);
     }
+    
+    // Debug after addition
+    debugCategoryState();
+    
+    console.log('=== END ADDING SELECTED CATEGORY ===');
 }
 
 
@@ -3407,7 +3618,9 @@ function updateSelectedCategoriesDisplay() {
 
 // Remove selected category
 function removeSelectedCategory(categoryId) {
+    console.log("=== REMOVING CATEGORY ===");
     console.log("Removing category with ID:", categoryId);
+    console.log("Current selectedCategories:", selectedCategories);
     
     const beforeCount = selectedCategories.length;
     selectedCategories = selectedCategories.filter(cat => cat.id !== categoryId);
@@ -3417,9 +3630,15 @@ function removeSelectedCategory(categoryId) {
     console.log("Updated selectedCategories:", selectedCategories);
     
     updateSelectedCategoriesDisplay();
-    
     showCategoryNotification('Category removed', 'info');
+    
+    // Debug after removal
+    debugCategoryState();
+    
+    console.log("=== END REMOVING CATEGORY ===");
 }
+
+
 async function loadExistingSelectedCategories() {
     try {
         console.log('Loading existing selected categories for user:', userId);
@@ -3639,32 +3858,135 @@ function showCategoryError(message) {
     }
 }
 
+// 1. Debug the selectedCategories array
+function debugSelectedCategories() {
+    console.log("=== SELECTED CATEGORIES DEBUG ===");
+    console.log("selectedCategories array:", selectedCategories);
+    console.log("selectedCategories length:", selectedCategories.length);
+    console.log("selectedCategories type:", typeof selectedCategories);
+    
+    selectedCategories.forEach((cat, index) => {
+        console.log(`Category ${index}:`, {
+            id: cat.id,
+            name: cat.name,
+            category: cat.category,
+            isNew: cat.isNew
+        });
+    });
+    
+    const categoriesForSubmission = getSelectedCategoriesForSubmission();
+    console.log("Categories for submission:", categoriesForSubmission);
+    console.log("Submission array length:", categoriesForSubmission.length);
+    console.log("=== END DEBUG ===");
+}
+
+// 2. Debug the form submission data
+function debugFormSubmissionData() {
+    console.log("=== FORM SUBMISSION DEBUG ===");
+    
+    const categoriesForSubmission = getSelectedCategoriesForSubmission();
+    console.log("Raw categories for submission:", categoriesForSubmission);
+    
+    const formData = {
+        profStrengths: document.getElementById("profStrengths")?.value || "",
+        profAreasForDevelopment: document.getElementById("profAreasForDevelopment")?.value || "",
+        profActionsToTake: document.getElementById("profActionsToTake")?.value || "",
+        leaderStrengths: document.getElementById("leaderStrengths")?.value || "",
+        leaderAreasForDevelopment: document.getElementById("leaderAreasForDevelopment")?.value || "",
+        leaderActionsToTake: document.getElementById("leaderActionsToTake")?.value || "",
+        nextRoleShortTerm: document.getElementById("nextRoleShortTerm")?.value || "",
+        nextRoleLongTerm: document.getElementById("nextRoleLongTerm")?.value || "",
+        nextRoleMobility: document.getElementById("nextRoleMobility")?.value || "",
+        trainingCategories: categoriesForSubmission,
+        trainingRemarks: document.getElementById("trainingRemarks")?.value || "",
+        year: new Date().getFullYear()
+    };
+    
+    console.log("Complete form data being sent:", formData);
+    console.log("trainingCategories in form data:", formData.trainingCategories);
+    console.log("JSON.stringify of form data:", JSON.stringify(formData, null, 2));
+    console.log("=== END FORM SUBMISSION DEBUG ===");
+}
+
+
 // Get selected categories for form submission
 function getSelectedCategoriesForSubmission() {
-    console.log('Getting selected categories for submission. Current selectedCategories:', selectedCategories);
+    console.log("=== getSelectedCategoriesForSubmission DEBUG ===");
+    console.log("selectedCategories input:", selectedCategories);
+    console.log("selectedCategories type:", typeof selectedCategories);
+    console.log("selectedCategories isArray:", Array.isArray(selectedCategories));
+    console.log("selectedCategories length:", selectedCategories.length);
     
     if (!selectedCategories || selectedCategories.length === 0) {
-        console.log('No categories selected');
+        console.log("No categories selected - returning empty array");
         return [];
     }
     
-    // FIXED: Return array of category names (strings only)
     const categoryNames = selectedCategories
-        .map(category => {
-            // Handle different possible structures
+        .map((category, index) => {
+            console.log(`Processing category ${index}:`, category);
+            
+            let categoryName = '';
+            
             if (typeof category === 'string') {
-                return category.trim();
+                categoryName = category.trim();
+                console.log(`  - String category: "${categoryName}"`);
             } else if (typeof category === 'object' && category !== null) {
-                return (category.name || category.category || '').trim();
+                // FIXED: Try multiple properties to get the category name
+                categoryName = (category.name || category.category || '').trim();
+                console.log(`  - Object category: "${categoryName}"`);
+                console.log(`    - From property:`, category.name ? 'name' : category.category ? 'category' : 'none');
+                console.log(`    - Full object:`, category);
+            } else {
+                console.warn(`  - Invalid category type:`, typeof category, category);
             }
-            return '';
+            
+            return categoryName;
         })
-        .filter(name => name && name.length > 0); // Remove empty/null values
+        .filter((name, index) => {
+            const isValid = name && name.length > 0;
+            console.log(`  - Filter result ${index}: "${name}" (valid: ${isValid})`);
+            return isValid;
+        });
     
-    console.log('Returning category names for submission:', categoryNames);
+    console.log("Final category names for submission:", categoryNames);
+    console.log("Category names type:", typeof categoryNames);
+    console.log("Category names isArray:", Array.isArray(categoryNames));
+    console.log("Category names length:", categoryNames.length);
+    console.log("JSON.stringify result:", JSON.stringify(categoryNames));
+    console.log("=== END getSelectedCategoriesForSubmission DEBUG ===");
+    
     return categoryNames;
 }
 
+// 4. Test function to manually add categories for testing
+function testAddCategory() {
+    console.log("=== TESTING CATEGORY ADDITION ===");
+    
+    // Clear existing categories
+    selectedCategories = [];
+    
+    // Add test categories
+    const testCategories = [
+        { id: "1", name: "ERP Software Proficiency", category: "ERP Software Proficiency", isNew: false },
+        { id: "2", name: "Leadership Training", category: "Leadership Training", isNew: true },
+        { id: "3", name: "Project Management", category: "Project Management", isNew: false }
+    ];
+    
+    testCategories.forEach(cat => {
+        selectedCategories.push(cat);
+        console.log("Added test category:", cat);
+    });
+    
+    // Update display
+    updateSelectedCategoriesDisplay();
+    
+    // Test submission format
+    const submissionData = getSelectedCategoriesForSubmission();
+    console.log("Test submission data:", submissionData);
+    console.log("Expected format: ['ERP Software Proficiency', 'Leadership Training', 'Project Management']");
+    console.log("=== END TESTING ===");
+}
 
 // Set training categories to view-only mode
 function setTrainingCategoriesViewOnly(isViewOnly) {
@@ -3853,6 +4175,13 @@ window.selectNewCategoryFromSearch = selectNewCategoryFromSearch;
 window.submitMidYearIDPFormWithTrainingCategories = submitMidYearIDPFormWithTrainingCategories;
 window.debugCategorySubmission = debugCategorySubmission;
 window.validateCategoryData = validateCategoryData;
+window.createAndSelectNewCategory = createAndSelectNewCategory;
+window.testCategoryAddition = testCategoryAddition;
+
+window.debugSelectedCategories = debugSelectedCategories;
+window.debugFormSubmissionData = debugFormSubmissionData;
+window.testAddCategory = testAddCategory;
+window.selectExistingCategory = selectExistingCategory;
 
 document.addEventListener('DOMContentLoaded', function() {
     console.log('Setting up enhanced feedback tabs...');
@@ -3930,8 +4259,128 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     }
     
-    console.log('Enhanced feedback tabs initialized successfully');
+     // Set current quarter if not already set
+    if (!currentQuarter) {
+        currentQuarter = getCurrentQuarter();
+        console.log('Auto-detected current quarter:', currentQuarter);
+    }
+    
+   // Wait a bit for other scripts to load
+    setTimeout(function() {
+        const exportBtn = document.getElementById('exportQuarterlyReportBtn');
+        
+        if (exportBtn) {
+            console.log('🔘 Export button found, attaching click handler...');
+            
+            // Remove any existing event listeners
+            exportBtn.removeEventListener('click', exportBtn._clickHandler);
+            
+            // Create new click handler
+            exportBtn._clickHandler = function(event) {
+                event.preventDefault();
+                event.stopPropagation();
+                
+                console.log('🖱️ Export button clicked!');
+                
+                // Get parameters
+                const userId = currentUserId || '<%= user.userId %>';
+                const quarter = currentQuarter || 'Q1';
+                const year = document.getElementById('yearSelect')?.value || currentYear || new Date().getFullYear();
+                
+                console.log('📋 Export parameters:', { userId, quarter, year });
+                
+                // Validate parameters
+                if (!userId) {
+                    alert('Error: User ID not found. Please refresh the page.');
+                    return;
+                }
+                
+                if (!quarter) {
+                    alert('Error: Quarter not specified. Please refresh the page.');
+                    return;
+                }
+                
+                // Start export
+                exportQuarterlyFeedbackReport(userId, quarter, year);
+            };
+            
+            // Attach event listener
+            exportBtn.addEventListener('click', exportBtn._clickHandler);
+            
+            console.log('✅ Export button click handler attached successfully');
+            console.log('📊 Current state:', {
+                userId: currentUserId,
+                quarter: currentQuarter,
+                year: currentYear
+            });
+        } else {
+            console.error('❌ Export button not found with ID: exportQuarterlyReportBtn');
+        }
+    }, 1500); // Wait 1.5 seconds for other scripts
 });
+
+function testExportNow() {
+    console.log('🧪 Running export test...');
+    
+    const userId = currentUserId || '<%= user.userId %>';
+    const quarter = currentQuarter || 'Q1';
+    const year = currentYear || new Date().getFullYear();
+    
+    console.log('🧪 Test parameters:', { userId, quarter, year });
+    
+    if (!userId) {
+        console.error('❌ No user ID available for test');
+        return;
+    }
+    
+    exportQuarterlyFeedbackReport(userId, quarter, year);
+}
+
+// Fix for missing functions (add dummy functions to prevent errors)
+if (typeof navigateToFinalYearIDP === 'undefined') {
+    window.navigateToFinalYearIDP = function() {
+        console.log('navigateToFinalYearIDP called but not implemented');
+    };
+}
+
+if (typeof loadMidYearIDPDataWithCategories === 'undefined') {
+    window.loadMidYearIDPDataWithCategories = function() {
+        console.log('loadMidYearIDPDataWithCategories called but not implemented');
+    };
+}
+
+// Make functions globally available
+window.exportQuarterlyFeedbackReport = exportQuarterlyFeedbackReport;
+window.testExportNow = testExportNow;
+window.currentQuarter = currentQuarter;
+window.currentUserId = currentUserId;
+window.currentYear = currentYear;
+
+console.log('🎯 Export functionality loaded successfully');
+console.log('💡 To test manually, run: testExportNow()');
+
+// Test function for manual export
+function testManualExport() {
+    const userId = currentUserId || '<%= user.userId %>';
+    const quarter = getCurrentQuarter();
+    const year = new Date().getFullYear();
+    
+    console.log('Manual export test with:', { userId, quarter, year });
+    exportQuarterlyFeedbackReport(userId, quarter, year);
+}
+
+// Global error handler for export-related errors
+window.addEventListener('error', function(event) {
+    if (event.message && event.message.includes('export')) {
+        console.error('Export-related error caught:', event.error);
+        showExportNotification('An unexpected error occurred during export', 'error');
+    }
+});
+
+// Make functions globally available
+window.exportQuarterlyFeedbackReport = exportQuarterlyFeedbackReport;
+window.getCurrentQuarter = getCurrentQuarter;
+window.showExportNotification = showExportNotification;
 
 // ENHANCED: Clear all filters including text search
 function clearAllFilters() {
@@ -4360,8 +4809,70 @@ async function loadExistingSelectedTrainings(userId) {
         selectedTrainings = [];
         updateSelectedTrainingsDisplay();
     }
+}// Function to export quarterly feedback report
+async function checkBackendRoute() {
+    try {
+        const testUrl = `/linemanager/quarterly-feedback-report/${currentUserId}?quarter=Q1&year=${currentYear}`;
+        console.log('Testing backend route:', testUrl);
+        
+        const response = await fetch(testUrl);
+        console.log('Backend response status:', response.status);
+        
+        if (response.ok) {
+            console.log('✅ Backend route is working!');
+            const blob = await response.blob();
+            console.log('PDF blob size:', blob.size);
+            
+            const url = window.URL.createObjectURL(blob);
+            const link = document.createElement('a');
+            link.href = url;
+            link.download = 'quarterly-feedback-report.pdf';
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+            window.URL.revokeObjectURL(url);
+        } else {
+            console.error('❌ Backend route failed:', response.status);
+        }
+    } catch (error) {
+        console.error('❌ Backend route test failed:', error);
+    }
 }
 
+
+function debugExportButton() {
+    console.log('=== EXPORT BUTTON DEBUG INFO ===');
+    console.log('Export button element:', document.getElementById('exportQuarterlyReportBtn'));
+    console.log('Current userId:', '<%= user.userId %>');
+    console.log('Current quarter:', currentQuarter);
+    console.log('Current year:', currentYear);
+    console.log('Year selector value:', document.getElementById('yearSelect')?.value);
+    console.log('================================');
+}
+// Call debug function when page loads (remove this later)
+document.addEventListener('DOMContentLoaded', function() {
+    setTimeout(debugExportButton, 1000);
+});
+
+// ===== ALTERNATIVE EXPORT METHOD (FALLBACK) =====
+// Add this as a fallback if the main export doesn't work
+function alternativeExport() {
+    const userId = '<%= user.userId %>';
+    const quarter = currentQuarter || 'Q1';
+    const year = currentYear;
+    
+    const url = `/linemanager/quarterly-feedback-report/${userId}?quarter=${quarter}&year=${year}`;
+    console.log('Alternative export URL:', url);
+    
+    // Simple window.open approach
+    const newWindow = window.open(url, '_blank');
+    
+    if (!newWindow) {
+        // If popup was blocked, try a direct location change
+        console.log('Popup blocked, trying direct approach...');
+        window.location.href = url;
+    }
+}
 
 // FIXED: Enhanced function to load Mid-Year IDP data for view-only mode (without year)
 async function loadMidYearIDPDataForViewOnly(userId) {
@@ -5054,21 +5565,28 @@ function validateIDPForm(formType) {
     
     return isValid;
 }
-
 async function submitMidYearIDPFormWithTrainingCategories(event) {
     event.preventDefault();
     
-    console.log("Submitting Mid-Year IDP form with training categories...");
-    console.log("Current selectedCategories:", selectedCategories);
+    console.log("=== STARTING SUBMISSION ===");
+    console.log("submitMidYearIDPFormWithTrainingCategories called");
+    
+    // Debug categories before validation
+    debugSelectedCategories();
+    debugFormSubmissionData();
     
     // Validate the form
     if (!validateIDPForm('mid')) {
+        console.log("Form validation failed");
         return;
     }
     
-    // Get selected training categories - FIXED
+    // Get selected training categories with debugging
     const trainingCategories = getSelectedCategoriesForSubmission();
-    console.log("Training categories for submission:", trainingCategories);
+    console.log("Final trainingCategories for submission:", trainingCategories);
+    console.log("trainingCategories type:", typeof trainingCategories);
+    console.log("trainingCategories isArray:", Array.isArray(trainingCategories));
+    console.log("trainingCategories length:", trainingCategories.length);
     
     // Validate that we have proper array of strings
     if (!Array.isArray(trainingCategories)) {
@@ -5088,14 +5606,16 @@ async function submitMidYearIDPFormWithTrainingCategories(event) {
         nextRoleShortTerm: document.getElementById("nextRoleShortTerm").value.trim(),
         nextRoleLongTerm: document.getElementById("nextRoleLongTerm").value.trim(),
         nextRoleMobility: document.getElementById("nextRoleMobility").value.trim(),
-        trainingCategories: trainingCategories, // FIXED: Send as proper array
+        trainingCategories: trainingCategories, // This should be an array of strings
         trainingRemarks: document.getElementById("trainingRemarks")?.value.trim() || "",
         year: new Date().getFullYear()
     };
     
-    console.log("Final form data being sent:", formData);
-    console.log("trainingCategories type:", typeof formData.trainingCategories);
-    console.log("trainingCategories isArray:", Array.isArray(formData.trainingCategories));
+    console.log("=== FINAL FORM DATA ===");
+    console.log("Complete form data:", formData);
+    console.log("trainingCategories in formData:", formData.trainingCategories);
+    console.log("JSON representation:", JSON.stringify(formData, null, 2));
+    console.log("=== END FINAL FORM DATA ===");
     
     // Disable the submit button and show loading state
     const submitButton = document.getElementById("submitMidYearIDP");
@@ -5105,6 +5625,8 @@ async function submitMidYearIDPFormWithTrainingCategories(event) {
     }
     
     try {
+        console.log("Sending POST request to server...");
+        
         const response = await fetch(`/linemanager/midyear-idp/${userId}`, {
             method: "POST",
             headers: {
@@ -5113,6 +5635,8 @@ async function submitMidYearIDPFormWithTrainingCategories(event) {
             },
             body: JSON.stringify(formData)
         });
+        
+        console.log("Server response status:", response.status);
         
         if (!response.ok) {
             const errorText = await response.text();
@@ -5165,7 +5689,6 @@ async function submitMidYearIDPFormWithTrainingCategories(event) {
         }
     }
 }
-
 // FIXED: Debug function to check the submission data
 function debugCategorySubmission() {
     console.log("=== CATEGORY SUBMISSION DEBUG ===");
@@ -5378,6 +5901,332 @@ function initializeTrainingDropdown() {
     }
 }
 
+document.addEventListener('DOMContentLoaded', function() {
+    console.log('Initializing enhanced training categories with debugging...');
+    
+    // Initialize the existing training categories functionality
+    if (typeof initializeTrainingCategories === 'function') {
+        initializeTrainingCategories();
+    }
+    
+    // Add debug button to the UI for testing (remove in production)
+    const debugContainer = document.createElement('div');
+    debugContainer.style.cssText = `
+        position: fixed;
+        top: 10px;
+        right: 10px;
+        z-index: 9999;
+        background: #fff;
+        padding: 10px;
+        border: 1px solid #ddd;
+        border-radius: 4px;
+        font-size: 12px;
+    `;
+    debugContainer.innerHTML = `
+        <div><strong>Debug Tools:</strong></div>
+        <button onclick="debugSelectedCategories()" style="margin: 2px; padding: 4px 8px; font-size: 11px;">Debug Categories</button>
+        <button onclick="testAddCategory()" style="margin: 2px; padding: 4px 8px; font-size: 11px;">Test Add</button>
+        <button onclick="debugFormSubmissionData()" style="margin: 2px; padding: 4px 8px; font-size: 11px;">Debug Form</button>
+    `;
+    document.body.appendChild(debugContainer);
+    
+    console.log('Enhanced training categories initialization complete');
+});
+
+// Test function you can run in console
+function testExport() {
+    const userId = currentUserId || '<%= user.userId %>';
+    const quarter = currentQuarter || 'Q1';
+    const year = new Date().getFullYear();
+    
+    console.log('Testing export with:', { userId, quarter, year });
+    exportQuarterlyFeedbackReport(userId, quarter, year);
+}
+
+if (typeof currentQuarter === 'undefined' || currentQuarter === null) {
+    const now = new Date();
+    const month = now.getMonth() + 1;
+    
+    if (month <= 3) currentQuarter = 'Q1';
+    else if (month <= 6) currentQuarter = 'Q2';
+    else if (month <= 9) currentQuarter = 'Q3';
+    else currentQuarter = 'Q4';
+    
+    console.log('Fixed currentQuarter to:', currentQuarter);
+}
+
+// Make sure currentUserId is available
+if (typeof currentUserId === 'undefined') {
+    currentUserId = '<%= user.userId %>';
+}
+
+// Make sure currentYear is available
+if (typeof currentYear === 'undefined') {
+    currentYear = new Date().getFullYear();
+}
+
+
+
+// ===== EXPORT FUNCTIONALITY =====
+async function exportQuarterlyFeedbackReport(userId, quarter, year) {
+    console.log(`🚀 Starting PDF export for user ${userId}, ${quarter} ${year}`);
+    
+    if (!userId || !quarter || !year) {
+        alert('Missing required parameters for export');
+        return;
+    }
+    
+    const exportBtn = document.getElementById('exportQuarterlyReportBtn');
+    let originalText = '';
+    
+    if (exportBtn) {
+        originalText = exportBtn.innerHTML;
+        exportBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Generating PDF...';
+        exportBtn.disabled = true;
+        exportBtn.style.backgroundColor = '#6c757d';
+    }
+    
+    try {
+        const exportUrl = `/linemanager/quarterly-feedback-report/${userId}?quarter=${quarter}&year=${year}`;
+        console.log('📡 Export URL:', exportUrl);
+        
+        // Show user that we're working
+        const notification = showLoadingNotification('Generating PDF report, please wait...');
+        
+        const response = await fetch(exportUrl, {
+            method: 'GET',
+            headers: {
+                'Accept': 'application/pdf',
+                'Cache-Control': 'no-cache'
+            }
+        });
+        
+        console.log('📊 Response status:', response.status);
+        console.log('📋 Response headers:', Object.fromEntries(response.headers.entries()));
+        
+        if (!response.ok) {
+            let errorMessage = `Server error: ${response.status}`;
+            try {
+                const contentType = response.headers.get('content-type');
+                if (contentType && contentType.includes('application/json')) {
+                    const errorData = await response.json();
+                    errorMessage = errorData.message || errorMessage;
+                    console.error('❌ Server error details:', errorData);
+                } else {
+                    const errorText = await response.text();
+                    console.error('❌ Server error text:', errorText);
+                    errorMessage = errorText || errorMessage;
+                }
+            } catch (e) {
+                console.error('❌ Could not parse error response');
+            }
+            
+            hideNotification(notification);
+            alert(`Export failed: ${errorMessage}`);
+            return;
+        }
+        
+        // Check content type
+        const contentType = response.headers.get('content-type');
+        if (!contentType || !contentType.includes('application/pdf')) {
+            hideNotification(notification);
+            alert(`Expected PDF but received ${contentType}. Check browser console for details.`);
+            
+            // Log response for debugging
+            const responseText = await response.text();
+            console.error('❌ Unexpected response:', responseText);
+            return;
+        }
+        
+        const blob = await response.blob();
+        console.log('📄 PDF blob size:', blob.size, 'bytes');
+        
+        if (blob.size === 0) {
+            hideNotification(notification);
+            alert('Received empty PDF file. Please check if there is data for the selected quarter.');
+            return;
+        }
+        
+        // Create and trigger download
+        const url = window.URL.createObjectURL(blob);
+        const link = document.createElement('a');
+        link.href = url;
+        link.download = `Quarterly_Feedback_Report_${userId}_${quarter}_${year}.pdf`;
+        link.style.display = 'none';
+        
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+        window.URL.revokeObjectURL(url);
+        
+        hideNotification(notification);
+        showSuccessNotification('✅ PDF downloaded successfully!');
+        console.log('✅ PDF download completed successfully');
+        
+    } catch (error) {
+        console.error('❌ Export failed with error:', error);
+        alert(`Export failed: ${error.message}`);
+    } finally {
+        // Reset button state
+        if (exportBtn) {
+            exportBtn.innerHTML = originalText;
+            exportBtn.disabled = false;
+            exportBtn.style.backgroundColor = '#28a745';
+        }
+    }
+}
+// Helper functions for notifications
+function showLoadingNotification(message) {
+    const notification = document.createElement('div');
+    notification.id = 'exportLoadingNotification';
+    notification.style.cssText = `
+        position: fixed;
+        top: 20px;
+        right: 20px;
+        background: linear-gradient(135deg, #007bff, #0056b3);
+        color: white;
+        padding: 16px 24px;
+        border-radius: 8px;
+        box-shadow: 0 6px 20px rgba(0, 0, 0, 0.15);
+        z-index: 10000;
+        font-weight: 500;
+        max-width: 400px;
+        border: 2px solid rgba(255, 255, 255, 0.2);
+    `;
+    
+    notification.innerHTML = `
+        <div style="display: flex; align-items: center; gap: 12px;">
+            <i class="fas fa-spinner fa-spin" style="font-size: 18px;"></i>
+            <div>${message}</div>
+        </div>
+    `;
+    
+    document.body.appendChild(notification);
+    return notification;
+}
+
+// Fixed function to determine current quarter
+function getCurrentQuarter() {
+    const now = new Date();
+    const month = now.getMonth() + 1; // JavaScript months are 0-indexed
+    
+    if (month <= 3) return 'Q1';
+    if (month <= 6) return 'Q2';
+    if (month <= 9) return 'Q3';
+    return 'Q4';
+}
+function showExportNotification(message, type = 'info') {
+    // Remove existing notifications
+    const existing = document.querySelectorAll('.export-notification');
+    existing.forEach(n => n.remove());
+    
+    const notification = document.createElement('div');
+    notification.className = 'export-notification';
+    
+    let backgroundColor = '#2196F3';
+    let icon = 'info-circle';
+    let borderColor = '#1976D2';
+    
+    switch (type) {
+        case 'success':
+            backgroundColor = '#4CAF50';
+            icon = 'check-circle';
+            borderColor = '#388E3C';
+            break;
+        case 'warning':
+            backgroundColor = '#FF9800';
+            icon = 'exclamation-triangle';
+            borderColor = '#F57C00';
+            break;
+        case 'error':
+            backgroundColor = '#f44336';
+            icon = 'times-circle';
+            borderColor = '#D32F2F';
+            break;
+    }
+    
+    notification.style.cssText = `
+        position: fixed;
+        top: 20px;
+        right: 20px;
+        background: linear-gradient(135deg, ${backgroundColor}, ${borderColor});
+        color: white;
+        padding: 16px 24px;
+        border-radius: 8px;
+        box-shadow: 0 6px 20px rgba(0, 0, 0, 0.15);
+        z-index: 10001;
+        font-weight: 500;
+        transform: translateX(100%);
+        transition: all 0.4s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+        max-width: 400px;
+        border: 2px solid rgba(255, 255, 255, 0.2);
+        backdrop-filter: blur(10px);
+    `;
+    
+    notification.innerHTML = `
+        <div style="display: flex; align-items: center; gap: 12px;">
+            <i class="fas fa-${icon}" style="font-size: 18px; flex-shrink: 0;"></i>
+            <div style="flex: 1; line-height: 1.4;">
+                ${message}
+            </div>
+            <button onclick="this.parentElement.parentElement.remove()" 
+                    style="background: none; border: none; color: white; cursor: pointer; padding: 4px; border-radius: 4px; opacity: 0.8; transition: opacity 0.2s;"
+                    onmouseover="this.style.opacity='1'; this.style.backgroundColor='rgba(255,255,255,0.1)'"
+                    onmouseout="this.style.opacity='0.8'; this.style.backgroundColor='transparent'">
+                <i class="fas fa-times" style="font-size: 12px;"></i>
+            </button>
+        </div>
+    `;
+    
+    document.body.appendChild(notification);
+    
+    // Animate in
+    setTimeout(() => {
+        notification.style.transform = 'translateX(0)';
+    }, 100);
+    
+    // Auto-remove after delay (longer for errors)
+    const delay = type === 'error' ? 8000 : type === 'warning' ? 6000 : 4000;
+    setTimeout(() => {
+        if (document.body.contains(notification)) {
+            notification.style.transform = 'translateX(100%)';
+            setTimeout(() => {
+                if (document.body.contains(notification)) {
+                    notification.remove();
+                }
+            }, 400);
+        }
+    }, delay);
+}
+
+async function checkBackendRoute() {
+    try {
+        const testUrl = `/linemanager/quarterly-feedback-report/${currentUserId}?quarter=Q1&year=${currentYear}`;
+        console.log('Testing backend route:', testUrl);
+        
+        const response = await fetch(testUrl);
+        console.log('Backend response status:', response.status);
+        
+        if (response.ok) {
+            console.log('✅ Backend route is working!');
+            const blob = await response.blob();
+            console.log('PDF blob size:', blob.size);
+            
+            const url = window.URL.createObjectURL(blob);
+            const link = document.createElement('a');
+            link.href = url;
+            link.download = 'quarterly-feedback-report.pdf';
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+            window.URL.revokeObjectURL(url);
+        } else {
+            console.error('❌ Backend route failed:', response.status);
+        }
+    } catch (error) {
+        console.error('❌ Backend route test failed:', error);
+    }
+}
 
 // Export functions for global access
 window.handleTrainingSelection = handleTrainingSelection;
@@ -5400,7 +6249,7 @@ window.submitMidYearIDPFormWithTraining = submitMidYearIDPFormWithTraining;
 // Initialize variables
 let currentStep = 0; // Track the current step
 let viewState = {}; // Store view state data
-let userId = ''; // Store user ID
+let userId = '<%= user.userId %>'; // Add this line - this was missing!
 let jobId = ''; // Store job ID
 let submittedObjectives = []; // Store submitted objectives
 let hardSkills = []; // Store hard skills
@@ -6253,6 +7102,18 @@ function addQuestionnaireSkillRow(skill, skillType) {
     }
 }
 function showFeedbackFormFromButton() {
+
+
+    // Get the clicked button to determine quarter
+    const clickedButton = event.target.closest('.step');
+    if (clickedButton) {
+        const quarter = clickedButton.getAttribute('data-quarter');
+        if (quarter) {
+            currentQuarter = `Q${quarter}`;
+            console.log('Current quarter set to:', currentQuarter);
+        }
+    }
+
     // Get the clicked element's quarter data
     const clickedElement = event.target.closest('[data-quarter]');
     if (!clickedElement) {
@@ -7133,71 +7994,44 @@ function addViewOnlyIndicator() {
     }
 }
 
-// Function to show success notification
-function showSuccessNotification(message, duration = 5000) {
-    // Remove any existing notifications
-    const existingNotifications = document.querySelectorAll('.success-notification');
-    existingNotifications.forEach(notification => {
-        if (document.body.contains(notification)) {
-            document.body.removeChild(notification);
-        }
-    });
-    
+function showSuccessNotification(message) {
     const notification = document.createElement('div');
-    notification.className = 'success-notification';
     notification.style.cssText = `
         position: fixed;
         top: 20px;
         right: 20px;
-        background: linear-gradient(135deg, #4CAF50, #45a049);
+        background: linear-gradient(135deg, #28a745, #1e7e34);
         color: white;
         padding: 16px 24px;
         border-radius: 8px;
         box-shadow: 0 6px 20px rgba(0, 0, 0, 0.15);
         z-index: 10000;
         font-weight: 500;
-        transform: translateX(100%);
-        transition: all 0.4s cubic-bezier(0.68, -0.55, 0.265, 1.55);
         max-width: 400px;
         border: 2px solid rgba(255, 255, 255, 0.2);
-        backdrop-filter: blur(10px);
     `;
     
     notification.innerHTML = `
         <div style="display: flex; align-items: center; gap: 12px;">
-            <i class="fas fa-check-circle" style="font-size: 18px; flex-shrink: 0;"></i>
-            <div style="flex: 1; line-height: 1.4;">
-                ${message}
-            </div>
-            <button onclick="this.parentElement.parentElement.style.transform='translateX(100%)'" 
-                    style="background: none; border: none; color: white; cursor: pointer; padding: 4px; border-radius: 4px; opacity: 0.8; transition: opacity 0.2s;"
-                    onmouseover="this.style.opacity='1'; this.style.backgroundColor='rgba(255,255,255,0.1)'"
-                    onmouseout="this.style.opacity='0.8'; this.style.backgroundColor='transparent'">
-                <i class="fas fa-times" style="font-size: 12px;"></i>
-            </button>
+            <i class="fas fa-check-circle" style="font-size: 18px;"></i>
+            <div>${message}</div>
         </div>
     `;
     
     document.body.appendChild(notification);
     
-    // Animate in
-    setTimeout(() => {
-        notification.style.transform = 'translateX(0)';
-    }, 100);
-    
-    // Auto-remove after specified duration
     setTimeout(() => {
         if (document.body.contains(notification)) {
-            notification.style.transform = 'translateX(100%)';
-            setTimeout(() => {
-                if (document.body.contains(notification)) {
-                    document.body.removeChild(notification);
-                }
-            }, 400);
+            notification.remove();
         }
-    }, duration);
+    }, 4000);
 }
 
+function hideNotification(notification) {
+    if (notification && document.body.contains(notification)) {
+        notification.remove();
+    }
+}
 // Enhanced function to update form state without refresh
 function updateFormStateBasedOnDataNoRefresh(data) {
     const isViewOnly = data.isViewOnly;
@@ -9086,36 +9920,81 @@ function replaceTrainingFunctions() {
 window.submitMidYearIDPFormWithTrainingCategories = submitMidYearIDPFormWithTrainingCategories;
 window.initializeTrainingDropdown = initializeTrainingDropdown;
 window.replaceTrainingFunctions = replaceTrainingFunctions;
+window.debugCategoryState = debugCategoryState;
 
 // Updated function to submit Mid-Year IDP form with training categories
 async function submitMidYearIDPFormWithTrainingCategories(event) {
     event.preventDefault();
     
-    console.log("Submitting Mid-Year IDP form with training categories...");
+    console.log("=== STARTING FORM SUBMISSION WITH CATEGORIES ===");
+    
+    // Debug categories before validation
+    debugCategoryState();
     
     // Validate the form
     if (!validateIDPForm('mid')) {
+        console.log("Form validation failed");
         return;
     }
     
-    // Get form data including selected training categories
+    // Get selected training categories with enhanced debugging
+    const trainingCategories = getSelectedCategoriesForSubmission();
+    
+    console.log("=== FINAL SUBMISSION DATA ===");
+    console.log("Final trainingCategories:", trainingCategories);
+    console.log("Type:", typeof trainingCategories);
+    console.log("IsArray:", Array.isArray(trainingCategories));
+    console.log("Length:", trainingCategories.length);
+    console.log("JSON representation:", JSON.stringify(trainingCategories));
+    
+    // Validate that we have proper array of strings
+    if (!Array.isArray(trainingCategories)) {
+        console.error("trainingCategories is not an array:", trainingCategories);
+        alert("Error: Training categories data is invalid. Please try again.");
+        return;
+    }
+    
+    // Additional validation: ensure all items are strings
+    const invalidItems = trainingCategories.filter(item => typeof item !== 'string' || item.trim() === '');
+    if (invalidItems.length > 0) {
+        console.error("Invalid items found in trainingCategories:", invalidItems);
+        alert("Error: Some training categories are invalid. Please try again.");
+        return;
+    }
+    
+    // Get form data
     const formData = {
-        profStrengths: document.getElementById("profStrengths").value,
-        profAreasForDevelopment: document.getElementById("profAreasForDevelopment").value,
-        profActionsToTake: document.getElementById("profActionsToTake").value,
-        leaderStrengths: document.getElementById("leaderStrengths").value,
-        leaderAreasForDevelopment: document.getElementById("leaderAreasForDevelopment").value,
-        leaderActionsToTake: document.getElementById("leaderActionsToTake").value,
-        nextRoleShortTerm: document.getElementById("nextRoleShortTerm").value,
-        nextRoleLongTerm: document.getElementById("nextRoleLongTerm").value,
-        nextRoleMobility: document.getElementById("nextRoleMobility").value,
-        trainingCategories: getSelectedCategoriesForSubmission(), // Categories instead of trainings
-        trainingRemarks: document.getElementById("trainingRemarks")?.value || "", // Training remarks
-        year: new Date().getFullYear() // Current year
+        profStrengths: document.getElementById("profStrengths").value.trim(),
+        profAreasForDevelopment: document.getElementById("profAreasForDevelopment").value.trim(),
+        profActionsToTake: document.getElementById("profActionsToTake").value.trim(),
+        leaderStrengths: document.getElementById("leaderStrengths").value.trim(),
+        leaderAreasForDevelopment: document.getElementById("leaderAreasForDevelopment").value.trim(),
+        leaderActionsToTake: document.getElementById("leaderActionsToTake").value.trim(),
+        nextRoleShortTerm: document.getElementById("nextRoleShortTerm").value.trim(),
+        nextRoleLongTerm: document.getElementById("nextRoleLongTerm").value.trim(),
+        nextRoleMobility: document.getElementById("nextRoleMobility").value.trim(),
+        trainingCategories: trainingCategories, // This should be an array of strings
+        trainingRemarks: document.getElementById("trainingRemarks")?.value.trim() || "",
+        year: new Date().getFullYear()
     };
     
-    console.log("Form data with training categories:", formData);
-    console.log("Selected categories count:", selectedCategories.length);
+    console.log("=== COMPLETE FORM DATA ===");
+    console.log("Form data structure:", {
+        ...formData,
+        profStrengths: formData.profStrengths.substring(0, 50) + '...',
+        profAreasForDevelopment: formData.profAreasForDevelopment.substring(0, 50) + '...',
+        profActionsToTake: formData.profActionsToTake.substring(0, 50) + '...',
+        leaderStrengths: formData.leaderStrengths.substring(0, 50) + '...',
+        leaderAreasForDevelopment: formData.leaderAreasForDevelopment.substring(0, 50) + '...',
+        leaderActionsToTake: formData.leaderActionsToTake.substring(0, 50) + '...',
+        nextRoleShortTerm: formData.nextRoleShortTerm.substring(0, 50) + '...',
+        nextRoleLongTerm: formData.nextRoleLongTerm.substring(0, 50) + '...',
+        nextRoleMobility: formData.nextRoleMobility.substring(0, 50) + '...',
+        trainingCategories: formData.trainingCategories // Show full array
+    });
+    console.log("trainingCategories in formData:", formData.trainingCategories);
+    console.log("JSON.stringify of complete formData:", JSON.stringify(formData, null, 2));
+    console.log("=== END COMPLETE FORM DATA ===");
     
     // Disable the submit button and show loading state
     const submitButton = document.getElementById("submitMidYearIDP");
@@ -9125,8 +10004,11 @@ async function submitMidYearIDPFormWithTrainingCategories(event) {
     }
     
     try {
-        // Submit the form using AJAX
-        const response = await fetch(`/linemanager/midyear-idp/${userId}`, {
+        console.log("Sending POST request to server...");
+        console.log("Request URL:", `/linemanager/midyear-idp/${currentUserId}`);
+        console.log("Request body:", JSON.stringify(formData, null, 2));
+        
+        const response = await fetch(`/linemanager/midyear-idp/${currentUserId}`, {
             method: "POST",
             headers: {
                 "Content-Type": "application/json",
@@ -9135,38 +10017,42 @@ async function submitMidYearIDPFormWithTrainingCategories(event) {
             body: JSON.stringify(formData)
         });
         
+        console.log("Server response status:", response.status);
+        console.log("Server response headers:", Object.fromEntries(response.headers.entries()));
+        
         if (!response.ok) {
-            throw new Error(`Server responded with status ${response.status}`);
+            const errorText = await response.text();
+            console.error("Server error response:", errorText);
+            throw new Error(`Server responded with status ${response.status}: ${errorText}`);
         }
         
         const result = await response.json();
+        console.log("Server response data:", result);
         
         if (result.success) {
             let successMessage = "Mid-Year IDP saved successfully!";
-            if (selectedCategories.length > 0) {
-                successMessage += `\n\nSelected ${selectedCategories.length} training categor${selectedCategories.length === 1 ? 'y' : 'ies'}:`;
-                selectedCategories.forEach(category => {
-                    successMessage += `\n• ${category.name}`;
+            if (trainingCategories.length > 0) {
+                successMessage += `\n\nSelected ${trainingCategories.length} training categor${trainingCategories.length === 1 ? 'y' : 'ies'}:`;
+                trainingCategories.forEach(category => {
+                    successMessage += `\n• ${category}`;
                 });
             }
             
-            if (formData.trainingRemarks) {
-                successMessage += `\n\nTraining remarks: ${formData.trainingRemarks.substring(0, 100)}${formData.trainingRemarks.length > 100 ? '...' : ''}`;
-            }
-            
+            console.log("✅ SUCCESS:", successMessage);
             alert(successMessage);
             
             // Update viewState to reflect the new status
             if (typeof viewState !== 'undefined') {
                 viewState.viewOnlyStatus.midyearidp = true;
-                
-                // Update the UI based on the new state
-                updateStepperAccessibility();
+                if (typeof updateStepperAccessibility === 'function') {
+                    updateStepperAccessibility();
+                }
             }
             
             // Redirect to refresh the page and show view-only mode
-            window.location.href = `/linemanager/records-performance-tracker/${userId}`;
+            window.location.href = `/linemanager/records-performance-tracker/${currentUserId}`;
         } else {
+            console.error("❌ Server returned error:", result);
             alert("Error saving Mid-Year IDP: " + (result.message || "Unknown error"));
             
             // Re-enable the submit button
@@ -9176,8 +10062,8 @@ async function submitMidYearIDPFormWithTrainingCategories(event) {
             }
         }
     } catch (error) {
-        console.error("Error submitting Mid-Year IDP:", error);
-        alert("An error occurred while submitting the Mid-Year IDP. Please try again.");
+        console.error("❌ Error submitting Mid-Year IDP:", error);
+        alert("An error occurred while submitting the Mid-Year IDP. Please try again.\n\nError: " + error.message);
         
         // Re-enable the submit button
         if (submitButton) {
@@ -9185,8 +10071,9 @@ async function submitMidYearIDPFormWithTrainingCategories(event) {
             submitButton.innerHTML = '<i class="fas fa-paper-plane"></i> Submit Mid-Year IDP';
         }
     }
+    
+    console.log("=== END FORM SUBMISSION ===");
 }
-
 
 // FIXED: Debug function to check category selection
 function debugCategorySelection() {
@@ -9211,23 +10098,43 @@ function debugCategorySelection() {
 
 // Add event listener to manually test category addition
 function testCategoryAddition() {
-    console.log("Testing category addition...");
+    console.log("=== TESTING CATEGORY ADDITION ===");
     
-    // Simulate adding a category
-    const testCategory = {
-        id: "999",
-        name: "Test Category",
-        category: "Test Category",
-        isNew: true
-    };
+    // Clear existing categories
+    selectedCategories = [];
     
-    selectedCategories.push(testCategory);
-    console.log("Added test category:", selectedCategories);
+    // Add test categories
+    const testCategories = [
+        "Implementing Personalized Shopping Experiences",
+        "Advanced Data Analytics",
+        "Customer Service Excellence"
+    ];
+    
+    testCategories.forEach((categoryName, index) => {
+        const newCategory = {
+            id: `test_${index}`,
+            name: categoryName,
+            category: categoryName,
+            isNew: false
+        };
+        
+        selectedCategories.push(newCategory);
+        console.log("Added test category:", newCategory);
+    });
+    
+    // Update display
     updateSelectedCategoriesDisplay();
     
     // Test submission format
     const submissionData = getSelectedCategoriesForSubmission();
     console.log("Test submission data:", submissionData);
+    console.log("Expected format: ['Implementing Personalized Shopping Experiences', 'Advanced Data Analytics', 'Customer Service Excellence']");
+    console.log("JSON.stringify:", JSON.stringify(submissionData));
+    
+    // Debug final state
+    debugCategoryState();
+    
+    console.log("=== END TESTING ===");
 }
 
 // Function to submit Final-Year IDP form
