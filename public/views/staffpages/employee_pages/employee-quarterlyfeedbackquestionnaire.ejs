@@ -769,6 +769,8 @@
 
 <script>
 document.addEventListener('DOMContentLoaded', function() {
+    console.log("=== FRONTEND DEBUG START ===");
+    
     const quarterDropdown = document.getElementById('quarter-dropdown');
     const staffDropdown = document.getElementById('staff-dropdown');
     const questionnaireContainer = document.getElementById('questionnaire-container');
@@ -784,111 +786,156 @@ document.addEventListener('DOMContentLoaded', function() {
     let submittedFeedbacks = {}; // Will store the userId of members with submitted feedback
     let totalCompleted = 0;
     
+    // DEBUG: Log initial data
+    console.log("🔍 Initial frontend data:");
+    console.log("  Active quarter:", activeQuarter);
+    console.log("  Quarter dropdown found:", !!quarterDropdown);
+    console.log("  Staff dropdown found:", !!staffDropdown);
+    
+    // Log server data
+    console.log("👥 Staff dropdown options:");
+    if (staffDropdown) {
+        const staffOptions = staffDropdown.querySelectorAll('option');
+        console.log("  Total options found:", staffOptions.length);
+        
+        staffOptions.forEach((option, index) => {
+            if (index === 0) {
+                console.log(`    ${index}. PLACEHOLDER: "${option.textContent}"`);
+            } else {
+                console.log(`    ${index}. "${option.textContent}" (value: "${option.value}")`);
+            }
+        });
+    }
+    
     // Check if the current quarter has data
     function checkIfQuarterHasData() {
-        // Count the number of department members available in dropdown
+        console.log("🔍 Checking if quarter has data...");
+        
         const staffOptions = document.querySelectorAll('#staff-dropdown option:not(:first-child)');
+        console.log(`📊 Found ${staffOptions.length} staff options for ${activeQuarter}`);
         
         if (staffOptions.length === 0) {
-            // No data available for this quarter, show message
-            noDataQuarterSpan.textContent = activeQuarter;
-            noQuarterDataMessage.style.display = 'block';
+            console.log("⚠️  No staff options found, showing no data message");
             
-            // Hide the department members dropdown card
-            const staffDropdownCard = staffDropdown.closest('.card');
-            staffDropdownCard.style.display = 'none';
+            if (noDataQuarterSpan) noDataQuarterSpan.textContent = activeQuarter;
+            if (noQuarterDataMessage) noQuarterDataMessage.style.display = 'block';
             
-            // Reset the questionnaire container
-            questionnaireContainer.innerHTML = `
-                <div class="h-full flex items-center justify-center bg-gray-50 rounded-lg p-8 border border-dashed border-gray-300">
-                    <p class="text-gray-500 text-center">No feedback data is available for ${activeQuarter}</p>
-                </div>
-            `;
+            const staffDropdownCard = staffDropdown ? staffDropdown.closest('.card') : null;
+            if (staffDropdownCard) {
+                console.log("🙈 Hiding staff dropdown card");
+                staffDropdownCard.style.display = 'none';
+            }
             
-            // Reset progress bar
-            progressBar.style.width = '0%';
-            progressText.textContent = '0 of 0 completed';
-            progressPercentage.textContent = '0%';
+            if (questionnaireContainer) {
+                questionnaireContainer.innerHTML = `
+                    <div class="h-full flex items-center justify-center bg-gray-50 rounded-lg p-8 border border-dashed border-gray-300">
+                        <p class="text-gray-500 text-center">No feedback data is available for ${activeQuarter}</p>
+                    </div>
+                `;
+            }
+            
+            if (progressBar) progressBar.style.width = '0%';
+            if (progressText) progressText.textContent = '0 of 0 completed';
+            if (progressPercentage) progressPercentage.textContent = '0%';
             
             return false;
         } else {
-            // Data is available, hide the message
-            noQuarterDataMessage.style.display = 'none';
+            console.log("✅ Staff options found, hiding no data message");
             
-            // Show the department members dropdown card
-            const staffDropdownCard = staffDropdown.closest('.card');
-            staffDropdownCard.style.display = 'block';
+            if (noQuarterDataMessage) noQuarterDataMessage.style.display = 'none';
+            
+            const staffDropdownCard = staffDropdown ? staffDropdown.closest('.card') : null;
+            if (staffDropdownCard) {
+                console.log("👁️  Showing staff dropdown card");
+                staffDropdownCard.style.display = 'block';
+            }
             
             return true;
         }
     }
     
     // Run the check on page load
-    checkIfQuarterHasData();
+    const hasData = checkIfQuarterHasData();
+    console.log("📋 Has quarter data:", hasData);
     
     // Handle quarter selection change
-    quarterDropdown.addEventListener('change', function() {
-        const newQuarter = this.value;
-        
-        // Show loading state before redirection
-        questionnaireContainer.innerHTML = `
-            <div class="h-full flex items-center justify-center">
-                <div class="text-center">
-                    <div class="w-12 h-12 border-4 border-t-4 border-t-blue-500 border-gray-200 rounded-full animate-spin mx-auto"></div>
-                    <p class="mt-4 text-gray-600">Loading ${newQuarter} data...</p>
-                </div>
-            </div>
-        `;
-        
-        // Redirect to same page with new quarter parameter
-        window.location.href = `/employee/staffFeedbackList?quarter=${newQuarter}`;
-    });
+    if (quarterDropdown) {
+        quarterDropdown.addEventListener('change', function() {
+            const newQuarter = this.value;
+            console.log("🔄 Quarter changed to:", newQuarter);
+            
+            if (questionnaireContainer) {
+                questionnaireContainer.innerHTML = `
+                    <div class="h-full flex items-center justify-center">
+                        <div class="text-center">
+                            <div class="w-12 h-12 border-4 border-t-4 border-t-blue-500 border-gray-200 rounded-full animate-spin mx-auto"></div>
+                            <p class="mt-4 text-gray-600">Loading ${newQuarter} data...</p>
+                        </div>
+                    </div>
+                `;
+            }
+            
+            const newUrl = `/employee/staffFeedbackList?quarter=${newQuarter}`;
+            console.log("🔗 Redirecting to:", newUrl);
+            window.location.href = newUrl;
+        });
+    }
     
     // Function to update the department progress bar
     function updateProgressBar() {
+        if (!staffDropdown || !progressBar || !progressText || !progressPercentage) {
+            console.log("⚠️  Progress bar elements not found");
+            return;
+        }
+        
         const staffOptions = document.querySelectorAll('#staff-dropdown option');
-        const total = staffOptions.length > 1 ? staffOptions.length - 1 : 0; // Exclude the placeholder option
+        const total = staffOptions.length > 1 ? staffOptions.length - 1 : 0;
         const percentage = total > 0 ? Math.round((totalCompleted / total) * 100) : 0;
         
         progressBar.style.width = `${percentage}%`;
         progressText.textContent = `${totalCompleted} of ${total} completed`;
         progressPercentage.textContent = `${percentage}%`;
+        
+        console.log(`📊 Progress updated: ${totalCompleted}/${total} (${percentage}%)`);
     }
     
     // Function to check if feedback has been submitted for a user
     async function checkFeedbackStatus(userId) {
         try {
-            const response = await fetch(`/employee/api/checkFeedbackStatus?userId=${userId}&quarter=${activeQuarter}`);
+            console.log(`🔍 Checking feedback status for user ${userId}, quarter ${activeQuarter}`);
+            const apiUrl = `/employee/api/checkFeedbackStatus?userId=${userId}&quarter=${activeQuarter}`;
+            
+            const response = await fetch(apiUrl);
             const data = await response.json();
             
+            console.log(`📊 Feedback status for user ${userId}:`, data);
+            
             if (data.success) {
-                // Update the global tracking object
                 submittedFeedbacks[userId] = data.submitted;
-                
-                // Count total completed
                 totalCompleted = Object.values(submittedFeedbacks).filter(Boolean).length;
-                
-                // Update progress bar
                 updateProgressBar();
-                
                 return data.submitted;
+            } else {
+                console.log(`⚠️  API returned success: false for user ${userId}:`, data.message);
             }
             return false;
         } catch (error) {
-            console.error("Error checking feedback status:", error);
+            console.error("❌ Error checking feedback status:", error);
             return false;
         }
     }
     
     // Initialize feedback status checks for all members
     async function initializeFeedbackStatus() {
-        if (!checkIfQuarterHasData()) {
-            // If no data for quarter, don't proceed with checks
+        if (!hasData || !staffDropdown) {
+            console.log('⚠️  Skipping feedback status initialization');
             return;
         }
         
         const staffOptions = document.querySelectorAll('#staff-dropdown option');
         let completedCount = 0;
+        
+        console.log('🔄 Initializing feedback status for', staffOptions.length - 1, 'staff members');
         
         for (const option of staffOptions) {
             const userId = option.value;
@@ -900,590 +947,650 @@ document.addEventListener('DOMContentLoaded', function() {
             }
         }
         
-        // Update progress bar after checking all members
         totalCompleted = completedCount;
         updateProgressBar();
+        
+        console.log('✅ Feedback status initialization complete:', completedCount, 'completed');
     }
     
-    // Call the initialization function
-    initializeFeedbackStatus();
-    // Handle staff member selection
-    staffDropdown.addEventListener('change', function() {
-        selectedMemberId = this.value;
+    // Function to render the questionnaire
+    function renderQuestionnaire(data, employeeName, jobTitle, isSubmitted) {
+        console.log("🎨 Rendering questionnaire with data:", data);
         
-        if (!selectedMemberId) {
-            // Reset container if no selection
+        const { feedback, objectives, hardSkills, softSkills } = data;
+        
+        if (!feedback) {
+            console.error("❌ No feedback data received");
             questionnaireContainer.innerHTML = `
-                <div class="h-full flex items-center justify-center bg-gray-50 rounded-lg p-8 border border-dashed border-gray-300">
-                    <p class="text-gray-500 text-center">Select a department member to begin the 360 feedback process</p>
+                <div class="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded">
+                    <p><strong>Error:</strong> No feedback data received from server</p>
                 </div>
             `;
-            statusIndicator.style.display = 'none';
             return;
         }
         
-        // Get the selected option's data
-        const selectedOption = this.options[this.selectedIndex];
-        const memberName = selectedOption.getAttribute('data-name');
-        const memberJob = selectedOption.getAttribute('data-job');
+        // Format dates properly
+        const startDate = feedback.setStartDate ? new Date(feedback.setStartDate).toLocaleDateString() : 'Not set';
+        const endDate = feedback.setEndDate ? new Date(feedback.setEndDate).toLocaleDateString() : 'Not set';
         
-        // Check if feedback has already been submitted for this member
-        const isSubmitted = submittedFeedbacks[selectedMemberId];
+        // Extract employee first and last name
+        const nameParts = employeeName.split(',');
+        const lastName = nameParts[0] ? nameParts[0].trim() : '';
+        const firstName = nameParts[1] ? nameParts[1].trim().split('\n')[0] : '';
         
-        // Update status indicator
-        if (isSubmitted) {
-            statusIndicator.className = 'status-indicator status-submitted';
-            statusIndicator.innerHTML = `
-                <i class="fas fa-check-circle"></i>
-                Feedback has already been submitted for ${memberName}
-            `;
+        console.log("📋 Questionnaire data summary:", {
+            objectivesCount: objectives?.length || 0,
+            hardSkillsCount: hardSkills?.length || 0,
+            softSkillsCount: softSkills?.length || 0,
+            isSubmitted: isSubmitted
+        });
+        
+        // Build the questionnaire HTML
+        let html = `
+            <form id="feedback-form" class="card">
+                <div class="card-header bg-blue-50">
+                    <h2 class="card-title">
+                        <i class="fas fa-comment-dots mr-2"></i> 
+                        360 Degree Feedback Questionnaire ${isSubmitted ? '<span class="ml-2 text-green-600">(Submitted)</span>' : ''}
+                    </h2>
+                </div>
+                <div class="card-content p-6">
+                    <!-- Date Information -->
+                    <div class="flex flex-col md:flex-row gap-6 mb-6">
+                        <div class="flex-1">
+                            <label class="block text-sm font-medium mb-1">Start Date:</label>
+                            <div class="text-gray-900 p-2 bg-gray-50 rounded border">
+                                ${startDate}
+                            </div>
+                        </div>
+                        <div class="flex-1">
+                            <label class="block text-sm font-medium mb-1">End Date:</label>
+                            <div class="text-gray-900 p-2 bg-gray-50 rounded border">
+                                ${endDate}
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Employee Details -->
+                    <div class="bg-gray-50 p-4 rounded-lg mb-6 border">
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            <div><strong>Employee:</strong> ${lastName}, ${firstName}</div>
+                            <div><strong>Position:</strong> ${jobTitle || feedback.jobTitle || 'Employee'}</div>
+                            <div><strong>Company:</strong> Prime Infrastructure</div>
+                            <div><strong>Department:</strong> ${feedback.deptName || 'Department'}</div>
+                        </div>
+                    </div>
+
+                    <hr class="my-6 border-gray-200" />
+
+                    <!-- Hidden fields for form submission -->
+                    <input type="hidden" name="feedbackId" value="${feedback.id}">
+                    <input type="hidden" name="quarter" value="${feedback.quarter}">
+                    <input type="hidden" name="userId" value="${feedback.userId}">
+                    <input type="hidden" name="reviewerUserId" value="${'<%= user.userId %>'}">
+        `;
+        
+        // Objectives Section
+        html += `
+            <!-- Objectives Section -->
+            <div class="mb-8">
+                <h3 class="text-xl font-semibold mb-4 text-blue-900">
+                    <i class="fas fa-bullseye mr-2"></i> Objective Setting Questions
+                </h3>
+                
+                <div class="overflow-x-auto">
+                    <table class="min-w-full divide-y divide-gray-200">
+                        <thead class="bg-gray-50">
+                            <tr>
+                                <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">KRA/Objectives</th>
+                                <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">KPI</th>
+                                <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Target</th>
+                                <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">UOM</th>
+                                <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Weight</th>
+                                <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Feedback</th>
+                            </tr>
+                        </thead>
+                        <tbody class="bg-white divide-y divide-gray-200">
+        `;
+        
+        if (objectives && objectives.length > 0) {
+            objectives.forEach((objective, index) => {
+                html += `
+                    <tr>
+                        <td class="px-4 py-4 whitespace-nowrap text-sm">${objective.description || objective.objectiveDescription || 'No description'}</td>
+                        <td class="px-4 py-4 whitespace-nowrap text-sm">${objective.kpi || ''}</td>
+                        <td class="px-4 py-4 whitespace-nowrap text-sm">${objective.target || ''}</td>
+                        <td class="px-4 py-4 whitespace-nowrap text-sm">${objective.uom || ''}</td>
+                        <td class="px-4 py-4 whitespace-nowrap text-sm">${objective.weight || ''}</td>
+                        <td class="px-4 py-4">
+                            <div class="space-y-2">
+                                <div class="star-rating">
+                                    <input type="radio" id="objective${index}-star5" name="objectives[${index}][quantitative]" value="5" ${isSubmitted ? 'disabled' : ''} />
+                                    <label for="objective${index}-star5" title="5 stars"></label>
+                                    <input type="radio" id="objective${index}-star4" name="objectives[${index}][quantitative]" value="4" ${isSubmitted ? 'disabled' : ''} />
+                                    <label for="objective${index}-star4" title="4 stars"></label>
+                                    <input type="radio" id="objective${index}-star3" name="objectives[${index}][quantitative]" value="3" ${isSubmitted ? 'disabled' : ''} />
+                                    <label for="objective${index}-star3" title="3 stars"></label>
+                                    <input type="radio" id="objective${index}-star2" name="objectives[${index}][quantitative]" value="2" ${isSubmitted ? 'disabled' : ''} />
+                                    <label for="objective${index}-star2" title="2 stars"></label>
+                                    <input type="radio" id="objective${index}-star1" name="objectives[${index}][quantitative]" value="1" ${isSubmitted ? 'disabled' : ''} required />
+                                    <label for="objective${index}-star1" title="1 star"></label>
+                                </div>
+                                <textarea 
+                                    name="objectives[${index}][qualitative]"
+                                    class="w-full p-2 border rounded" 
+                                    rows="2"
+                                    placeholder="Qualitative feedback..."
+                                    required
+                                    ${isSubmitted ? 'disabled' : ''}
+                                ></textarea>
+                                <input 
+                                    type="hidden" 
+                                    name="objectives[${index}][objectiveId]" 
+                                    value="${objective.objectiveId}"
+                                />
+                            </div>
+                        </td>
+                    </tr>
+                `;
+            });
         } else {
-            statusIndicator.className = 'status-indicator status-pending';
-            statusIndicator.innerHTML = `
-                <i class="fas fa-clock"></i>
-                Feedback is pending for ${memberName}
+            html += `
+                <tr>
+                    <td colspan="6" class="px-4 py-4 text-center text-sm text-gray-500">
+                        No objectives found for this employee.
+                    </td>
+                </tr>
             `;
         }
-        statusIndicator.style.display = 'flex';
         
-        // Show loading state
-        questionnaireContainer.innerHTML = `
-            <div class="h-full flex items-center justify-center">
-                <div class="text-center">
-                    <div class="w-12 h-12 border-4 border-t-4 border-t-blue-500 border-gray-200 rounded-full animate-spin mx-auto"></div>
-                    <p class="mt-4 text-gray-600">Loading questionnaire...</p>
+        html += `
+                        </tbody>
+                    </table>
                 </div>
             </div>
         `;
         
-        // Fetch questionnaire data
-        fetch(`/employee/api/getQuestionnaireData?userId=${selectedMemberId}&quarter=${activeQuarter}`)
-            .then(response => response.json())
-            .then(data => {
-                if (data.success) {
-                    renderQuestionnaire(data, memberName, memberJob, isSubmitted);
-                } else {
-                    throw new Error(data.message || 'Failed to load questionnaire data');
-                }
-            })
-            .catch(error => {
+        // Hard Skills Section
+        html += `
+            <!-- Hard Skills Section -->
+            <div class="mb-8">
+                <h3 class="text-xl font-semibold mb-4 text-blue-900">
+                    <i class="fas fa-cogs mr-2"></i> Hard Skills
+                </h3>
+                
+                <div class="overflow-x-auto">
+                    <table class="min-w-full divide-y divide-gray-200">
+                        <thead class="bg-gray-50">
+                            <tr>
+                                <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Skill Name</th>
+                                <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Feedback</th>
+                            </tr>
+                        </thead>
+                        <tbody class="bg-white divide-y divide-gray-200">
+        `;
+        
+        if (hardSkills && hardSkills.length > 0) {
+            hardSkills.forEach((skill, index) => {
+                html += `
+                    <tr>
+                        <td class="px-4 py-4 whitespace-nowrap text-sm">${skill.jobReqSkillName || 'Skill name not available'}</td>
+                        <td class="px-4 py-4">
+                            <div class="space-y-2">
+                                <div class="star-rating">
+                                    <input type="radio" id="hardSkill${index}-star5" name="hardSkills[${index}][quantitative]" value="5" ${isSubmitted ? 'disabled' : ''} />
+                                    <label for="hardSkill${index}-star5" title="5 stars"></label>
+                                    <input type="radio" id="hardSkill${index}-star4" name="hardSkills[${index}][quantitative]" value="4" ${isSubmitted ? 'disabled' : ''} />
+                                    <label for="hardSkill${index}-star4" title="4 stars"></label>
+                                    <input type="radio" id="hardSkill${index}-star3" name="hardSkills[${index}][quantitative]" value="3" ${isSubmitted ? 'disabled' : ''} />
+                                    <label for="hardSkill${index}-star3" title="3 stars"></label>
+                                    <input type="radio" id="hardSkill${index}-star2" name="hardSkills[${index}][quantitative]" value="2" ${isSubmitted ? 'disabled' : ''} />
+                                    <label for="hardSkill${index}-star2" title="2 stars"></label>
+                                    <input type="radio" id="hardSkill${index}-star1" name="hardSkills[${index}][quantitative]" value="1" ${isSubmitted ? 'disabled' : ''} required />
+                                    <label for="hardSkill${index}-star1" title="1 star"></label>
+                                </div>
+                                <textarea 
+                                    name="hardSkills[${index}][qualitative]"
+                                    class="w-full p-2 border rounded" 
+                                    rows="2"
+                                    placeholder="Qualitative feedback..."
+                                    required
+                                    ${isSubmitted ? 'disabled' : ''}
+                                ></textarea>
+                                <input 
+                                    type="hidden" 
+                                    name="hardSkills[${index}][skillId]" 
+                                    value="${skill.jobReqSkillId || skill.skillId}"
+                                />
+                            </div>
+                        </td>
+                    </tr>
+                `;
+            });
+        } else {
+            html += `
+                <tr>
+                    <td colspan="2" class="px-4 py-4 text-center text-sm text-gray-500">
+                        No hard skills found for this employee.
+                    </td>
+                </tr>
+            `;
+        }
+        
+        html += `
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        `;
+        
+        // Soft Skills Section
+        html += `
+            <!-- Soft Skills Section -->
+            <div class="mb-8">
+                <h3 class="text-xl font-semibold mb-4 text-blue-900">
+                    <i class="fas fa-comments mr-2"></i> Soft Skills
+                </h3>
+                
+                <div class="overflow-x-auto">
+                    <table class="min-w-full divide-y divide-gray-200">
+                        <thead class="bg-gray-50">
+                            <tr>
+                                <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Skill Name</th>
+                                <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Feedback</th>
+                            </tr>
+                        </thead>
+                        <tbody class="bg-white divide-y divide-gray-200">
+        `;
+        
+        if (softSkills && softSkills.length > 0) {
+            softSkills.forEach((skill, index) => {
+                html += `
+                    <tr>
+                        <td class="px-4 py-4 whitespace-nowrap text-sm">${skill.jobReqSkillName || 'Skill name not available'}</td>
+                        <td class="px-4 py-4">
+                            <div class="space-y-2">
+                                <div class="star-rating">
+                                    <input type="radio" id="softSkill${index}-star5" name="softSkills[${index}][quantitative]" value="5" ${isSubmitted ? 'disabled' : ''} />
+                                    <label for="softSkill${index}-star5" title="5 stars"></label>
+                                    <input type="radio" id="softSkill${index}-star4" name="softSkills[${index}][quantitative]" value="4" ${isSubmitted ? 'disabled' : ''} />
+                                    <label for="softSkill${index}-star4" title="4 stars"></label>
+                                    <input type="radio" id="softSkill${index}-star3" name="softSkills[${index}][quantitative]" value="3" ${isSubmitted ? 'disabled' : ''} />
+                                    <label for="softSkill${index}-star3" title="3 stars"></label>
+                                    <input type="radio" id="softSkill${index}-star2" name="softSkills[${index}][quantitative]" value="2" ${isSubmitted ? 'disabled' : ''} />
+                                    <label for="softSkill${index}-star2" title="2 stars"></label>
+                                    <input type="radio" id="softSkill${index}-star1" name="softSkills[${index}][quantitative]" value="1" ${isSubmitted ? 'disabled' : ''} required />
+                                    <label for="softSkill${index}-star1" title="1 star"></label>
+                                </div>
+                                <textarea 
+                                    name="softSkills[${index}][qualitative]"
+                                    class="w-full p-2 border rounded" 
+                                    rows="2"
+                                    placeholder="Qualitative feedback..."
+                                    required
+                                    ${isSubmitted ? 'disabled' : ''}
+                                ></textarea>
+                                <input 
+                                    type="hidden" 
+                                    name="softSkills[${index}][skillId]" 
+                                    value="${skill.jobReqSkillId || skill.skillId}"
+                                />
+                            </div>
+                        </td>
+                    </tr>
+                `;
+            });
+        } else {
+            html += `
+                <tr>
+                    <td colspan="2" class="px-4 py-4 text-center text-sm text-gray-500">
+                        No soft skills found for this employee.
+                    </td>
+                </tr>
+            `;
+        }
+        
+        html += `
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        `;
+        
+        // Submit Button (only show if not already submitted)
+        if (!isSubmitted) {
+            html += `
+                <!-- Submit Button -->
+                <div class="flex justify-end mt-6">
+                    <button
+                        type="submit"
+                        class="bg-blue-600 hover:bg-blue-700 text-white font-medium py-2 px-6 rounded-md flex items-center"
+                    >
+                        <i class="fas fa-save mr-2"></i> Submit Feedback
+                    </button>
+                </div>
+            `;
+        } else {
+            html += `
+                <!-- Already Submitted Message -->
+                <div class="flex justify-center mt-6">
+                    <div class="bg-green-100 text-green-700 px-4 py-3 rounded flex items-center">
+                        <i class="fas fa-check-circle mr-2"></i>
+                        You have already submitted feedback for this employee.
+                    </div>
+                </div>
+            `;
+        }
+        
+        html += `
+                </div>
+            </form>
+        `;
+        
+        // Set the HTML
+        questionnaireContainer.innerHTML = html;
+        console.log("✅ Questionnaire rendered successfully");
+        
+        // Add form submission handler if not already submitted
+        if (!isSubmitted) {
+            const feedbackForm = document.getElementById('feedback-form');
+            if (feedbackForm) {
+                feedbackForm.addEventListener('submit', handleFormSubmission);
+                console.log("✅ Form submission handler attached");
+            }
+        }
+    }
+    
+    // Handle form submission
+    function handleFormSubmission(event) {
+        event.preventDefault();
+        console.log("📝 Form submission started");
+        
+        // Validate the form
+        if (!validateForm()) {
+            console.log("❌ Form validation failed");
+            return;
+        }
+        
+        // Get form data
+        const formData = new FormData(event.target);
+        const formDataObj = {};
+        
+        // Convert FormData to object
+        for (let [key, value] of formData.entries()) {
+            if (key.includes('[') && key.includes(']')) {
+                const parsedKey = parseFormDataKey(key);
+                setNestedValue(formDataObj, parsedKey, value);
+            } else {
+                formDataObj[key] = value;
+            }
+        }
+        
+        // Clean up arrays
+        ['objectives', 'hardSkills', 'softSkills'].forEach(key => {
+            if (formDataObj[key]) {
+                formDataObj[key] = Object.values(formDataObj[key]);
+            }
+        });
+        
+        console.log("📤 Submitting form data:", formDataObj);
+        
+        // Show submitting state
+        const submitButton = document.querySelector('#feedback-form button[type="submit"]');
+        if (submitButton) {
+            submitButton.disabled = true;
+            submitButton.innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i> Submitting...';
+        }
+        
+        // Submit data
+        fetch('/employee/api/submitFeedback', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify(formDataObj)
+        })
+        .then(response => response.json())
+        .then(data => {
+            console.log("📨 Submission response:", data);
+            
+            if (data.success) {
+                submittedFeedbacks[selectedMemberId] = true;
+                totalCompleted++;
+                updateProgressBar();
+                
                 questionnaireContainer.innerHTML = `
-                    <div class="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded">
-                        <p>${error.message}</p>
+                    <div class="bg-green-100 border border-green-400 text-green-700 px-4 py-3 rounded">
+                        <p>✅ Feedback submitted successfully!</p>
                     </div>
                 `;
+                
+                if (statusIndicator) {
+                    statusIndicator.className = 'status-indicator status-submitted';
+                    statusIndicator.innerHTML = `
+                        <i class="fas fa-check-circle"></i>
+                        Feedback has been submitted
+                    `;
+                }
+                
+                setTimeout(() => {
+                    staffDropdown.value = '';
+                    statusIndicator.style.display = 'none';
+                    questionnaireContainer.innerHTML = `
+                        <div class="h-full flex items-center justify-center bg-gray-50 rounded-lg p-8 border border-dashed border-gray-300">
+                            <p class="text-gray-500 text-center">Select a department member to begin the 360 feedback process</p>
+                        </div>
+                    `;
+                }, 2000);
+            } else {
+                throw new Error(data.message || 'Failed to submit feedback');
+            }
+        })
+        .catch(error => {
+            console.error("❌ Submission error:", error);
+            
+            const errorDiv = document.createElement('div');
+            errorDiv.className = 'bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded mt-4';
+            errorDiv.innerHTML = `<p>${error.message}</p>`;
+            event.target.appendChild(errorDiv);
+            
+            if (submitButton) {
+                submitButton.disabled = false;
+                submitButton.innerHTML = '<i class="fas fa-save mr-2"></i> Submit Feedback';
+            }
+        });
+    }
+    
+    // Form validation function
+    function validateForm() {
+        let isValid = true;
+        
+        const requiredFields = document.querySelectorAll('#feedback-form [required]');
+        requiredFields.forEach(field => {
+            if (!field.value.trim()) {
+                field.classList.add('border-red-500');
+                isValid = false;
+            } else {
+                field.classList.remove('border-red-500');
+            }
+        });
+        
+        const starGroups = document.querySelectorAll('.star-rating');
+        starGroups.forEach(group => {
+            const checkedStar = group.querySelector('input:checked');
+            if (!checkedStar) {
+                group.classList.add('border-red-500');
+                isValid = false;
+            } else {
+                group.classList.remove('border-red-500');
+            }
+        });
+        
+        if (!isValid) {
+            const errorDiv = document.createElement('div');
+            errorDiv.className = 'bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded mt-4';
+            errorDiv.innerHTML = `<p>Please complete all required fields and ratings.</p>`;
+            
+            const existingError = document.querySelector('.bg-red-100');
+            if (existingError) {
+                existingError.remove();
+            }
+            
+            document.getElementById('feedback-form').appendChild(errorDiv);
+            document.getElementById('feedback-form').scrollIntoView({ behavior: 'smooth' });
+        }
+        
+        return isValid;
+    }
+    
+    // Helper function to parse complex form data keys
+    function parseFormDataKey(key) {
+        const keyParts = key.match(/([^\[\]]+)|\[([^\[\]]*)\]/g);
+        const parsedKey = [];
+        
+        if (keyParts) {
+            keyParts.forEach(part => {
+                const cleanPart = part.replace(/\[|\]/g, '');
+                if (cleanPart !== '') {
+                    parsedKey.push(cleanPart);
+                }
             });
-    });
-        // Function to render the questionnaire
-        function renderQuestionnaire(data, employeeName, jobTitle, isSubmitted) {
-            const { feedback, objectives, hardSkills, softSkills } = data;
+        }
+        
+        return parsedKey;
+    }
+    
+    // Helper function to set nested values in an object
+    function setNestedValue(obj, keyParts, value) {
+        let current = obj;
+        
+        for (let i = 0; i < keyParts.length; i++) {
+            const key = keyParts[i];
+            const isLast = i === keyParts.length - 1;
             
-            // Format dates properly
-            const startDate = feedback.setStartDate ? new Date(feedback.setStartDate).toLocaleDateString() : 'Not set';
-            const endDate = feedback.setEndDate ? new Date(feedback.setEndDate).toLocaleDateString() : 'Not set';
+            if (isLast) {
+                current[key] = value;
+            } else {
+                if (!current[key]) {
+                    const nextKey = keyParts[i + 1];
+                    current[key] = !isNaN(parseInt(nextKey)) ? [] : {};
+                }
+                current = current[key];
+            }
+        }
+        
+        return obj;
+    }
+    
+    // Call the initialization function
+    initializeFeedbackStatus();
+    
+    // Handle staff member selection
+    if (staffDropdown) {
+        staffDropdown.addEventListener('change', function() {
+            selectedMemberId = this.value;
+            console.log('👤 Staff member selected:', selectedMemberId);
             
-            // Extract employee first and last name
-            const nameParts = employeeName.split(',');
-            const lastName = nameParts[0] ? nameParts[0].trim() : '';
-            const firstName = nameParts[1] ? nameParts[1].trim().split('\n')[0] : '';
-            
-            // Build the questionnaire HTML
-            let html = `
-                <form id="feedback-form" class="card">
-                    <div class="card-header bg-blue-50">
-                        <h2 class="card-title">
-                            <i class="fas fa-comment-dots mr-2"></i> 
-                            360 Degree Feedback Questionnaire ${isSubmitted ? '<span class="ml-2 text-green-600">(Submitted)</span>' : ''}
-                        </h2>
-                    </div>
-                    <div class="card-content p-6">
-                        <!-- Date Information -->
-                        <div class="flex flex-col md:flex-row gap-6 mb-6">
-                            <div class="flex-1">
-                                <label class="block text-sm font-medium mb-1">Start Date:</label>
-                                <div class="text-gray-900 p-2 bg-gray-50 rounded border">
-                                    ${startDate}
-                                </div>
-                            </div>
-                            <div class="flex-1">
-                                <label class="block text-sm font-medium mb-1">End Date:</label>
-                                <div class="text-gray-900 p-2 bg-gray-50 rounded border">
-                                    ${endDate}
-                                </div>
-                            </div>
+            if (!selectedMemberId) {
+                console.log('🔄 No member selected, resetting container');
+                if (questionnaireContainer) {
+                    questionnaireContainer.innerHTML = `
+                        <div class="h-full flex items-center justify-center bg-gray-50 rounded-lg p-8 border border-dashed border-gray-300">
+                            <p class="text-gray-500 text-center">Select a department member to begin the 360 feedback process</p>
                         </div>
-    
-                        <!-- Employee Details -->
-                        <div class="bg-gray-50 p-4 rounded-lg mb-6 border">
-                            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                                <div><strong>Employee:</strong> ${lastName}, ${firstName}</div>
-                                <div><strong>Position:</strong> ${jobTitle || feedback.jobTitle || 'Employee'}</div>
-                                <div><strong>Company:</strong> Prime Infrastructure</div>
-                                <div><strong>Department:</strong> ${feedback.deptName || 'Department'}</div>
-                            </div>
-                        </div>
-    
-                        <hr class="my-6 border-gray-200" />
-    
-                        <!-- Hidden fields for form submission -->
-                        <input type="hidden" name="feedbackId" value="${feedback.id}">
-                        <input type="hidden" name="quarter" value="${feedback.quarter}">
-                        <input type="hidden" name="userId" value="${feedback.userId}">
-                        <input type="hidden" name="reviewerUserId" value="${'<%= user.userId %>'}">
-
-            `;
-            
-            // Objectives Section
-            html += `
-                <!-- Objectives Section -->
-                <div class="mb-8">
-                    <h3 class="text-xl font-semibold mb-4 text-blue-900">
-                        <i class="fas fa-bullseye mr-2"></i> Objective Setting Questions
-                    </h3>
-                    
-                    <div class="overflow-x-auto">
-                        <table class="min-w-full divide-y divide-gray-200">
-                            <thead class="bg-gray-50">
-                                <tr>
-                                    <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">KRA/Objectives</th>
-                                    <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">KPI</th>
-                                    <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Target</th>
-                                    <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">UOM</th>
-                                    <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Weight</th>
-                                    <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Feedback</th>
-                                </tr>
-                            </thead>
-                            <tbody class="bg-white divide-y divide-gray-200">
-            `;
-            
-            if (objectives && objectives.length > 0) {
-                objectives.forEach((objective, index) => {
-                    html += `
-                        <tr>
-                            <td class="px-4 py-4 whitespace-nowrap text-sm">${objective.description || objective.objectiveDescription}</td>
-                            <td class="px-4 py-4 whitespace-nowrap text-sm">${objective.kpi || ''}</td>
-                            <td class="px-4 py-4 whitespace-nowrap text-sm">${objective.target || ''}</td>
-                            <td class="px-4 py-4 whitespace-nowrap text-sm">${objective.uom || ''}</td>
-                            <td class="px-4 py-4 whitespace-nowrap text-sm">${objective.weight || ''}</td>
-                            <td class="px-4 py-4">
-                                <div class="space-y-2">
-                                    <div class="star-rating">
-                                        <input type="radio" id="objective${index}-star5" name="objectives[${index}][quantitative]" value="5" ${isSubmitted ? 'disabled' : ''} />
-                                        <label for="objective${index}-star5" title="5 stars"></label>
-                                        <input type="radio" id="objective${index}-star4" name="objectives[${index}][quantitative]" value="4" ${isSubmitted ? 'disabled' : ''} />
-                                        <label for="objective${index}-star4" title="4 stars"></label>
-                                        <input type="radio" id="objective${index}-star3" name="objectives[${index}][quantitative]" value="3" ${isSubmitted ? 'disabled' : ''} />
-                                        <label for="objective${index}-star3" title="3 stars"></label>
-                                        <input type="radio" id="objective${index}-star2" name="objectives[${index}][quantitative]" value="2" ${isSubmitted ? 'disabled' : ''} />
-                                        <label for="objective${index}-star2" title="2 stars"></label>
-                                        <input type="radio" id="objective${index}-star1" name="objectives[${index}][quantitative]" value="1" ${isSubmitted ? 'disabled' : ''} required />
-                                        <label for="objective${index}-star1" title="1 star"></label>
-                                    </div>
-                                    <textarea 
-                                        name="objectives[${index}][qualitative]"
-                                        class="w-full p-2 border rounded" 
-                                        rows="2"
-                                        placeholder="Qualitative feedback..."
-                                        required
-                                        ${isSubmitted ? 'disabled' : ''}
-                                    ></textarea>
-                                    <input 
-                                        type="hidden" 
-                                        name="objectives[${index}][objectiveId]" 
-                                        value="${objective.objectiveId}"
-                                    />
-                                </div>
-                            </td>
-                        </tr>
                     `;
-                });
-            } else {
-                html += `
-                    <tr>
-                        <td colspan="6" class="px-4 py-4 text-center text-sm text-gray-500">
-                            No objectives found for this employee.
-                        </td>
-                    </tr>
-                `;
+                }
+                if (statusIndicator) statusIndicator.style.display = 'none';
+                return;
             }
             
-            html += `
-                            </tbody>
-                        </table>
-                    </div>
-                </div>
-            `;
+            const selectedOption = this.options[this.selectedIndex];
+            const memberName = selectedOption.getAttribute('data-name');
+            const memberJob = selectedOption.getAttribute('data-job');
             
-            // Hard Skills Section
-            html += `
-                <!-- Hard Skills Section -->
-                <div class="mb-8">
-                    <h3 class="text-xl font-semibold mb-4 text-blue-900">
-                        <i class="fas fa-cogs mr-2"></i> Hard Skills
-                    </h3>
-                    
-                    <div class="overflow-x-auto">
-                        <table class="min-w-full divide-y divide-gray-200">
-                            <thead class="bg-gray-50">
-                                <tr>
-                                    <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Skill Name</th>
-                                    <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Feedback</th>
-                                </tr>
-                            </thead>
-                            <tbody class="bg-white divide-y divide-gray-200">
-            `;
+            console.log('👤 Selected member details:', { memberName, memberJob, userId: selectedMemberId });
             
-            if (hardSkills && hardSkills.length > 0) {
-                hardSkills.forEach((skill, index) => {
-                    html += `
-                        <tr>
-                            <td class="px-4 py-4 whitespace-nowrap text-sm">${skill.jobReqSkillName}</td>
-                            <td class="px-4 py-4">
-                                <div class="space-y-2">
-                                    <div class="star-rating">
-                                        <input type="radio" id="hardSkill${index}-star5" name="hardSkills[${index}][quantitative]" value="5" ${isSubmitted ? 'disabled' : ''} />
-                                        <label for="hardSkill${index}-star5" title="5 stars"></label>
-                                        <input type="radio" id="hardSkill${index}-star4" name="hardSkills[${index}][quantitative]" value="4" ${isSubmitted ? 'disabled' : ''} />
-                                        <label for="hardSkill${index}-star4" title="4 stars"></label>
-                                        <input type="radio" id="hardSkill${index}-star3" name="hardSkills[${index}][quantitative]" value="3" ${isSubmitted ? 'disabled' : ''} />
-                                        <label for="hardSkill${index}-star3" title="3 stars"></label>
-                                        <input type="radio" id="hardSkill${index}-star2" name="hardSkills[${index}][quantitative]" value="2" ${isSubmitted ? 'disabled' : ''} />
-                                        <label for="hardSkill${index}-star2" title="2 stars"></label>
-                                        <input type="radio" id="hardSkill${index}-star1" name="hardSkills[${index}][quantitative]" value="1" ${isSubmitted ? 'disabled' : ''} required />
-                                        <label for="hardSkill${index}-star1" title="1 star"></label>
-                                    </div>
-                                    <textarea 
-                                        name="hardSkills[${index}][qualitative]"
-                                        class="w-full p-2 border rounded" 
-                                        rows="2"
-                                        placeholder="Qualitative feedback..."
-                                        required
-                                        ${isSubmitted ? 'disabled' : ''}
-                                    ></textarea>
-                                    <input 
-                                        type="hidden" 
-                                        name="hardSkills[${index}][skillId]" 
-                                        value="${skill.jobReqSkillId}"
-                                    />
-                                </div>
-                            </td>
-                        </tr>
+            const isSubmitted = submittedFeedbacks[selectedMemberId];
+            console.log('📊 Is feedback already submitted:', isSubmitted);
+            
+            if (statusIndicator) {
+                if (isSubmitted) {
+                    statusIndicator.className = 'status-indicator status-submitted';
+                    statusIndicator.innerHTML = `
+                        <i class="fas fa-check-circle"></i>
+                        Feedback has already been submitted for ${memberName}
                     `;
-                });
-            } else {
-                html += `
-                    <tr>
-                        <td colspan="2" class="px-4 py-4 text-center text-sm text-gray-500">
-                            No hard skills found for this employee.
-                        </td>
-                    </tr>
-                `;
+                } else {
+                    statusIndicator.className = 'status-indicator status-pending';
+                    statusIndicator.innerHTML = `
+                        <i class="fas fa-clock"></i>
+                        Feedback is pending for ${memberName}
+                    `;
+                }
+                statusIndicator.style.display = 'flex';
             }
             
-            html += `
-                            </tbody>
-                        </table>
-                    </div>
-                </div>
-            `;
-            
-            // Soft Skills Section
-            html += `
-                <!-- Soft Skills Section -->
-                <div class="mb-8">
-                    <h3 class="text-xl font-semibold mb-4 text-blue-900">
-                        <i class="fas fa-comments mr-2"></i> Soft Skills
-                    </h3>
-                    
-                    <div class="overflow-x-auto">
-                        <table class="min-w-full divide-y divide-gray-200">
-                            <thead class="bg-gray-50">
-                                <tr>
-                                    <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Skill Name</th>
-                                    <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Feedback</th>
-                                </tr>
-                            </thead>
-                            <tbody class="bg-white divide-y divide-gray-200">
-            `;
-            
-            if (softSkills && softSkills.length > 0) {
-                softSkills.forEach((skill, index) => {
-                    html += `
-                        <tr>
-                            <td class="px-4 py-4 whitespace-nowrap text-sm">${skill.jobReqSkillName}</td>
-                            <td class="px-4 py-4">
-                                <div class="space-y-2">
-                                    <div class="star-rating">
-                                        <input type="radio" id="softSkill${index}-star5" name="softSkills[${index}][quantitative]" value="5" ${isSubmitted ? 'disabled' : ''} />
-                                        <label for="softSkill${index}-star5" title="5 stars"></label>
-                                        <input type="radio" id="softSkill${index}-star4" name="softSkills[${index}][quantitative]" value="4" ${isSubmitted ? 'disabled' : ''} />
-                                        <label for="softSkill${index}-star4" title="4 stars"></label>
-                                        <input type="radio" id="softSkill${index}-star3" name="softSkills[${index}][quantitative]" value="3" ${isSubmitted ? 'disabled' : ''} />
-                                        <label for="softSkill${index}-star3" title="3 stars"></label>
-                                        <input type="radio" id="softSkill${index}-star2" name="softSkills[${index}][quantitative]" value="2" ${isSubmitted ? 'disabled' : ''} />
-                                        <label for="softSkill${index}-star2" title="2 stars"></label>
-                                        <input type="radio" id="softSkill${index}-star1" name="softSkills[${index}][quantitative]" value="1" ${isSubmitted ? 'disabled' : ''} required />
-                                        <label for="softSkill${index}-star1" title="1 star"></label>
-                                    </div>
-                                    <textarea 
-                                        name="softSkills[${index}][qualitative]"
-                                        class="w-full p-2 border rounded" 
-                                        rows="2"
-                                        placeholder="Qualitative feedback..."
-                                        required
-                                        ${isSubmitted ? 'disabled' : ''}
-                                    ></textarea>
-                                    <input 
-                                        type="hidden" 
-                                        name="softSkills[${index}][skillId]" 
-                                        value="${skill.jobReqSkillId}"
-                                    />
-                                </div>
-                            </td>
-                        </tr>
-                    `;
-                });
-            } else {
-                html += `
-                    <tr>
-                        <td colspan="2" class="px-4 py-4 text-center text-sm text-gray-500">
-                            No soft skills found for this employee.
-                        </td>
-                    </tr>
-                `;
-            }
-            
-            html += `
-                            </tbody>
-                        </table>
-                    </div>
-                </div>
-            `;
-            
-            // Submit Button (only show if not already submitted)
-            if (!isSubmitted) {
-                html += `
-                    <!-- Submit Button -->
-                    <div class="flex justify-end mt-6">
-                        <button
-                            type="submit"
-                            class="bg-blue-600 hover:bg-blue-700 text-white font-medium py-2 px-6 rounded-md flex items-center"
-                        >
-                            <i class="fas fa-save mr-2"></i> Submit Feedback
-                        </button>
-                    </div>
-                `;
-            } else {
-                html += `
-                    <!-- Already Submitted Message -->
-                    <div class="flex justify-center mt-6">
-                        <div class="bg-green-100 text-green-700 px-4 py-3 rounded flex items-center">
-                            <i class="fas fa-check-circle mr-2"></i>
-                            You have already submitted feedback for this employee.
+            if (questionnaireContainer) {
+                questionnaireContainer.innerHTML = `
+                    <div class="h-full flex items-center justify-center">
+                        <div class="text-center">
+                            <div class="w-12 h-12 border-4 border-t-4 border-t-blue-500 border-gray-200 rounded-full animate-spin mx-auto"></div>
+                            <p class="mt-4 text-gray-600">Loading questionnaire...</p>
                         </div>
                     </div>
                 `;
             }
             
-            html += `
-                    </div>
-                </form>
-            `;
+            const apiUrl = `/employee/api/getQuestionnaireData?userId=${selectedMemberId}&quarter=${activeQuarter}`;
+            console.log('🔗 Fetching questionnaire data from:', apiUrl);
             
-            // Set the HTML and add event listener
-            questionnaireContainer.innerHTML = html;
-            
-            // Add form submission handler if not already submitted
-            if (!isSubmitted) {
-                document.getElementById('feedback-form').addEventListener('submit', function(event) {
-                    event.preventDefault();
-                    
-                    // Validate the form
-                    if (!validateForm()) {
-                        return;
+            fetch(apiUrl)
+                .then(response => {
+                    console.log('📡 API response status:', response.status);
+                    if (!response.ok) {
+                        throw new Error(`HTTP ${response.status}: ${response.statusText}`);
                     }
-                    
-                    // Get form data
-                    const formData = new FormData(this);
-                    const formDataObj = {};
-                    
-                    // Convert FormData to object
-                    for (let [key, value] of formData.entries()) {
-                        if (key.includes('[') && key.includes(']')) {
-                            // Handle nested form data (arrays and objects)
-                            const parsedKey = parseFormDataKey(key);
-                            setNestedValue(formDataObj, parsedKey, value);
-                        } else {
-                            formDataObj[key] = value;
-                        }
-                    }
-                    
-                    // Clean up arrays (convert from objects to actual arrays)
-                    ['objectives', 'hardSkills', 'softSkills'].forEach(key => {
-                        if (formDataObj[key]) {
-                            formDataObj[key] = Object.values(formDataObj[key]);
-                        }
-                    });
-                    
-                    // Show submitting state
-                    const submitButton = document.querySelector('#feedback-form button[type="submit"]');
-                    if (submitButton) {
-                        submitButton.disabled = true;
-                        submitButton.innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i> Submitting...';
-                    }
-                    
-                    // Submit data
-                    fetch('/employee/api/submitFeedback', {
-                        method: 'POST',
-                        headers: {
-                            'Content-Type': 'application/json'
-                        },
-                        body: JSON.stringify(formDataObj)
-                    })
-                    .then(response => response.json())
-                    .then(data => {
-                        if (data.success) {
-                            // Update submission status
-                            submittedFeedbacks[selectedMemberId] = true;
-                            totalCompleted++;
-                            updateProgressBar();
-                            
-                            // Show success message
-                            questionnaireContainer.innerHTML = `
-                                <div class="bg-green-100 border border-green-400 text-green-700 px-4 py-3 rounded">
-                                    <p>Feedback submitted successfully!</p>
-                                </div>
-                            `;
-                            
-                            // Update status indicator
-                            statusIndicator.className = 'status-indicator status-submitted';
-                            statusIndicator.innerHTML = `
-                                <i class="fas fa-check-circle"></i>
-                                Feedback has been submitted for ${employeeName}
-                            `;
-                            
-                            // Reload dropdown after delay
-                            setTimeout(() => {
-                                staffDropdown.value = '';
-                                statusIndicator.style.display = 'none';
-                                questionnaireContainer.innerHTML = `
-                                    <div class="h-full flex items-center justify-center bg-gray-50 rounded-lg p-8 border border-dashed border-gray-300">
-                                        <p class="text-gray-500 text-center">Select a department member to begin the 360 feedback process</p>
-                                    </div>
-                                `;
-                            }, 2000);
-                        } else {
-                            throw new Error(data.message || 'Failed to submit feedback');
-                        }
-                    })
-                    .catch(error => {
-                        // Show error message below form
-                        const errorDiv = document.createElement('div');
-                        errorDiv.className = 'bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded mt-4';
-                        errorDiv.innerHTML = `<p>${error.message}</p>`;
-                        document.getElementById('feedback-form').appendChild(errorDiv);
+                    return response.json();
+                })
+                .then(data => {
+                    console.log('📊 API response data:', data);
+                    if (data.success) {
+                        console.log('✅ Successfully received questionnaire data');
+                        console.log('📋 Data summary:', {
+                            objectivesCount: data.objectives?.length || 0,
+                            hardSkillsCount: data.hardSkills?.length || 0,
+                            softSkillsCount: data.softSkills?.length || 0,
+                            isSubmitted: data.isSubmitted
+                        });
                         
-                        // Reset submit button
-                        if (submitButton) {
-                            submitButton.disabled = false;
-                            submitButton.innerHTML = '<i class="fas fa-save mr-2"></i> Submit Feedback';
-                        }
-                    });
-                });
-            }
-        }
-        
-        // Function to validate the form
-        function validateForm() {
-            let isValid = true;
-            
-            // Check all required fields
-            const requiredFields = document.querySelectorAll('#feedback-form [required]');
-            requiredFields.forEach(field => {
-                if (!field.value.trim()) {
-                    field.classList.add('border-red-500');
-                    isValid = false;
-                } else {
-                    field.classList.remove('border-red-500');
-                }
-            });
-            
-            // Check star ratings
-            const starGroups = document.querySelectorAll('.star-rating');
-            starGroups.forEach(group => {
-                const checkedStar = group.querySelector('input:checked');
-                if (!checkedStar) {
-                    group.classList.add('border-red-500');
-                    isValid = false;
-                } else {
-                    group.classList.remove('border-red-500');
-                }
-            });
-            
-            if (!isValid) {
-                // Show error message
-                const errorDiv = document.createElement('div');
-                errorDiv.className = 'bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded mt-4';
-                errorDiv.innerHTML = `<p>Please complete all required fields and ratings.</p>`;
-                
-                // Remove existing error message if any
-                const existingError = document.querySelector('.bg-red-100');
-                if (existingError) {
-                    existingError.remove();
-                }
-                
-                document.getElementById('feedback-form').appendChild(errorDiv);
-                
-                // Scroll to the top of the form
-                document.getElementById('feedback-form').scrollIntoView({ behavior: 'smooth' });
-            }
-            
-            return isValid;
-        }
-        
-        // Helper function to parse complex form data keys like objectives[0][quantitative]
-        function parseFormDataKey(key) {
-            const keyParts = key.match(/([^\[\]]+)|\[([^\[\]]*)\]/g);
-            const parsedKey = [];
-            
-            if (keyParts) {
-                keyParts.forEach(part => {
-                    // Remove brackets and add to parsedKey array
-                    const cleanPart = part.replace(/\[|\]/g, '');
-                    if (cleanPart !== '') {
-                        parsedKey.push(cleanPart);
+                        renderQuestionnaire(data, memberName, memberJob, isSubmitted);
+                    } else {
+                        throw new Error(data.message || 'Failed to load questionnaire data');
+                    }
+                })
+                .catch(error => {
+                    console.error('❌ Error fetching questionnaire:', error);
+                    if (questionnaireContainer) {
+                        questionnaireContainer.innerHTML = `
+                            <div class="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded">
+                                <p><strong>❌ Error:</strong> ${error.message}</p>
+                                <p><strong>Debug Info:</strong></p>
+                                <ul class="list-disc ml-5">
+                                    <li>User ID: ${selectedMemberId}</li>
+                                    <li>Quarter: ${activeQuarter}</li>
+                                    <li>API URL: ${apiUrl}</li>
+                                </ul>
+                            </div>
+                        `;
                     }
                 });
-            }
-            
-            return parsedKey;
-        }
-        
-        // Helper function to set nested values in an object
-        function setNestedValue(obj, keyParts, value) {
-            let current = obj;
-            
-            for (let i = 0; i < keyParts.length; i++) {
-                const key = keyParts[i];
-                const isLast = i === keyParts.length - 1;
-                
-                if (isLast) {
-                    // Set the final value
-                    current[key] = value;
-                } else {
-                    // Create empty object/array for intermediate keys if they don't exist
-                    if (!current[key]) {
-                        // If next key is numeric, create an array, otherwise an object
-                        const nextKey = keyParts[i + 1];
-                        current[key] = !isNaN(parseInt(nextKey)) ? [] : {};
-                    }
-                    current = current[key];
-                }
-            }
-            
-            return obj;
-        }
-    });
+        });
+    } else {
+        console.log("❌ Staff dropdown not found for event listener!");
+    }
+    
+    console.log("=== FRONTEND DEBUG END ===");
+});
 </script>
 
 </body>
