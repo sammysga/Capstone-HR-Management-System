@@ -9093,7 +9093,6 @@ getFinalYearIDPWithTrainings: async function(req, res) {
         // Get data from request
         const { 
             jobId, 
-            departmentId,
             performancePeriodYear,
             objectiveDescrpt = [], 
             objectiveKPI = [], 
@@ -9102,35 +9101,76 @@ getFinalYearIDPWithTrainings: async function(req, res) {
             objectiveAssignedWeight = [] 
         } = req.body;
 
+        console.log("Received data:", req.body); // Debug log
+
+        // Validate required fields
+        if (!jobId || !performancePeriodYear) {
+            return res.status(400).json({ 
+                success: false, 
+                message: "Missing required fields: jobId or performancePeriodYear" 
+            });
+        }
+
         // Validate objectives
         if (objectiveDescrpt.length === 0 || 
             objectiveDescrpt.length !== objectiveKPI.length ||
             objectiveDescrpt.length !== objectiveTarget.length ||
             objectiveDescrpt.length !== objectiveUOM.length ||
             objectiveDescrpt.length !== objectiveAssignedWeight.length) {
-            return res.status(400).json({ success: false, message: "Invalid objectives data" });
+            return res.status(400).json({ success: false, message: "Invalid objectives data - arrays must have same length" });
         }
 
         // Calculate total weight (frontend should have validated this)
-        const totalWeight = objectiveAssignedWeight.reduce((sum, weight) => sum + parseFloat(weight), 0);
-        if (totalWeight !== 100) {
-            return res.status(400).json({ success: false, message: "Total weight must be 100%" });
+        const totalWeight = objectiveAssignedWeight.reduce((sum, weight) => {
+            const numWeight = typeof weight === 'string' ? parseFloat(weight) : weight;
+            return sum + numWeight;
+        }, 0);
+        
+        if (Math.abs(totalWeight - 100) > 0.01) {
+            return res.status(400).json({ 
+                success: false, 
+                message: `Total weight must be 100%. Received: ${totalWeight}%` 
+            });
         }
 
-        // Insert objective settings
-        const { data: objectiveSettingsData, error: objectiveSettingsError } = await supabase
+        // Check if objective settings already exist for this user/year
+        const { data: existingSettings } = await supabase
             .from("objectivesettings")
-            .insert({
-                userId,
-                jobId,
-                departmentId,
-                performancePeriodYear
-            })
-            .select("objectiveSettingsId");
+            .select("objectiveSettingsId")
+            .eq("userId", userId)
+            .eq("performancePeriodYear", performancePeriodYear)
+            .single();
 
-        if (objectiveSettingsError) throw objectiveSettingsError;
+        let objectiveSettingsId;
 
-        const objectiveSettingsId = objectiveSettingsData[0].objectiveSettingsId;
+        if (existingSettings) {
+            // Update existing settings
+            objectiveSettingsId = existingSettings.objectiveSettingsId;
+            
+            // Delete existing objectives
+            await supabase
+                .from("objectivesettings_objectives")
+                .delete()
+                .eq("objectiveSettingsId", objectiveSettingsId);
+        } else {
+            // Insert new objective settings
+            const { data: objectiveSettingsData, error: objectiveSettingsError } = await supabase
+                .from("objectivesettings")
+                .insert({
+                    userId,
+                    jobId,
+                    performancePeriodYear
+                })
+                .select("objectiveSettingsId")
+                .single();
+
+            if (objectiveSettingsError) {
+                console.error("Error inserting objective settings:", objectiveSettingsError);
+                throw objectiveSettingsError;
+            }
+
+            objectiveSettingsId = objectiveSettingsData.objectiveSettingsId;
+        }
 
         // Prepare objectives data
         const objectives = objectiveDescrpt.map((desc, index) => ({
@@ -9142,18 +9182,30 @@ getFinalYearIDPWithTrainings: async function(req, res) {
             objectiveAssignedWeight: parseFloat(objectiveAssignedWeight[index]) / 100 // Convert to decimal
         }));
 
-        // Insert objectives
-        const { error: objectivesInsertError } = await supabase
-            .from("objectivesettings_objectives")
-            .insert(objectives);
+        console.log("Inserting objectives:", objectives); // Debug log
 
-        if (objectivesInsertError) throw objectivesInsertError;
+        // Insert objectives
+        const { data: insertedObjectives, error: objectivesInsertError } = await supabase
+            .from("objectivesettings_objectives")
+            .insert(objectives)
+            .select();
+
+        if (objectivesInsertError) {
+            console.error("Error inserting objectives:", objectivesInsertError);
+            throw objectivesInsertError;
+        }
+
+        console.log("Successfully inserted objectives:", insertedObjectives); // Debug log
 
         // Return success response
         res.json({ 
             success: true,
             message: "Objectives saved successfully",
-            redirectUrl: `/linemanager/records-performance-tracker/view/${userId}`
+            redirectUrl: `/linemanager/records-performance-tracker/view/${userId}`,
+            data: {
+                objectiveSettingsId,
+                objectivesCount: objectives.length
+            }
         });
 
     } catch (error) {

@@ -11620,13 +11620,13 @@ async function saveObjectives(event) {
     event.preventDefault();
     
     // Get form values properly
-    const departmentId = document.getElementById("departmentId").value; // Add this hidden field
     const performancePeriodYear = document.getElementById("performanceDate").textContent;
-    const userId = document.getElementById("userId").value; // Add this hidden field
+    const userId = document.getElementById("userId").value;
+    const jobId = document.getElementById("jobId").value; // Add this line - you were missing jobId
 
     // Validate required IDs
     if (!userId || !jobId) {
-        console.error("Missing required IDs");
+        console.error("Missing required IDs", { userId, jobId });
         alert("System error: Missing user information. Please refresh the page.");
         return;
     }
@@ -11635,7 +11635,6 @@ async function saveObjectives(event) {
     const formData = {
         userId: userId,
         jobId: jobId,
-        departmentId: departmentId,
         performancePeriodYear: performancePeriodYear,
         objectiveDescrpt: [],
         objectiveKPI: [],
@@ -11655,21 +11654,36 @@ async function saveObjectives(event) {
         const uomInput = row.querySelector('input[name="objectiveUOM"]');
         const weightInput = row.querySelector('input[name="objectiveAssignedWeight"]');
 
+        // Check if all inputs exist and have values (skip empty rows)
         if (descriptionInput && kpiInput && targetInput && uomInput && weightInput) {
+            const description = descriptionInput.value.trim();
+            const kpi = kpiInput.value.trim();
+            const target = targetInput.value.trim();
+            const uom = uomInput.value.trim();
             const weight = parseFloat(weightInput.value);
-            totalWeight += weight;
 
-            formData.objectiveDescrpt.push(descriptionInput.value);
-            formData.objectiveKPI.push(kpiInput.value);
-            formData.objectiveTarget.push(targetInput.value);
-            formData.objectiveUOM.push(uomInput.value);
-            formData.objectiveAssignedWeight.push(weight.toString()); // Send as string
+            // Only add if all fields have values
+            if (description && kpi && target && uom && !isNaN(weight) && weight > 0) {
+                totalWeight += weight;
+                
+                formData.objectiveDescrpt.push(description);
+                formData.objectiveKPI.push(kpi);
+                formData.objectiveTarget.push(target);
+                formData.objectiveUOM.push(uom);
+                formData.objectiveAssignedWeight.push(weight); // Send as number, not string
+            }
         }
     });
 
+    // Check if we have any objectives
+    if (formData.objectiveDescrpt.length === 0) {
+        alert("Please add at least one objective before saving.");
+        return;
+    }
+
     // Validate total weight
-    if (totalWeight !== 100) {
-        alert("Total assigned weight must be exactly 100% to save.");
+    if (Math.abs(totalWeight - 100) > 0.01) { // Allow small floating point differences
+        alert(`Total assigned weight must be exactly 100%. Current total: ${totalWeight}%`);
         return;
     }
 
@@ -11681,6 +11695,8 @@ async function saveObjectives(event) {
             saveButton.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Saving...';
         }
 
+        console.log("Sending data:", formData); // Debug log
+
         // Send data to server
         const response = await fetch(`/linemanager/records-performance-tracker/${userId}`, {
             method: 'POST',
@@ -11689,21 +11705,31 @@ async function saveObjectives(event) {
         });
 
         if (!response.ok) {
-            throw new Error(`Server error: ${response.status}`);
+            const errorText = await response.text();
+            console.error("Server response:", errorText);
+            throw new Error(`Server error: ${response.status} - ${errorText}`);
         }
 
         // Handle both JSON and redirect responses
         const contentType = response.headers.get('content-type');
         if (contentType && contentType.includes('application/json')) {
             const result = await response.json();
+            console.log("Server response:", result); // Debug log
+            
             if (result.success) {
-                window.location.href = `/linemanager/records-performance-tracker/view/${userId}`;
+                alert("Objectives saved successfully!");
+                if (result.redirectUrl) {
+                    window.location.href = result.redirectUrl;
+                } else {
+                    window.location.href = `/linemanager/records-performance-tracker/view/${userId}`;
+                }
             } else {
                 throw new Error(result.message || "Save failed");
             }
         } else {
             // Handle redirect
-            window.location.href = await response.text();
+            const redirectUrl = await response.text();
+            window.location.href = redirectUrl;
         }
     } catch (error) {
         console.error("Error saving objectives:", error);
