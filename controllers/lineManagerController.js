@@ -2766,7 +2766,7 @@ updateLeaveRequest: async function(req, res) {
             jobTitle: staff.jobpositions.jobTitle
         };
 
-        res.render('staffpages/employee_pages/useracc', { 
+        res.render('staffpages/linemanager_pages/manageruseraccount', { 
             user: userData,
             offboardingRequests: offboardingRequests || [] // Pass empty array if null
         });
@@ -2948,7 +2948,7 @@ updateLeaveRequest: async function(req, res) {
             if (userError || degreeError || jobError || departmentError || milestonesError || experienceError || certificationError) {
                 console.error('Error fetching one or more sets of data:', userError, degreeError, jobError, departmentError, milestonesError, experienceError, certificationError);
                 req.flash('errors', { dbError: 'Error fetching data.' });
-                return res.redirect('/employee/employeepersinfocareerprog');
+                return res.redirect('/linemanager_pages/managerpersinfocareerprog');
             }
     
             // Construct user data
@@ -2974,14 +2974,14 @@ updateLeaveRequest: async function(req, res) {
             console.log("User data constructed successfully.");
     
             // Render the personal information and career progression page
-            res.render('staffpages/employee_pages/employeepersinfocareerprog', {
+            res.render('staffpages/linemanager_pages/managerpersinfocareerprog', {
                 user: userData,
                 errors: req.flash('errors')
             });
         } catch (err) {
             console.error('Error in getPersInfoCareerProg controller:', err);
             req.flash('errors', { dbError: 'An error occurred while loading the personal info page.' });
-            res.redirect('/employee/useracc');
+            res.redirect('/linemanager_pages/manageruseraccount');
         }
     },
 
