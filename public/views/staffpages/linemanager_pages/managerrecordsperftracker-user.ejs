@@ -2033,121 +2033,123 @@
                 </div>
             </section>
             
-            <!-- Form for setting objectives -->
-            <form id="objectiveSettingsForm" method="POST" action="/linemanager/records-performance-tracker/<%= user.userId %>">
-                <section id="objective-skill-progress-form" class="fade-out section" style="display: none;">
-                    <h2>Annual Objective Setting Form</h2>
-                    
-                    <div class="header-grid">
-                        <div><strong>Employee:</strong> <%= user.lastName %>, <%= user.firstName %></div>
-                        <div><strong>Position:</strong> <%= user.jobTitle %></div>
-                        <div><strong>Year:</strong> <span id="performanceDate"><%= new Date().getFullYear() %></span></div>
-                        <div><strong>Company:</strong> Prime Infrastructure</div>
-                        <div><strong>Department:</strong> <%= user.departmentName %></div>
-                    </div>
-                    
-                    <input type="hidden" name="userId" value="<%= user.userId %>">
-                    <input type="hidden" id="jobId" name="jobId" value="<%= user.jobId %>">
-                    <input type="hidden" id="departmentId" name="departmentId" value="<%= user.departmentId %>">
-                    
-                    <table>
-                        <thead>
-                            <tr>
-                                <th>KRA/Objectives</th>
-                                <th>KPI</th>
-                                <th>Target</th>
-                                <th>UOM</th>
-                                <th>Weight</th>
-                                <th>Actions</th>
-                            </tr>
-                            <tr>
-                                <th colspan="6" style="background-color: #f9f9f9; font-weight: normal; text-align: center; font-style: italic;">
-                                    Example: "Improve Customer Satisfaction" | "Satisfaction Rate" | "90" | "%" | "20"
-                                </th>
-                            </tr>
-                        </thead>
-                        <tbody id="progress-table-body">
-                            <tr>
-                                <td><input type="text" placeholder="Enter Objective" name="objectiveDescrpt" required></td>
-                                <td><input type="text" placeholder="Enter KPI" name="objectiveKPI" required></td>
-                                <td><input type="text" placeholder="Enter Target" name="objectiveTarget" required></td>
-                                <td><input type="text" placeholder="Enter UOM" name="objectiveUOM" required></td>
-                                <td><input type="number" class="weight-input" oninput="updateTotalWeight()" placeholder="Weight %" name="objectiveAssignedWeight" min="0" max="100" required></td>
-                                <td><button type="button" class="cancel-btn" onclick="removeRow(this)">Remove</button></td>
-                            </tr>
-                        </tbody>
-                    </table>
-                    
-                    <button id="addRowBtn" type="button" class="add-btn" onclick="addRow()">
-                        <i class="fas fa-plus"></i> Add Objective
-                    </button>
-                    
-                    <div class="weight-summary" style="margin: 15px 0; padding: 10px; background-color: #f9f9f9; border-radius: 8px; border-left: 4px solid #124A5C;">
-                        <strong>Total Assigned Weight:</strong> 
-                        <span id="totalWeightDisplay">0</span>% <span style="color: #f44336; font-size: 0.9em;">(must equal 100%)</span>
-                        <input id="totalWeight" type="hidden" value="0">
-                    </div>
+           <!-- Form for setting objectives -->
+<form id="objectiveSettingsForm" method="POST">
+    <section id="objective-skill-progress-form" class="fade-out section" style="display: none;">
+        <h2>Annual Objective Setting Form</h2>
+        
+        <div class="header-grid">
+            <div><strong>Employee:</strong> <%= user.lastName %>, <%= user.firstName %></div>
+            <div><strong>Position:</strong> <%= user.jobTitle %></div>
+            <div><strong>Year:</strong> <span id="performanceDate"><%= new Date().getFullYear() %></span></div>
+            <div><strong>Company:</strong> Prime Infrastructure</div>
+            <div><strong>Department:</strong> <%= user.departmentName %></div>
+        </div>
+        
+        <!-- Hidden fields for required data -->
+        <input type="hidden" id="userId" name="userId" value="<%= user.userId %>">
+        <input type="hidden" id="jobId" name="jobId" value="<%= user.jobId %>">
+        <input type="hidden" id="departmentId" name="departmentId" value="<%= user.departmentId %>">
+        <input type="hidden" id="performancePeriodYear" name="performancePeriodYear" value="<%= new Date().getFullYear() %>">
+        
+        <table>
+            <thead>
+                <tr>
+                    <th>KRA/Objectives</th>
+                    <th>KPI</th>
+                    <th>Target</th>
+                    <th>UOM</th>
+                    <th>Weight</th>
+                    <th>Actions</th>
+                </tr>
+                <tr>
+                    <th colspan="6" style="background-color: #f9f9f9; font-weight: normal; text-align: center; font-style: italic;">
+                        Example: "Improve Customer Satisfaction" | "Satisfaction Rate" | "90" | "%" | "20"
+                    </th>
+                </tr>
+            </thead>
+            <tbody id="progress-table-body">
+                <tr>
+                    <td><input type="text" placeholder="Enter Objective" name="objectiveDescrpt" required></td>
+                    <td><input type="text" placeholder="Enter KPI" name="objectiveKPI" required></td>
+                    <td><input type="text" placeholder="Enter Target" name="objectiveTarget" required></td>
+                    <td><input type="text" placeholder="Enter UOM" name="objectiveUOM" required></td>
+                    <td><input type="number" class="weight-input" oninput="updateTotalWeight()" placeholder="Weight %" name="objectiveAssignedWeight" min="1" max="100" required></td>
+                    <td><button type="button" class="cancel-btn" onclick="removeRow(this)">Remove</button></td>
+                </tr>
+            </tbody>
+        </table>
+        
+        <button id="addRowBtn" type="button" class="add-btn" onclick="addRow()">
+            <i class="fas fa-plus"></i> Add Objective
+        </button>
+        
+        <div class="weight-summary" style="margin: 15px 0; padding: 10px; background-color: #f9f9f9; border-radius: 8px; border-left: 4px solid #124A5C;">
+            <strong>Total Assigned Weight:</strong> 
+            <span id="totalWeightDisplay">0</span>% <span style="color: #f44336; font-size: 0.9em;">(must equal 100%)</span>
+            <input id="totalWeight" type="hidden" value="0">
+        </div>
+
+        <div class="confirmation-box" style="margin: 20px 0; padding: 15px; background-color: rgba(76, 175, 80, 0.1); border-radius: 8px; border: 1px solid rgba(76, 175, 80, 0.3);">
+            <label style="display: flex; align-items: center; cursor: pointer;">
+                <input type="checkbox" id="confirmationCheckbox" required style="margin-right: 10px;">
+                <span>I confirm that the objective weights have been accurately consolidated and reviewed.</span>
+            </label>
+        </div>
+        
+        <div id="submitButtonContainer">
+            <button id="saveButton" type="submit" class="save-btn">
+                <i class="fas fa-save"></i> Save Objectives
+            </button>
+        </div>
+    </section>
+
+    <% if (viewState.viewOnlyStatus['objectivesettings']) { %>
+        <section id="view-only-page" class="fade-out section" style="display: none;">
+            <h2><i class="fas fa-clipboard-list"></i> Submitted Annual Objective Setting Form</h2>
+            <div class="header-grid">
+                <div><strong>Employee:</strong> <%= user.lastName %>, <%= user.firstName %></div>
+                <div><strong>Position:</strong> <%= user.jobTitle %></div>
+                <div><strong>Performance Year:</strong> <%= viewState.performancePeriodYear %></div>
+                <div><strong>Company:</strong> Prime Infrastructure</div>
+                <div><strong>Department:</strong> <%= user.departmentName %></div>
+            </div>
             
-                    <div class="confirmation-box" style="margin: 20px 0; padding: 15px; background-color: rgba(76, 175, 80, 0.1); border-radius: 8px; border: 1px solid rgba(76, 175, 80, 0.3);">
-                        <label style="display: flex; align-items: center; cursor: pointer;">
-                            <input type="checkbox" id="confirmationCheckbox" required style="margin-right: 10px;">
-                            <span>I confirm that the objective weights have been accurately consolidated and reviewed.</span>
-                        </label>
-                    </div>
-                    
-                    <div id="submitButtonContainer">
-                        <button id="saveButton" type="submit" class="save-btn">
-                            <i class="fas fa-save"></i> Save Objectives
-                        </button>
-                    </div>
-                </section>
-            
-                <% if (viewState.viewOnlyStatus['objectivesettings']) { %>
-                    <section id="view-only-page" class="fade-out section" style="display: none;">
-                        <h2><i class="fas fa-clipboard-list"></i> Submitted Annual Objective Setting Form</h2>
-                        <div class="header-grid">
-                            <div><strong>Employee:</strong> <%= user.lastName %>, <%= user.firstName %></div>
-                            <div><strong>Position:</strong> <%= user.jobTitle %></div>
-                            <div><strong>Performance Year:</strong> <%= viewState.performancePeriodYear %></div>
-                            <div><strong>Company:</strong> Prime Infrastructure</div>
-                            <div><strong>Department:</strong> <%= user.departmentName %></div>
-                        </div>
-                        
-                        <div id="objectivesData" class="view-only-section">
-                            <table>
-                                <thead>
-                                    <tr>
-                                        <th>KRA/Objectives</th>
-                                        <th>KPI</th>
-                                        <th>Target</th>
-                                        <th>UOM</th>
-                                        <th>Assigned Weight</th>
-                                    </tr>
-                                </thead>
-                                <tbody id="view-only-table-body">
-                                    <% if (viewState.submittedObjectives && viewState.submittedObjectives.length > 0) { %>
-                                        <% viewState.submittedObjectives.forEach(obj => { %>
-                                            <tr>
-                                                <td><%= obj.objectiveDescrpt || 'N/A' %></td>
-                                                <td><%= obj.objectiveKPI || 'N/A' %></td>
-                                                <td><%= obj.objectiveTarget || 'N/A' %></td>
-                                                <td><%= obj.objectiveUOM || 'N/A' %></td>
-                                                <td><%= obj.objectiveAssignedWeight !== undefined ? (obj.objectiveAssignedWeight * 100).toFixed(2) + '%' : 'N/A' %></td>
-                                            </tr>
-                                        <% }); %>
-                                    <% } else { %>
-                                        <tr>
-                                            <td colspan="5" style="text-align: center; padding: 20px;">No objectives submitted yet.</td>
-                                        </tr>
-                                    <% } %>
-                                </tbody>
-                            </table>
-                        </div>
-                    </section>
-                <% } %>
-            
-                <div id="viewState" data-viewstate='<%= JSON.stringify(viewState) %>' style="display:none;"></div>
-            </form>
+            <div id="objectivesData" class="view-only-section">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>KRA/Objectives</th>
+                            <th>KPI</th>
+                            <th>Target</th>
+                            <th>UOM</th>
+                            <th>Assigned Weight</th>
+                        </tr>
+                    </thead>
+                    <tbody id="view-only-table-body">
+                        <% if (viewState.submittedObjectives && viewState.submittedObjectives.length > 0) { %>
+                            <% viewState.submittedObjectives.forEach(obj => { %>
+                                <tr>
+                                    <td><%= obj.objectiveDescrpt || 'N/A' %></td>
+                                    <td><%= obj.objectiveKPI || 'N/A' %></td>
+                                    <td><%= obj.objectiveTarget || 'N/A' %></td>
+                                    <td><%= obj.objectiveUOM || 'N/A' %></td>
+                                    <td><%= obj.objectiveAssignedWeight !== undefined ? (obj.objectiveAssignedWeight * 100).toFixed(2) + '%' : 'N/A' %></td>
+                                </tr>
+                            <% }); %>
+                        <% } else { %>
+                            <tr>
+                                <td colspan="5" style="text-align: center; padding: 20px;">No objectives submitted yet.</td>
+                            </tr>
+                        <% } %>
+                    </tbody>
+                </table>
+            </div>
+        </section>
+    <% } %>
+
+    <div id="viewState" data-viewstate='<%= JSON.stringify(viewState) %>' style="display:none;"></div>
+</form>
 
             <!-- 360 Degree Feedback Form -->
 <form id="feedbackForm" method="POST" action="/linemanager/records-performance-tracker/questionnaire/<%= user.userId %>">                
@@ -2388,7 +2390,7 @@
             </div>
             
             <!-- EXPORT BUTTON IN HEADER -->
-            <div style="margin-left: 20px; flex-shrink: 0;">
+            <!-- <div style="margin-left: 20px; flex-shrink: 0;">
                 <button type="button" id="exportQuarterlyReportBtn" class="export-btn" style="
                     background-color: #28a745; 
                     color: white; 
@@ -2409,7 +2411,7 @@
                 onmouseout="this.style.backgroundColor='#28a745'; this.style.transform='translateY(0)'; this.style.boxShadow='0 2px 4px rgba(40, 167, 69, 0.3)'">
                     <i class="fas fa-file-pdf"></i> Export PDF Report
                 </button>
-            </div>
+            </div> -->
         </div>
     </div>
 
@@ -5922,12 +5924,12 @@ document.addEventListener('DOMContentLoaded', function() {
         border-radius: 4px;
         font-size: 12px;
     `;
-    debugContainer.innerHTML = `
-        <div><strong>Debug Tools:</strong></div>
-        <button onclick="debugSelectedCategories()" style="margin: 2px; padding: 4px 8px; font-size: 11px;">Debug Categories</button>
-        <button onclick="testAddCategory()" style="margin: 2px; padding: 4px 8px; font-size: 11px;">Test Add</button>
-        <button onclick="debugFormSubmissionData()" style="margin: 2px; padding: 4px 8px; font-size: 11px;">Debug Form</button>
-    `;
+    // debugContainer.innerHTML = `
+    //     <div><strong>Debug Tools:</strong></div>
+    //     <button onclick="debugSelectedCategories()" style="margin: 2px; padding: 4px 8px; font-size: 11px;">Debug Categories</button>
+    //     <button onclick="testAddCategory()" style="margin: 2px; padding: 4px 8px; font-size: 11px;">Test Add</button>
+    //     <button onclick="debugFormSubmissionData()" style="margin: 2px; padding: 4px 8px; font-size: 11px;">Debug Form</button>
+    // `;
     document.body.appendChild(debugContainer);
     
     console.log('Enhanced training categories initialization complete');
@@ -11559,7 +11561,7 @@ function setupStepperEvents() {
 
 // Function to attach form submission listeners
 function attachFormListeners() {
-    // Objective settings form
+    // Objective settings form - REPLACE THE EXISTING CODE WITH THIS
     const objectiveSettingsForm = document.getElementById('objectiveSettingsForm');
     if (objectiveSettingsForm) {
         objectiveSettingsForm.addEventListener('submit', function(event) {
@@ -11568,6 +11570,7 @@ function attachFormListeners() {
         });
     }
     
+    // Keep all your other existing form listeners here
     // Feedback form
     const feedbackForm = document.getElementById('feedbackForm');
     if (feedbackForm) {
@@ -11612,6 +11615,107 @@ function attachFormListeners() {
             }
         });
     });
+}
+async function saveObjectives(event) {
+    event.preventDefault();
+    
+    // Get form values properly
+    const departmentId = document.getElementById("departmentId").value; // Add this hidden field
+    const performancePeriodYear = document.getElementById("performanceDate").textContent;
+    const userId = document.getElementById("userId").value; // Add this hidden field
+
+    // Validate required IDs
+    if (!userId || !jobId) {
+        console.error("Missing required IDs");
+        alert("System error: Missing user information. Please refresh the page.");
+        return;
+    }
+
+    // Collect objectives in format backend expects
+    const formData = {
+        userId: userId,
+        jobId: jobId,
+        departmentId: departmentId,
+        performancePeriodYear: performancePeriodYear,
+        objectiveDescrpt: [],
+        objectiveKPI: [],
+        objectiveTarget: [],
+        objectiveUOM: [],
+        objectiveAssignedWeight: []
+    };
+
+    // Calculate total weight and collect data
+    let totalWeight = 0;
+    const rows = document.querySelectorAll("#progress-table-body tr");
+
+    rows.forEach(row => {
+        const descriptionInput = row.querySelector('input[name="objectiveDescrpt"]');
+        const kpiInput = row.querySelector('input[name="objectiveKPI"]');
+        const targetInput = row.querySelector('input[name="objectiveTarget"]');
+        const uomInput = row.querySelector('input[name="objectiveUOM"]');
+        const weightInput = row.querySelector('input[name="objectiveAssignedWeight"]');
+
+        if (descriptionInput && kpiInput && targetInput && uomInput && weightInput) {
+            const weight = parseFloat(weightInput.value);
+            totalWeight += weight;
+
+            formData.objectiveDescrpt.push(descriptionInput.value);
+            formData.objectiveKPI.push(kpiInput.value);
+            formData.objectiveTarget.push(targetInput.value);
+            formData.objectiveUOM.push(uomInput.value);
+            formData.objectiveAssignedWeight.push(weight.toString()); // Send as string
+        }
+    });
+
+    // Validate total weight
+    if (totalWeight !== 100) {
+        alert("Total assigned weight must be exactly 100% to save.");
+        return;
+    }
+
+    try {
+        // Show loading state
+        const saveButton = document.getElementById("saveButton");
+        if (saveButton) {
+            saveButton.disabled = true;
+            saveButton.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Saving...';
+        }
+
+        // Send data to server
+        const response = await fetch(`/linemanager/records-performance-tracker/${userId}`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(formData)
+        });
+
+        if (!response.ok) {
+            throw new Error(`Server error: ${response.status}`);
+        }
+
+        // Handle both JSON and redirect responses
+        const contentType = response.headers.get('content-type');
+        if (contentType && contentType.includes('application/json')) {
+            const result = await response.json();
+            if (result.success) {
+                window.location.href = `/linemanager/records-performance-tracker/view/${userId}`;
+            } else {
+                throw new Error(result.message || "Save failed");
+            }
+        } else {
+            // Handle redirect
+            window.location.href = await response.text();
+        }
+    } catch (error) {
+        console.error("Error saving objectives:", error);
+        alert(`Error: ${error.message}`);
+        
+        // Reset button state
+        const saveButton = document.getElementById("saveButton");
+        if (saveButton) {
+            saveButton.disabled = false;
+            saveButton.innerHTML = '<i class="fas fa-save"></i> Save Objectives';
+        }
+    }
 }
 
 // Sidebar functionality

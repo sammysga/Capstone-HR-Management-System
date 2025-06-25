@@ -9084,121 +9084,87 @@ getFinalYearIDPWithTrainings: async function(req, res) {
     // },
     
     saveObjectiveSettings: async function(req, res) {
-        try {
-            const userId = req.body.userId;
-            console.log("User ID in saveObjectiveSettings:", userId);
-    
-            const { jobId, objectiveDescrpt, objectiveKPI, objectiveTarget, objectiveUOM, objectiveAssignedWeight } = req.body;
-    
-            console.log("Request body:", req.body);
-    
-            if (!userId) {
-                console.log("User not authenticated");
-                return res.status(401).json({ success: false, message: "User not authenticated" });
-            }
-    
-            // Get the current year
-            const performancePeriodYear = new Date().getFullYear(); // Just the year
-    
-            // Initialize completeJobId
-            let completeJobId = jobId;
-    
-            // Fetch from staffaccounts if jobId is missing
-            if (!jobId) {
-                console.log("Fetching missing jobId from staffaccounts table");
-    
-                const { data: staffAccountData, error } = await supabase
-                    .from("staffaccounts")
-                    .select("jobId")
-                    .eq("userId", userId)
-                    .single();
-    
-                if (error) {
-                    console.error("Error fetching jobId:", error.message);
-                    return res.status(500).json({ success: false, message: error.message });
-                }
-    
-                completeJobId = staffAccountData?.jobId || jobId; // Fallback to existing jobId if staffAccountData is not found
-            }
-    
-            // Check if jobId is still missing after fetching
-            if (!completeJobId) {
-                return res.status(400).json({ success: false, message: "Unable to retrieve jobId. Please provide it or ensure your user account has this information." });
-            }
-    
-            // Validate objectives format
-            const objectives = [];
-            if (req.body.objectiveDescrpt) {
-                for (let i = 0; i < req.body.objectiveDescrpt.length; i++) {
-                    if (
-                        req.body.objectiveDescrpt[i] && 
-                        req.body.objectiveKPI[i] && 
-                        req.body.objectiveTarget[i] && 
-                        req.body.objectiveUOM[i] && 
-                        req.body.objectiveAssignedWeight[i]
-                    ) {
-                        // Normalize weight to a decimal
-                        const weight = parseFloat(req.body.objectiveAssignedWeight[i]) / 100;
-    
-                        objectives.push({
-                            description: req.body.objectiveDescrpt[i],
-                            kpi: req.body.objectiveKPI[i],
-                            target: req.body.objectiveTarget[i],
-                            uom: req.body.objectiveUOM[i],
-                            weight: weight // Store normalized weight
-                        });
-                    }
-                }
-            }
-    
-            if (objectives.length === 0) {
-                return res.status(400).json({ success: false, message: "Invalid objectives data format" });
-            }
-    
-            console.log("Inserting data into objectivesettings table for user:", userId);
-    
-            const { data: objectiveSettingsData, error: objectiveSettingsError } = await supabase
-                .from("objectivesettings")
-                .insert({
-                    userId,
-                    jobId: completeJobId,
-                    performancePeriodYear // Store only the year
-                })
-                .select("objectiveSettingsId");
-    
-            if (objectiveSettingsError) {
-                console.error("Error inserting into objectivesettings table:", objectiveSettingsError.message);
-                return res.status(500).json({ success: false, message: objectiveSettingsError.message });
-            }
-    
-            const objectiveSettingsId = objectiveSettingsData[0].objectiveSettingsId;
-            console.log("Objective Settings Inserted:", objectiveSettingsId);
-    
-            // Insert associated objectives into objectivesettings_objectives
-            const objectiveEntries = objectives.map(objective => ({
-                objectiveSettingsId,
-                objectiveDescrpt: objective.description,
-                objectiveKPI: objective.kpi,
-                objectiveTarget: objective.target,
-                objectiveUOM: objective.uom,
-                objectiveAssignedWeight: objective.weight
-            }));
-    
-            const { error: objectivesInsertError } = await supabase
-                .from("objectivesettings_objectives")
-                .insert(objectiveEntries);
-    
-            if (objectivesInsertError) {
-                console.error("Error inserting objectives:", objectivesInsertError.message);
-                return res.status(500).json({ success: false, message: objectivesInsertError.message });
-            }
-    
-            res.redirect(`/linemanager/records-performance-tracker/${userId}`);
-        } catch (error) {
-            console.error("Error saving objective settings:", error);
-            res.status(500).json({ success: false, message: error.message });
+    try {
+        const userId = req.body.userId;
+        if (!userId) {
+            return res.status(401).json({ success: false, message: "User not authenticated" });
         }
-    },    
+
+        // Get data from request
+        const { 
+            jobId, 
+            departmentId,
+            performancePeriodYear,
+            objectiveDescrpt = [], 
+            objectiveKPI = [], 
+            objectiveTarget = [], 
+            objectiveUOM = [], 
+            objectiveAssignedWeight = [] 
+        } = req.body;
+
+        // Validate objectives
+        if (objectiveDescrpt.length === 0 || 
+            objectiveDescrpt.length !== objectiveKPI.length ||
+            objectiveDescrpt.length !== objectiveTarget.length ||
+            objectiveDescrpt.length !== objectiveUOM.length ||
+            objectiveDescrpt.length !== objectiveAssignedWeight.length) {
+            return res.status(400).json({ success: false, message: "Invalid objectives data" });
+        }
+
+        // Calculate total weight (frontend should have validated this)
+        const totalWeight = objectiveAssignedWeight.reduce((sum, weight) => sum + parseFloat(weight), 0);
+        if (totalWeight !== 100) {
+            return res.status(400).json({ success: false, message: "Total weight must be 100%" });
+        }
+
+        // Insert objective settings
+        const { data: objectiveSettingsData, error: objectiveSettingsError } = await supabase
+            .from("objectivesettings")
+            .insert({
+                userId,
+                jobId,
+                departmentId,
+                performancePeriodYear
+            })
+            .select("objectiveSettingsId");
+
+        if (objectiveSettingsError) throw objectiveSettingsError;
+
+        const objectiveSettingsId = objectiveSettingsData[0].objectiveSettingsId;
+
+        // Prepare objectives data
+        const objectives = objectiveDescrpt.map((desc, index) => ({
+            objectiveSettingsId,
+            objectiveDescrpt: desc,
+            objectiveKPI: objectiveKPI[index],
+            objectiveTarget: objectiveTarget[index],
+            objectiveUOM: objectiveUOM[index],
+            objectiveAssignedWeight: parseFloat(objectiveAssignedWeight[index]) / 100 // Convert to decimal
+        }));
+
+        // Insert objectives
+        const { error: objectivesInsertError } = await supabase
+            .from("objectivesettings_objectives")
+            .insert(objectives);
+
+        if (objectivesInsertError) throw objectivesInsertError;
+
+        // Return success response
+        res.json({ 
+            success: true,
+            message: "Objectives saved successfully",
+            redirectUrl: `/linemanager/records-performance-tracker/view/${userId}`
+        });
+
+    } catch (error) {
+        console.error("Error saving objective settings:", error);
+        res.status(500).json({ 
+            success: false, 
+            message: error.message || "Failed to save objectives" 
+        });
+    }
+},
+
 getFeedbackData: async function(req, res) {
     try {
         const userId = req.params.userId;
@@ -15526,7 +15492,6 @@ getDepartmentEmployeesForFeedbackReports: async function(req, res) {
         });
     }
 },
-
 generateQuarterlyFeedbackReport: async function(req, res) {
         try {
             const { userId } = req.params;
@@ -15911,6 +15876,275 @@ generateQuarterlyFeedbackReport: async function(req, res) {
             }
         });
     },
+// ===== COMPLETE addSimplePDFContent FUNCTION =====
+addSimplePDFContent: function(doc, data) {
+    try {
+        console.log('📄 Adding PDF content...');
+        
+        // Title
+        doc.fontSize(20)
+           .font('Helvetica-Bold')
+           .fillColor('#2c3e50')
+           .text('Quarterly 360° Feedback Report', 50, 50, { align: 'center' });
+        
+        doc.moveDown(2);
+        
+        // Employee Information Section
+        doc.fontSize(16)
+           .font('Helvetica-Bold')
+           .fillColor('#34495e')
+           .text('Employee Information', 50, doc.y);
+        
+        doc.moveDown(0.5);
+        
+        // Employee details
+        doc.fontSize(12)
+           .font('Helvetica')
+           .fillColor('#2c3e50')
+           .text(`Name: ${data.employee.firstName} ${data.employee.lastName}`, 70, doc.y)
+           .text(`Position: ${data.employee.jobpositions?.jobTitle || 'N/A'}`, 70, doc.y + 20)
+           .text(`Department: ${data.employee.departments?.deptName || 'N/A'}`, 70, doc.y + 40)
+           .text(`Email: ${data.employee.useraccounts?.userEmail || 'N/A'}`, 70, doc.y + 60)
+           .text(`Report Period: ${data.quarter} ${data.year}`, 70, doc.y + 80);
+        
+        // Add reporting period dates if available
+        if (data.reportingPeriod && data.reportingPeriod.start && data.reportingPeriod.end) {
+            const startDate = new Date(data.reportingPeriod.start).toLocaleDateString();
+            const endDate = new Date(data.reportingPeriod.end).toLocaleDateString();
+            doc.text(`Period: ${startDate} - ${endDate}`, 70, doc.y + 100);
+            doc.y += 120;
+        } else {
+            doc.y += 100;
+        }
+        
+        doc.moveDown(1.5);
+        
+        // Objectives Assessment Section
+        if (doc.y > 650) {
+            doc.addPage();
+            doc.y = 50;
+        }
+        
+        doc.fontSize(16)
+           .font('Helvetica-Bold')
+           .fillColor('#34495e')
+           .text('Objectives Assessment', 50, doc.y);
+        
+        doc.moveDown(0.5);
+        
+        if (!data.objectives || data.objectives.length === 0) {
+            doc.fontSize(12)
+               .font('Helvetica')
+               .fillColor('#7f8c8d')
+               .text('No objectives data available for this reporting period.', 70, doc.y);
+            doc.moveDown(1);
+        } else {
+            doc.fontSize(11)
+               .font('Helvetica')
+               .fillColor('#2c3e50')
+               .text(`Total Objectives Evaluated: ${data.objectives.length}`, 70, doc.y);
+            
+            doc.moveDown(0.5);
+            
+            data.objectives.forEach((objective, index) => {
+                // Check if we need a new page
+                if (doc.y > 700) {
+                    doc.addPage();
+                    doc.y = 50;
+                }
+                
+                doc.fontSize(11)
+                   .font('Helvetica-Bold')
+                   .fillColor('#2c3e50')
+                   .text(`${index + 1}. ${objective.objective}`, 70, doc.y);
+                
+                doc.fontSize(10)
+                   .font('Helvetica')
+                   .fillColor('#34495e')
+                   .text(`KPI: ${objective.kpi}`, 90, doc.y + 15)
+                   .text(`Target: ${objective.target}`, 90, doc.y + 28)
+                   .text(`Weight: ${(objective.weight * 100).toFixed(1)}%`, 90, doc.y + 41)
+                   .text(`Average Rating: ${objective.averageRating}/5.0`, 90, doc.y + 54);
+                
+                doc.y += 75;
+            });
+        }
+        
+        doc.moveDown(1);
+        
+        // Skills Assessment Section
+        if (doc.y > 600) {
+            doc.addPage();
+            doc.y = 50;
+        }
+        
+        doc.fontSize(16)
+           .font('Helvetica-Bold')
+           .fillColor('#34495e')
+           .text('Skills Assessment', 50, doc.y);
+        
+        doc.moveDown(0.5);
+        
+        // Hard Skills Subsection
+        doc.fontSize(14)
+           .font('Helvetica-Bold')
+           .fillColor('#e67e22')
+           .text('Hard Skills', 70, doc.y);
+        
+        doc.moveDown(0.3);
+        
+        if (!data.skills.hardSkills || data.skills.hardSkills.length === 0) {
+            doc.fontSize(11)
+               .font('Helvetica')
+               .fillColor('#7f8c8d')
+               .text('No hard skills data available.', 90, doc.y);
+        } else {
+            data.skills.hardSkills.forEach((skill, index) => {
+                if (doc.y > 720) {
+                    doc.addPage();
+                    doc.y = 50;
+                }
+                
+                doc.fontSize(10)
+                   .font('Helvetica')
+                   .fillColor('#2c3e50')
+                   .text(`• ${skill.skillName}: ${skill.averageRating}/5.0`, 90, doc.y);
+                doc.y += 15;
+            });
+        }
+        
+        doc.moveDown(0.8);
+        
+        // Soft Skills Subsection
+        if (doc.y > 650) {
+            doc.addPage();
+            doc.y = 50;
+        }
+        
+        doc.fontSize(14)
+           .font('Helvetica-Bold')
+           .fillColor('#9b59b6')
+           .text('Soft Skills', 70, doc.y);
+        
+        doc.moveDown(0.3);
+        
+        if (!data.skills.softSkills || data.skills.softSkills.length === 0) {
+            doc.fontSize(11)
+               .font('Helvetica')
+               .fillColor('#7f8c8d')
+               .text('No soft skills data available.', 90, doc.y);
+        } else {
+            data.skills.softSkills.forEach((skill, index) => {
+                if (doc.y > 720) {
+                    doc.addPage();
+                    doc.y = 50;
+                }
+                
+                doc.fontSize(10)
+                   .font('Helvetica')
+                   .fillColor('#2c3e50')
+                   .text(`• ${skill.skillName}: ${skill.averageRating}/5.0`, 90, doc.y);
+                doc.y += 15;
+            });
+        }
+        
+        doc.moveDown(1.5);
+        
+        // Performance Summary Section
+        if (doc.y > 600) {
+            doc.addPage();
+            doc.y = 50;
+        }
+        
+        doc.fontSize(16)
+           .font('Helvetica-Bold')
+           .fillColor('#34495e')
+           .text('Performance Summary', 50, doc.y);
+        
+        doc.moveDown(0.8);
+        
+        const summary = data.summary;
+        
+        // Create a summary box
+        const boxY = doc.y;
+        const boxHeight = 140;
+        const boxWidth = doc.page.width - 100;
+        
+        // Draw background box
+        doc.rect(50, boxY, boxWidth, boxHeight)
+           .fillColor('#f8f9fa')
+           .fill()
+           .rect(50, boxY, boxWidth, boxHeight)
+           .strokeColor('#dee2e6')
+           .lineWidth(1)
+           .stroke();
+        
+        // Add summary content
+        doc.fontSize(12)
+           .font('Helvetica')
+           .fillColor('#2c3e50')
+           .text(`Objectives Evaluated: ${summary.objectivesCount}`, 70, boxY + 20)
+           .text(`Average Objective Rating: ${summary.averageObjectiveRating}/5.0`, 300, boxY + 20)
+           
+           .text(`Hard Skills Evaluated: ${summary.hardSkillsCount}`, 70, boxY + 40)
+           .text(`Average Hard Skills Rating: ${summary.averageHardSkillRating}/5.0`, 300, boxY + 40)
+           
+           .text(`Soft Skills Evaluated: ${summary.softSkillsCount}`, 70, boxY + 60)
+           .text(`Average Soft Skills Rating: ${summary.averageSoftSkillRating}/5.0`, 300, boxY + 60);
+        
+        // Overall Performance Score - highlighted
+        doc.fontSize(16)
+           .font('Helvetica-Bold')
+           .fillColor('#e74c3c')
+           .text(`Overall Performance Score: ${summary.overallPerformanceScore}/5.0`, 70, boxY + 95);
+        
+        doc.y = boxY + boxHeight + 30;
+        
+        // Line Manager Information (if available)
+        if (data.lineManager) {
+            doc.moveDown(1);
+            
+            doc.fontSize(14)
+               .font('Helvetica-Bold')
+               .fillColor('#34495e')
+               .text('Reviewed By', 50, doc.y);
+            
+            doc.moveDown(0.5);
+            
+            doc.fontSize(12)
+               .font('Helvetica')
+               .fillColor('#2c3e50')
+               .text(`Line Manager: ${data.lineManager.firstName} ${data.lineManager.lastName}`, 70, doc.y)
+               .text(`Position: ${data.lineManager.jobpositions?.jobTitle || 'N/A'}`, 70, doc.y + 20);
+            
+            doc.y += 50;
+        }
+        
+        // Footer
+        const footerY = doc.page.height - 80;
+        
+        // Add separator line
+        doc.moveTo(50, footerY)
+           .lineTo(doc.page.width - 50, footerY)
+           .strokeColor('#bdc3c7')
+           .lineWidth(1)
+           .stroke();
+        
+        // Footer content
+        doc.fontSize(9)
+           .font('Helvetica')
+           .fillColor('#6c757d')
+           .text(`Report Generated: ${new Date().toLocaleString()}`, 50, footerY + 15)
+           .text(`Performance Management System`, 50, footerY + 30)
+           .text(`Page 1`, doc.page.width - 100, footerY + 15, { align: 'right' });
+        
+        console.log('✅ PDF content added successfully');
+        
+    } catch (error) {
+        console.error('❌ Error adding PDF content:', error);
+        throw error;
+    }
+},
 
 // Generate mid-year feedback report (Q1 + Q2)
 generateMidYearFeedbackReport: async function(req, res) {

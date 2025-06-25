@@ -346,6 +346,12 @@ router.use((error, req, res, next) => {
 });
 // Mid-year IDP routes
 router.get('/linemanager/quarterly-feedback-report/:userId', lineManagerController.generateQuarterlyFeedbackReport);
+// Alternative route format 2
+router.get('/api/reports/quarterly-feedback/:userId', 
+    lineManagerController.generateQuarterlyFeedbackReport
+);
+
+
 router.get('/linemanager/midyear-idp/:userId', lineManagerController.getMidYearIDP);
 router.post('/linemanager/midyear-idp/:userId', lineManagerController.saveMidYearIDP);
 router.get('/linemanager/midyear-idp-trainings/:userId', lineManagerController.getMidYearIDPWithTrainings);
