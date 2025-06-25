@@ -849,11 +849,11 @@ function updateTrainingRequestsSection(trainingRequests) {
         return;
     }
 
-    // Filter for pending approval requests (status "For Approval" and isApproved null)
+    // Filter for pending approval requests (status "For Line Manager Endorsement")
     const pendingRequests = trainingRequests.filter(request => {
-        const isPending = request.trainingStatus === 'For Approval' && request.isApproved === null;
+        const isPending = request.status === 'For Line Manager Endorsement';
         console.log(`Checking request ${request.trainingRecordId}:`, {
-            status: request.trainingStatus,
+            status: request.status,
             isApproved: request.isApproved,
             isPending: isPending
         });
@@ -895,14 +895,14 @@ function updateTrainingRequestsSection(trainingRequests) {
             <div class="headline">Training Request: ${fullName}</div>
             <div class="content">
                 <strong>Training:</strong> ${trainingName}<br>
-                <strong>Status:</strong> <span class="status-pending">For Approval</span>
+                <strong>Status:</strong> <span class="status-pending">For Line Manager Endorsement</span>
             </div>
             <div class="date">Requested: ${dateRequested}</div>
             <button class="view-training-btn" 
                     data-user-id="${request.userId}" 
                     data-record-id="${request.trainingRecordId}"
                     data-training-name="${encodeURIComponent(trainingName)}">
-               Required Action
+               Review Request
             </button>
         `;
         trainingSection.appendChild(notificationItem);
@@ -918,7 +918,7 @@ function updateTrainingRequestsSection(trainingRequests) {
             console.log('Training request clicked:', { userId, recordId, trainingName });
             
             if (userId && recordId) {
-                window.location.href = `/linemanager/training-request/${userId}?recordId=${recordId}&trainingName=${trainingName}`;
+                window.location.href = `/linemanager/training-development-tracker`;
             } else {
                 alert('Error: Missing request information. Please refresh and try again.');
             }

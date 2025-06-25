@@ -379,15 +379,15 @@ router.get('/linemanager/check-feedback-status', lineManagerController.checkFeed
 // Line Manager - TRAINING MODULE CONTROLLER FUNCTIONS
 // ============================
 router.get('/linemanager/training-form-data', lineManagerController.getTrainingFormData);
-router.post('/linemanager/training', lineManagerController.createTraining);
-router.post('/linemanager/activity-type', lineManagerController.addActivityType);
-router.get('/linemanager/trainings', lineManagerController.getAllTrainings);
+// router.post('/linemanager/training', lineManagerController.createTraining);
+// router.post('/linemanager/activity-type', lineManagerController.addActivityType);
+// router.get('/linemanager/trainings', lineManagerController.getAllTrainings);
 router.get('/linemanager/training-development-tracker', lineManagerController.getTrainingDevelopmentTracker);
 // Training request routes
 router.get('/linemanager/training-request/:userId', lineManagerController.getTrainingRequest);
 router.get('/linemanager/api/training-request/:userId/details', lineManagerController.getTrainingRequestDetails); // Fixed path
-router.post('/linemanager/training/approve', lineManagerController.approveTrainingRequest); // Fixed path
-router.post('/linemanager/training/reject', lineManagerController.rejectTrainingRequest); // Fixed path
+// router.post('/linemanager/training/approve', lineManagerController.approveTrainingRequest); // Fixed path
+// router.post('/linemanager/training/reject', lineManagerController.rejectTrainingRequest); // Fixed path
 router.post('/api/training/endorse', lineManagerController.endorseTrainingToHR);
 router.post('/api/training/reject', lineManagerController.cancelTraining);
 router.get('/api/training/details/:id', lineManagerController.getTrainingDetailsAPI);
