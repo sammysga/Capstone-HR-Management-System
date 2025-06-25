@@ -295,37 +295,131 @@
         }
 
         .idp-section {
-        margin-bottom: 25px;
-        padding-bottom: 15px;
-        border-bottom: 1px solid #eee;
-    }
-    
-    .idp-section h4 {
-        color: #07ACB9;
-        margin-bottom: 15px;
-        font-size: 1.1rem;
-    }
-    
-    .idp-item {
-        margin-bottom: 15px;
-        padding-left: 15px;
-        border-left: 3px solid #e0f7fa;
-    }
-    
-    .idp-item h5 {
-        font-size: 0.95rem;
-        color: #444;
-        margin-bottom: 8px;
-    }
-    
-    .step.completed .step-icon {
-        background-color: #e0f7fa;
-        border-color: #07ACB9;
-    }
-    
-    .step.completed .step-icon i {
-        color: #07ACB9;
-    }
+            margin-bottom: 25px;
+            padding-bottom: 15px;
+            border-bottom: 1px solid #eee;
+        }
+        
+        .idp-section h4 {
+            color: #07ACB9;
+            margin-bottom: 15px;
+            font-size: 1.1rem;
+        }
+        
+        .idp-item {
+            margin-bottom: 15px;
+            padding-left: 15px;
+            border-left: 3px solid #e0f7fa;
+        }
+        
+        .idp-item h5 {
+            font-size: 0.95rem;
+            color: #444;
+            margin-bottom: 8px;
+        }
+        
+        .step.completed .step-icon {
+            background-color: #e0f7fa;
+            border-color: #07ACB9;
+        }
+        
+        .step.completed .step-icon i {
+            color: #07ACB9;
+        }
+
+        /* Enhanced feedback styling */
+        .feedback-header {
+            background-color: #f8f9fa;
+            padding: 15px;
+            border-radius: 5px;
+            margin-bottom: 20px;
+        }
+
+        .reviewer-feedback {
+            background-color: #fff;
+            border: 1px solid #dee2e6;
+            border-radius: 5px;
+            padding: 15px;
+            margin-bottom: 15px;
+        }
+
+        .feedback-remarks {
+            background-color: #f8f9fa;
+            padding: 10px;
+            border-radius: 3px;
+            font-style: italic;
+        }
+
+        .scores-section {
+            margin-top: 25px;
+            padding: 20px;
+            background-color: #f8f9fa;
+            border-radius: 5px;
+        }
+
+        .scores-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+            margin-top: 15px;
+        }
+
+        .score-item {
+            background: white;
+            padding: 15px;
+            border-radius: 5px;
+            border: 1px solid #dee2e6;
+        }
+
+        .score-label {
+            display: block;
+            font-weight: 600;
+            margin-bottom: 5px;
+        }
+
+        .score-value {
+            display: block;
+            font-size: 1.2em;
+            font-weight: bold;
+            color: #007bff;
+            margin-bottom: 10px;
+        }
+
+        .score-bar {
+            width: 100%;
+            height: 8px;
+            background-color: #e9ecef;
+            border-radius: 4px;
+            overflow: hidden;
+        }
+
+        .score-fill {
+            height: 100%;
+            background-color: #28a745;
+            transition: width 0.3s ease;
+        }
+
+        .badge {
+            display: inline-block;
+            padding: 0.25em 0.4em;
+            font-size: 75%;
+            font-weight: 700;
+            line-height: 1;
+            text-align: center;
+            white-space: nowrap;
+            vertical-align: baseline;
+            border-radius: 0.25rem;
+        }
+
+        .badge-success {
+            color: #fff;
+            background-color: #28a745;
+        }
+
+        .badge-warning {
+            color: #212529;
+            background-color: #ffc107;
+        }
     </style>
 </head>
 <body>
@@ -385,13 +479,22 @@
                                             <td>
                                                 <% 
                                                     let score = 0;
-                                                    if (objectiveScores && objectiveScores[objective.objectiveId]) {
-                                                        score = objectiveScores[objective.objectiveId];
+                                                    // Check for latest quarterly scores
+                                                    if (quarterlyData) {
+                                                        if (quarterlyData.q4 && quarterlyData.q4.objectiveScores && quarterlyData.q4.objectiveScores[objective.objectiveId]) {
+                                                            score = quarterlyData.q4.objectiveScores[objective.objectiveId];
+                                                        } else if (quarterlyData.q3 && quarterlyData.q3.objectiveScores && quarterlyData.q3.objectiveScores[objective.objectiveId]) {
+                                                            score = quarterlyData.q3.objectiveScores[objective.objectiveId];
+                                                        } else if (quarterlyData.q2 && quarterlyData.q2.objectiveScores && quarterlyData.q2.objectiveScores[objective.objectiveId]) {
+                                                            score = quarterlyData.q2.objectiveScores[objective.objectiveId];
+                                                        } else if (quarterlyData.q1 && quarterlyData.q1.objectiveScores && quarterlyData.q1.objectiveScores[objective.objectiveId]) {
+                                                            score = quarterlyData.q1.objectiveScores[objective.objectiveId];
+                                                        }
                                                     }
                                                     const scorePercentage = (score / 5) * 100;
                                                 %>
                                                 <div class="progress-container">
-                                                    <div class="progress-bar" style="width: 5%;"><%= score %></div>
+                                                    <div class="progress-bar" style="width: <%= scorePercentage %>%;"><%= score %>/5</div>
                                                 </div>
                                             </td>
                                         </tr>
@@ -424,13 +527,22 @@
                                         <div class="skill-progress">
                                             <% 
                                                 let score = 0;
-                                                if (skillScores && skillScores[skill.jobReqSkillId]) {
-                                                    score = skillScores[skill.jobReqSkillId];
+                                                // Check for latest quarterly skill scores
+                                                if (quarterlyData) {
+                                                    if (quarterlyData.q4 && quarterlyData.q4.skillScores && quarterlyData.q4.skillScores[skill.jobReqSkillId]) {
+                                                        score = quarterlyData.q4.skillScores[skill.jobReqSkillId];
+                                                    } else if (quarterlyData.q3 && quarterlyData.q3.skillScores && quarterlyData.q3.skillScores[skill.jobReqSkillId]) {
+                                                        score = quarterlyData.q3.skillScores[skill.jobReqSkillId];
+                                                    } else if (quarterlyData.q2 && quarterlyData.q2.skillScores && quarterlyData.q2.skillScores[skill.jobReqSkillId]) {
+                                                        score = quarterlyData.q2.skillScores[skill.jobReqSkillId];
+                                                    } else if (quarterlyData.q1 && quarterlyData.q1.skillScores && quarterlyData.q1.skillScores[skill.jobReqSkillId]) {
+                                                        score = quarterlyData.q1.skillScores[skill.jobReqSkillId];
+                                                    }
                                                 }
                                                 const scorePercentage = (score / 5) * 100;
                                             %>
-                                            <div class="skill-bar" style="width: 5%;">
-                                                <span class="percentage"><%= score %></span>
+                                            <div class="skill-bar" style="width: <%= scorePercentage %>%;">
+                                                <span class="percentage"><%= score %>/5</span>
                                             </div>
                                         </div>
                                     </div>
@@ -450,13 +562,22 @@
                                         <div class="skill-progress">
                                             <% 
                                                 let score = 0;
-                                                if (skillScores && skillScores[skill.jobReqSkillId]) {
-                                                    score = skillScores[skill.jobReqSkillId];
+                                                // Check for latest quarterly skill scores
+                                                if (quarterlyData) {
+                                                    if (quarterlyData.q4 && quarterlyData.q4.skillScores && quarterlyData.q4.skillScores[skill.jobReqSkillId]) {
+                                                        score = quarterlyData.q4.skillScores[skill.jobReqSkillId];
+                                                    } else if (quarterlyData.q3 && quarterlyData.q3.skillScores && quarterlyData.q3.skillScores[skill.jobReqSkillId]) {
+                                                        score = quarterlyData.q3.skillScores[skill.jobReqSkillId];
+                                                    } else if (quarterlyData.q2 && quarterlyData.q2.skillScores && quarterlyData.q2.skillScores[skill.jobReqSkillId]) {
+                                                        score = quarterlyData.q2.skillScores[skill.jobReqSkillId];
+                                                    } else if (quarterlyData.q1 && quarterlyData.q1.skillScores && quarterlyData.q1.skillScores[skill.jobReqSkillId]) {
+                                                        score = quarterlyData.q1.skillScores[skill.jobReqSkillId];
+                                                    }
                                                 }
                                                 const scorePercentage = (score / 5) * 100;
                                             %>
-                                            <div class="skill-bar" style="width: 5%;">
-                                                <span class="percentage"><%= score %></span>
+                                            <div class="skill-bar" style="width: <%= scorePercentage %>%;">
+                                                <span class="percentage"><%= score %>/5</span>
                                             </div>
                                         </div>
                                     </div>
@@ -468,7 +589,7 @@
                     </div>
                 </div>
                 
-                <!-- Updated Development Timeline Tab -->
+                <!-- Enhanced Development Timeline Tab -->
                 <div id="timeline-tab" class="tab-content">
                     <div class="card">
                         <div class="card-header">
@@ -490,13 +611,14 @@
                         <div class="content-section <%= currentStep === 0 ? 'active' : '' %>" id="objectiveSettingForm">
                             <h3>Objective Setting Form</h3>
                             <% if (objectives && objectives.length > 0) { %>
-                                <p>Your objectives for this performance period have been set. You can view them in the Objectives tab.</p>
-                                <table>
+                                <p><strong>Status:</strong> <span class="badge badge-success">Completed</span> - Your objectives for this performance period have been set.</p>
+                                <table class="table table-striped">
                                     <thead>
                                         <tr>
                                             <th>Objective</th>
                                             <th>KPI</th>
                                             <th>Target</th>
+                                            <th>Weight</th>
                                         </tr>
                                     </thead>
                                     <tbody>
@@ -505,180 +627,315 @@
                                                 <td><%= obj.objectiveDescrpt %></td>
                                                 <td><%= obj.objectiveKPI %></td>
                                                 <td><%= obj.objectiveTarget %> <%= obj.objectiveUOM %></td>
+                                                <td><%= obj.objectiveAssignedWeight %>%</td>
                                             </tr>
                                         <% }); %>
                                     </tbody>
                                 </table>
                             <% } else { %>
                                 <p>At the start of the work year, employees collaborate with their line managers to conduct objective setting, where key performance objectives and individual goals are discussed and established. The line manager inputs these agreed-upon objectives into the system, consolidating them for tracking throughout the year. Once the objectives are finalized and inputted, they will be reflected on your performance records, enabling you to monitor progress through quarterly 360-degree feedback.</p>
-                                <p><strong>Status:</strong> Pending - Your objectives have not yet been set by your line manager.</p>
+                                <p><strong>Status:</strong> <span class="badge badge-warning">Pending</span> - Your objectives have not yet been set by your line manager.</p>
                             <% } %>
                         </div>
                         
                         <div class="content-section <%= currentStep === 1 ? 'active' : '' %>" id="quarterlyProgress1">
                             <h3>First Quarter 360° Feedback</h3>
                             <% if (quarterlyData && quarterlyData.q1) { %>
-                                <p><strong>Period:</strong> <%= new Date(quarterlyData.q1.setStartDate).toLocaleDateString() %> to <%= new Date(quarterlyData.q1.setEndDate).toLocaleDateString() %></p>
+                                <div class="feedback-header">
+                                    <p><strong>Period:</strong> <%= new Date(quarterlyData.q1.setStartDate).toLocaleDateString() %> to <%= new Date(quarterlyData.q1.setEndDate).toLocaleDateString() %></p>
+                                    <p><strong>Status:</strong> <span class="badge badge-success">Completed</span></p>
+                                </div>
+                                
                                 <p>Your first quarter feedback has been completed. This feedback incorporates perspectives from your line manager, peers, and HR, offering a comprehensive view of your progress.</p>
                                 
                                 <% if (quarterlyData.q1.feedbacks_answers && quarterlyData.q1.feedbacks_answers.length > 0) { %>
-                                    <h4>Feedback Summary</h4>
-                                    <% let reviewersCount = quarterlyData.q1.feedbacks_answers.length; %>
-                                    <p><strong>Number of reviewers:</strong> <%= reviewersCount %></p>
+                                    <div class="feedback-summary">
+                                        <h4>Feedback Summary</h4>
+                                        <p><strong>Number of reviewers:</strong> <%= quarterlyData.q1.feedbacks_answers.length %></p>
+                                        
+                                        <!-- Display all remarks from reviewers -->
+                                        <% quarterlyData.q1.feedbacks_answers.forEach((answer, index) => { %>
+                                            <% if (answer.remarks && answer.remarks.trim()) { %>
+                                                <div class="reviewer-feedback">
+                                                    <h5>Reviewer <%= index + 1 %> Comments</h5>
+                                                    <% if (answer.reviewDate) { %>
+                                                        <small class="text-muted">Review Date: <%= new Date(answer.reviewDate).toLocaleDateString() %></small>
+                                                    <% } %>
+                                                    <p class="feedback-remarks"><%= answer.remarks %></p>
+                                                </div>
+                                            <% } %>
+                                        <% }); %>
+                                    </div>
                                     
-                                    <% if (quarterlyData.q1.feedbacks_answers[0].remarks) { %>
-                                        <h4>Remarks</h4>
-                                        <p><%= quarterlyData.q1.feedbacks_answers[0].remarks %></p>
+                                    <!-- Display objective scores if available -->
+                                    <% if (quarterlyData.q1.objectiveScores && Object.keys(quarterlyData.q1.objectiveScores).length > 0) { %>
+                                        <div class="scores-section">
+                                            <h4>Objective Performance Scores</h4>
+                                            <div class="scores-grid">
+                                                <% Object.entries(quarterlyData.q1.objectiveScores).forEach(([objId, score]) => { %>
+                                                    <% 
+                                                        // Find the objective description
+                                                        const objective = objectives.find(obj => obj.objectiveId == objId);
+                                                        const objName = objective ? objective.objectiveDescrpt : `Objective ${objId}`;
+                                                    %>
+                                                    <div class="score-item">
+                                                        <span class="score-label"><%= objName %></span>
+                                                        <span class="score-value"><%= score %>/5</span>
+                                                        <div class="score-bar">
+                                                            <div class="score-fill" style="width: <%= (score/5)*100 %>%"></div>
+                                                        </div>
+                                                    </div>
+                                                <% }); %>
+                                            </div>
+                                        </div>
+                                    <% } %>
+                                    
+                                    <!-- Display skill scores if available -->
+                                    <% if (quarterlyData.q1.skillScores && Object.keys(quarterlyData.q1.skillScores).length > 0) { %>
+                                        <div class="scores-section">
+                                            <h4>Skill Performance Scores</h4>
+                                            <div class="scores-grid">
+                                                <% Object.entries(quarterlyData.q1.skillScores).forEach(([skillId, score]) => { %>
+                                                    <% 
+                                                        // Find the skill name
+                                                        const allSkills = [...(hardSkills || []), ...(softSkills || [])];
+                                                        const skill = allSkills.find(s => s.jobReqSkillId == skillId);
+                                                        const skillName = skill ? skill.jobReqSkillName : `Skill ${skillId}`;
+                                                    %>
+                                                    <div class="score-item">
+                                                        <span class="score-label"><%= skillName %></span>
+                                                        <span class="score-value"><%= score %>/5</span>
+                                                        <div class="score-bar">
+                                                            <div class="score-fill" style="width: <%= (score/5)*100 %>%"></div>
+                                                        </div>
+                                                    </div>
+                                                <% }); %>
+                                            </div>
+                                        </div>
                                     <% } %>
                                 <% } %>
                             <% } else { %>
                                 <p>The first quarterly feedback session provides early insights into your performance against objectives. This feedback incorporates perspectives from your line manager, peers, and HR, offering a comprehensive view of your progress.</p>
-                                <p><strong>Status:</strong> Pending - Your Q1 feedback has not yet been completed.</p>
+                                <p><strong>Status:</strong> <span class="badge badge-warning">Pending</span> - Your Q1 feedback has not yet been completed.</p>
                             <% } %>
                         </div>
                         
                         <div class="content-section <%= currentStep === 2 ? 'active' : '' %>" id="quarterlyProgress2">
                             <h3>Second Quarter 360° Feedback</h3>
                             <% if (quarterlyData && quarterlyData.q2) { %>
-                                <p><strong>Period:</strong> <%= new Date(quarterlyData.q2.setStartDate).toLocaleDateString() %> to <%= new Date(quarterlyData.q2.setEndDate).toLocaleDateString() %></p>
+                                <div class="feedback-header">
+                                    <p><strong>Period:</strong> <%= new Date(quarterlyData.q2.setStartDate).toLocaleDateString() %> to <%= new Date(quarterlyData.q2.setEndDate).toLocaleDateString() %></p>
+                                    <p><strong>Status:</strong> <span class="badge badge-success">Completed</span></p>
+                                </div>
+                                
                                 <p>Your second quarter feedback has been completed. This feedback builds on previous insights, tracking progressive improvement or identifying persistent challenges.</p>
+                                
+                                <% if (quarterlyData.q2.feedbacks_answers && quarterlyData.q2.feedbacks_answers.length > 0) { %>
+                                    <div class="feedback-summary">
+                                        <h4>Feedback Summary</h4>
+                                        <p><strong>Number of reviewers:</strong> <%= quarterlyData.q2.feedbacks_answers.length %></p>
+                                        
+                                        <% quarterlyData.q2.feedbacks_answers.forEach((answer, index) => { %>
+                                            <% if (answer.remarks && answer.remarks.trim()) { %>
+                                                <div class="reviewer-feedback">
+                                                    <h5>Reviewer <%= index + 1 %> Comments</h5>
+                                                    <% if (answer.reviewDate) { %>
+                                                        <small class="text-muted">Review Date: <%= new Date(answer.reviewDate).toLocaleDateString() %></small>
+                                                    <% } %>
+                                                    <p class="feedback-remarks"><%= answer.remarks %></p>
+                                                </div>
+                                            <% } %>
+                                        <% }); %>
+                                    </div>
+                                <% } %>
                             <% } else { %>
                                 <p>The second quarterly feedback session builds on previous insights, tracking progressive improvement or identifying persistent challenges. This helps in preparing for the Mid-Year Individual Development Plan.</p>
-                                <p><strong>Status:</strong> Pending - Your Q2 feedback has not yet been completed.</p>
+                                <p><strong>Status:</strong> <span class="badge badge-warning">Pending</span> - Your Q2 feedback has not yet been completed.</p>
                             <% } %>
                         </div>
                         
                         <div class="content-section <%= currentStep === 3 ? 'active' : '' %>" id="midYearReview">
                             <h3>Mid-Year Individual Development Plan</h3>
                             <% if (midYearIDP) { %>
-                                <div class="idp-section">
-                                    <h4>Professional Development</h4>
-                                    <div class="idp-item">
-                                        <h5>Strengths</h5>
-                                        <p><%= midYearIDP.profStrengths %></p>
+                                <div class="idp-container">
+                                    <div class="idp-section">
+                                        <h4><i class="fa fa-user-tie"></i> Professional Development</h4>
+                                        <div class="idp-item">
+                                            <h5>Strengths</h5>
+                                            <p><%= midYearIDP.profStrengths %></p>
+                                        </div>
+                                        <div class="idp-item">
+                                            <h5>Areas for Development</h5>
+                                            <p><%= midYearIDP.profAreasForDevelopment %></p>
+                                        </div>
+                                        <div class="idp-item">
+                                            <h5>Actions to Take</h5>
+                                            <p><%= midYearIDP.profActionsToTake %></p>
+                                        </div>
                                     </div>
-                                    <div class="idp-item">
-                                        <h5>Areas for Development</h5>
-                                        <p><%= midYearIDP.profAreasForDevelopment %></p>
+                                    
+                                    <div class="idp-section">
+                                        <h4><i class="fa fa-users"></i> Leadership Development</h4>
+                                        <div class="idp-item">
+                                            <h5>Strengths</h5>
+                                            <p><%= midYearIDP.leaderStrengths %></p>
+                                        </div>
+                                        <div class="idp-item">
+                                            <h5>Areas for Development</h5>
+                                            <p><%= midYearIDP.leaderAreasForDevelopment %></p>
+                                        </div>
+                                        <div class="idp-item">
+                                            <h5>Actions to Take</h5>
+                                            <p><%= midYearIDP.leaderActionsToTake %></p>
+                                        </div>
                                     </div>
-                                    <div class="idp-item">
-                                        <h5>Actions to Take</h5>
-                                        <p><%= midYearIDP.profActionsToTake %></p>
-                                    </div>
-                                </div>
-                                
-                                <div class="idp-section">
-                                    <h4>Leadership Development</h4>
-                                    <div class="idp-item">
-                                        <h5>Strengths</h5>
-                                        <p><%= midYearIDP.leaderStrengths %></p>
-                                    </div>
-                                    <div class="idp-item">
-                                        <h5>Areas for Development</h5>
-                                        <p><%= midYearIDP.leaderAreasForDevelopment %></p>
-                                    </div>
-                                    <div class="idp-item">
-                                        <h5>Actions to Take</h5>
-                                        <p><%= midYearIDP.leaderActionsToTake %></p>
-                                    </div>
-                                </div>
-                                
-                                <div class="idp-section">
-                                    <h4>Career Planning</h4>
-                                    <div class="idp-item">
-                                        <h5>Short-Term Role Aspirations</h5>
-                                        <p><%= midYearIDP.nextRoleShortTerm %></p>
-                                    </div>
-                                    <div class="idp-item">
-                                        <h5>Long-Term Role Aspirations</h5>
-                                        <p><%= midYearIDP.nextRoleLongTerm %></p>
-                                    </div>
-                                    <div class="idp-item">
-                                        <h5>Mobility Preferences</h5>
-                                        <p><%= midYearIDP.nextRoleMobility %></p>
+                                    
+                                    <div class="idp-section">
+                                        <h4><i class="fa fa-road"></i> Career Planning</h4>
+                                        <div class="idp-item">
+                                            <h5>Short-Term Role Aspirations</h5>
+                                            <p><%= midYearIDP.nextRoleShortTerm %></p>
+                                        </div>
+                                        <div class="idp-item">
+                                            <h5>Long-Term Role Aspirations</h5>
+                                            <p><%= midYearIDP.nextRoleLongTerm %></p>
+                                        </div>
+                                        <div class="idp-item">
+                                            <h5>Mobility Preferences</h5>
+                                            <p><%= midYearIDP.nextRoleMobility %></p>
+                                        </div>
                                     </div>
                                 </div>
                             <% } else { %>
                                 <p>The Mid-Year IDP is a comprehensive review of your performance over the first half of the year. It includes a discussion of achievements, challenges, and adjustments to objectives if necessary. A personalized development plan is created to focus efforts for the remainder of the year.</p>
-                                <p><strong>Status:</strong> Pending - Your Mid-Year IDP has not yet been completed.</p>
+                                <p><strong>Status:</strong> <span class="badge badge-warning">Pending</span> - Your Mid-Year IDP has not yet been completed.</p>
                             <% } %>
                         </div>
                         
                         <div class="content-section <%= currentStep === 4 ? 'active' : '' %>" id="quarterlyProgress3">
                             <h3>Third Quarter 360° Feedback</h3>
                             <% if (quarterlyData && quarterlyData.q3) { %>
-                                <p><strong>Period:</strong> <%= new Date(quarterlyData.q3.setStartDate).toLocaleDateString() %> to <%= new Date(quarterlyData.q3.setEndDate).toLocaleDateString() %></p>
+                                <div class="feedback-header">
+                                    <p><strong>Period:</strong> <%= new Date(quarterlyData.q3.setStartDate).toLocaleDateString() %> to <%= new Date(quarterlyData.q3.setEndDate).toLocaleDateString() %></p>
+                                    <p><strong>Status:</strong> <span class="badge badge-success">Completed</span></p>
+                                </div>
+                                
                                 <p>Your third quarter feedback has been completed. This assessment evaluates how effectively you've implemented development recommendations from your Mid-Year IDP.</p>
+                                
+                                <% if (quarterlyData.q3.feedbacks_answers && quarterlyData.q3.feedbacks_answers.length > 0) { %>
+                                    <div class="feedback-summary">
+                                        <h4>Feedback Summary</h4>
+                                        <p><strong>Number of reviewers:</strong> <%= quarterlyData.q3.feedbacks_answers.length %></p>
+                                        
+                                        <% quarterlyData.q3.feedbacks_answers.forEach((answer, index) => { %>
+                                            <% if (answer.remarks && answer.remarks.trim()) { %>
+                                                <div class="reviewer-feedback">
+                                                    <h5>Reviewer <%= index + 1 %> Comments</h5>
+                                                    <% if (answer.reviewDate) { %>
+                                                        <small class="text-muted">Review Date: <%= new Date(answer.reviewDate).toLocaleDateString() %></small>
+                                                    <% } %>
+                                                    <p class="feedback-remarks"><%= answer.remarks %></p>
+                                                </div>
+                                            <% } %>
+                                        <% }); %>
+                                    </div>
+                                <% } %>
                             <% } else { %>
                                 <p>The third quarterly session assesses your progress following the Mid-Year IDP, evaluating how effectively you've implemented development recommendations and continued to work toward your objectives.</p>
-                                <p><strong>Status:</strong> Pending - Your Q3 feedback has not yet been completed.</p>
+                                <p><strong>Status:</strong> <span class="badge badge-warning">Pending</span> - Your Q3 feedback has not yet been completed.</p>
                             <% } %>
                         </div>
                         
                         <div class="content-section <%= currentStep === 5 ? 'active' : '' %>" id="quarterlyProgress4">
                             <h3>Fourth Quarter 360° Feedback</h3>
                             <% if (quarterlyData && quarterlyData.q4) { %>
-                                <p><strong>Period:</strong> <%= new Date(quarterlyData.q4.setStartDate).toLocaleDateString() %> to <%= new Date(quarterlyData.q4.setEndDate).toLocaleDateString() %></p>
+                                <div class="feedback-header">
+                                    <p><strong>Period:</strong> <%= new Date(quarterlyData.q4.setStartDate).toLocaleDateString() %> to <%= new Date(quarterlyData.q4.setEndDate).toLocaleDateString() %></p>
+                                    <p><strong>Status:</strong> <span class="badge badge-success">Completed</span></p>
+                                </div>
+                                
                                 <p>Your fourth quarter feedback has been completed. This provides a comprehensive evaluation of your performance throughout the year.</p>
+                                
+                                <% if (quarterlyData.q4.feedbacks_answers && quarterlyData.q4.feedbacks_answers.length > 0) { %>
+                                    <div class="feedback-summary">
+                                        <h4>Feedback Summary</h4>
+                                        <p><strong>Number of reviewers:</strong> <%= quarterlyData.q4.feedbacks_answers.length %></p>
+                                        
+                                        <% quarterlyData.q4.feedbacks_answers.forEach((answer, index) => { %>
+                                            <% if (answer.remarks && answer.remarks.trim()) { %>
+                                                <div class="reviewer-feedback">
+                                                    <h5>Reviewer <%= index + 1 %> Comments</h5>
+                                                    <% if (answer.reviewDate) { %>
+                                                        <small class="text-muted">Review Date: <%= new Date(answer.reviewDate).toLocaleDateString() %></small>
+                                                    <% } %>
+                                                    <p class="feedback-remarks"><%= answer.remarks %></p>
+                                                </div>
+                                            <% } %>
+                                        <% }); %>
+                                    </div>
+                                <% } %>
                             <% } else { %>
                                 <p>The final quarterly feedback session provides a comprehensive evaluation of your performance throughout the year, serving as a foundation for the Year-End Individual Development Plan.</p>
-                                <p><strong>Status:</strong> Pending - Your Q4 feedback has not yet been completed.</p>
+                                <p><strong>Status:</strong> <span class="badge badge-warning">Pending</span> - Your Q4 feedback has not yet been completed.</p>
                             <% } %>
                         </div>
-                        
+
                         <div class="content-section <%= currentStep === 6 ? 'active' : '' %>" id="yearEndReview">
                             <h3>Final-Year Individual Development Plan</h3>
                             <% if (finalYearIDP) { %>
-                                <div class="idp-section">
-                                    <h4>Professional Development</h4>
-                                    <div class="idp-item">
-                                        <h5>Strengths</h5>
-                                        <p><%= finalYearIDP.profStrengths %></p>
+                                <div class="idp-container">
+                                    <p><strong>Status:</strong> <span class="badge badge-success">Completed</span></p>
+                                    <div class="idp-section">
+                                        <h4><i class="fa fa-user-tie"></i> Professional Development</h4>
+                                        <div class="idp-item">
+                                            <h5>Strengths</h5>
+                                            <p><%= finalYearIDP.profStrengths %></p>
+                                        </div>
+                                        <div class="idp-item">
+                                            <h5>Areas for Development</h5>
+                                            <p><%= finalYearIDP.profAreasForDevelopment %></p>
+                                        </div>
+                                        <div class="idp-item">
+                                            <h5>Actions to Take</h5>
+                                            <p><%= finalYearIDP.profActionsToTake %></p>
+                                        </div>
                                     </div>
-                                    <div class="idp-item">
-                                        <h5>Areas for Development</h5>
-                                        <p><%= finalYearIDP.profAreasForDevelopment %></p>
+                                    
+                                    <div class="idp-section">
+                                        <h4><i class="fa fa-users"></i> Leadership Development</h4>
+                                        <div class="idp-item">
+                                            <h5>Strengths</h5>
+                                            <p><%= finalYearIDP.leaderStrengths %></p>
+                                        </div>
+                                        <div class="idp-item">
+                                            <h5>Areas for Development</h5>
+                                            <p><%= finalYearIDP.leaderAreasForDevelopment %></p>
+                                        </div>
+                                        <div class="idp-item">
+                                            <h5>Actions to Take</h5>
+                                            <p><%= finalYearIDP.leaderActionsToTake %></p>
+                                        </div>
                                     </div>
-                                    <div class="idp-item">
-                                        <h5>Actions to Take</h5>
-                                        <p><%= finalYearIDP.profActionsToTake %></p>
-                                    </div>
-                                </div>
-                                
-                                <div class="idp-section">
-                                    <h4>Leadership Development</h4>
-                                    <div class="idp-item">
-                                        <h5>Strengths</h5>
-                                        <p><%= finalYearIDP.leaderStrengths %></p>
-                                    </div>
-                                    <div class="idp-item">
-                                        <h5>Areas for Development</h5>
-                                        <p><%= finalYearIDP.leaderAreasForDevelopment %></p>
-                                    </div>
-                                    <div class="idp-item">
-                                        <h5>Actions to Take</h5>
-                                        <p><%= finalYearIDP.leaderActionsToTake %></p>
-                                    </div>
-                                </div>
-                                
-                                <div class="idp-section">
-                                    <h4>Career Planning</h4>
-                                    <div class="idp-item">
-                                        <h5>Short-Term Role Aspirations</h5>
-                                        <p><%= finalYearIDP.nextRoleShortTerm %></p>
-                                    </div>
-                                    <div class="idp-item">
-                                        <h5>Long-Term Role Aspirations</h5>
-                                        <p><%= finalYearIDP.nextRoleLongTerm %></p>
-                                    </div>
-                                    <div class="idp-item">
-                                        <h5>Mobility Preferences</h5>
-                                        <p><%= finalYearIDP.nextRoleMobility %></p>
+                                    
+                                    <div class="idp-section">
+                                        <h4><i class="fa fa-road"></i> Career Planning</h4>
+                                        <div class="idp-item">
+                                            <h5>Short-Term Role Aspirations</h5>
+                                            <p><%= finalYearIDP.nextRoleShortTerm %></p>
+                                        </div>
+                                        <div class="idp-item">
+                                            <h5>Long-Term Role Aspirations</h5>
+                                            <p><%= finalYearIDP.nextRoleLongTerm %></p>
+                                        </div>
+                                        <div class="idp-item">
+                                            <h5>Mobility Preferences</h5>
+                                            <p><%= finalYearIDP.nextRoleMobility %></p>
+                                        </div>
                                     </div>
                                 </div>
                             <% } else { %>
                                 <p>The Year-End IDP offers a complete assessment of your annual performance, highlighting achievements, areas for growth, and setting the stage for the next year's objectives. This session may include discussions about career progression, compensation adjustments, and long-term development opportunities.</p>
-                                <p><strong>Status:</strong> Pending - Your Final-Year IDP has not yet been completed.</p>
+                                <p><strong>Status:</strong> <span class="badge badge-warning">Pending</span> - Your Final-Year IDP has not yet been completed.</p>
                             <% } %>
                         </div>
                     </div>
