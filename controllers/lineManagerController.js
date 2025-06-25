@@ -11252,11 +11252,13 @@ getFeedbackUsers: async function(req, res) {
         return res.status(500).json({ success: false, message: 'An error occurred while fetching feedback data.', error: error.message });
     }
 },
-
 staffFeedbackList: async function (req, res) {
-    console.log("staffFeedbackList function called for line manager!");
+    console.log("=== Employee staffFeedbackList function called ===");
     const currentUserId = req.session?.user?.userId;
     const quarter = req.query.quarter || 'Q1';
+    
+    console.log("🔍 Current User ID:", currentUserId);
+    console.log("🔍 Requested Quarter:", quarter);
     
     if (!currentUserId) {
         return res.status(400).json({
@@ -11267,7 +11269,7 @@ staffFeedbackList: async function (req, res) {
     }
     
     try {
-        // Fetch current user data (line manager)
+        // Fetch current user data
         const { data: currentUserData, error: userError } = await supabase
             .from('staffaccounts')
             .select(`
@@ -11283,7 +11285,7 @@ staffFeedbackList: async function (req, res) {
             .single();
         
         if (userError || !currentUserData) {
-            console.error("Error fetching user details:", userError);
+            console.error("❌ Error fetching user details:", userError);
             return res.status(404).json({
                 success: false,
                 error: 'User Not Found',
@@ -11292,27 +11294,35 @@ staffFeedbackList: async function (req, res) {
         }
         
         const { departmentId } = currentUserData;
+        console.log("✅ Current user:", currentUserData.firstName, currentUserData.lastName);
+        console.log("🏢 Department ID:", departmentId, "Name:", currentUserData.departments?.deptName);
         
-        // Fetch all staff members in the same department
-        const { data: staffList, error: staffError } = await supabase
+        // Fetch ALL staff members in the same department (excluding current user)
+        const { data: allDepartmentStaff, error: staffError } = await supabase
             .from('staffaccounts')
             .select(`
                 userId, 
                 firstName, 
                 lastName,
+                jobId,
                 jobpositions (jobTitle)
             `)
             .eq('departmentId', departmentId)
-            .neq('userId', currentUserId);
+            .neq('userId', currentUserId); // Exclude current user
         
         if (staffError) {
-            console.error("Error fetching staff list:", staffError);
+            console.error("❌ Error fetching staff list:", staffError);
             return res.status(500).json({
                 success: false,
                 error: 'Data Fetch Error',
                 message: 'Unable to retrieve department staff list.'
             });
         }
+        
+        console.log(`📊 Found ${allDepartmentStaff?.length || 0} department colleagues:`);
+        allDepartmentStaff?.forEach((staff, index) => {
+            console.log(`  ${index + 1}. ${staff.firstName} ${staff.lastName} (ID: ${staff.userId}, JobID: ${staff.jobId})`);
+        });
         
         // Get the list of users who have complete feedback data for each quarter
         const quarters = ['Q1', 'Q2', 'Q3', 'Q4'];
@@ -11325,45 +11335,61 @@ staffFeedbackList: async function (req, res) {
             const feedbackTable = `feedbacks_${q}`;
             const feedbackIdField = `feedbackq${q.substring(1)}_Id`;
             
-            // Get users who have feedback data for this quarter
-            const { data: feedbackData, error: feedbackError } = await supabase
-                .from(feedbackTable)
-                .select(`userId, ${feedbackIdField}, quarter`)
-                .eq('quarter', q);
-                
-            if (feedbackError) {
-                console.error(`Error fetching ${q} feedback data:`, feedbackError);
-                continue;
-            }
+            console.log(`\n🔍 Checking ${feedbackTable} for quarter ${q}...`);
             
-            // For each feedback record, verify it has complete data
-            for (const feedback of feedbackData || []) {
-                const feedbackId = feedback[feedbackIdField];
+            // For each department staff member, check if they have complete feedback setup
+            for (const staff of allDepartmentStaff || []) {
+                const { userId: staffUserId, jobId: staffJobId } = staff;
+                
+                console.log(`  🔍 Checking user ${staffUserId} (${staff.firstName} ${staff.lastName})...`);
+                
+                // Check if user has feedback record for this quarter
+                const { data: feedbackData, error: feedbackError } = await supabase
+                    .from(feedbackTable)
+                    .select(`${feedbackIdField}, userId, quarter`)
+                    .eq('userId', staffUserId)
+                    .eq('quarter', q)
+                    .single();
+                    
+                if (feedbackError || !feedbackData) {
+                    console.log(`    ❌ No feedback record found in ${feedbackTable}`);
+                    continue;
+                }
+                
+                const feedbackId = feedbackData[feedbackIdField];
+                console.log(`    ✅ Found feedback record with ID ${feedbackId}`);
                 
                 // Check for objectives questions
                 const { data: objectivesData, error: objectivesError } = await supabase
                     .from('feedbacks_questions-objectives')
-                    .select('feedback_qObjectivesId')
-                    .eq(feedbackIdField, feedbackId)
-                    .limit(1);
-                    
-                // Check for skills questions
+                    .select('feedback_qObjectivesId, objectiveId')
+                    .eq(feedbackIdField, feedbackId);
+                
+                // Check for skills questions  
                 const { data: skillsData, error: skillsError } = await supabase
                     .from('feedbacks_questions-skills')
-                    .select('feedback_qSkillsId')
-                    .eq(feedbackIdField, feedbackId)
-                    .limit(1);
+                    .select('feedback_qSkillsId, jobReqSkillId')
+                    .eq(feedbackIdField, feedbackId);
                 
-                // Only include if both objectives and skills data exist
-                if (!objectivesError && !skillsError && 
-                    objectivesData?.length > 0 && skillsData?.length > 0) {
-                    usersWithDataByQuarter[q].push(feedback.userId);
+                const hasObjectives = !objectivesError && objectivesData?.length > 0;
+                const hasSkills = !skillsError && skillsData?.length > 0;
+                const hasCompleteData = hasObjectives && hasSkills;
+                
+                console.log(`    📋 Objectives: ${hasObjectives ? '✅' : '❌'} (${objectivesData?.length || 0})`);
+                console.log(`    🛠️ Skills: ${hasSkills ? '✅' : '❌'} (${skillsData?.length || 0})`);
+                console.log(`    📊 Complete: ${hasCompleteData ? '✅' : '❌'}`);
+                
+                if (hasCompleteData) {
+                    usersWithDataByQuarter[q].push(staffUserId);
+                    console.log(`    ✅ Added user ${staffUserId} to ${q} available list`);
                 }
             }
+            
+            console.log(`  📊 ${q} available users: [${usersWithDataByQuarter[q].join(', ')}]`);
         }
         
         // Format the staff list with quarter availability info
-        const formattedStaffList = staffList.map(staff => {
+        const formattedStaffList = allDepartmentStaff.map(staff => {
             const availableQuarters = {};
             
             quarters.forEach(q => {
@@ -11386,19 +11412,48 @@ staffFeedbackList: async function (req, res) {
         
         const hasQuarterData = filteredStaffList.length > 0;
         
-        console.log(`Found ${filteredStaffList.length} staff members with data for ${quarter}`);
+        console.log(`\n📈 FINAL RESULTS for ${quarter}:`);
+        console.log(`  Department: ${currentUserData.departments?.deptName} (ID: ${departmentId})`);
+        console.log(`  Total department colleagues: ${allDepartmentStaff?.length || 0}`);
+        console.log(`  Available colleagues for feedback: ${filteredStaffList.length}`);
         
-        return res.render('staffpages/linemanager_pages/linemanager-quarterlyfeedbackquestionnaire.ejs', {
+        if (filteredStaffList.length > 0) {
+            console.log(`  ✅ Available for ${quarter} feedback:`);
+            filteredStaffList.forEach((staff, index) => {
+                console.log(`    ${index + 1}. ${staff.firstName} ${staff.lastName} (${staff.userId}) - ${staff.jobTitle}`);
+            });
+        } else {
+            console.log(`  ❌ No colleagues available for ${quarter} feedback`);
+        }
+        
+        // Show quarter availability summary
+        console.log("\n📊 Quarter availability summary:");
+        quarters.forEach(q => {
+            const count = formattedStaffList.filter(staff => staff.availableQuarters[q]).length;
+            console.log(`  ${q}: ${count} colleagues available`);
+        });
+        
+        console.log("\n✅ Rendering page...");
+        
+        return res.render('staffpages/employee_pages/employee-quarterlyfeedbackquestionnaire.ejs', {
             title: '360 Degree Feedback Questionnaires',
             quarter: quarter,
             staffList: filteredStaffList,
             allStaffList: formattedStaffList,
             hasQuarterData: hasQuarterData,
-            user: req.session.user
+            user: req.session.user,
+            debug: {
+                currentUserId: currentUserId,
+                departmentId: departmentId,
+                departmentName: currentUserData.departments?.deptName,
+                totalDepartmentStaff: allDepartmentStaff?.length || 0,
+                availableColleagues: filteredStaffList.length,
+                selectedQuarter: quarter
+            }
         });
         
     } catch (error) {
-        console.error('Error in staffFeedbackList:', error);
+        console.error('❌ Error in staffFeedbackList:', error);
         return res.status(500).json({
             success: false,
             error: 'Server Error',
@@ -11407,7 +11462,251 @@ staffFeedbackList: async function (req, res) {
     }
 },
 
+getQuestionnaireData: async function (req, res) {
+    const currentUserId = req.session?.user?.userId;
+    const targetUserId = req.query.userId;
+    const quarter = req.query.quarter || 'Q1';
+    
+    console.log("=== getQuestionnaireData called ===");
+    console.log("🔍 Current User ID:", currentUserId);
+    console.log("🔍 Target User ID:", targetUserId);
+    console.log("🔍 Quarter:", quarter);
+    
+    if (!currentUserId || !targetUserId) {
+        return res.status(400).json({ 
+            success: false, 
+            message: 'User IDs are required.'
+        });
+    }
+    
+    try {
+        // Get table name and ID field based on quarter
+        const quarterTable = `feedbacks_${quarter}`;
+        const idField = `feedbackq${quarter.substring(1)}_Id`;
+        
+        console.log(`📋 Using table: ${quarterTable}, ID field: ${idField}`);
+        
+        // Fetch feedback data for the target user
+        const { data: feedbackData, error: feedbackError } = await supabase
+            .from(quarterTable)
+            .select(`
+                userId, 
+                setStartDate, 
+                setEndDate, 
+                ${idField},
+                quarter,
+                year,
+                jobId
+            `)
+            .eq('userId', targetUserId)
+            .eq('quarter', quarter)
+            .order('created_at', { ascending: false })
+            .limit(1);
 
+        if (feedbackError || !feedbackData || feedbackData.length === 0) {
+            console.error(`❌ Error fetching feedback data from ${quarterTable}:`, feedbackError);
+            return res.status(404).json({ 
+                success: false, 
+                message: 'No feedback data found for this user in this quarter.'
+            });
+        }
+
+        const feedback = feedbackData[0];
+        const feedbackId = feedback[idField];
+
+        console.log(`✅ Found feedback record with ID ${feedbackId}`);
+        
+        // Fetch user details for additional information
+        const { data: userData, error: userError } = await supabase
+            .from('staffaccounts')
+            .select(`
+                departments (deptName),
+                jobpositions (jobTitle),
+                jobId
+            `)
+            .eq('userId', targetUserId)
+            .single();
+            
+        if (userError) {
+            console.error("⚠️ Error fetching user data:", userError);
+        } else if (userData) {
+            feedback.deptName = userData.departments?.deptName;
+            feedback.jobTitle = userData.jobpositions?.jobTitle;
+            if (!feedback.jobId && userData.jobId) {
+                feedback.jobId = userData.jobId;
+            }
+        }
+
+        feedback.id = feedbackId;
+        
+        console.log(`📊 Feedback details:`, {
+            id: feedbackId,
+            userId: feedback.userId,
+            quarter: feedback.quarter,
+            year: feedback.year,
+            jobId: feedback.jobId,
+            startDate: feedback.setStartDate,
+            endDate: feedback.setEndDate
+        });
+        
+        // Fetch objectives for this feedback using the correct ID field
+        const { data: objectivesData, error: objectivesError } = await supabase
+            .from('feedbacks_questions-objectives')
+            .select(`
+                feedback_qObjectivesId,
+                objectiveId,
+                objectiveQualiQuestion,
+                ${idField}
+            `)
+            .eq(idField, feedbackId);
+            
+        if (objectivesError) {
+            console.error("❌ Error fetching objectives:", objectivesError);
+            return res.status(500).json({ 
+                success: false, 
+                message: 'Error fetching objectives data.'
+            });
+        }
+
+        console.log(`📋 Found ${objectivesData?.length || 0} objective questions`);
+        
+        // Get detailed objective information
+        let objectives = [];
+        if (objectivesData && objectivesData.length > 0) {
+            const objectiveIds = objectivesData.map(obj => obj.objectiveId).filter(id => id);
+            
+            console.log(`🔍 Fetching details for objective IDs: [${objectiveIds.join(', ')}]`);
+            
+            if (objectiveIds.length > 0) {
+                const { data: objectiveDetails, error: objectiveDetailsError } = await supabase
+                    .from('objectivesettings_objectives')
+                    .select('*')
+                    .in('objectiveId', objectiveIds);
+                    
+                if (objectiveDetailsError) {
+                    console.error("❌ Error fetching objective details:", objectiveDetailsError);
+                } else if (objectiveDetails) {
+                    console.log(`✅ Found ${objectiveDetails.length} objective details`);
+                    
+                    objectives = objectivesData.map(obj => {
+                        const detail = objectiveDetails.find(d => d.objectiveId === obj.objectiveId);
+                        return {
+                            ...obj,
+                            ...detail,
+                            objectiveDescription: detail?.objectiveDescrpt,
+                            description: detail?.objectiveDescrpt,
+                            kpi: detail?.objectiveKPI,
+                            target: detail?.objectiveTarget,
+                            uom: detail?.objectiveUOM,
+                            weight: detail?.objectiveAssignedWeight
+                        };
+                    });
+                } else {
+                    objectives = objectivesData;
+                }
+            } else {
+                objectives = objectivesData;
+            }
+        }
+        
+        // Fetch skills questions for this feedback
+        const { data: skillsQuestionsData, error: skillsQuestionsError } = await supabase
+            .from('feedbacks_questions-skills')
+            .select(`
+                feedback_qSkillsId,
+                jobReqSkillId,
+                ${idField}
+            `)
+            .eq(idField, feedbackId);
+            
+        if (skillsQuestionsError) {
+            console.error("❌ Error fetching skills questions:", skillsQuestionsError);
+            return res.status(500).json({ 
+                success: false, 
+                message: 'Error fetching skills questions data.'
+            });
+        }
+
+        console.log(`🛠️ Found ${skillsQuestionsData?.length || 0} skills questions`);
+        
+        // Get detailed skill information
+        let hardSkills = [];
+        let softSkills = [];
+        
+        if (skillsQuestionsData && skillsQuestionsData.length > 0) {
+            const skillIds = skillsQuestionsData.map(skill => skill.jobReqSkillId).filter(id => id);
+            
+            console.log(`🔍 Fetching details for skill IDs: [${skillIds.join(', ')}]`);
+            
+            if (skillIds.length > 0) {
+                const { data: skillDetails, error: skillDetailsError } = await supabase
+                    .from('jobreqskills')
+                    .select('*')
+                    .in('jobReqSkillId', skillIds);
+                    
+                if (skillDetailsError) {
+                    console.error("❌ Error fetching skill details:", skillDetailsError);
+                    return res.status(500).json({ 
+                        success: false, 
+                        message: 'Error fetching skills details.'
+                    });
+                }
+
+                console.log(`✅ Found ${skillDetails?.length || 0} skill details`);
+
+                // Map skills questions to detailed skill information
+                const skillsWithDetails = skillsQuestionsData.map(skillQ => {
+                    const detail = skillDetails?.find(d => d.jobReqSkillId === skillQ.jobReqSkillId);
+                    return {
+                        ...skillQ,
+                        ...detail,
+                        skillId: skillQ.jobReqSkillId // For consistency with frontend
+                    };
+                });
+
+                // Separate hard and soft skills
+                hardSkills = skillsWithDetails.filter(skill => skill.jobReqSkillType === 'Hard') || [];
+                softSkills = skillsWithDetails.filter(skill => skill.jobReqSkillType === 'Soft') || [];
+                
+                console.log(`📊 Skills breakdown - Hard: ${hardSkills.length}, Soft: ${softSkills.length}`);
+            }
+        }
+
+        // Check if feedback is already submitted by this reviewer
+        const { data: existingFeedback, error: existingFeedbackError } = await supabase
+            .from('feedbacks_answers')
+            .select('feedbackId_answerId')
+            .eq(idField, feedbackId)
+            .eq('reviewerUserId', currentUserId)
+            .limit(1);
+            
+        const isSubmitted = existingFeedback && existingFeedback.length > 0;
+        console.log(`📝 Feedback already submitted by this reviewer: ${isSubmitted}`);
+
+        console.log("\n📊 Final questionnaire data summary:");
+        console.log(`  Objectives: ${objectives.length}`);
+        console.log(`  Hard Skills: ${hardSkills.length}`);
+        console.log(`  Soft Skills: ${softSkills.length}`);
+        console.log(`  Already Submitted: ${isSubmitted}`);
+
+        return res.json({
+            success: true,
+            feedback,
+            objectives,
+            hardSkills,
+            softSkills,
+            isSubmitted
+        });
+        
+    } catch (error) {
+        console.error('❌ Error in getQuestionnaireData:', error);
+        return res.status(500).json({ 
+            success: false, 
+            message: 'An error occurred while fetching questionnaire data.',
+            error: error.message
+        });
+    }
+},
 checkFeedbackStatus: async function(req, res) {
     const { userId, quarter } = req.query;
     const reviewerUserId = req.session?.user?.userId;
