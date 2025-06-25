@@ -10877,7 +10877,7 @@ getLineManagerNotifications: async function (req, res) {
             type: 'Resignation Request'
         }));
 
-        // ======= ENHANCED TRAINING REQUESTS FETCHING WITH ENUM =======
+        // ======= TRAINING REQUESTS FETCHING WITH SEPARATE QUERIES =======
         console.log(`[${new Date().toISOString()}] Starting to fetch training requests for department: ${lineManagerDepartmentId}`);
         
         let formattedTrainingRequests = [];
@@ -10899,95 +10899,138 @@ getLineManagerNotifications: async function (req, res) {
             } else {
                 console.log(`[${new Date().toISOString()}] training_records table exists, proceeding with query`);
                 
-                // Enhanced query with detailed logging
-                console.log(`[${new Date().toISOString()}] Executing training requests query with filters:`);
-                console.log(`- trainingStatus: 'For Approval' (enum)`);
-                console.log(`- isApproved: null`);
-                console.log(`- decisionDate: null`);
-                console.log(`- departmentId: ${lineManagerDepartmentId}`);
-
-                const { data: trainingRequests, error: trainingError } = await supabase
-                    .from('training_records')
+                // First, get all staff in the line manager's department
+                console.log(`[${new Date().toISOString()}] Fetching staff in department: ${lineManagerDepartmentId}`);
+                const { data: departmentStaff, error: staffError } = await supabase
+                    .from('staffaccounts')
                     .select(`
-                        trainingRecordId,
                         userId,
-                        trainingId,
-                        dateRequested,
-                        isApproved,
-                        decisionDate,
-                        trainingStatus,
-                        useraccounts!inner (
-                            userEmail,
-                            staffaccounts!inner (
-                                departmentId,
-                                firstName,
-                                lastName
-                            )
-                        ),
-                        trainings!inner (
+                        firstName,
+                        lastName,
+                        jobId,
+                        departmentId
+                    `)
+                    .eq('departmentId', lineManagerDepartmentId);
+
+                if (staffError) {
+                    console.error(`[${new Date().toISOString()}] Error fetching department staff:`, staffError);
+                    throw staffError;
+                }
+
+                console.log(`[${new Date().toISOString()}] Found ${departmentStaff?.length || 0} staff members in department`);
+
+                // Separately fetch job titles for the staff if needed
+                let jobTitles = {};
+                if (departmentStaff && departmentStaff.length > 0) {
+                    const jobIds = [...new Set(departmentStaff.map(staff => staff.jobId).filter(Boolean))];
+                    if (jobIds.length > 0) {
+                        const { data: jobPositions, error: jobError } = await supabase
+                            .from('jobpositions')
+                            .select('jobId, jobTitle')
+                            .in('jobId', jobIds);
+                        
+                        if (!jobError && jobPositions) {
+                            jobPositions.forEach(job => {
+                                jobTitles[job.jobId] = job.jobTitle;
+                            });
+                        }
+                    }
+                }
+
+                // Get user IDs for department staff
+                const departmentUserIds = departmentStaff.map(staff => staff.userId);
+                console.log(`[${new Date().toISOString()}] Department user IDs:`, departmentUserIds);
+
+                if (departmentUserIds.length === 0) {
+                    console.log(`[${new Date().toISOString()}] No staff found in department, skipping training requests`);
+                } else {
+                    // Now fetch training requests for these users
+                    console.log(`[${new Date().toISOString()}] Executing training requests query with filters:`);
+                    console.log(`- status: 'For Line Manager Endorsement' (enum)`);
+                    console.log(`- userId in: [${departmentUserIds.join(', ')}]`);
+
+                    const { data: trainingRequests, error: trainingError } = await supabase
+                        .from('training_records')
+                        .select(`
+                            trainingRecordId,
+                            userId,
+                            jobId,
+                            dateRequested,
+                            isApproved,
+                            status,
                             trainingName,
                             trainingDesc
-                        )
-                    `)
-                    .eq('trainingStatus', 'For Approval') // Enum value
-                    .is('isApproved', null)
-                    // .is('decisionDate', null)
-                    .eq('useraccounts.staffaccounts.departmentId', lineManagerDepartmentId)
-                    .order('dateRequested', { ascending: true });
+                        `)
+                        .eq('status', 'For Line Manager Endorsement')
+                        .in('userId', departmentUserIds)
+                        .order('dateRequested', { ascending: true });
 
-                if (trainingError) {
-                    console.error(`[${new Date().toISOString()}] Error in training requests query:`, trainingError);
-                    console.error(`[${new Date().toISOString()}] Error details:`, {
-                        code: trainingError.code,
-                        message: trainingError.message,
-                        details: trainingError.details,
-                        hint: trainingError.hint
-                    });
-                } else {
-                    console.log(`[${new Date().toISOString()}] Training requests query successful`);
-                    console.log(`[${new Date().toISOString()}] Raw training requests data:`, JSON.stringify(trainingRequests, null, 2));
-                    console.log(`[${new Date().toISOString()}] Found ${trainingRequests?.length || 0} training requests matching criteria`);
-
-                    if (trainingRequests && trainingRequests.length > 0) {
-                        // Log each training request for debugging
-                        trainingRequests.forEach((request, index) => {
-                            console.log(`[${new Date().toISOString()}] Training Request ${index + 1}:`, {
-                                trainingRecordId: request.trainingRecordId,
-                                userId: request.userId,
-                                trainingStatus: request.trainingStatus,
-                                isApproved: request.isApproved,
-                                decisionDate: request.decisionDate,
-                                departmentId: request.useraccounts?.staffaccounts?.departmentId,
-                                firstName: request.useraccounts?.staffaccounts?.firstName,
-                                lastName: request.useraccounts?.staffaccounts?.lastName,
-                                trainingName: request.trainings?.trainingName
-                            });
-                        });
-
-                        // Format training requests with detailed logging
-                        formattedTrainingRequests = trainingRequests.map((request, index) => {
-                            const formatted = {
-                                userId: request.userId,
-                                trainingRecordId: request.trainingRecordId,
-                                firstName: request.useraccounts?.staffaccounts?.firstName || 'Employee',
-                                lastName: request.useraccounts?.staffaccounts?.lastName || '',
-                                trainingName: request.trainings?.trainingName || 'N/A',
-                                dateRequested: request.dateRequested ? new Date(request.dateRequested).toLocaleString('en-US', {
-                                    weekday: 'short',
-                                    year: 'numeric',
-                                    month: 'short',
-                                    day: 'numeric'
-                                }) : 'Recent',
-                                trainingStatus: request.trainingStatus || 'For Approval',
-                                isApproved: request.isApproved,
-                                date: request.dateRequested
-                            };
-                            
-                            console.log(`[${new Date().toISOString()}] Formatted Training Request ${index + 1}:`, formatted);
-                            return formatted;
+                    if (trainingError) {
+                        console.error(`[${new Date().toISOString()}] Error in training requests query:`, trainingError);
+                        console.error(`[${new Date().toISOString()}] Error details:`, {
+                            code: trainingError.code,
+                            message: trainingError.message,
+                            details: trainingError.details,
+                            hint: trainingError.hint
                         });
                     } else {
-                        console.log(`[${new Date().toISOString()}] No training requests found matching the criteria`);
+                        console.log(`[${new Date().toISOString()}] Training requests query successful`);
+                        console.log(`[${new Date().toISOString()}] Raw training requests data:`, JSON.stringify(trainingRequests, null, 2));
+                        console.log(`[${new Date().toISOString()}] Found ${trainingRequests?.length || 0} training requests matching criteria`);
+
+                        if (trainingRequests && trainingRequests.length > 0) {
+                            // Create a lookup map for staff details
+                            const staffLookup = {};
+                            departmentStaff.forEach(staff => {
+                                staffLookup[staff.userId] = {
+                                    ...staff,
+                                    jobTitle: jobTitles[staff.jobId] || 'N/A'
+                                };
+                            });
+
+                            // Log each training request for debugging
+                            trainingRequests.forEach((request, index) => {
+                                const staffDetails = staffLookup[request.userId];
+                                console.log(`[${new Date().toISOString()}] Training Request ${index + 1}:`, {
+                                    trainingRecordId: request.trainingRecordId,
+                                    userId: request.userId,
+                                    jobId: request.jobId,
+                                    status: request.status,
+                                    isApproved: request.isApproved,
+                                    firstName: staffDetails?.firstName,
+                                    lastName: staffDetails?.lastName,
+                                    jobTitle: staffDetails?.jobTitle,
+                                    trainingName: request.trainingName
+                                });
+                            });
+
+                            // Format training requests with staff details
+                            formattedTrainingRequests = trainingRequests.map((request, index) => {
+                                const staffDetails = staffLookup[request.userId];
+                                const formatted = {
+                                    userId: request.userId,
+                                    trainingRecordId: request.trainingRecordId,
+                                    firstName: staffDetails?.firstName || 'Employee',
+                                    lastName: staffDetails?.lastName || '',
+                                    jobTitle: staffDetails?.jobTitle || 'N/A',
+                                    trainingName: request.trainingName || 'N/A',
+                                    dateRequested: request.dateRequested ? new Date(request.dateRequested).toLocaleString('en-US', {
+                                        weekday: 'short',
+                                        year: 'numeric',
+                                        month: 'short',
+                                        day: 'numeric'
+                                    }) : 'Recent',
+                                    status: request.status || 'For Line Manager Endorsement',
+                                    isApproved: request.isApproved,
+                                    date: request.dateRequested
+                                };
+                                
+                                console.log(`[${new Date().toISOString()}] Formatted Training Request ${index + 1}:`, formatted);
+                                return formatted;
+                            });
+                        } else {
+                            console.log(`[${new Date().toISOString()}] No training requests found matching the criteria`);
+                        }
                     }
                 }
             }
@@ -12487,271 +12530,271 @@ getTrainingFormData: async function(req, res) {
     }
 },
 
-createTraining: async function(req, res) {
-    console.log(`[${new Date().toISOString()}] Creating new training for user ${req.session?.user?.userId}`);
-    console.log('Request body:', req.body);
+// createTraining: async function(req, res) {
+//     console.log(`[${new Date().toISOString()}] Creating new training for user ${req.session?.user?.userId}`);
+//     console.log('Request body:', req.body);
 
-    const {
-        trainingName,
-        trainingDesc,
-        jobId,
-        objectives,        // Array of objective IDs
-        skills,           // Array of skill IDs
-        isOnlineArrangement,
-        country,          // Country code for onsite training
-        address,          // Address for onsite training
-        cost,
-        totalDuration,
-        activities,
-        certifications
-    } = req.body;
+//     const {
+//         trainingName,
+//         trainingDesc,
+//         jobId,
+//         objectives,        // Array of objective IDs
+//         skills,           // Array of skill IDs
+//         isOnlineArrangement,
+//         country,          // Country code for onsite training
+//         address,          // Address for onsite training
+//         cost,
+//         totalDuration,
+//         activities,
+//         certifications
+//     } = req.body;
 
-    const userId = req.session?.user?.userId;
+//     const userId = req.session?.user?.userId;
 
-    if (!userId) {
-        return res.status(401).json({
-            success: false,
-            message: 'User not authenticated'
-        });
-    }
+//     if (!userId) {
+//         return res.status(401).json({
+//             success: false,
+//             message: 'User not authenticated'
+//         });
+//     }
 
-    try {
-        // Validate required fields
-        if (!trainingName || !trainingDesc || !jobId) {
-            return res.status(400).json({
-                success: false,
-                message: 'Missing required fields: trainingName, trainingDesc, and jobId are required'
-            });
-        }
+//     try {
+//         // Validate required fields
+//         if (!trainingName || !trainingDesc || !jobId) {
+//             return res.status(400).json({
+//                 success: false,
+//                 message: 'Missing required fields: trainingName, trainingDesc, and jobId are required'
+//             });
+//         }
 
-        // UPDATED VALIDATION: Allow either objectives OR skills (at least one from either)
-        if ((!objectives || !Array.isArray(objectives) || objectives.length === 0) && 
-            (!skills || !Array.isArray(skills) || skills.length === 0)) {
-            return res.status(400).json({
-                success: false,
-                message: 'At least one objective OR one skill must be selected'
-            });
-        }
+//         // UPDATED VALIDATION: Allow either objectives OR skills (at least one from either)
+//         if ((!objectives || !Array.isArray(objectives) || objectives.length === 0) && 
+//             (!skills || !Array.isArray(skills) || skills.length === 0)) {
+//             return res.status(400).json({
+//                 success: false,
+//                 message: 'At least one objective OR one skill must be selected'
+//             });
+//         }
 
-        // Validation: Check if onsite training has required location fields
-        if (isOnlineArrangement === false) {
-            if (!country || !address) {
-                return res.status(400).json({
-                    success: false,
-                    message: 'Country and address are required for onsite training'
-                });
-            }
-        }
+//         // Validation: Check if onsite training has required location fields
+//         if (isOnlineArrangement === false) {
+//             if (!country || !address) {
+//                 return res.status(400).json({
+//                     success: false,
+//                     message: 'Country and address are required for onsite training'
+//                 });
+//             }
+//         }
 
-        console.log('Selected objectives:', objectives);
-        console.log('Selected skills:', skills);
-        console.log('Training mode online:', isOnlineArrangement);
-        console.log('Country:', country);
-        console.log('Address:', address);
+//         console.log('Selected objectives:', objectives);
+//         console.log('Selected skills:', skills);
+//         console.log('Training mode online:', isOnlineArrangement);
+//         console.log('Country:', country);
+//         console.log('Address:', address);
 
-        // 1. Create the main training record in trainings table
-        const trainingData = {
-            trainingName,
-            trainingDesc,
-            jobId: parseInt(jobId),
-            userId: userId,
-            isOnlineArrangement: isOnlineArrangement || false,
-            cost: parseFloat(cost) || 0,
-            totalDuration: parseFloat(totalDuration) || 0,
-            isActive: true
-        };
+//         // 1. Create the main training record in trainings table
+//         const trainingData = {
+//             trainingName,
+//             trainingDesc,
+//             jobId: parseInt(jobId),
+//             userId: userId,
+//             isOnlineArrangement: isOnlineArrangement || false,
+//             cost: parseFloat(cost) || 0,
+//             totalDuration: parseFloat(totalDuration) || 0,
+//             isActive: true
+//         };
 
-        // Add country and address for onsite training
-        if (isOnlineArrangement === false) {
-            trainingData.country = country;
-            trainingData.address = address;
-        } else {
-            // Set to null for online training
-            trainingData.country = null;
-            trainingData.address = null;
-        }
+//         // Add country and address for onsite training
+//         if (isOnlineArrangement === false) {
+//             trainingData.country = country;
+//             trainingData.address = address;
+//         } else {
+//             // Set to null for online training
+//             trainingData.country = null;
+//             trainingData.address = null;
+//         }
 
-        console.log('Training data to insert:', trainingData);
+//         console.log('Training data to insert:', trainingData);
 
-        const { data: training, error: trainingError } = await supabase
-            .from('trainings')
-            .insert([trainingData])
-            .select()
-            .single();
+//         const { data: training, error: trainingError } = await supabase
+//             .from('trainings')
+//             .insert([trainingData])
+//             .select()
+//             .single();
 
-        if (trainingError) {
-            console.error('Error creating training:', trainingError);
-            throw new Error(`Failed to create training: ${trainingError.message}`);
-        }
+//         if (trainingError) {
+//             console.error('Error creating training:', trainingError);
+//             throw new Error(`Failed to create training: ${trainingError.message}`);
+//         }
 
-        const trainingId = training.trainingId;
-        console.log(`Training created with ID: ${trainingId}`);
+//         const trainingId = training.trainingId;
+//         console.log(`Training created with ID: ${trainingId}`);
 
-        // 2. Insert objectives into training_objectives table
-        if (objectives && objectives.length > 0) {
-            const formattedObjectives = objectives.map(objectiveId => ({
-                trainingId: trainingId,
-                objectiveId: parseInt(objectiveId)
-            }));
+//         // 2. Insert objectives into training_objectives table
+//         if (objectives && objectives.length > 0) {
+//             const formattedObjectives = objectives.map(objectiveId => ({
+//                 trainingId: trainingId,
+//                 objectiveId: parseInt(objectiveId)
+//             }));
 
-            const { error: objectivesError } = await supabase
-                .from('training_objectives')
-                .insert(formattedObjectives);
+//             const { error: objectivesError } = await supabase
+//                 .from('training_objectives')
+//                 .insert(formattedObjectives);
 
-            if (objectivesError) {
-                console.error('Error inserting training objectives:', objectivesError);
-                throw new Error(`Failed to create objectives: ${objectivesError.message}`);
-            }
-            console.log(`Created ${objectives.length} objectives for training`);
-        }
+//             if (objectivesError) {
+//                 console.error('Error inserting training objectives:', objectivesError);
+//                 throw new Error(`Failed to create objectives: ${objectivesError.message}`);
+//             }
+//             console.log(`Created ${objectives.length} objectives for training`);
+//         }
 
-        // 3. Insert skills into training_skills table
-        if (skills && skills.length > 0) {
-            const formattedSkills = skills.map(skillId => ({
-                trainingId: trainingId,
-                jobReqSkillId: parseInt(skillId)
-            }));
+//         // 3. Insert skills into training_skills table
+//         if (skills && skills.length > 0) {
+//             const formattedSkills = skills.map(skillId => ({
+//                 trainingId: trainingId,
+//                 jobReqSkillId: parseInt(skillId)
+//             }));
 
-            const { error: skillsError } = await supabase
-                .from('training_skills')
-                .insert(formattedSkills);
+//             const { error: skillsError } = await supabase
+//                 .from('training_skills')
+//                 .insert(formattedSkills);
 
-            if (skillsError) {
-                console.error('Error inserting training skills:', skillsError);
-                throw new Error(`Failed to create skills: ${skillsError.message}`);
-            }
-            console.log(`Created ${skills.length} skills for training`);
-        }
+//             if (skillsError) {
+//                 console.error('Error inserting training skills:', skillsError);
+//                 throw new Error(`Failed to create skills: ${skillsError.message}`);
+//             }
+//             console.log(`Created ${skills.length} skills for training`);
+//         }
 
-        // 4. Insert activities into training_activities table
-        if (activities && activities.length > 0) {
-            const formattedActivities = activities.map((activity) => ({
-                trainingId: trainingId,
-                activityName: activity.name,
-                estActivityDuration: parseFloat(activity.duration) || 0,
-                activityType: activity.type,
-                activityRemarks: activity.remarks || ''
-            }));
+//         // 4. Insert activities into training_activities table
+//         if (activities && activities.length > 0) {
+//             const formattedActivities = activities.map((activity) => ({
+//                 trainingId: trainingId,
+//                 activityName: activity.name,
+//                 estActivityDuration: parseFloat(activity.duration) || 0,
+//                 activityType: activity.type,
+//                 activityRemarks: activity.remarks || ''
+//             }));
 
-            const { error: activitiesError } = await supabase
-                .from('training_activities')
-                .insert(formattedActivities);
+//             const { error: activitiesError } = await supabase
+//                 .from('training_activities')
+//                 .insert(formattedActivities);
 
-            if (activitiesError) {
-                console.error('Error inserting training activities:', activitiesError);
-                throw new Error(`Failed to create activities: ${activitiesError.message}`);
-            }
-            console.log(`Created ${activities.length} activities for training`);
-        }
+//             if (activitiesError) {
+//                 console.error('Error inserting training activities:', activitiesError);
+//                 throw new Error(`Failed to create activities: ${activitiesError.message}`);
+//             }
+//             console.log(`Created ${activities.length} activities for training`);
+//         }
 
-        // 5. Insert certifications
-        if (certifications && certifications.length > 0) {
-            const formattedCerts = certifications.map(cert => ({
-                trainingId: trainingId,
-                trainingCertTitle: cert.title,
-                trainingCertDesc: cert.description
-            }));
+//         // 5. Insert certifications
+//         if (certifications && certifications.length > 0) {
+//             const formattedCerts = certifications.map(cert => ({
+//                 trainingId: trainingId,
+//                 trainingCertTitle: cert.title,
+//                 trainingCertDesc: cert.description
+//             }));
 
-            const { error: certsError } = await supabase
-                .from('training_certifications')
-                .insert(formattedCerts);
+//             const { error: certsError } = await supabase
+//                 .from('training_certifications')
+//                 .insert(formattedCerts);
 
-            if (certsError) {
-                console.error('Error inserting training certifications:', certsError);
-                throw new Error(`Failed to create certifications: ${certsError.message}`);
-            }
-            console.log(`Created ${certifications.length} certifications for training`);
-        }
+//             if (certsError) {
+//                 console.error('Error inserting training certifications:', certsError);
+//                 throw new Error(`Failed to create certifications: ${certsError.message}`);
+//             }
+//             console.log(`Created ${certifications.length} certifications for training`);
+//         }
 
-        // Return success response with created training data
-        const responseData = {
-            ...training,
-            activityCount: activities ? activities.length : 0,
-            certificationCount: certifications ? certifications.length : 0,
-            selectedObjectives: objectives ? objectives.length : 0,
-            selectedSkills: skills ? skills.length : 0
-        };
+//         // Return success response with created training data
+//         const responseData = {
+//             ...training,
+//             activityCount: activities ? activities.length : 0,
+//             certificationCount: certifications ? certifications.length : 0,
+//             selectedObjectives: objectives ? objectives.length : 0,
+//             selectedSkills: skills ? skills.length : 0
+//         };
 
-        console.log(`[${new Date().toISOString()}] Training created successfully: ${trainingId}`);
+//         console.log(`[${new Date().toISOString()}] Training created successfully: ${trainingId}`);
 
-        res.status(201).json({
-            success: true,
-            message: 'Training created successfully',
-            data: responseData
-        });
+//         res.status(201).json({
+//             success: true,
+//             message: 'Training created successfully',
+//             data: responseData
+//         });
 
-    } catch (error) {
-        console.error('Error in createTraining:', error);
-        res.status(500).json({
-            success: false,
-            message: 'Failed to create training',
-            error: error.message,
-            timestamp: new Date().toISOString()
-        });
-    }
-},
-    // Add new activity type
-    addActivityType: async function(req, res) {
-        const { activityType } = req.body;
+//     } catch (error) {
+//         console.error('Error in createTraining:', error);
+//         res.status(500).json({
+//             success: false,
+//             message: 'Failed to create training',
+//             error: error.message,
+//             timestamp: new Date().toISOString()
+//         });
+//     }
+// },
+//     // Add new activity type
+//     addActivityType: async function(req, res) {
+//         const { activityType } = req.body;
 
-        try {
-            const { data, error } = await supabase
-                .from('training_activities_types')
-                .insert([{ activityType }])
-                .select()
-                .single();
+//         try {
+//             const { data, error } = await supabase
+//                 .from('training_activities_types')
+//                 .insert([{ activityType }])
+//                 .select()
+//                 .single();
 
-            if (error) throw error;
+//             if (error) throw error;
 
-            res.json({
-                success: true,
-                message: 'Activity type added successfully',
-                data: data
-            });
+//             res.json({
+//                 success: true,
+//                 message: 'Activity type added successfully',
+//                 data: data
+//             });
 
-        } catch (error) {
-            console.error('Error in addActivityType:', error);
-            res.status(500).json({
-                success: false,
-                message: 'Failed to add activity type',
-                error: error.message
-            });
-        }
-    },
+//         } catch (error) {
+//             console.error('Error in addActivityType:', error);
+//             res.status(500).json({
+//                 success: false,
+//                 message: 'Failed to add activity type',
+//                 error: error.message
+//             });
+//         }
+//     },
 
-    // Fetch all trainings with related data
-    getAllTrainings: async function(req, res) {
-        try {
-            const { data: trainings, error: trainingsError } = await supabase
-                .from('trainings')
-                .select(`
-                    *,
-                    jobpositions (jobTitle),
-                    objectivesettings_objectives (objectiveName),
-                    jobreqskills (skillName),
-                    useraccounts (firstName, lastName),
-                    training_activities (*),
-                    training_certifications (*)
-                `)
-                .eq('isActive', true)
-                .order('trainingId', { ascending: false });
+    // // Fetch all trainings with related data
+    // getAllTrainings: async function(req, res) {
+    //     try {
+    //         const { data: trainings, error: trainingsError } = await supabase
+    //             .from('trainings')
+    //             .select(`
+    //                 *,
+    //                 jobpositions (jobTitle),
+    //                 objectivesettings_objectives (objectiveName),
+    //                 jobreqskills (skillName),
+    //                 useraccounts (firstName, lastName),
+    //                 training_activities (*),
+    //                 training_certifications (*)
+    //             `)
+    //             .eq('isActive', true)
+    //             .order('trainingId', { ascending: false });
 
-            if (trainingsError) throw trainingsError;
+    //         if (trainingsError) throw trainingsError;
 
-            res.json({
-                success: true,
-                data: trainings
-            });
+    //         res.json({
+    //             success: true,
+    //             data: trainings
+    //         });
 
-        } catch (error) {
-            console.error('Error in getAllTrainings:', error);
-            res.status(500).json({
-                success: false,
-                message: 'Failed to fetch trainings',
-                error: error.message
-            });
-        }
-    },
+    //     } catch (error) {
+    //         console.error('Error in getAllTrainings:', error);
+    //         res.status(500).json({
+    //             success: false,
+    //             message: 'Failed to fetch trainings',
+    //             error: error.message
+    //         });
+    //     }
+    // },
 
 getTrainingRequestsForNotifications: async function(lineManagerUserId) {
     console.log(`[${new Date().toISOString()}] Fetching training requests for line manager ${lineManagerUserId}`);
@@ -12787,6 +12830,8 @@ getTrainingRequestsForNotifications: async function(lineManagerUserId) {
                 dateRequested,
                 isApproved,
                 trainingStatus,
+                trainingName,
+                trainingDesc,
                 useraccounts!inner(
                     userEmail,
                     staffaccounts!inner(
@@ -12794,10 +12839,6 @@ getTrainingRequestsForNotifications: async function(lineManagerUserId) {
                         lastName,
                         departmentId
                     )
-                ),
-                trainings!inner(
-                    trainingName,
-                    trainingDesc
                 )
             `)
             .is('isApproved', null) // Only get pending approvals
@@ -12816,13 +12857,15 @@ getTrainingRequestsForNotifications: async function(lineManagerUserId) {
             trainingRecordId: request.trainingRecordId,
             firstName: request.useraccounts.staffaccounts.firstName,
             lastName: request.useraccounts.staffaccounts.lastName,
-            trainingName: request.trainings.trainingName,
+            trainingName: request.trainingName,
             dateRequested: new Date(request.dateRequested).toLocaleDateString('en-US', {
                 weekday: 'short',
                 year: 'numeric',
                 month: 'short',
                 day: 'numeric'
             }),
+            trainingStatus: request.trainingStatus,
+            isApproved: request.isApproved,
             // Keep original date for frontend sorting
             date: request.dateRequested
         }));
@@ -12877,15 +12920,6 @@ getTrainingRequest: async function(req, res) {
                                 jobTitle
                             )
                         )
-                    ),
-                    trainings!inner(
-                        trainingName,
-                        trainingDesc,
-                        cost,
-                        totalDuration,
-                        address,
-                        country,
-                        isOnlineArrangement
                     )
                 `)
                 .eq('userId', requestUserId)
@@ -12915,7 +12949,7 @@ getTrainingRequest: async function(req, res) {
                 trainingRecordId: trainingRequest.trainingRecordId,
                 trainingStatus: trainingRequest.trainingStatus,
                 isApproved: trainingRequest.isApproved,
-                trainingName: trainingRequest.trainings?.trainingName
+                trainingName: trainingRequest.trainingName
             });
 
             // Render the view with the training request data
@@ -12978,6 +13012,8 @@ getTrainingRequestsForNotifications: async function(lineManagerUserId) {
                 dateRequested,
                 isApproved,
                 trainingStatus,
+                trainingName,
+                trainingDesc,
                 useraccounts!inner(
                     userEmail,
                     staffaccounts!inner(
@@ -12985,10 +13021,6 @@ getTrainingRequestsForNotifications: async function(lineManagerUserId) {
                         lastName,
                         departmentId
                     )
-                ),
-                trainings!inner(
-                    trainingName,
-                    trainingDesc
                 )
             `)
             .eq('trainingStatus', 'For Approval') // Enum value
@@ -13023,7 +13055,7 @@ getTrainingRequestsForNotifications: async function(lineManagerUserId) {
                 isApproved: request.isApproved,
                 firstName: request.useraccounts?.staffaccounts?.firstName,
                 lastName: request.useraccounts?.staffaccounts?.lastName,
-                trainingName: request.trainings?.trainingName
+                trainingName: request.trainingName
             });
 
             return {
@@ -13031,7 +13063,7 @@ getTrainingRequestsForNotifications: async function(lineManagerUserId) {
                 trainingRecordId: request.trainingRecordId,
                 firstName: request.useraccounts.staffaccounts.firstName,
                 lastName: request.useraccounts.staffaccounts.lastName,
-                trainingName: request.trainings.trainingName,
+                trainingName: request.trainingName,
                 dateRequested: new Date(request.dateRequested).toLocaleDateString('en-US', {
                     weekday: 'short',
                     year: 'numeric',
@@ -13110,15 +13142,6 @@ getTrainingRequestDetails: async function(req, res) {
                             jobTitle
                         )
                     )
-                ),
-                trainings!inner(
-                    trainingName,
-                    trainingDesc,
-                    cost,
-                    totalDuration,
-                    address,
-                    country,
-                    isOnlineArrangement
                 )
             `)
             .eq('userId', requestUserId)
@@ -13148,15 +13171,6 @@ getTrainingRequestDetails: async function(req, res) {
                                 jobTitle
                             )
                         )
-                    ),
-                    trainings!inner(
-                        trainingName,
-                        trainingDesc,
-                        cost,
-                        totalDuration,
-                        address,
-                        country,
-                        isOnlineArrangement
                     )
                 `)
                 .eq('userId', requestUserId)
@@ -13186,15 +13200,6 @@ getTrainingRequestDetails: async function(req, res) {
                                     jobTitle
                                 )
                             )
-                        ),
-                        trainings!inner(
-                            trainingName,
-                            trainingDesc,
-                            cost,
-                            totalDuration,
-                            address,
-                            country,
-                            isOnlineArrangement
                         )
                     `)
                     .eq('userId', requestUserId)
@@ -13235,472 +13240,472 @@ getTrainingRequestDetails: async function(req, res) {
         });
     }
 },
-approveTrainingRequest: async function(req, res) {
-    const userId = req.session?.user?.userId;
-    const userRole = req.session?.user?.userRole;
+// approveTrainingRequest: async function(req, res) {
+//     const userId = req.session?.user?.userId;
+//     const userRole = req.session?.user?.userRole;
 
-    if (!userId || userRole !== 'Line Manager') {
-        return res.status(401).json({
-            success: false,
-            message: 'Unauthorized. Line Manager access only.',
-            timestamp: new Date().toISOString()
-        });
-    }
+//     if (!userId || userRole !== 'Line Manager') {
+//         return res.status(401).json({
+//             success: false,
+//             message: 'Unauthorized. Line Manager access only.',
+//             timestamp: new Date().toISOString()
+//         });
+//     }
 
-    console.log(`[${new Date().toISOString()}] Line manager ${userId} approving training request`);
+//     console.log(`[${new Date().toISOString()}] Line manager ${userId} approving training request`);
 
-    try {
-        const { remarks, trainingRecordId } = req.body;
+//     try {
+//         const { remarks, trainingRecordId } = req.body;
 
-        if (!remarks || !remarks.trim()) {
-            return res.status(400).json({
-                success: false,
-                message: 'Remarks are required for approval',
-                timestamp: new Date().toISOString()
-            });
-        }
+//         if (!remarks || !remarks.trim()) {
+//             return res.status(400).json({
+//                 success: false,
+//                 message: 'Remarks are required for approval',
+//                 timestamp: new Date().toISOString()
+//             });
+//         }
 
-        if (!trainingRecordId) {
-            return res.status(400).json({
-                success: false,
-                message: 'Training record ID is required',
-                timestamp: new Date().toISOString()
-            });
-        }
+//         if (!trainingRecordId) {
+//             return res.status(400).json({
+//                 success: false,
+//                 message: 'Training record ID is required',
+//                 timestamp: new Date().toISOString()
+//             });
+//         }
 
-        // Get training record with training and job position details
-        const { data: trainingRecord, error: fetchError } = await supabase
-            .from('training_records')
-            .select(`
-                trainingId,
-                userId,
-                trainings(cost, jobId, jobpositions(departmentId))
-            `)
-            .eq('trainingRecordId', trainingRecordId)
-            .is('isApproved', null)
-            .single();
+//         // Get training record with training and job position details
+//         const { data: trainingRecord, error: fetchError } = await supabase
+//             .from('training_records')
+//             .select(`
+//                 trainingId,
+//                 userId,
+//                 trainings(cost, jobId, jobpositions(departmentId))
+//             `)
+//             .eq('trainingRecordId', trainingRecordId)
+//             .is('isApproved', null)
+//             .single();
 
-        if (fetchError || !trainingRecord) {
-            console.error(`[${new Date().toISOString()}] Error fetching training record:`, fetchError);
-            return res.status(fetchError ? 500 : 404).json({
-                success: false,
-                message: fetchError ? 'Error fetching training record' : 'Training request not found or already processed',
-                error: fetchError?.message,
-                timestamp: new Date().toISOString()
-            });
-        }
+//         if (fetchError || !trainingRecord) {
+//             console.error(`[${new Date().toISOString()}] Error fetching training record:`, fetchError);
+//             return res.status(fetchError ? 500 : 404).json({
+//                 success: false,
+//                 message: fetchError ? 'Error fetching training record' : 'Training request not found or already processed',
+//                 error: fetchError?.message,
+//                 timestamp: new Date().toISOString()
+//             });
+//         }
 
-        // Verify we have all required data
-        if (!trainingRecord.trainings?.cost || !trainingRecord.trainings.jobpositions?.departmentId) {
-            console.error(`[${new Date().toISOString()}] Missing required data:`, {
-                cost: trainingRecord.trainings?.cost,
-                departmentId: trainingRecord.trainings.jobpositions?.departmentId
-            });
-            return res.status(400).json({
-                success: false,
-                message: 'Missing required training cost or department information',
-                timestamp: new Date().toISOString()
-            });
-        }
+//         // Verify we have all required data
+//         if (!trainingRecord.trainings?.cost || !trainingRecord.trainings.jobpositions?.departmentId) {
+//             console.error(`[${new Date().toISOString()}] Missing required data:`, {
+//                 cost: trainingRecord.trainings?.cost,
+//                 departmentId: trainingRecord.trainings.jobpositions?.departmentId
+//             });
+//             return res.status(400).json({
+//                 success: false,
+//                 message: 'Missing required training cost or department information',
+//                 timestamp: new Date().toISOString()
+//             });
+//         }
 
-        const trainingCost = trainingRecord.trainings.cost;
-        const departmentId = trainingRecord.trainings.jobpositions.departmentId;
+//         const trainingCost = trainingRecord.trainings.cost;
+//         const departmentId = trainingRecord.trainings.jobpositions.departmentId;
 
-        // Get current department training budget
-        const { data: budgetData, error: budgetError } = await supabase
-            .from('training_budgets')
-            .select('amount, trainingBugetId')
-            .eq('departmentId', departmentId)
-            .single();
+//         // Get current department training budget
+//         const { data: budgetData, error: budgetError } = await supabase
+//             .from('training_budgets')
+//             .select('amount, trainingBugetId')
+//             .eq('departmentId', departmentId)
+//             .single();
 
-        if (budgetError || !budgetData) {
-            console.error(`[${new Date().toISOString()}] Error fetching training budget:`, budgetError);
-            return res.status(500).json({
-                success: false,
-                message: 'Error fetching department training budget',
-                error: budgetError?.message,
-                timestamp: new Date().toISOString()
-            });
-        }
+//         if (budgetError || !budgetData) {
+//             console.error(`[${new Date().toISOString()}] Error fetching training budget:`, budgetError);
+//             return res.status(500).json({
+//                 success: false,
+//                 message: 'Error fetching department training budget',
+//                 error: budgetError?.message,
+//                 timestamp: new Date().toISOString()
+//             });
+//         }
 
-        // Check budget sufficiency
-        if (budgetData.amount < trainingCost) {
-            return res.status(400).json({
-                success: false,
-                message: 'Insufficient training budget for approval',
-                details: {
-                    required: trainingCost,
-                    available: budgetData.amount,
-                    departmentId: departmentId
-                },
-                timestamp: new Date().toISOString()
-            });
-        }
+//         // Check budget sufficiency
+//         if (budgetData.amount < trainingCost) {
+//             return res.status(400).json({
+//                 success: false,
+//                 message: 'Insufficient training budget for approval',
+//                 details: {
+//                     required: trainingCost,
+//                     available: budgetData.amount,
+//                     departmentId: departmentId
+//                 },
+//                 timestamp: new Date().toISOString()
+//             });
+//         }
 
-        const approvedDate = new Date().toISOString().split('T')[0];
+//         const approvedDate = new Date().toISOString().split('T')[0];
 
-        // Update training record
-        const { data: updatedRecord, error } = await supabase
-            .from('training_records')
-            .update({
-                trainingStatus: 'Not Started',
-                isApproved: true,
-                decisionDate: approvedDate,
-                decisionRemarks: remarks
-            })
-            .eq('trainingRecordId', trainingRecordId)
-            .is('isApproved', null)
-            .select()
-            .single();
+//         // Update training record
+//         const { data: updatedRecord, error } = await supabase
+//             .from('training_records')
+//             .update({
+//                 trainingStatus: 'Not Started',
+//                 isApproved: true,
+//                 decisionDate: approvedDate,
+//                 decisionRemarks: remarks
+//             })
+//             .eq('trainingRecordId', trainingRecordId)
+//             .is('isApproved', null)
+//             .select()
+//             .single();
 
-        if (error || !updatedRecord) {
-            console.error(`[${new Date().toISOString()}] Error approving training request:`, error);
-            return res.status(500).json({
-                success: false,
-                message: 'Failed to approve training request',
-                error: error?.message,
-                timestamp: new Date().toISOString()
-            });
-        }
+//         if (error || !updatedRecord) {
+//             console.error(`[${new Date().toISOString()}] Error approving training request:`, error);
+//             return res.status(500).json({
+//                 success: false,
+//                 message: 'Failed to approve training request',
+//                 error: error?.message,
+//                 timestamp: new Date().toISOString()
+//             });
+//         }
 
-        // Deduct from budget
-        const newBudgetAmount = budgetData.amount - trainingCost;
-        const { error: budgetUpdateError } = await supabase
-            .from('training_budgets')
-            .update({ amount: newBudgetAmount })
-            .eq('trainingBugetId', budgetData.trainingBugetId);
+//         // Deduct from budget
+//         const newBudgetAmount = budgetData.amount - trainingCost;
+//         const { error: budgetUpdateError } = await supabase
+//             .from('training_budgets')
+//             .update({ amount: newBudgetAmount })
+//             .eq('trainingBugetId', budgetData.trainingBugetId);
 
-        if (budgetUpdateError) {
-            console.error(`[${new Date().toISOString()}] Error updating budget:`, budgetUpdateError);
+//         if (budgetUpdateError) {
+//             console.error(`[${new Date().toISOString()}] Error updating budget:`, budgetUpdateError);
             
-            // Rollback approval
-            await supabase
-                .from('training_records')
-                .update({
-                    trainingStatus: 'For Approval',
-                    isApproved: null,
-                    decisionDate: null,
-                    decisionRemarks: null
-                })
-                .eq('trainingRecordId', trainingRecordId);
+//             // Rollback approval
+//             await supabase
+//                 .from('training_records')
+//                 .update({
+//                     trainingStatus: 'For Approval',
+//                     isApproved: null,
+//                     decisionDate: null,
+//                     decisionRemarks: null
+//                 })
+//                 .eq('trainingRecordId', trainingRecordId);
 
-            return res.status(500).json({
-                success: false,
-                message: 'Failed to update training budget - approval rolled back',
-                error: budgetUpdateError.message,
-                timestamp: new Date().toISOString()
-            });
-        }
+//             return res.status(500).json({
+//                 success: false,
+//                 message: 'Failed to update training budget - approval rolled back',
+//                 error: budgetUpdateError.message,
+//                 timestamp: new Date().toISOString()
+//             });
+//         }
 
-        console.log(`[${new Date().toISOString()}] Approved training ${trainingRecordId}. Budget updated: ${budgetData.amount} -> ${newBudgetAmount}`);
+//         console.log(`[${new Date().toISOString()}] Approved training ${trainingRecordId}. Budget updated: ${budgetData.amount} -> ${newBudgetAmount}`);
 
-        res.json({
-            success: true,
-            message: 'Training request approved successfully!',
-            data: {
-                trainingRecordId,
-                trainingStatus: 'Not Started',
-                isApproved: true,
-                approvedBy: userId,
-                decisionDate: approvedDate,
-                decisionRemarks: remarks,
-                budgetImpact: {
-                    departmentId,
-                    amountDeducted: trainingCost,
-                    remainingBudget: newBudgetAmount
-                }
-            },
-            timestamp: new Date().toISOString()
-        });
+//         res.json({
+//             success: true,
+//             message: 'Training request approved successfully!',
+//             data: {
+//                 trainingRecordId,
+//                 trainingStatus: 'Not Started',
+//                 isApproved: true,
+//                 approvedBy: userId,
+//                 decisionDate: approvedDate,
+//                 decisionRemarks: remarks,
+//                 budgetImpact: {
+//                     departmentId,
+//                     amountDeducted: trainingCost,
+//                     remainingBudget: newBudgetAmount
+//                 }
+//             },
+//             timestamp: new Date().toISOString()
+//         });
 
-    } catch (error) {
-        console.error(`[${new Date().toISOString()}] Error in approval:`, error);
-        res.status(500).json({
-            success: false,
-            message: 'Internal server error during approval',
-            error: error.message,
-            timestamp: new Date().toISOString()
-        });
-    }
-},
+//     } catch (error) {
+//         console.error(`[${new Date().toISOString()}] Error in approval:`, error);
+//         res.status(500).json({
+//             success: false,
+//             message: 'Internal server error during approval',
+//             error: error.message,
+//             timestamp: new Date().toISOString()
+//         });
+//     }
+// },
 
-// Reject training request - REVISED
-rejectTrainingRequest: async function(req, res) {
-    const userId = req.session?.user?.userId;
-    const userRole = req.session?.user?.userRole;
+// // Reject training request - REVISED
+// rejectTrainingRequest: async function(req, res) {
+//     const userId = req.session?.user?.userId;
+//     const userRole = req.session?.user?.userRole;
 
-    if (!userId || userRole !== 'Line Manager') {
-        return res.status(401).json({
-            success: false,
-            message: 'Unauthorized. Line Manager access only.',
-            timestamp: new Date().toISOString()
-        });
-    }
+//     if (!userId || userRole !== 'Line Manager') {
+//         return res.status(401).json({
+//             success: false,
+//             message: 'Unauthorized. Line Manager access only.',
+//             timestamp: new Date().toISOString()
+//         });
+//     }
 
-    console.log(`[${new Date().toISOString()}] Line manager ${userId} rejecting training request`);
+//     console.log(`[${new Date().toISOString()}] Line manager ${userId} rejecting training request`);
 
-    try {
-        const { remarks, trainingRecordId, userId: requestUserId } = req.body;
+//     try {
+//         const { remarks, trainingRecordId, userId: requestUserId } = req.body;
 
-        if (!remarks || !remarks.trim()) {
-            return res.status(400).json({
-                success: false,
-                message: 'Remarks are required for rejection',
-                timestamp: new Date().toISOString()
-            });
-        }
+//         if (!remarks || !remarks.trim()) {
+//             return res.status(400).json({
+//                 success: false,
+//                 message: 'Remarks are required for rejection',
+//                 timestamp: new Date().toISOString()
+//             });
+//         }
 
-        if (!trainingRecordId) {
-            return res.status(400).json({
-                success: false,
-                message: 'Training record ID is required',
-                timestamp: new Date().toISOString()
-            });
-        }
+//         if (!trainingRecordId) {
+//             return res.status(400).json({
+//                 success: false,
+//                 message: 'Training record ID is required',
+//                 timestamp: new Date().toISOString()
+//             });
+//         }
 
-        const rejectedDate = new Date().toISOString().split('T')[0]; // Today's date
+//         const rejectedDate = new Date().toISOString().split('T')[0]; // Today's date
 
-        // REVISED: Update the training record with proper rejection status
-        const { data: updatedRecord, error } = await supabase
-            .from('training_records')
-            .update({
-                trainingStatus: 'Not Started', // Keep as Not Started even when rejected
-                isApproved: false, // Set to rejected
-                decisionDate: rejectedDate, // Record decision date
-                decisionRemarks: remarks // Record rejection remarks
-            })
-            .eq('trainingRecordId', trainingRecordId)
-            .is('isApproved', null) // Only update if still pending
-            .select() // Return the updated record
-            .single();
+//         // REVISED: Update the training record with proper rejection status
+//         const { data: updatedRecord, error } = await supabase
+//             .from('training_records')
+//             .update({
+//                 trainingStatus: 'Not Started', // Keep as Not Started even when rejected
+//                 isApproved: false, // Set to rejected
+//                 decisionDate: rejectedDate, // Record decision date
+//                 decisionRemarks: remarks // Record rejection remarks
+//             })
+//             .eq('trainingRecordId', trainingRecordId)
+//             .is('isApproved', null) // Only update if still pending
+//             .select() // Return the updated record
+//             .single();
 
-        if (error) {
-            console.error(`[${new Date().toISOString()}] Error rejecting training request:`, error);
-            return res.status(500).json({
-                success: false,
-                message: 'Failed to reject training request',
-                error: error.message,
-                timestamp: new Date().toISOString()
-            });
-        }
+//         if (error) {
+//             console.error(`[${new Date().toISOString()}] Error rejecting training request:`, error);
+//             return res.status(500).json({
+//                 success: false,
+//                 message: 'Failed to reject training request',
+//                 error: error.message,
+//                 timestamp: new Date().toISOString()
+//             });
+//         }
 
-        // Check if any record was actually updated
-        if (!updatedRecord) {
-            return res.status(404).json({
-                success: false,
-                message: 'Training request not found or already processed',
-                timestamp: new Date().toISOString()
-            });
-        }
+//         // Check if any record was actually updated
+//         if (!updatedRecord) {
+//             return res.status(404).json({
+//                 success: false,
+//                 message: 'Training request not found or already processed',
+//                 timestamp: new Date().toISOString()
+//             });
+//         }
 
-        console.log(`[${new Date().toISOString()}] Training request ${trainingRecordId} rejected successfully - Status: Not Started, Approved: false`);
+//         console.log(`[${new Date().toISOString()}] Training request ${trainingRecordId} rejected successfully - Status: Not Started, Approved: false`);
 
-        res.json({
-            success: true,
-            message: 'Training request rejected successfully.',
-            data: {
-                trainingRecordId,
-                trainingStatus: 'Not Started',
-                isApproved: false,
-                rejectedBy: userId,
-                decisionDate: rejectedDate,
-                decisionRemarks: remarks
-            },
-            timestamp: new Date().toISOString()
-        });
+//         res.json({
+//             success: true,
+//             message: 'Training request rejected successfully.',
+//             data: {
+//                 trainingRecordId,
+//                 trainingStatus: 'Not Started',
+//                 isApproved: false,
+//                 rejectedBy: userId,
+//                 decisionDate: rejectedDate,
+//                 decisionRemarks: remarks
+//             },
+//             timestamp: new Date().toISOString()
+//         });
 
-    } catch (error) {
-        console.error(`[${new Date().toISOString()}] Error in training rejection:`, error);
-        res.status(500).json({
-            success: false,
-            message: 'Internal server error during rejection',
-            error: error.message,
-            timestamp: new Date().toISOString()
-        });
-    }
-},
+//     } catch (error) {
+//         console.error(`[${new Date().toISOString()}] Error in training rejection:`, error);
+//         res.status(500).json({
+//             success: false,
+//             message: 'Internal server error during rejection',
+//             error: error.message,
+//             timestamp: new Date().toISOString()
+//         });
+//     }
+// },
 
-// BONUS: Updated createTrainingRequest function to properly handle the initial status
-createTrainingRequest: async function(req, res) {
-    console.log(`[${new Date().toISOString()}] Creating training request for user ${req.session?.user?.userId}`);
-    console.log('Request body:', req.body);
+// // BONUS: Updated createTrainingRequest function to properly handle the initial status
+// createTrainingRequest: async function(req, res) {
+//     console.log(`[${new Date().toISOString()}] Creating training request for user ${req.session?.user?.userId}`);
+//     console.log('Request body:', req.body);
 
-    try {
-        const userId = req.session?.user?.userId;
-        if (!userId) {
-            return res.status(401).json({
-                success: false,
-                message: 'User not authenticated'
-            });
-        }
+//     try {
+//         const userId = req.session?.user?.userId;
+//         if (!userId) {
+//             return res.status(401).json({
+//                 success: false,
+//                 message: 'User not authenticated'
+//             });
+//         }
 
-        const { trainingId, startDate, endDate, scheduleType } = req.body;
+//         const { trainingId, startDate, endDate, scheduleType } = req.body;
 
-        // Validate required fields
-        if (!trainingId || !startDate || !endDate) {
-            return res.status(400).json({
-                success: false,
-                message: 'Training ID, start date, and end date are required'
-            });
-        }
+//         // Validate required fields
+//         if (!trainingId || !startDate || !endDate) {
+//             return res.status(400).json({
+//                 success: false,
+//                 message: 'Training ID, start date, and end date are required'
+//             });
+//         }
 
-        // Validate dates
-        const start = new Date(startDate);
-        const end = new Date(endDate);
+//         // Validate dates
+//         const start = new Date(startDate);
+//         const end = new Date(endDate);
         
-        if (end <= start) {
-            return res.status(400).json({
-                success: false,
-                message: 'End date must be after start date'
-            });
-        }
+//         if (end <= start) {
+//             return res.status(400).json({
+//                 success: false,
+//                 message: 'End date must be after start date'
+//             });
+//         }
 
-        // Check if training exists and is active
-        const { data: training, error: trainingError } = await supabase
-            .from('trainings')
-            .select('trainingId, trainingName, isOnlineArrangement, totalDuration')
-            .eq('trainingId', parseInt(trainingId))
-            .eq('isActive', true)
-            .single();
+//         // Check if training exists and is active
+//         const { data: training, error: trainingError } = await supabase
+//             .from('trainings')
+//             .select('trainingId, trainingName, isOnlineArrangement, totalDuration')
+//             .eq('trainingId', parseInt(trainingId))
+//             .eq('isActive', true)
+//             .single();
 
-        if (trainingError || !training) {
-            console.error('Training not found or inactive:', trainingError);
-            return res.status(404).json({
-                success: false,
-                message: 'Training not found or inactive'
-            });
-        }
+//         if (trainingError || !training) {
+//             console.error('Training not found or inactive:', trainingError);
+//             return res.status(404).json({
+//                 success: false,
+//                 message: 'Training not found or inactive'
+//             });
+//         }
 
-        // Check for existing active requests
-        const { data: existingRequests, error: existingError } = await supabase
-            .from('training_records')
-            .select('trainingRecordId, setStartDate, setEndDate, trainingStatus, isApproved')
-            .eq('userId', userId)
-            .eq('trainingId', parseInt(trainingId))
-            .or('isApproved.is.null,isApproved.eq.true') // Pending or approved
-            .not('trainingStatus', 'eq', 'Completed'); // Exclude completed
+//         // Check for existing active requests
+//         const { data: existingRequests, error: existingError } = await supabase
+//             .from('training_records')
+//             .select('trainingRecordId, setStartDate, setEndDate, trainingStatus, isApproved')
+//             .eq('userId', userId)
+//             .eq('trainingId', parseInt(trainingId))
+//             .or('isApproved.is.null,isApproved.eq.true') // Pending or approved
+//             .not('trainingStatus', 'eq', 'Completed'); // Exclude completed
 
-        if (existingError && existingError.code !== 'PGRST116') {
-            console.error('Error checking existing requests:', existingError);
-            throw new Error(`Failed to check existing requests: ${existingError.message}`);
-        }
+//         if (existingError && existingError.code !== 'PGRST116') {
+//             console.error('Error checking existing requests:', existingError);
+//             throw new Error(`Failed to check existing requests: ${existingError.message}`);
+//         }
 
-        // Check for conflicts
-        if (existingRequests && existingRequests.length > 0) {
-            const hasConflict = existingRequests.some(request => {
-                // If there's a pending request (isApproved is null)
-                if (request.isApproved === null) {
-                    return true; // Block duplicate pending requests
-                }
+//         // Check for conflicts
+//         if (existingRequests && existingRequests.length > 0) {
+//             const hasConflict = existingRequests.some(request => {
+//                 // If there's a pending request (isApproved is null)
+//                 if (request.isApproved === null) {
+//                     return true; // Block duplicate pending requests
+//                 }
                 
-                // If there's an approved request, check for date overlap
-                if (request.isApproved === true) {
-                    const requestStart = new Date(request.setStartDate);
-                    const requestEnd = new Date(request.setEndDate);
-                    return (start <= requestEnd && end >= requestStart);
-                }
+//                 // If there's an approved request, check for date overlap
+//                 if (request.isApproved === true) {
+//                     const requestStart = new Date(request.setStartDate);
+//                     const requestEnd = new Date(request.setEndDate);
+//                     return (start <= requestEnd && end >= requestStart);
+//                 }
                 
-                return false;
-            });
+//                 return false;
+//             });
 
-            if (hasConflict) {
-                const conflicting = existingRequests[0];
-                const conflictType = conflicting.isApproved === null ? 'pending approval' : 'approved and overlapping';
-                return res.status(400).json({
-                    success: false,
-                    message: `You already have a training request for this course that is ${conflictType}. Please check your existing requests.`
-                });
-            }
-        }
+//             if (hasConflict) {
+//                 const conflicting = existingRequests[0];
+//                 const conflictType = conflicting.isApproved === null ? 'pending approval' : 'approved and overlapping';
+//                 return res.status(400).json({
+//                     success: false,
+//                     message: `You already have a training request for this course that is ${conflictType}. Please check your existing requests.`
+//                 });
+//             }
+//         }
 
-        // REVISED: Create training record with proper initial status
-        const trainingRecordData = {
-            userId: userId,
-            trainingId: parseInt(trainingId),
-            setStartDate: startDate,
-            setEndDate: endDate,
-            trainingStatus: 'Not Started', // Use proper enum value
-            isApproved: null, // Pending approval
-            dateRequested: new Date().toISOString().split('T')[0],
-            decisionDate: null, // Will be set when approved/rejected
-            decisionRemarks: scheduleType ? `Schedule Type: ${scheduleType}` : null
-        };
+//         // REVISED: Create training record with proper initial status
+//         const trainingRecordData = {
+//             userId: userId,
+//             trainingId: parseInt(trainingId),
+//             setStartDate: startDate,
+//             setEndDate: endDate,
+//             trainingStatus: 'Not Started', // Use proper enum value
+//             isApproved: null, // Pending approval
+//             dateRequested: new Date().toISOString().split('T')[0],
+//             decisionDate: null, // Will be set when approved/rejected
+//             decisionRemarks: scheduleType ? `Schedule Type: ${scheduleType}` : null
+//         };
 
-        console.log('Creating training record with data:', trainingRecordData);
+//         console.log('Creating training record with data:', trainingRecordData);
 
-        const { data: trainingRecord, error: recordError } = await supabase
-            .from('training_records')
-            .insert([trainingRecordData])
-            .select()
-            .single();
+//         const { data: trainingRecord, error: recordError } = await supabase
+//             .from('training_records')
+//             .insert([trainingRecordData])
+//             .select()
+//             .single();
 
-        if (recordError) {
-            console.error('Error creating training record:', recordError);
-            throw new Error(`Failed to create training record: ${recordError.message}`);
-        }
+//         if (recordError) {
+//             console.error('Error creating training record:', recordError);
+//             throw new Error(`Failed to create training record: ${recordError.message}`);
+//         }
 
-        const trainingRecordId = trainingRecord.trainingRecordId;
-        console.log(`Training record created with ID: ${trainingRecordId}`);
+//         const trainingRecordId = trainingRecord.trainingRecordId;
+//         console.log(`Training record created with ID: ${trainingRecordId}`);
 
-        // Create activity records (same as before)
-        const { data: activities, error: activitiesError } = await supabase
-            .from('training_activities')
-            .select('activityId, activityName, estActivityDuration, activityType')
-            .eq('trainingId', parseInt(trainingId))
-            .order('activityId', { ascending: true });
+//         // Create activity records (same as before)
+//         const { data: activities, error: activitiesError } = await supabase
+//             .from('training_activities')
+//             .select('activityId, activityName, estActivityDuration, activityType')
+//             .eq('trainingId', parseInt(trainingId))
+//             .order('activityId', { ascending: true });
 
-        let activitiesCreated = 0;
+//         let activitiesCreated = 0;
         
-        if (!activitiesError && activities && activities.length > 0) {
-            for (const activity of activities) {
-                try {
-                    const activityRecordData = {
-                        trainingRecordId: trainingRecordId,
-                        activityId: activity.activityId,
-                        status: 'Not Started',
-                        timestampzStarted: null,
-                        timestampzCompleted: null
-                    };
+//         if (!activitiesError && activities && activities.length > 0) {
+//             for (const activity of activities) {
+//                 try {
+//                     const activityRecordData = {
+//                         trainingRecordId: trainingRecordId,
+//                         activityId: activity.activityId,
+//                         status: 'Not Started',
+//                         timestampzStarted: null,
+//                         timestampzCompleted: null
+//                     };
 
-                    const { error: activityInsertError } = await supabase
-                        .from('training_records_activities')
-                        .insert([activityRecordData]);
+//                     const { error: activityInsertError } = await supabase
+//                         .from('training_records_activities')
+//                         .insert([activityRecordData]);
 
-                    if (!activityInsertError) {
-                        activitiesCreated++;
-                    }
-                } catch (activityError) {
-                    console.error(`Error creating activity record:`, activityError);
-                }
-            }
-        }
+//                     if (!activityInsertError) {
+//                         activitiesCreated++;
+//                     }
+//                 } catch (activityError) {
+//                     console.error(`Error creating activity record:`, activityError);
+//                 }
+//             }
+//         }
 
-        console.log(`Training request created successfully: ${trainingRecordId} with ${activitiesCreated} activities`);
+//         console.log(`Training request created successfully: ${trainingRecordId} with ${activitiesCreated} activities`);
 
-        res.status(201).json({
-            success: true,
-            message: 'Training request submitted successfully and is pending approval',
-            data: {
-                trainingRecordId: trainingRecordId,
-                trainingName: training.trainingName,
-                trainingStatus: 'Not Started',
-                isApproved: null, // Pending
-                scheduleType: scheduleType,
-                activitiesCreated: activitiesCreated,
-                totalActivitiesAvailable: activities ? activities.length : 0
-            }
-        });
+//         res.status(201).json({
+//             success: true,
+//             message: 'Training request submitted successfully and is pending approval',
+//             data: {
+//                 trainingRecordId: trainingRecordId,
+//                 trainingName: training.trainingName,
+//                 trainingStatus: 'Not Started',
+//                 isApproved: null, // Pending
+//                 scheduleType: scheduleType,
+//                 activitiesCreated: activitiesCreated,
+//                 totalActivitiesAvailable: activities ? activities.length : 0
+//             }
+//         });
 
-    } catch (error) {
-        console.error('Error in createTrainingRequest:', error);
-        res.status(500).json({
-            success: false,
-            message: 'Failed to create training request',
-            error: error.message,
-            timestamp: new Date().toISOString()
-        });
-    }
-},
+//     } catch (error) {
+//         console.error('Error in createTrainingRequest:', error);
+//         res.status(500).json({
+//             success: false,
+//             message: 'Failed to create training request',
+//             error: error.message,
+//             timestamp: new Date().toISOString()
+//         });
+//     }
+// },
 // Get department employees for line manager reports
 getDepartmentEmployeesForReports: async (req, res) => {
     try {
