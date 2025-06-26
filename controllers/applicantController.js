@@ -1585,42 +1585,62 @@ if (userMessage === 'check_reupload_progress') {
                 }
         
                 // Automatic rejection for work setup or availability
-                if ((questionType === 'work_setup' || questionType === 'availability') && answerValue === 0) {
-                    console.log(`❌ [Chatbot] Automatic rejection triggered: ${questionType} = No`);
-                    
-                    // Save remaining questions as "No" answers
-                    for (let i = currentIndex + 1; i < questions.length; i++) {
-                        req.session.screeningScores.push({
-                            question: questions[i].text,
-                            answer: 0,
-                            type: questions[i].type
-                        });
-                    }
+                // Replace the automatic rejection section in your screening_questions handler
+
+// Automatic rejection for work setup or availability
+if ((questionType === 'work_setup' || questionType === 'availability') && answerValue === 0) {
+    console.log(`❌ [Chatbot] Automatic rejection triggered: ${questionType} = No`);
+    
+    // Save remaining questions as "No" answers
+    for (let i = currentIndex + 1; i < questions.length; i++) {
+        req.session.screeningScores.push({
+            question: questions[i].text,
+            answer: 0,
+            type: questions[i].type
+        });
+    }
+
+    // Save scores to the database
+    const saveResult = await applicantController.saveScreeningScores(
+        userId, req.session.selectedPosition, req.session.screeningScores, req.session.resumeUrl
+    );
+
+    // 🔥 CRITICAL FIX: Update applicant status in database to P1 - FAILED
+    console.log('❌ [Chatbot] Updating applicant status to P1 - FAILED due to work setup/availability rejection');
+    
+    const { data: updateStatusData, error: updateStatusError } = await supabase
+        .from('applicantaccounts')
+        .update({ applicantStatus: 'P1 - FAILED' })
+        .eq('userId', userId);
+    
+    if (updateStatusError) {
+        console.error('❌ [Chatbot] Error updating applicant status to P1 - FAILED:', updateStatusError);
+        // Continue with rejection message even if status update fails
+    } else {
+        console.log('✅ [Chatbot] Applicant status successfully updated to P1 - FAILED');
+    }
+
+    // Rejection message
+    const rejectionMessage = {
+        text: "We regret to inform you that you have not met the requirements for this position. Thank you for your interest in applying at Prime Infrastructure, and we wish you the best in your future endeavors."
+    };
+    
+    // Update session applicant stage
+    req.session.applicantStage = 'P1 - FAILED';
+    
+    // Save rejection to chat history
+    await supabase
+        .from('chatbot_history')
+        .insert([{
+            userId,
+            message: JSON.stringify(rejectionMessage),
+            sender: 'bot',
+            timestamp,
+            applicantStage: req.session.applicantStage
+        }]);
         
-                    // Save scores
-                    const saveResult = await applicantController.saveScreeningScores(
-                        userId, req.session.selectedPosition, req.session.screeningScores, req.session.resumeUrl
-                    );
-        
-                    // Rejection message
-                    botResponse = {
-                        text: "We regret to inform you that you have not met the requirements for this position. Thank you for your interest in applying at Prime Infrastructure, and we wish you the best in your future endeavors."
-                    };
-                    
-                    req.session.applicantStage = 'rejected';
-                    
-                    // Save rejection to chat history
-                    await supabase
-                        .from('chatbot_history')
-                        .insert([{
-                            userId,
-                            message: JSON.stringify(botResponse),
-                            sender: 'bot',
-                            timestamp,
-                            applicantStage: req.session.applicantStage
-                        }]);
-                        
-                    return res.status(200).json({ response: botResponse });
+    return res.status(200).json({ response: rejectionMessage });
+
                 } else {
                     // For questions that don't require file upload, move to the next question
                     req.session.currentQuestionIndex++;
@@ -1650,39 +1670,67 @@ if (userMessage === 'check_reupload_progress') {
                         return res.status(200).json({ response: botResponse });
                     } else {
                         // If all questions are answered, proceed to final step
-                        const saveResult = await applicantController.saveScreeningScores(
-                            userId, req.session.selectedPosition, req.session.screeningScores, req.session.resumeUrl
-                        );
-                    
-                        if (saveResult.success) {
-                            botResponse = {
-                                text: saveResult.message,
-                                buttons: saveResult.message.includes("not met the requirements") ? [] : [{ text: 'Upload Resume', type: 'file_upload' }]
-                            };
-                            
-                            if (!saveResult.message.includes("not met the requirements")) {
-                                req.session.awaitingFileUpload = 'resume';
-                                req.session.applicantStage = 'resume_upload';
-                            }
-                        } else {
-                            botResponse = { text: "There was an error processing your application. Please try again later." };
-                        }
-                    
-                        req.session.applicantStage = (saveResult.message.includes("not met the requirements")) ? 
-                            'rejected' : 'resume_upload';
-                            
-                        // Save final message to chat history
-                        await supabase
-                            .from('chatbot_history')
-                            .insert([{
-                                userId,
-                                message: JSON.stringify(botResponse),
-                                sender: 'bot',
-                                timestamp,
-                                applicantStage: req.session.applicantStage
-                            }]);
-                            
-                        return res.status(200).json({ response: botResponse });
+                       const saveResult = await applicantController.saveScreeningScores(
+        userId, req.session.selectedPosition, req.session.screeningScores, req.session.resumeUrl
+    );
+
+    if (saveResult.success) {
+        // 🔥 CRITICAL FIX: Handle different result types
+        if (saveResult.isRejected) {
+            console.log('❌ [Chatbot] Final scoring resulted in rejection');
+            
+            // Update session stage for rejected applications
+            req.session.applicantStage = 'P1 - FAILED';
+            
+            botResponse = {
+                text: saveResult.message,
+                buttons: [] // No buttons for rejected applications
+            };
+        } else if (saveResult.passes) {
+            console.log('✅ [Chatbot] Final scoring - applicant passed');
+            
+            // Applicant passed, proceed to resume upload
+            req.session.awaitingFileUpload = 'resume';
+            req.session.applicantStage = 'resume_upload';
+            
+            botResponse = {
+                text: saveResult.message,
+                buttons: [{ text: 'Upload Resume', type: 'file_upload' }]
+            };
+        } else {
+            console.log('❌ [Chatbot] Final scoring - applicant failed');
+            
+            // Applicant failed due to low score
+            req.session.applicantStage = 'P1 - FAILED';
+            
+            botResponse = {
+                text: saveResult.message,
+                buttons: [] // No buttons for failed applications
+            };
+        }
+    } else {
+        // Error in processing
+        console.error('❌ [Chatbot] Error in saveScreeningScores:', saveResult.error);
+        
+        botResponse = { 
+            text: "There was an error processing your application. Please try again later." 
+        };
+        
+        // Don't change the applicant stage if there was an error
+    }
+
+    // Save final message to chat history
+    await supabase
+        .from('chatbot_history')
+        .insert([{
+            userId,
+            message: JSON.stringify(botResponse),
+            sender: 'bot',
+            timestamp,
+            applicantStage: req.session.applicantStage
+        }]);
+        
+    return res.status(200).json({ response: botResponse });
                     }
                 }
             }
@@ -2882,153 +2930,191 @@ getJobPositionsList: async function() {
         }
     },
 
-    saveScreeningScores: async function (userId, jobPosition, responses, resumeUrl = null, degreeUrl = null, certificationUrl = null) {
-        try {
-            console.log('Saving screening scores for user:', userId);
-            console.log('Resume URL:', resumeUrl);
-            console.log('Degree URL:', degreeUrl);
-            console.log('Certification URL:', certificationUrl);
-    
-            // Get jobId from the database using the position name
-            const { data: jobData, error: jobError } = await supabase
-                .from('jobpositions')
-                .select('jobId')
-                .ilike('jobTitle', jobPosition)
-                .single();
-    
-            if (jobError || !jobData) {
-                console.error('Error fetching job ID:', jobError);
-                throw new Error('Error finding job position ID.');
-            }
-    
-            const jobId = jobData.jobId;
-            console.log(`Job ID: ${jobId}`);
-    
-            // Initialize category counters
-            let degreeScore = 0;
-            let experienceScore = 0;
-            let certificationScore = 0;
-            let hardSkillsScore = 0;
-            let softSkillsScore = 0;
-            let workSetupScore = false; // Changed variable name to match what's used later
-            let availabilityScore = false; // Changed variable name to match what's used later
-    
-            // Count scores from responses
-            if (responses && Array.isArray(responses)) {
-                responses.forEach(response => {
-                    switch (response.type) {
-                        case 'degree': degreeScore += response.answer; break;
-                        case 'experience': experienceScore += response.answer; break;
-                        case 'certification': certificationScore += response.answer; break;
-                        case 'hardSkill': hardSkillsScore += response.answer; break; 
-                        case 'softSkill': softSkillsScore += response.answer; break;
-                        case 'work_setup': workSetupScore = response.answer > 0; break; // Store as boolean
-                        case 'availability': availabilityScore = response.answer > 0; break; // Store as boolean
+    // Update your saveScreeningScores function to handle automatic rejections
+
+saveScreeningScores: async function(userId, selectedPosition, screeningScores, resumeUrl = null) {
+    try {
+        console.log('💾 [Save Scores] Saving screening scores for user:', userId);
+        console.log('💾 [Save Scores] Scores:', screeningScores);
+        
+        // Calculate scores by category
+        let degreeScore = 0, experienceScore = 0, certificationScore = 0;
+        let hardSkillsScore = 0, softSkillsScore = 0;
+        let workSetupScore = false, availabilityScore = false;
+        
+        // Check for automatic rejection conditions
+        let automaticRejection = false;
+        let rejectionReason = '';
+        
+        screeningScores.forEach(score => {
+            switch(score.type) {
+                case 'degree':
+                    degreeScore += score.answer;
+                    break;
+                case 'experience':
+                    experienceScore += score.answer;
+                    break;
+                case 'certification':
+                    certificationScore += score.answer;
+                    break;
+                case 'hardSkill':
+                    hardSkillsScore += score.answer;
+                    break;
+                case 'softSkill':
+                    softSkillsScore += score.answer;
+                    break;
+                case 'work_setup':
+                    workSetupScore = score.answer === 1;
+                    if (score.answer === 0) {
+                        automaticRejection = true;
+                        rejectionReason = 'work_setup';
                     }
-                });
+                    break;
+                case 'availability':
+                    availabilityScore = score.answer === 1;
+                    if (score.answer === 0) {
+                        automaticRejection = true;
+                        rejectionReason = 'availability';
+                    }
+                    break;
             }
-    
-            // Check if a record already exists
-            const { data: existingRecord, error: checkError } = await supabase
-                .from('applicant_initialscreening_assessment')
-                .select('*')
-                .eq('userId', userId)
-                .eq('jobId', jobId)
-                .maybeSingle();
-    
-            let result;
-            
-            // Calculate total score by adding only the numeric scores
-            const totalScore = degreeScore + experienceScore + certificationScore + hardSkillsScore + softSkillsScore;
-    
-            if (existingRecord) {
-                // Update existing record
-                const updateData = {
-                    degreeScore,
-                    experienceScore,
-                    certificationScore,
-                    hardSkillsScore,
-                    softSkillsScore,
-                    workSetupScore, // Boolean
-                    availabilityScore, // Boolean
-                    totalScore,
-                    totalScoreCalculatedAt: new Date(),
-                };
-    
-                // Only update URLs if they are provided
-                if (resumeUrl) updateData.resume_url = resumeUrl;
-                if (degreeUrl) updateData.degree_url = degreeUrl;
-                if (certificationUrl) updateData.cert_url = certificationUrl;
-    
-                result = await supabase
-                    .from('applicant_initialscreening_assessment')
-                    .update(updateData)
-                    .eq('userId', userId)
-                    .eq('jobId', jobId);
-            } else {
-                // Insert new record
-                const insertData = {
-                    userId,
-                    jobId,
-                    degreeScore,
-                    experienceScore,
-                    certificationScore,
-                    hardSkillsScore,
-                    softSkillsScore,
-                    workSetupScore, // Boolean
-                    availabilityScore, // Boolean
-                    totalScore,
-                    resume_url: resumeUrl,
-                    degree_url: degreeUrl,
-                    cert_url: certificationUrl,
-                    totalScoreCalculatedAt: new Date(),
-                };
-    
-                result = await supabase
-                    .from('applicant_initialscreening_assessment')
-                    .insert([insertData]);
-            }
-    
-            if (result.error) {
-                console.error('Error saving screening scores:', result.error);
-                return { success: false, message: 'Error saving scores.' };
-            }
-    
-            console.log('Screening scores saved successfully.');
-            
-            // Define the response message based on screening status
-            let message = 'Screening scores saved.';
-    
-            // Automatic rejection if workSetupScore or availabilityScore is false
-            if (!workSetupScore || !availabilityScore) {
-                message = "We regret to inform you that you have not met the requirements for this position. Thank you for your interest in applying at Prime Infrastructure, and we wish you the best in your future endeavors.";
-                return { success: true, message };
-            }
-    
-            // If resume is uploaded and all screening is complete
-            if (resumeUrl && responses && responses.length > 0) {
-                // Update applicant status to "P1 - Awaiting for HR Action"
-                const { data: statusData, error: statusError } = await supabase
-                    .from('applicantaccounts')
-                    .update({ applicantStatus: 'P1 - Awaiting for HR Action' })
-                    .eq('userId', userId);
-                
-                if (statusError) {
-                    console.error('Error updating applicant status:', statusError);
-                } else {
-                    console.log('Applicant status updated to: P1 - Awaiting for HR Action');
-                }
-                
-                message = "Thank you for answering, this marks the end of the initial screening process. We have forwarded your resume to the department's Line Manager, and we will notify you once a decision has been made.";
-            }
-            
-            return { success: true, message };
-    
-        } catch (error) {
-            console.error('Error in saveScreeningScores:', error);
-            return { success: false, message: 'Internal error occurred.' };
+        });
+        
+        console.log('💾 [Save Scores] Calculated scores:', {
+            degreeScore, experienceScore, certificationScore,
+            hardSkillsScore, softSkillsScore, workSetupScore, availabilityScore
+        });
+        
+        if (automaticRejection) {
+            console.log(`❌ [Save Scores] Automatic rejection detected: ${rejectionReason}`);
         }
-    },
+
+        // Get job details for the selected position
+        const jobDetails = await applicantController.getJobDetailsbyTitle(selectedPosition);
+        if (!jobDetails) {
+            throw new Error('Job details not found');
+        }
+
+        const jobId = jobDetails.jobId;
+        console.log('💾 [Save Scores] Job ID:', jobId);
+
+        // Prepare the data to save/update
+        const assessmentData = {
+            userId: userId,
+            jobId: jobId,
+            degreeScore: degreeScore,
+            experienceScore: experienceScore,
+            certificationScore: certificationScore,
+            hardSkillsScore: hardSkillsScore,
+            softSkillsScore: softSkillsScore,
+            workSetupScore: workSetupScore,
+            availabilityScore: availabilityScore,
+            currentQuestionIndex: screeningScores.length,
+            resume_url: resumeUrl,
+            created_at: new Date().toISOString(),
+            // 🔥 NEW: Add rejection tracking
+            isRejected: automaticRejection,
+            rejectionReason: automaticRejection ? rejectionReason : null
+        };
+
+        // Check if record already exists
+        const { data: existingRecord, error: checkError } = await supabase
+            .from('applicant_initialscreening_assessment')
+            .select('*')
+            .eq('userId', userId)
+            .single();
+
+        let result;
+        if (existingRecord) {
+            // Update existing record
+            const { data, error } = await supabase
+                .from('applicant_initialscreening_assessment')
+                .update(assessmentData)
+                .eq('userId', userId);
+            result = { data, error };
+        } else {
+            // Insert new record
+            const { data, error } = await supabase
+                .from('applicant_initialscreening_assessment')
+                .insert([assessmentData]);
+            result = { data, error };
+        }
+
+        if (result.error) {
+            console.error('❌ [Save Scores] Error saving assessment:', result.error);
+            throw result.error;
+        }
+
+        console.log('✅ [Save Scores] Assessment saved successfully');
+
+        // 🔥 CRITICAL: Handle automatic rejections
+        if (automaticRejection) {
+            console.log('❌ [Save Scores] Processing automatic rejection');
+            
+            // Update applicant status to P1 - FAILED
+            const { error: statusError } = await supabase
+                .from('applicantaccounts')
+                .update({ applicantStatus: 'P1 - FAILED' })
+                .eq('userId', userId);
+            
+            if (statusError) {
+                console.error('❌ [Save Scores] Error updating status for rejection:', statusError);
+            } else {
+                console.log('✅ [Save Scores] Applicant status updated to P1 - FAILED for automatic rejection');
+            }
+            
+            return {
+                success: true,
+                message: "We regret to inform you that you have not met the requirements for this position. Thank you for your interest in applying at Prime Infrastructure, and we wish you the best in your future endeavors.",
+                isRejected: true,
+                rejectionReason: rejectionReason
+            };
+        }
+
+        // Calculate total score for non-rejected applications
+        const totalQuestions = screeningScores.length;
+        const totalScore = degreeScore + experienceScore + certificationScore + hardSkillsScore + softSkillsScore + (workSetupScore ? 1 : 0) + (availabilityScore ? 1 : 0);
+        const percentage = totalQuestions > 0 ? (totalScore / totalQuestions) * 100 : 0;
+
+        console.log('💾 [Save Scores] Total score calculation:', {
+            totalScore, totalQuestions, percentage
+        });
+
+        // Determine if the applicant passes the initial screening
+        const passingThreshold = 70; // You can adjust this threshold
+        const passes = percentage >= passingThreshold;
+
+        let message;
+        if (passes) {
+            message = `Congratulations! You have completed the initial screening with a score of ${percentage.toFixed(1)}%. Please proceed to upload your resume.`;
+        } else {
+            message = `Thank you for completing the screening. Unfortunately, you did not meet the minimum requirements for this position. Your score was ${percentage.toFixed(1)}%.`;
+            
+            // Update status to P1 - FAILED for low scores
+            await supabase
+                .from('applicantaccounts')
+                .update({ applicantStatus: 'P1 - FAILED' })
+                .eq('userId', userId);
+        }
+
+        return {
+            success: true,
+            message: message,
+            score: percentage,
+            passes: passes,
+            isRejected: !passes,
+            rejectionReason: !passes ? 'low_score' : null
+        };
+
+    } catch (error) {
+        console.error('❌ [Save Scores] Error in saveScreeningScores:', error);
+        return {
+            success: false,
+            message: "There was an error processing your screening results. Please try again later.",
+            error: error.message
+        };
+    }
+},
     handleFileUpload: async function(req, res) {
     console.log('📂 [Upload] Initiating file upload process...');
 
