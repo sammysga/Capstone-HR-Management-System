@@ -5124,7 +5124,7 @@ function getTrainingPriorityInfo(trainingOption) {
         };
     }
 }
-
+// Updated function to show top 5 areas in the legend (replace the existing one)
 function updateTrainingLegendWithTop5() {
     const legendContainer = document.querySelector('.training-match-info');
     if (!legendContainer) return;
@@ -5139,11 +5139,17 @@ function updateTrainingLegendWithTop5() {
         return;
     }
     
-    // Get top 5 lacking areas (lowest ratings first)
-    const lackingAreas = [
-        ...midYearFeedbackData.categorizedFeedback.average,
-        ...midYearFeedbackData.categorizedFeedback.belowAverage
-    ].sort((a, b) => a.averageRating - b.averageRating).slice(0, 5);
+    // ENHANCED: Get top 5 lowest-rated areas from ALL categories
+    const allAreas = [
+        ...midYearFeedbackData.categorizedFeedback.strengths || [],
+        ...midYearFeedbackData.categorizedFeedback.average || [],
+        ...midYearFeedbackData.categorizedFeedback.belowAverage || []
+    ];
+    
+    // Sort by lowest rating and take top 5
+    const top5Areas = allAreas
+        .sort((a, b) => a.averageRating - b.averageRating)
+        .slice(0, 5);
     
     let legendHTML = `
         <h5 style="margin: 5px 0; color: var(--primary-color); font-size: 13px;">
@@ -5151,20 +5157,31 @@ function updateTrainingLegendWithTop5() {
         </h5>
     `;
     
-    if (lackingAreas.length === 0) {
+    if (top5Areas.length === 0) {
         legendHTML += `
             <div style="font-style: italic; color: #888; font-size: 11px;">
-                No development areas identified. All objectives and skills are performing well!
+                No feedback data available yet. Complete Q1 and Q2 feedback to see development priorities.
             </div>
         `;
     } else {
         legendHTML += `<div style="display: flex; flex-direction: column; gap: 8px;">`;
         
-        lackingAreas.forEach((area, index) => {
+        top5Areas.forEach((area, index) => {
             const name = area.type === 'objective' ? area.objectiveDescrpt : area.jobReqSkillName;
             const type = area.type === 'objective' ? 'Objective' : `${area.jobReqSkillType} Skill`;
             const rating = area.averageRating.toFixed(1);
-            const ratingColor = area.averageRating < 3 ? '#dc3545' : '#ffc107';
+            
+            // Enhanced color coding based on rating ranges
+            let ratingColor;
+            if (area.averageRating < 2) {
+                ratingColor = '#dc3545'; // Critical (red)
+            } else if (area.averageRating < 3) {
+                ratingColor = '#fd7e14'; // Needs improvement (orange)
+            } else if (area.averageRating < 4) {
+                ratingColor = '#ffc107'; // Average (yellow)
+            } else {
+                ratingColor = '#28a745'; // Good (green)
+            }
             
             legendHTML += `
                 <div style="display: flex; align-items: center; gap: 10px; padding: 6px; background-color: rgba(255, 255, 255, 0.8); border-radius: 4px; border-left: 3px solid ${ratingColor};">
@@ -5179,15 +5196,102 @@ function updateTrainingLegendWithTop5() {
         
         legendHTML += `</div>`;
         
+        // Show count and note about methodology
+        const totalAvailable = allAreas.length;
         legendHTML += `
             <div style="margin-top: 8px; font-style: italic; color: #666; font-size: 11px;">
-                💡 Trainings that address these areas will be prioritized in recommendations.
+                💡 Showing lowest-rated ${top5Areas.length} of ${totalAvailable} areas. Trainings addressing these will be prioritized.
             </div>
         `;
     }
     
     legendContainer.innerHTML = legendHTML;
 }
+
+// Debug function to check what data is available and how top 5 is calculated
+function debugTop5AreasSelection() {
+    console.log("=== DEBUGGING TOP 5 AREAS SELECTION ===");
+    
+    if (!midYearFeedbackData || !midYearFeedbackData.categorizedFeedback) {
+        console.log("❌ No midYearFeedbackData available");
+        return;
+    }
+    
+    const categorized = midYearFeedbackData.categorizedFeedback;
+    
+    // Log all categories and their contents
+    console.log("Available categories:");
+    console.log("- Strengths:", categorized.strengths?.length || 0, "items");
+    console.log("- Average:", categorized.average?.length || 0, "items");
+    console.log("- Below Average:", categorized.belowAverage?.length || 0, "items");
+    
+    // Combine all areas
+    const allAreas = [
+        ...(categorized.strengths || []),
+        ...(categorized.average || []),
+        ...(categorized.belowAverage || [])
+    ];
+    
+    console.log("\n=== ALL AREAS WITH RATINGS ===");
+    allAreas.forEach((area, index) => {
+        const name = area.type === 'objective' ? area.objectiveDescrpt : area.jobReqSkillName;
+        const type = area.type === 'objective' ? 'Objective' : `${area.jobReqSkillType} Skill`;
+        console.log(`${index + 1}. ${name} (${type}) - Rating: ${area.averageRating}`);
+    });
+    
+    // Sort and show top 5
+    const sortedAreas = allAreas.sort((a, b) => a.averageRating - b.averageRating);
+    
+    console.log("\n=== TOP 5 LOWEST RATED (DEVELOPMENT PRIORITIES) ===");
+    const top5 = sortedAreas.slice(0, 5);
+    top5.forEach((area, index) => {
+        const name = area.type === 'objective' ? area.objectiveDescrpt : area.jobReqSkillName;
+        const type = area.type === 'objective' ? 'Objective' : `${area.jobReqSkillType} Skill`;
+        console.log(`${index + 1}. ${name} (${type}) - Rating: ${area.averageRating}`);
+    });
+    
+    console.log(`\n✅ Total areas available: ${allAreas.length}`);
+    console.log(`✅ Top 5 selected: ${top5.length}`);
+    console.log(`✅ Ratings range: ${allAreas.length > 0 ? `${Math.min(...allAreas.map(a => a.averageRating))} - ${Math.max(...allAreas.map(a => a.averageRating))}` : 'N/A'}`);
+    
+    console.log("=== END DEBUGGING ===");
+    
+    return {
+        totalAreas: allAreas.length,
+        top5Areas: top5,
+        allAreas: allAreas
+    };
+}
+
+// Function to test the top 5 collection manually
+function testTop5Collection() {
+    console.log("=== TESTING TOP 5 COLLECTION ===");
+    
+    const debugResult = debugTop5AreasSelection();
+    const top5Result = getTop5DevelopmentAreas();
+    
+    console.log("Debug result top 5 count:", debugResult?.top5Areas?.length || 0);
+    console.log("getTop5DevelopmentAreas result count:", top5Result.length);
+    
+    console.log("getTop5DevelopmentAreas result:", top5Result);
+    
+    if (top5Result.length < 5 && debugResult?.totalAreas >= 5) {
+        console.warn("⚠️ Expected 5 areas but got", top5Result.length);
+        console.log("Available areas:", debugResult.totalAreas);
+        console.log("Check if there's a filtering issue in getTop5DevelopmentAreas()");
+    } else if (debugResult?.totalAreas < 5) {
+        console.log(`ℹ️ Only ${debugResult.totalAreas} areas available, so showing all of them`);
+    } else {
+        console.log("✅ Top 5 collection working correctly");
+    }
+    
+    console.log("=== END TESTING ===");
+}
+
+// Make debug functions globally available
+window.debugTop5AreasSelection = debugTop5AreasSelection;
+window.testTop5Collection = testTop5Collection;
+
 function showTrainingDetails() {
     const trainingSelect = document.getElementById('suggestedTrainings');
     const detailsPanel = document.getElementById('trainingDetailsPanel');
@@ -5616,7 +5720,6 @@ window.updateIDPProgress = updateIDPProgress;
 window.updateCharCounter = updateCharCounter;
 window.validateIDPForm = validateIDPForm;
 
-
 // Function to get top 5 development areas from feedback data
 function getTop5DevelopmentAreas() {
     console.log("=== COLLECTING TOP 5 DEVELOPMENT AREAS ===");
@@ -5626,18 +5729,24 @@ function getTop5DevelopmentAreas() {
         return [];
     }
     
-    // Combine all areas that need development (average and below average ratings)
-    const developmentAreas = [
-        ...midYearFeedbackData.categorizedFeedback.average,
-        ...midYearFeedbackData.categorizedFeedback.belowAverage
+    // ENHANCED: Combine ALL areas from ALL categories (strengths, average, below average)
+    const allAreas = [
+        ...midYearFeedbackData.categorizedFeedback.strengths || [],
+        ...midYearFeedbackData.categorizedFeedback.average || [],
+        ...midYearFeedbackData.categorizedFeedback.belowAverage || []
     ];
     
-    console.log("Found development areas:", developmentAreas.length);
+    console.log("Found all feedback areas:", allAreas.length);
+    console.log("Breakdown:", {
+        strengths: midYearFeedbackData.categorizedFeedback.strengths?.length || 0,
+        average: midYearFeedbackData.categorizedFeedback.average?.length || 0,
+        belowAverage: midYearFeedbackData.categorizedFeedback.belowAverage?.length || 0
+    });
     
-    // Sort by lowest rating first (most critical areas)
-    const sortedAreas = developmentAreas
+    // Sort by lowest rating first (most critical areas) and take top 5
+    const sortedAreas = allAreas
         .sort((a, b) => a.averageRating - b.averageRating)
-        .slice(0, 5); // Take top 5
+        .slice(0, 5); // Take top 5 lowest rated items
     
     // Format for database storage
     const top5Areas = sortedAreas.map((area, index) => {
@@ -5666,6 +5775,7 @@ function getTop5DevelopmentAreas() {
     
     return top5Areas;
 }
+
 async function submitMidYearIDPFormWithTrainingCategories(event) {
     event.preventDefault();
     
@@ -5847,6 +5957,7 @@ async function submitMidYearIDPFormWithTrainingCategories(event) {
     
     console.log("=== END ENHANCED FORM SUBMISSION ===");
 }
+
 // Enhanced Final-Year IDP submission function
 async function submitFinalYearIDPFormWithEnhancements(event) {
     event.preventDefault();
@@ -5975,19 +6086,28 @@ function getFinalYearTop5DevelopmentAreas() {
         return [];
     }
     
-    // Combine all areas that need development
-    const developmentAreas = [
+    // ENHANCED: Combine ALL areas from ALL categories for Final-Year
+    const allAreas = [
+        ...window.finalYearFeedbackData.categorizedFeedback.excellent || [],
+        ...window.finalYearFeedbackData.categorizedFeedback.good || [],
         ...window.finalYearFeedbackData.categorizedFeedback.satisfactory || [],
         ...window.finalYearFeedbackData.categorizedFeedback.needsImprovement || [],
         ...window.finalYearFeedbackData.categorizedFeedback.critical || []
     ];
     
-    console.log("Found final year development areas:", developmentAreas.length);
+    console.log("Found all final year feedback areas:", allAreas.length);
+    console.log("Final-Year breakdown:", {
+        excellent: window.finalYearFeedbackData.categorizedFeedback.excellent?.length || 0,
+        good: window.finalYearFeedbackData.categorizedFeedback.good?.length || 0,
+        satisfactory: window.finalYearFeedbackData.categorizedFeedback.satisfactory?.length || 0,
+        needsImprovement: window.finalYearFeedbackData.categorizedFeedback.needsImprovement?.length || 0,
+        critical: window.finalYearFeedbackData.categorizedFeedback.critical?.length || 0
+    });
     
-    // Sort by lowest rating first (most critical areas)
-    const sortedAreas = developmentAreas
+    // Sort by lowest rating first (most critical areas) and take top 5
+    const sortedAreas = allAreas
         .sort((a, b) => a.averageRating - b.averageRating)
-        .slice(0, 5); // Take top 5
+        .slice(0, 5); // Take top 5 lowest rated items
     
     // Format for database storage
     const top5Areas = sortedAreas.map((area, index) => {
