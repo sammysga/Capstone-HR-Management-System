@@ -171,7 +171,7 @@ router.post('/employee/submit-clearance', employeeController.submitEmployeeClear
 router.get('/employee/leaverequest', employeeController.getLeaveRequestForm); // To load the form
 router.post('/employee/leaverequest', employeeController.submitLeaveRequest); // To submit a leave request
 router.get('/employee/leaverequest/requests', employeeController.getLeaveRequestsByUserId); // To get leave requests
-router.post('/employee/leaverequest', employeeController.postLeaveBalancesByUserId); // To get leave balances
+router.post('/employee/leaverequest/balances/update', employeeController.postLeaveBalancesByUserId); // To get leave balances
 router.get('/employee/leaverequest/pending', employeeController.fetchPendingRequestsCount);
 router.get('/employee/leaverequest/latest', employeeController.getLatestLeaveBalances);
 

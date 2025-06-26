@@ -2650,52 +2650,102 @@ updateLeaveRequest: async function(req, res) {
             
             console.log(`Leave duration calculated: ${daysRequested} days`);
             
-            // Get current leave balance for this user and leave type
+            // FIXED: Get current leave balance with better error handling and ordering
             const { data: balanceData, error: balanceError } = await supabase
                 .from('leavebalances')
-                .select('usedLeaves, remainingLeaves, totalLeaves')
+                .select('usedLeaves, remainingLeaves, totalLeaves, created_at')
                 .eq('userId', leaveRequest.userId)
                 .eq('leaveTypeId', leaveRequest.leaveTypeId)
-                .single();
+                .order('created_at', { ascending: false })
+                .limit(1);
+                
+            console.log('Raw balance data from database:', balanceData);
+            console.log('Balance error:', balanceError);
                 
             if (balanceError) {
                 console.error('Error fetching leave balance:', balanceError);
-                // Continue with the process even if there's an error here
+                return res.status(500).json({ 
+                    success: false, 
+                    message: 'Error fetching leave balance data' 
+                });
             }
             
-            // Default values if no balance record exists
-            let currentUsedLeaves = 0;
-            let currentRemainingLeaves = 0; 
-            let totalLeaves = 0;
+            // FIXED: Better handling of balance data
+            let currentUsedLeaves, currentRemainingLeaves, totalLeaves;
             
-            if (balanceData) {
-                currentUsedLeaves = balanceData.usedLeaves || 0;
-                currentRemainingLeaves = balanceData.remainingLeaves || 0;
-                totalLeaves = balanceData.totalLeaves || 0;
+            if (!balanceData || balanceData.length === 0) {
+                // No balance record exists - get default from leave type
+                console.log('No balance record found, fetching leave type defaults');
+                
+                const { data: leaveTypeData, error: leaveTypeError } = await supabase
+                    .from('leave_types')
+                    .select('typeMaxCount')
+                    .eq('leaveTypeId', leaveRequest.leaveTypeId)
+                    .single();
+                    
+                if (leaveTypeError || !leaveTypeData) {
+                    console.error('Error fetching leave type data:', leaveTypeError);
+                    return res.status(500).json({ 
+                        success: false, 
+                        message: 'Error fetching leave type information' 
+                    });
+                }
+                
+                totalLeaves = leaveTypeData.typeMaxCount || 0;
+                currentUsedLeaves = 0;
+                currentRemainingLeaves = totalLeaves;
+                
+                console.log(`Using defaults - Total: ${totalLeaves}, Used: ${currentUsedLeaves}, Remaining: ${currentRemainingLeaves}`);
+            } else {
+                // Balance record exists - use actual values with proper null checking
+                const balance = balanceData[0];
+                
+                // FIXED: Use proper null checking instead of || operator
+                currentUsedLeaves = balance.usedLeaves !== null && balance.usedLeaves !== undefined ? balance.usedLeaves : 0;
+                currentRemainingLeaves = balance.remainingLeaves !== null && balance.remainingLeaves !== undefined ? balance.remainingLeaves : 0;
+                totalLeaves = balance.totalLeaves !== null && balance.totalLeaves !== undefined ? balance.totalLeaves : 0;
+                
+                console.log(`Using existing balance - Total: ${totalLeaves}, Used: ${currentUsedLeaves}, Remaining: ${currentRemainingLeaves}`);
+            }
+            
+            // FIXED: Add validation before updating
+            if (currentRemainingLeaves < daysRequested) {
+                console.error(`Insufficient leave balance: ${currentRemainingLeaves} remaining, ${daysRequested} requested`);
+                return res.status(400).json({ 
+                    success: false, 
+                    message: `Insufficient leave balance. Only ${currentRemainingLeaves} days remaining, but ${daysRequested} days requested.` 
+                });
             }
             
             // Calculate new balances
             const newUsedLeaves = currentUsedLeaves + daysRequested;
-            const newRemainingLeaves = Math.max(0, currentRemainingLeaves - daysRequested);
+            const newRemainingLeaves = currentRemainingLeaves - daysRequested;
             
-            console.log(`Updating leave balance: Used: ${currentUsedLeaves} -> ${newUsedLeaves}, Remaining: ${currentRemainingLeaves} -> ${newRemainingLeaves}`);
+            console.log(`Updating leave balance:`);
+            console.log(`  Used: ${currentUsedLeaves} + ${daysRequested} = ${newUsedLeaves}`);
+            console.log(`  Remaining: ${currentRemainingLeaves} - ${daysRequested} = ${newRemainingLeaves}`);
+            console.log(`  Total: ${totalLeaves} (unchanged)`);
             
-            // Update the leave balance record
-            const { error: upsertError } = await supabase
+            // FIXED: Insert new balance record instead of upsert to maintain history
+            const { error: insertError } = await supabase
                 .from('leavebalances')
-                .upsert({
+                .insert({
                     userId: leaveRequest.userId,
                     leaveTypeId: leaveRequest.leaveTypeId,
                     usedLeaves: newUsedLeaves,
                     remainingLeaves: newRemainingLeaves,
-                    totalLeaves: totalLeaves || (newUsedLeaves + newRemainingLeaves) // Preserve total if exists
+                    totalLeaves: totalLeaves,
+                    created_at: new Date().toISOString()
                 });
                 
-            if (upsertError) {
-                console.error('Error updating leave balance:', upsertError);
-                // Don't return an error, just log it and continue
+            if (insertError) {
+                console.error('Error inserting new leave balance:', insertError);
+                return res.status(500).json({ 
+                    success: false, 
+                    message: 'Error updating leave balance' 
+                });
             } else {
-                console.log('Successfully updated leave balance');
+                console.log('Successfully inserted new leave balance record');
             }
         } else {
             console.log('Leave request rejected, no changes to leave balance');

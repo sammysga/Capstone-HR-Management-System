@@ -434,607 +434,603 @@
             </div>
         </div>
     </div>
-    <script>// Get the modal
-var modal = document.getElementById("fileLeaveModal");
+    <script>
+        // Get the modal
+        var modal = document.getElementById("fileLeaveModal");
 
-// Get the button that opens the modal
-var btn = document.getElementById("fileLeaveBtn");
+        // Get the button that opens the modal
+        var btn = document.getElementById("fileLeaveBtn");
 
-// Get the <span> element that closes the modal
-var closeBtn = document.getElementById("closeModalBtn");
+        // Get the <span> element that closes the modal
+        var closeBtn = document.getElementById("closeModalBtn");
 
-// When the user clicks the button, open the modal 
-btn.onclick = function() {
-    modal.style.display = "block";
-    // Reset the form when opening the modal
-    document.getElementById('leaveForm').reset();
-    
-    // Reset custom checkbox state
-    const customCheckbox = document.getElementById('customCheckbox');
-    if (customCheckbox) {
-        customCheckbox.classList.remove('checked');
-    }
-    
-    // Reset hidden checkbox
-    const selfCertifyCheckbox = document.getElementById('selfCertify');
-    if (selfCertifyCheckbox) {
-        selfCertifyCheckbox.checked = false;
-    }
-    
-    // Reset file display
-    const fileNameDisplay = document.getElementById('fileName');
-    if (fileNameDisplay) {
-        fileNameDisplay.textContent = 'No file chosen';
-        fileNameDisplay.style.color = '#666';
-    }
-    
-    // Hide clear file button
-    const clearFileBtn = document.getElementById('clearFileBtn');
-    if (clearFileBtn) {
-        clearFileBtn.style.display = 'none';
-    }
-    
-    // Initialize certification section after form reset
-    setTimeout(initializeCertificationSection, 100);
-    console.log("Modal opened, certification section will be initialized");
-}
+        // When the user clicks the button, open the modal 
+        btn.onclick = function() {
+            modal.style.display = "block";
+            // Reset the form when opening the modal
+            document.getElementById('leaveForm').reset();
+            
+            // Reset custom checkbox state
+            const customCheckbox = document.getElementById('customCheckbox');
+            if (customCheckbox) {
+                customCheckbox.classList.remove('checked');
+            }
+            
+            // Reset hidden checkbox
+            const selfCertifyCheckbox = document.getElementById('selfCertify');
+            if (selfCertifyCheckbox) {
+                selfCertifyCheckbox.checked = false;
+            }
+            
+            // Reset file display
+            const fileNameDisplay = document.getElementById('fileName');
+            if (fileNameDisplay) {
+                fileNameDisplay.textContent = 'No file chosen';
+                fileNameDisplay.style.color = '#666';
+            }
+            
+            // Hide clear file button
+            const clearFileBtn = document.getElementById('clearFileBtn');
+            if (clearFileBtn) {
+                clearFileBtn.style.display = 'none';
+            }
+            
+            // Initialize certification section after form reset
+            setTimeout(initializeCertificationSection, 100);
+            console.log("Modal opened, certification section will be initialized");
+        }
 
-// When the user clicks on <span> (x), close the modal
-closeBtn.onclick = function() {
-    modal.style.display = "none";
-}
+        // When the user clicks on <span> (x), close the modal
+        closeBtn.onclick = function() {
+            modal.style.display = "none";
+        }
 
-// When the user clicks anywhere outside of the modal, close it
-window.onclick = function(event) {
-    if (event.target == modal) {
-        modal.style.display = "none";
-    }
-}
+        // When the user clicks anywhere outside of the modal, close it
+        window.onclick = function(event) {
+            if (event.target == modal) {
+                modal.style.display = "none";
+            }
+        }
 
-// Frontend fetch function with improved error handling
-async function updatePendingRequestsCount() {
-    const pendingCountElement = document.getElementById('pendingCount');
+        // Frontend fetch function with improved error handling
+        async function updatePendingRequestsCount() {
+            const pendingCountElement = document.getElementById('pendingCount');
 
-    try {
-        const response = await fetch('/employee/leaverequest/pending');
-        const contentType = response.headers.get("content-type");
-        
-        if (response.ok) {
-            if (contentType && contentType.includes("application/json")) {
-                const data = await response.json();
-                pendingCountElement.textContent = data.count > 0 ? `${data.count} Pending Requests` : 'No Pending Requests';
-            } else {
-                const responseBody = await response.text();
-                console.error("Expected JSON response but received:", responseBody);
+            try {
+                const response = await fetch('/employee/leaverequest/pending');
+                const contentType = response.headers.get("content-type");
+                
+                if (response.ok) {
+                    if (contentType && contentType.includes("application/json")) {
+                        const data = await response.json();
+                        pendingCountElement.textContent = data.count > 0 ? `${data.count} Pending Requests` : 'No Pending Requests';
+                    } else {
+                        const responseBody = await response.text();
+                        console.error("Expected JSON response but received:", responseBody);
+                        pendingCountElement.textContent = 'Error fetching count';
+                    }
+                } else {
+                    const errorBody = await response.text();
+                    console.error('Failed to fetch pending requests count:', errorBody);
+                    pendingCountElement.textContent = 'Error fetching count';
+                }
+            } catch (error) {
+                console.error('Error in updatePendingRequestsCount:', error);
                 pendingCountElement.textContent = 'Error fetching count';
             }
-        } else {
-            const errorBody = await response.text();
-            console.error('Failed to fetch pending requests count:', errorBody);
-            pendingCountElement.textContent = 'Error fetching count';
         }
-    } catch (error) {
-        console.error('Error in updatePendingRequestsCount:', error);
-        pendingCountElement.textContent = 'Error fetching count';
-    }
-}
 
-// Fixed function to calculate leave duration
-function calculateLeaveDuration() {
-    const fromDateInput = document.getElementById('fromDate');
-    const untilDateInput = document.getElementById('untilDate');
-    const fromDayTypeSelect = document.getElementById('fromDayType');
-    const untilDayTypeSelect = document.getElementById('untilDayType');
-    
-    if (!fromDateInput || !untilDateInput || !fromDateInput.value || !untilDateInput.value) {
-        return 0;
-    }
-    
-    const fromDate = new Date(fromDateInput.value);
-    const untilDate = new Date(untilDateInput.value);
-    
-    // Reset time portion to ensure accurate date comparison
-    fromDate.setHours(0, 0, 0, 0);
-    untilDate.setHours(0, 0, 0, 0);
-    
-    // Handle invalid date range
-    if (fromDate > untilDate) {
-        return 0;
-    }
-    
-    // Same day case
-    if (fromDate.getTime() === untilDate.getTime()) {
-        if (fromDayTypeSelect.value === 'half_day' && untilDayTypeSelect.value === 'half_day') {
-            return 0.5;
-        }
-        return 1;
-    }
-    
-    // Calculate number of calendar days (inclusive)
-    const dayCount = Math.round((untilDate - fromDate) / (1000 * 60 * 60 * 24)) + 1;
-    
-    // Adjust for half days
-    let adjustedDays = dayCount;
-    if (fromDayTypeSelect.value === 'half_day') {
-        adjustedDays -= 0.5;
-    }
-    if (untilDayTypeSelect.value === 'half_day') {
-        adjustedDays -= 0.5;
-    }
-    
-    return adjustedDays;
-}
-
-// Custom checkbox initialization and management
-function initializeCustomCheckbox() {
-    const customCheckboxContainer = document.getElementById('customSelfCertify');
-    const customCheckbox = document.getElementById('customCheckbox');
-    const hiddenCheckbox = document.getElementById('selfCertify');
-    const certificationInput = document.getElementById('certification');
-    const fileNameDisplay = document.getElementById('fileName');
-    
-    if (!customCheckboxContainer || !customCheckbox || !hiddenCheckbox) {
-        console.error("Custom checkbox elements not found");
-        return;
-    }
-    
-    // Click handler for the custom checkbox
-    customCheckboxContainer.addEventListener('click', function() {
-        console.log("Custom checkbox container clicked");
-        
-        // Only allow interaction if container is not disabled
-        if (!customCheckboxContainer.classList.contains('disabled')) {
-            // Toggle checkbox state
-            if (customCheckbox.classList.contains('checked')) {
-                // Uncheck
-                customCheckbox.classList.remove('checked');
-                hiddenCheckbox.checked = false;
-                
-                // Re-enable file upload
-                if (certificationInput) {
-                    certificationInput.disabled = false;
+        // Fixed function to calculate leave duration
+        function calculateLeaveDuration() {
+            const fromDateInput = document.getElementById('fromDate');
+            const untilDateInput = document.getElementById('untilDate');
+            const fromDayTypeSelect = document.getElementById('fromDayType');
+            const untilDayTypeSelect = document.getElementById('untilDayType');
+            
+            if (!fromDateInput || !untilDateInput || !fromDateInput.value || !untilDateInput.value) {
+                return 0;
+            }
+            
+            const fromDate = new Date(fromDateInput.value);
+            const untilDate = new Date(untilDateInput.value);
+            
+            // Reset time portion to ensure accurate date comparison
+            fromDate.setHours(0, 0, 0, 0);
+            untilDate.setHours(0, 0, 0, 0);
+            
+            // Handle invalid date range
+            if (fromDate > untilDate) {
+                return 0;
+            }
+            
+            // Same day case
+            if (fromDate.getTime() === untilDate.getTime()) {
+                if (fromDayTypeSelect.value === 'half_day' && untilDayTypeSelect.value === 'half_day') {
+                    return 0.5;
                 }
-            } else {
-                // Check
-                customCheckbox.classList.add('checked');
-                hiddenCheckbox.checked = true;
+                return 1;
+            }
+            
+            // Calculate number of calendar days (inclusive)
+            const dayCount = Math.round((untilDate - fromDate) / (1000 * 60 * 60 * 24)) + 1;
+            
+            // Adjust for half days
+            let adjustedDays = dayCount;
+            if (fromDayTypeSelect.value === 'half_day') {
+                adjustedDays -= 0.5;
+            }
+            if (untilDayTypeSelect.value === 'half_day') {
+                adjustedDays -= 0.5;
+            }
+            
+            return adjustedDays;
+        }
+
+        // FIXED: Certification section initialization
+        function initializeCertificationSection() {
+            console.log("Initializing certification section");
+            
+            // Get DOM elements
+            const leaveTypeSelect = document.getElementById('leaveType');
+            const fromDateInput = document.getElementById('fromDate');
+            const untilDateInput = document.getElementById('untilDate');
+            const fromDayTypeSelect = document.getElementById('fromDayType');
+            const untilDayTypeSelect = document.getElementById('untilDayType');
+            const certificationSection = document.getElementById('certificationSection');
+            const certificationNote = document.getElementById('certificationNote');
+            const certificationInput = document.getElementById('certification');
+            const customSelfCertify = document.getElementById('customSelfCertify');
+            const customCheckbox = document.getElementById('customCheckbox');
+            const hiddenCheckbox = document.getElementById('selfCertify');
+            const fileNameDisplay = document.getElementById('fileName');
+            const clearFileBtn = document.getElementById('clearFileBtn');
+            
+            // Check if elements exist to prevent errors
+            if (!certificationSection || !certificationInput || !customSelfCertify || !customCheckbox || !hiddenCheckbox) {
+                console.error("Required certification elements not found");
+                return;
+            }
+            
+           // Store references to current elements
+            const updatedCertificationInput = certificationInput;
+            const updatedCustomSelfCertify = customSelfCertify;
+            const updatedCustomCheckbox = customCheckbox;
+            const updatedHiddenCheckbox = hiddenCheckbox;
+            const updatedClearFileBtn = clearFileBtn;
+
+            // Remove existing event listeners by checking if they have our custom property
+            if (updatedCertificationInput._hasListener) {
+                console.log("Skipping duplicate listener setup for certification input");
+                return;
+            }
+            if (updatedCustomSelfCertify._hasListener) {
+                console.log("Skipping duplicate listener setup for self-certification");
+                return;
+            }
+
+            // Mark elements as having listeners to prevent duplicates
+            updatedCertificationInput._hasListener = true;
+            updatedCustomSelfCertify._hasListener = true;
+            updatedClearFileBtn._hasListener = true;
+            
+            // FIXED: File input change handler with proper file handling
+            updatedCertificationInput.addEventListener('change', function() {
+                console.log("File input changed, files:", this.files);
                 
-                // Disable and clear file upload
-                if (certificationInput) {
-                    certificationInput.disabled = true;
-                    certificationInput.value = '';
+                if (this.files && this.files.length > 0) {
+                    // File selected
+                    const file = this.files[0];
+                    console.log("File selected:", file.name, "Size:", file.size, "Type:", file.mimetype);
                     
-                    if (fileNameDisplay) {
+                    // Validate file
+                    const allowedTypes = ['application/pdf', 'image/jpeg', 'image/png'];
+                    const maxSize = 5 * 1024 * 1024; // 5 MB
+                    
+                    if (file.size > maxSize) {
+                        alert('File size exceeds the 5 MB limit.');
+                        this.value = ''; // Clear the input
+                        return;
+                    }
+                    
+                    if (!allowedTypes.includes(file.type)) {
+                        alert('Invalid file type. Only PDF and image files are allowed.');
+                        this.value = ''; // Clear the input
+                        return;
+                    }
+                    
+                    // Update UI
+                    fileNameDisplay.textContent = file.name;
+                    fileNameDisplay.style.color = '#124A5C';
+                    updatedClearFileBtn.style.display = 'inline-block';
+                    
+                    // Disable self-certification
+                    updatedCustomSelfCertify.classList.add('disabled');
+                    updatedCustomCheckbox.classList.remove('checked');
+                    updatedHiddenCheckbox.checked = false;
+                    
+                    console.log("File uploaded successfully, self-certification disabled");
+                } else {
+                    // No file selected
+                    fileNameDisplay.textContent = 'No file chosen';
+                    fileNameDisplay.style.color = '#666';
+                    updatedClearFileBtn.style.display = 'none';
+                    
+                    // Re-enable self-certification if appropriate
+                    updateCertificationState();
+                    console.log("File cleared, checking if self-certification can be enabled");
+                }
+            });
+            
+            // FIXED: Clear file button handler
+            updatedClearFileBtn.addEventListener('click', function(e) {
+                e.preventDefault();
+                e.stopPropagation();
+                
+                console.log("Clear file button clicked");
+                
+                // Clear file input
+                updatedCertificationInput.value = '';
+                fileNameDisplay.textContent = 'No file chosen';
+                fileNameDisplay.style.color = '#666';
+                updatedClearFileBtn.style.display = 'none';
+                
+                // Trigger change event to update UI state
+                const changeEvent = new Event('change', { bubbles: true });
+                updatedCertificationInput.dispatchEvent(changeEvent);
+                
+                console.log("File cleared, updating certification state");
+            });
+            
+            // FIXED: Self-certification checkbox handler
+            updatedCustomSelfCertify.addEventListener('click', function(e) {
+                e.preventDefault();
+                e.stopPropagation();
+                
+                console.log("Self-certification container clicked");
+                console.log("Container disabled?", updatedCustomSelfCertify.classList.contains('disabled'));
+                console.log("Current checkbox state:", updatedCustomCheckbox.classList.contains('checked'));
+                
+                // Only allow clicking if not disabled
+                if (!updatedCustomSelfCertify.classList.contains('disabled')) {
+                    if (updatedCustomCheckbox.classList.contains('checked')) {
+                        // Uncheck
+                        updatedCustomCheckbox.classList.remove('checked');
+                        updatedHiddenCheckbox.checked = false;
+                        console.log("Self-certification unchecked");
+                    } else {
+                        // Check
+                        updatedCustomCheckbox.classList.add('checked');
+                        updatedHiddenCheckbox.checked = true;
+                        
+                        // Clear file input when self-certifying
+                        updatedCertificationInput.value = '';
                         fileNameDisplay.textContent = 'No file chosen';
                         fileNameDisplay.style.color = '#666';
+                        updatedClearFileBtn.style.display = 'none';
+                        
+                        console.log("Self-certification checked, file input cleared");
+                    }
+                } else {
+                    console.log("Self-certification is disabled");
+                    // Check if there's a file that needs to be cleared
+                    if (updatedCertificationInput.files && updatedCertificationInput.files.length > 0) {
+                        alert("Please clear your uploaded file first before self-certifying.");
+                    }
+                }
+            });
+            
+            // Function to update certification state based on leave type and duration
+            function updateCertificationState() {
+                const selectedText = leaveTypeSelect.options[leaveTypeSelect.selectedIndex].text;
+                const isSickLeave = selectedText.toLowerCase().includes('sick');
+                const days = calculateLeaveDuration();
+                
+                console.log(`Updating certification state - Leave type: ${selectedText}, Duration: ${days} days, Is sick leave: ${isSickLeave}`);
+                
+                if (isSickLeave) {
+                    // Show certification section for sick leaves
+                    certificationSection.style.display = 'block';
+                    
+                    // Check if a file is already selected
+                    const hasFile = updatedCertificationInput.files && updatedCertificationInput.files.length > 0;
+                    
+                    if (days <= 2 && days > 0) {
+                        // Short-term sick leave (1-2 days)
+                        certificationNote.textContent = 'For short-term sick leave (1-2 days), you can self-certify or provide a medical certificate.';
+                        certificationNote.style.color = '#124A5C';
+                        
+                        // Enable self-certification if no file is uploaded
+                        if (!hasFile) {
+                            updatedCustomSelfCertify.classList.remove('disabled');
+                            console.log("Self-certification enabled for short-term sick leave");
+                        } else {
+                            updatedCustomSelfCertify.classList.add('disabled');
+                            console.log("Self-certification disabled because file is uploaded");
+                        }
+                    } else if (days > 2) {
+                        // Long-term sick leave (3+ days)
+                        certificationNote.innerHTML = 'For sick leaves of 3 or more days, a medical certificate is <span class="required-indicator">required</span>.';
+                        
+                        // Always disable self-certification for long sick leaves
+                        updatedCustomSelfCertify.classList.add('disabled');
+                        updatedCustomCheckbox.classList.remove('checked');
+                        updatedHiddenCheckbox.checked = false;
+                        console.log("Self-certification disabled for long-term sick leave");
+                    } else {
+                        // Invalid date selection
+                        certificationNote.textContent = 'Please select valid dates to determine certification requirements.';
+                        
+                        // Disable self-certification for invalid dates
+                        updatedCustomSelfCertify.classList.add('disabled');
+                        updatedCustomCheckbox.classList.remove('checked');
+                        updatedHiddenCheckbox.checked = false;
+                        console.log("Self-certification disabled for invalid dates");
+                    }
+                } else {
+                    // Hide certification section for non-sick leaves
+                    certificationSection.style.display = 'none';
+                    
+                    // Reset state
+                    updatedCustomCheckbox.classList.remove('checked');
+                    updatedHiddenCheckbox.checked = false;
+                    updatedCertificationInput.value = '';
+                    fileNameDisplay.textContent = 'No file chosen';
+                    fileNameDisplay.style.color = '#666';
+                    updatedClearFileBtn.style.display = 'none';
+                    console.log("Certification section hidden for non-sick leave");
+                }
+            }
+            
+            // Add event listeners to form fields
+            leaveTypeSelect.addEventListener('change', updateCertificationState);
+            fromDateInput.addEventListener('change', updateCertificationState);
+            untilDateInput.addEventListener('change', updateCertificationState);
+            fromDayTypeSelect.addEventListener('change', updateCertificationState);
+            untilDayTypeSelect.addEventListener('change', updateCertificationState);
+            
+            // Initial update
+            updateCertificationState();
+        }
+
+        // Function to refresh leave balances from server
+        async function refreshLeaveBalances() {
+            try {
+                console.log('Refreshing leave balances...');
+                const response = await fetch('/employee/leaverequest/balances/latest');
+                
+                if (response.ok) {
+                    const data = await response.json();
+                    console.log('Received updated balances:', data.leaveBalances);
+                    
+                    // Update the UI with new balances
+                    data.leaveBalances.forEach(balance => {
+                        updateLeaveBalanceDisplay(balance);
+                    });
+                } else {
+                    console.error('Failed to refresh leave balances');
+                }
+            } catch (error) {
+                console.error('Error refreshing leave balances:', error);
+            }
+        }
+
+        // Function to update individual leave balance display
+        function updateLeaveBalanceDisplay(balance) {
+            // Find the chart element for this leave type
+            let chartElement = document.getElementById(balance.typeName);
+            
+            if (!chartElement) {
+                // Try finding by case-insensitive search
+                const allCharts = document.querySelectorAll('.chart');
+                for (const chart of allCharts) {
+                    const headerElement = chart.querySelector('h3');
+                    if (headerElement && headerElement.textContent.trim().toLowerCase() === balance.typeName.toLowerCase()) {
+                        chartElement = chart;
+                        break;
                     }
                 }
             }
             
-            console.log("Self-certification changed to:", hiddenCheckbox.checked);
-        } else {
-            console.log("Custom checkbox is disabled, ignoring click");
-        }
-    });
-    
-    // File input handler
-    if (certificationInput) {
-        certificationInput.addEventListener('change', function() {
-            console.log("File input changed");
-            
-            if (this.files && this.files.length > 0) {
-                // Update file name display
-                if (fileNameDisplay) {
-                    fileNameDisplay.textContent = this.files[0].name;
-                    fileNameDisplay.style.color = '#124A5C';
-                }
-                
-                // Disable self-certification
-                customCheckboxContainer.classList.add('disabled');
-                customCheckbox.classList.remove('checked');
-                hiddenCheckbox.checked = false;
-                console.log("Self-certification disabled because file was uploaded");
-            } else {
-                // Reset file name display
-                if (fileNameDisplay) {
-                    fileNameDisplay.textContent = 'No file chosen';
-                    fileNameDisplay.style.color = '#666';
-                }
-                
-                // Re-enable self-certification if applicable
-                updateCertificationUIState();
-            }
-        });
-    }
-}
-
-function initializeCertificationSection() {
-    console.log("Initializing certification section");
-    
-    // Get DOM elements
-    const leaveTypeSelect = document.getElementById('leaveType');
-    const fromDateInput = document.getElementById('fromDate');
-    const untilDateInput = document.getElementById('untilDate');
-    const fromDayTypeSelect = document.getElementById('fromDayType');
-    const untilDayTypeSelect = document.getElementById('untilDayType');
-    const certificationSection = document.getElementById('certificationSection');
-    const certificationNote = document.getElementById('certificationNote');
-    const certificationInput = document.getElementById('certification');
-    const customSelfCertify = document.getElementById('customSelfCertify');
-    const customCheckbox = document.getElementById('customCheckbox');
-    const hiddenCheckbox = document.getElementById('selfCertify');
-    const fileNameDisplay = document.getElementById('fileName');
-    const clearFileBtn = document.getElementById('clearFileBtn');
-    
-    // Check if elements exist to prevent errors
-    if (!certificationSection || !certificationInput || !customSelfCertify || !customCheckbox || !hiddenCheckbox) {
-        console.error("Required certification elements not found");
-        return;
-    }
-    
-    // File input change handler
-    certificationInput.addEventListener('change', function() {
-        if (this.files && this.files.length > 0) {
-            // File selected
-            fileNameDisplay.textContent = this.files[0].name;
-            fileNameDisplay.style.color = '#124A5C';
-            clearFileBtn.style.display = 'inline-block';
-            
-            // Disable self-certification
-            customSelfCertify.classList.add('disabled');
-            customCheckbox.classList.remove('checked');
-            hiddenCheckbox.checked = false;
-            
-            console.log("File uploaded, self-certification disabled");
-        } else {
-            // No file selected
-            fileNameDisplay.textContent = 'No file chosen';
-            fileNameDisplay.style.color = '#666';
-            clearFileBtn.style.display = 'none';
-            
-            // Re-enable self-certification if appropriate
-            updateCertificationState();
-        }
-    });
-    
-    // Clear file button handler
-    clearFileBtn.addEventListener('click', function() {
-        // Clear file input
-        certificationInput.value = '';
-        fileNameDisplay.textContent = 'No file chosen';
-        fileNameDisplay.style.color = '#666';
-        clearFileBtn.style.display = 'none';
-        
-        // Re-enable self-certification if appropriate
-        updateCertificationState();
-        
-        console.log("File cleared, checking if self-certification can be enabled");
-    });
-    
-    // Self-certification checkbox handler
-    customSelfCertify.addEventListener('click', function() {
-        // Only allow clicking if not disabled
-        if (!customSelfCertify.classList.contains('disabled')) {
-            if (customCheckbox.classList.contains('checked')) {
-                // Uncheck
-                customCheckbox.classList.remove('checked');
-                hiddenCheckbox.checked = false;
-                console.log("Self-certification unchecked");
-            } else {
-                // Check
-                customCheckbox.classList.add('checked');
-                hiddenCheckbox.checked = true;
-                
-                // Clear and disable file input when self-certifying
-                certificationInput.value = '';
-                fileNameDisplay.textContent = 'No file chosen';
-                fileNameDisplay.style.color = '#666';
-                clearFileBtn.style.display = 'none';
-                
-                console.log("Self-certification checked");
-            }
-        } else {
-            console.log("Self-certification is disabled, can't toggle");
-            // Show message to clear file first
-            if (certificationInput.files && certificationInput.files.length > 0) {
-                alert("Please clear your uploaded file first before self-certifying.");
-            }
-        }
-    });
-    
-    // Function to update certification state based on leave type and duration
-    function updateCertificationState() {
-        const selectedText = leaveTypeSelect.options[leaveTypeSelect.selectedIndex].text;
-        const isSickLeave = selectedText.toLowerCase().includes('sick');
-        const days = calculateLeaveDuration();
-        
-        console.log(`Leave type: ${selectedText}, Duration: ${days} days, Is sick leave: ${isSickLeave}`);
-        
-        if (isSickLeave) {
-            // Show certification section for sick leaves
-            certificationSection.style.display = 'block';
-            
-            // Check if a file is already selected
-            const hasFile = certificationInput.files && certificationInput.files.length > 0;
-            
-            if (days <= 2 && days > 0) {
-                // Short-term sick leave (1-2 days)
-                certificationNote.textContent = 'For short-term sick leave (1-2 days), you can self-certify or provide a medical certificate.';
-                certificationNote.style.color = '#124A5C';
-                
-                // Enable self-certification if no file is uploaded
-                if (!hasFile) {
-                    customSelfCertify.classList.remove('disabled');
+            if (chartElement) {
+                // Update the remaining leaves span
+                const remainingLeavesSpan = chartElement.querySelector('p span');
+                if (remainingLeavesSpan) {
+                    remainingLeavesSpan.textContent = balance.remainingLeaves;
+                    console.log(`Updated ${balance.typeName}: Remaining leaves now shows ${balance.remainingLeaves}`);
                 } else {
-                    customSelfCertify.classList.add('disabled');
+                    console.error(`Could not find remaining leaves span for "${balance.typeName}"`);
                 }
-            } else if (days > 2) {
-                // Long-term sick leave (3+ days)
-                certificationNote.innerHTML = 'For sick leaves of 3 or more days, a medical certificate is <span class="required-indicator">required</span>.';
-                
-                // Always disable self-certification for long sick leaves
-                customSelfCertify.classList.add('disabled');
-                customCheckbox.classList.remove('checked');
-                hiddenCheckbox.checked = false;
             } else {
-                // Invalid date selection
-                certificationNote.textContent = 'Please select valid dates to determine certification requirements.';
+                console.error(`Could not find chart element for leave type "${balance.typeName}"`);
+            }
+        }
+
+        // Updated function to include certification status
+        function updateLeaveDataWithCert(leaveType, fromDate, untilDate, totalDays, status, certStatus) {
+            const table = document.getElementById('leaveRequestsTable');
+            
+            // Check if table has a "no leave requests" row and remove it
+            const noRequestsRow = table.querySelector('tr td[colspan="6"]');
+            if (noRequestsRow) {
+                noRequestsRow.parentElement.remove();
+            }
+            
+            const newRow = table.insertRow(0); // Insert at the top
+            
+            const cellLeaveType = newRow.insertCell(0);
+            const cellFromDate = newRow.insertCell(1);
+            const cellUntilDate = newRow.insertCell(2);
+            const cellTotalDays = newRow.insertCell(3);
+            const cellStatus = newRow.insertCell(4);
+            const cellCert = newRow.insertCell(5);
+
+            cellLeaveType.textContent = leaveType;
+            cellFromDate.textContent = fromDate;
+            cellUntilDate.textContent = untilDate;
+            cellTotalDays.textContent = totalDays;
+            cellStatus.textContent = status;
+            
+            // Style certification status
+            if (certStatus === 'Provided') {
+                cellCert.innerHTML = '<span style="color: green;">Provided</span>';
+            } else if (certStatus === 'Self-certified') {
+                cellCert.textContent = 'Self-certified';
+            } else if (certStatus === 'Required') {
+                cellCert.innerHTML = '<span style="color: red;">Required</span>';
+            } else {
+                cellCert.textContent = certStatus;
+            }
+        }
+
+        // Initialize everything when DOM is fully loaded
+        document.addEventListener('DOMContentLoaded', function() {
+            console.log("DOM fully loaded");
+            updatePendingRequestsCount();
+            initializeCertificationSection();
+            
+            // Setup file upload button click
+            const fileUploadBtn = document.querySelector('.file-upload-btn');
+            const hiddenFileInput = document.getElementById('certification');
+            
+            if (fileUploadBtn && hiddenFileInput) {
+                fileUploadBtn.addEventListener('click', function(e) {
+                    e.preventDefault();
+                    hiddenFileInput.click();
+                });
+            }
+        });
+
+        // FIXED: Enhanced form submission with proper file validation
+        document.getElementById('leaveForm').addEventListener('submit', async (event) => {
+            event.preventDefault();
+
+            const leaveTypeSelect = document.getElementById('leaveType');
+            const leaveTypeId = leaveTypeSelect.value;
+            const leaveTypeText = leaveTypeSelect.options[leaveTypeSelect.selectedIndex].text;
+            const fromDate = document.getElementById('fromDate').value;
+            const fromDayType = document.getElementById('fromDayType').value;
+            const untilDate = document.getElementById('untilDate').value;
+            const untilDayType = document.getElementById('untilDayType').value;
+            const reason = document.getElementById('reason').value;
+
+            // Calculate total days
+            const totalDays = calculateLeaveDuration();
+            
+            if (totalDays <= 0) {
+                alert('Please select valid dates for your leave request.');
+                return;
+            }
+            
+            // Check if this is a sick leave
+            const isSickLeave = leaveTypeText.toLowerCase().includes('sick');
+            const certificationInput = document.getElementById('certification');
+            const selfCertifyCheckbox = document.getElementById('selfCertify');
+            
+            console.log("Form submission - Sick leave:", isSickLeave, "Total days:", totalDays);
+            console.log("File input files:", certificationInput ? certificationInput.files : 'null');
+            console.log("Self-certify checked:", selfCertifyCheckbox ? selfCertifyCheckbox.checked : 'null');
+            
+            // Validate certification for sick leave
+            if (isSickLeave && totalDays > 2) {
+                const hasFile = certificationInput && certificationInput.files && certificationInput.files.length > 0;
+                const isSelfCertified = selfCertifyCheckbox && selfCertifyCheckbox.checked;
                 
-                // Disable self-certification for invalid dates
-                customSelfCertify.classList.add('disabled');
-                customCheckbox.classList.remove('checked');
-                hiddenCheckbox.checked = false;
-            }
-        } else {
-            // Hide certification section for non-sick leaves
-            certificationSection.style.display = 'none';
-            
-            // Reset state
-            customCheckbox.classList.remove('checked');
-            hiddenCheckbox.checked = false;
-            certificationInput.value = '';
-            fileNameDisplay.textContent = 'No file chosen';
-            fileNameDisplay.style.color = '#666';
-            clearFileBtn.style.display = 'none';
-        }
-    }
-    
-    // Add event listeners to form fields
-    leaveTypeSelect.addEventListener('change', updateCertificationState);
-    fromDateInput.addEventListener('change', updateCertificationState);
-    untilDateInput.addEventListener('change', updateCertificationState);
-    fromDayTypeSelect.addEventListener('change', updateCertificationState);
-    untilDayTypeSelect.addEventListener('change', updateCertificationState);
-    
-    // Initial update
-    updateCertificationState();
-}
-
-// Function to refresh leave balances from server
-async function refreshLeaveBalances() {
-    try {
-        console.log('Refreshing leave balances...');
-        const response = await fetch('/employee/leaverequest/balances/latest');
-        
-        if (response.ok) {
-            const data = await response.json();
-            console.log('Received updated balances:', data.leaveBalances);
-            
-            // Update the UI with new balances
-            data.leaveBalances.forEach(balance => {
-                updateLeaveBalanceDisplay(balance);
-            });
-        } else {
-            console.error('Failed to refresh leave balances');
-        }
-    } catch (error) {
-        console.error('Error refreshing leave balances:', error);
-    }
-}
-
-// Function to update individual leave balance display (works with your existing HTML)
-function updateLeaveBalanceDisplay(balance) {
-    // Find the chart element for this leave type
-    let chartElement = document.getElementById(balance.typeName);
-    
-    if (!chartElement) {
-        // Try finding by case-insensitive search
-        const allCharts = document.querySelectorAll('.chart');
-        for (const chart of allCharts) {
-            const headerElement = chart.querySelector('h3');
-            if (headerElement && headerElement.textContent.trim().toLowerCase() === balance.typeName.toLowerCase()) {
-                chartElement = chart;
-                break;
-            }
-        }
-    }
-    
-    if (chartElement) {
-        // Update the remaining leaves span (your existing structure)
-        const remainingLeavesSpan = chartElement.querySelector('p span');
-        if (remainingLeavesSpan) {
-            remainingLeavesSpan.textContent = balance.remainingLeaves;
-            console.log(`Updated ${balance.typeName}: Remaining leaves now shows ${balance.remainingLeaves}`);
-        } else {
-            console.error(`Could not find remaining leaves span for "${balance.typeName}"`);
-        }
-    } else {
-        console.error(`Could not find chart element for leave type "${balance.typeName}"`);
-    }
-}
-
-// Updated function that now calls refreshLeaveBalances for accurate server data
-function updateRemainingLeaves(leaveTypeText, daysRequested) {
-    console.log(`Updating remaining leaves for "${leaveTypeText}" - refreshing from server for accuracy`);
-    
-    // Refresh from server instead of manual calculation to ensure accuracy
-    setTimeout(refreshLeaveBalances, 500);
-}
-// Updated function to include certification status
-function updateLeaveDataWithCert(leaveType, fromDate, untilDate, totalDays, status, certStatus) {
-    const table = document.getElementById('leaveRequestsTable');
-    
-    // Check if table has a "no leave requests" row and remove it
-    const noRequestsRow = table.querySelector('tr td[colspan="6"]');
-    if (noRequestsRow) {
-        noRequestsRow.parentElement.remove();
-    }
-    
-    const newRow = table.insertRow(0); // Insert at the top
-    
-    const cellLeaveType = newRow.insertCell(0);
-    const cellFromDate = newRow.insertCell(1);
-    const cellUntilDate = newRow.insertCell(2);
-    const cellTotalDays = newRow.insertCell(3);
-    const cellStatus = newRow.insertCell(4);
-    const cellCert = newRow.insertCell(5); // New cell for certification
-
-    cellLeaveType.textContent = leaveType;
-    cellFromDate.textContent = fromDate;
-    cellUntilDate.textContent = untilDate;
-    cellTotalDays.textContent = totalDays;
-    cellStatus.textContent = status;
-    
-    // Style certification status
-    if (certStatus === 'Provided') {
-        cellCert.innerHTML = '<span style="color: green;">Provided</span>';
-    } else if (certStatus === 'Self-certified') {
-        cellCert.textContent = 'Self-certified';
-    } else if (certStatus === 'Required') {
-        cellCert.innerHTML = '<span style="color: red;">Required</span>';
-    } else {
-        cellCert.textContent = certStatus;
-    }
-}
-
-// Initialize everything when DOM is fully loaded
-document.addEventListener('DOMContentLoaded', function() {
-    console.log("DOM fully loaded");
-    updatePendingRequestsCount();
-    initializeCertificationSection();
-    
-    // Setup file upload button click
-    const fileUploadBtn = document.querySelector('.file-upload-btn');
-    const hiddenFileInput = document.getElementById('certification');
-    
-    if (fileUploadBtn && hiddenFileInput) {
-        fileUploadBtn.addEventListener('click', function(e) {
-            e.preventDefault();
-            hiddenFileInput.click();
-        });
-    }
-});
-
-// UPDATED: Enhanced form submission with immediate UI update
-document.getElementById('leaveForm').addEventListener('submit', async (event) => {
-    event.preventDefault(); // Prevent the default form submission
-
-    const leaveTypeSelect = document.getElementById('leaveType');
-    const leaveTypeId = leaveTypeSelect.value;
-    const leaveTypeText = leaveTypeSelect.options[leaveTypeSelect.selectedIndex].text;
-    const fromDate = document.getElementById('fromDate').value;
-    const fromDayType = document.getElementById('fromDayType').value;
-    const untilDate = document.getElementById('untilDate').value;
-    const untilDayType = document.getElementById('untilDayType').value;
-    const reason = document.getElementById('reason').value;
-
-    // Calculate total days using our improved function
-    const totalDays = calculateLeaveDuration();
-    
-    if (totalDays <= 0) {
-        alert('Please select valid dates for your leave request.');
-        return;
-    }
-    
-    // Check if this is a sick leave
-    const isSickLeave = leaveTypeText.toLowerCase().includes('sick');
-    const certificationInput = document.getElementById('certification');
-    const selfCertifyCheckbox = document.getElementById('selfCertify');
-    
-    // Validate certification for sick leave
-    if (isSickLeave && totalDays > 2 && 
-        (!certificationInput || certificationInput.files.length === 0)) {
-        alert('A medical certificate is required for sick leaves of 3 or more days.');
-        return;
-    }
-    
-    // Use FormData for all submissions to handle file uploads properly
-    const formData = new FormData();
-    formData.append('leaveTypeId', leaveTypeId);
-    formData.append('fromDate', fromDate);
-    formData.append('fromDayType', fromDayType);
-    formData.append('untilDate', untilDate);
-    formData.append('untilDayType', untilDayType);
-    formData.append('reason', reason);
-    
-    // Add certification data if it's a sick leave
-    if (isSickLeave) {
-        formData.append('isSickLeave', 'true');
-        formData.append('leaveDuration', totalDays.toString());
-        
-        if (totalDays <= 2 && selfCertifyCheckbox && selfCertifyCheckbox.checked) {
-            formData.append('isSelfCertified', 'true');
-            console.log("Adding self-certification flag to form data");
-        } else if (certificationInput && certificationInput.files.length > 0) {
-            formData.append('certification', certificationInput.files[0]);
-            console.log("Adding certification file to form data:", certificationInput.files[0].name);
-        }
-    }
-    
-    try {
-        console.log("Submitting leave request...");
-        const response = await fetch('/employee/leaverequest', {
-            method: 'POST',
-            body: formData
-            // Note: Don't set Content-Type header when using FormData
-        });
-
-        if (response.ok) {
-            const data = await response.json();
-            console.log("Leave request submitted successfully:", data);
-            alert('Leave request submitted successfully!');
-
-            // Get certification status for display
-            let certStatus = 'N/A';
-            if (isSickLeave) {
-                if (certificationInput && certificationInput.files.length > 0) {
-                    certStatus = 'Provided';
-                } else if (selfCertifyCheckbox && selfCertifyCheckbox.checked) {
-                    certStatus = 'Self-certified';
-                } else if (totalDays > 2) {
-                    certStatus = 'Required';
+                console.log("Validation check - Has file:", hasFile, "Is self-certified:", isSelfCertified);
+                console.log("File input:", certificationInput);
+                console.log("Files array:", certificationInput ? certificationInput.files : 'null');
+                
+                if (!hasFile && !isSelfCertified) {
+                    alert('A medical certificate is required for sick leaves of 3 or more days.');
+                    return;
                 }
             }
-
-            // Update the UI
-            updateLeaveDataWithCert(leaveTypeText, fromDate, untilDate, totalDays, 'Pending for Approval', certStatus);
-
-            modal.style.display = "none"; // Close the modal
             
-            // Reset the form
-            document.getElementById('leaveForm').reset();
+            // Use FormData for file uploads
+            const formData = new FormData();
+            formData.append('leaveTypeId', leaveTypeId);
+            formData.append('fromDate', fromDate);
+            formData.append('fromDayType', fromDayType);
+            formData.append('untilDate', untilDate);
+            formData.append('untilDayType', untilDayType);
+            formData.append('reason', reason);
             
-            // Refresh leave balances from server to get updated effective balances
-            setTimeout(refreshLeaveBalances, 500);
-            
-            // Update pending requests count
-            updatePendingRequestsCount();
-        } else {
-            let errorMessage = 'Error submitting leave request';
-            try {
-                const errorData = await response.json();
-                errorMessage = errorData.message || errorMessage;
-            } catch (e) {
-                console.error("Error parsing error response:", e);
+            // Add certification data if it's a sick leave
+            if (isSickLeave) {
+                formData.append('isSickLeave', 'true');
+                formData.append('leaveDuration', totalDays.toString());
+                
+                if (totalDays <= 2 && selfCertifyCheckbox && selfCertifyCheckbox.checked) {
+                    formData.append('isSelfCertified', 'true');
+                    console.log("Adding self-certification flag to form data");
+                } else if (certificationInput && certificationInput.files && certificationInput.files.length > 0) {
+                    formData.append('certification', certificationInput.files[0]);
+                    console.log("Adding certification file to form data:", certificationInput.files[0].name);
+                }
             }
-            console.error("Server returned error:", response.status, errorMessage);
-            alert('Error submitting leave request: ' + errorMessage);
-        }
-    } catch (error) {
-        console.error('Error in form submission:', error);
-        alert('Error submitting leave request: ' + error.message);
-    }
-});
+            
+            // Log FormData contents for debugging
+            console.log("FormData contents:");
+            for (let [key, value] of formData.entries()) {
+                if (value instanceof File) {
+                    console.log(key, ":", value.name, "(", value.size, "bytes )");
+                } else {
+                    console.log(key, ":", value);
+                }
+            }
+            
+            try {
+                console.log("Submitting leave request...");
+                const response = await fetch('/employee/leaverequest', {
+                    method: 'POST',
+                    body: formData
+                });
+
+                if (response.ok) {
+                    const data = await response.json();
+                    console.log("Leave request submitted successfully:", data);
+                    alert('Leave request submitted successfully!');
+
+                    // Get certification status for display
+                    let certStatus = 'N/A';
+                    if (isSickLeave) {
+                        if (certificationInput && certificationInput.files && certificationInput.files.length > 0) {
+                            certStatus = 'Provided';
+                        } else if (selfCertifyCheckbox && selfCertifyCheckbox.checked) {
+                            certStatus = 'Self-certified';
+                        } else if (totalDays > 2) {
+                            certStatus = 'Required';
+                        }
+                    }
+
+                    // Update the UI
+                    updateLeaveDataWithCert(leaveTypeText, fromDate, untilDate, totalDays, 'Pending for Approval', certStatus);
+
+                    modal.style.display = "none";
+                    
+                    // Reset the form
+                    document.getElementById('leaveForm').reset();
+                    
+                    // Refresh leave balances from server (this will show reduced effective balances for pending requests)
+                    setTimeout(refreshLeaveBalances, 500);
+                    
+                    // Update pending requests count
+                    updatePendingRequestsCount();
+                } else {
+                    let errorMessage = 'Error submitting leave request';
+                    try {
+                        const errorData = await response.json();
+                        errorMessage = errorData.message || errorMessage;
+                    } catch (e) {
+                        console.error("Error parsing error response:", e);
+                    }
+                    console.error("Server returned error:", response.status, errorMessage);
+                    alert('Error submitting leave request: ' + errorMessage);
+                }
+            } catch (error) {
+                console.error('Error in form submission:', error);
+                alert('Error submitting leave request: ' + error.message);
+            }
+        });
     </script>
 </body>
 </html>

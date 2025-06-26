@@ -1699,6 +1699,9 @@ getLeaveRequestForm: async function(req, res) {
 
 submitLeaveRequest: async function(req, res) {
     console.log('Submitting leave request...');
+    console.log('Request body:', req.body);
+    console.log('Request files:', req.files);
+    
     if (!req.session.user || !req.session.user.userId) {
         console.log('Unauthorized access: No session user');
         return res.status(401).json({ message: 'Unauthorized access' });
@@ -1716,7 +1719,7 @@ submitLeaveRequest: async function(req, res) {
             
             // File validation
             const allowedTypes = [
-                'application/pdf', 'image/jpeg', 'image/png'
+                'application/pdf', 'image/jpeg', 'image/png', 'image/jpg'
             ];
             const maxSize = 5 * 1024 * 1024; // 5 MB
             
@@ -1727,43 +1730,59 @@ submitLeaveRequest: async function(req, res) {
             
             if (!allowedTypes.includes(file.mimetype)) {
                 console.log('❌ [Leave Request] Invalid file type. Only PDF and image files are allowed.');
+                console.log('Received mimetype:', file.mimetype);
                 return res.status(400).json({ message: 'Invalid file type. Only PDF and image files are allowed.' });
             }
             
             // Generate unique file name
-            const uniqueName = `cert-${Date.now()}-${file.name}`;
+            const fileExtension = file.name.split('.').pop();
+            const uniqueName = `cert-${Date.now()}-${Math.random().toString(36).substring(2)}.${fileExtension}`;
             const filePath = path.join(__dirname, '../uploads', uniqueName);
             
             // Ensure uploads directory exists
-            if (!fs.existsSync(path.join(__dirname, '../uploads'))) {
-                fs.mkdirSync(path.join(__dirname, '../uploads'), { recursive: true });
+            const uploadsDir = path.join(__dirname, '../uploads');
+            if (!fs.existsSync(uploadsDir)) {
+                fs.mkdirSync(uploadsDir, { recursive: true });
             }
             
-            // Save file locally
-            await file.mv(filePath);
-            console.log('📂 [Leave Request] File successfully saved locally. Uploading to Supabase...');
-            
-            // Upload to Supabase
-            const { error: uploadError } = await supabase.storage
-                .from('uploads')  // Use the existing bucket name
-                .upload(uniqueName, fs.readFileSync(filePath), {
-                    contentType: file.mimetype,
-                    cacheControl: '3600',
-                    upsert: false,
-                });
-            
-            // Remove local file after upload
-            fs.unlinkSync(filePath);
-            console.log('📂 [Leave Request] Local file deleted after upload to Supabase.');
-            
-            if (uploadError) {
-                console.error('❌ [Leave Request] Error uploading file to Supabase:', uploadError);
-                return res.status(500).json({ message: 'Error uploading medical certificate.' });
+            try {
+                // Save file locally first
+                await file.mv(filePath);
+                console.log('📂 [Leave Request] File successfully saved locally. Uploading to Supabase...');
+                
+                // Upload to Supabase
+                const fileBuffer = fs.readFileSync(filePath);
+                const { error: uploadError } = await supabase.storage
+                    .from('uploads')
+                    .upload(uniqueName, fileBuffer, {
+                        contentType: file.mimetype,
+                        cacheControl: '3600',
+                        upsert: false,
+                    });
+                
+                // Remove local file after upload
+                if (fs.existsSync(filePath)) {
+                    fs.unlinkSync(filePath);
+                    console.log('📂 [Leave Request] Local file deleted after upload to Supabase.');
+                }
+                
+                if (uploadError) {
+                    console.error('❌ [Leave Request] Error uploading file to Supabase:', uploadError);
+                    return res.status(500).json({ message: 'Error uploading medical certificate.' });
+                }
+                
+                // Get the public URL for the file
+                certificationPath = `https://amzzxgaqoygdgkienkwf.supabase.co/storage/v1/object/public/uploads/${uniqueName}`;
+                console.log(`✅ [Leave Request] File uploaded successfully: ${certificationPath}`);
+                
+            } catch (fileError) {
+                console.error('❌ [Leave Request] Error processing file:', fileError);
+                // Clean up local file if it exists
+                if (fs.existsSync(filePath)) {
+                    fs.unlinkSync(filePath);
+                }
+                return res.status(500).json({ message: 'Error processing medical certificate file.' });
             }
-            
-            // Get the public URL for the file
-            certificationPath = `https://amzzxgaqoygdgkienkwf.supabase.co/storage/v1/object/public/uploads/${uniqueName}`;
-            console.log(`✅ [Leave Request] File uploaded successfully: ${certificationPath}`);
         }
         
         // Get form fields from req.body
@@ -1775,8 +1794,14 @@ submitLeaveRequest: async function(req, res) {
             fromDayType, 
             untilDayType,
             isSickLeave,
-            isSelfCertified
+            isSelfCertified,
+            leaveDuration
         } = req.body;
+
+        console.log('Form data received:', {
+            leaveTypeId, fromDate, untilDate, reason, fromDayType, untilDayType,
+            isSickLeave, isSelfCertified, leaveDuration
+        });
 
         if (!leaveTypeId || !fromDate || !untilDate || !reason || !fromDayType || !untilDayType) {
             console.log('Missing fields in leave request submission', req.body);
@@ -1810,26 +1835,55 @@ submitLeaveRequest: async function(req, res) {
 
         console.log('Days requested:', daysRequested);
 
-        // Check leave balance to ensure sufficient days are available
+        // FIXED: Check EFFECTIVE leave balance (including pending requests)
+        // Get current balance from database
         const { data: balanceData, error: balanceError } = await supabase
             .from('leavebalances')
             .select('usedLeaves, remainingLeaves, totalLeaves')
             .eq('userId', req.session.user.userId)
             .eq('leaveTypeId', leaveTypeId)
-            .single();
+            .order('created_at', { ascending: false })
+            .limit(1);
 
         let totalLeaves, remainingLeaves;
-        if (balanceError || !balanceData) {
+        if (balanceError || !balanceData || balanceData.length === 0) {
             totalLeaves = leaveTypeData.typeMaxCount;
             remainingLeaves = totalLeaves;
         } else {
-            totalLeaves = balanceData.totalLeaves;
-            remainingLeaves = balanceData.remainingLeaves;
+            totalLeaves = balanceData[0].totalLeaves;
+            remainingLeaves = balanceData[0].remainingLeaves;
         }
 
-        if (remainingLeaves < daysRequested) {
-            console.log(`Insufficient leave balance. Remaining: ${remainingLeaves}, Requested: ${daysRequested}`);
-            return res.status(400).json({ message: 'Insufficient leave balance for the requested period.' });
+        // Get all pending requests for this leave type to calculate effective balance
+        const { data: pendingRequests, error: pendingError } = await supabase
+            .from('leaverequests')
+            .select('fromDate, untilDate, fromDayType, untilDayType')
+            .eq('userId', req.session.user.userId)
+            .eq('leaveTypeId', leaveTypeId)
+            .eq('status', 'Pending for Approval');
+
+        let totalPendingDays = 0;
+        if (pendingRequests && pendingRequests.length > 0) {
+            pendingRequests.forEach(request => {
+                const fromDate = new Date(request.fromDate);
+                const untilDate = new Date(request.untilDate);
+                let days = Math.ceil((untilDate - fromDate) / (1000 * 60 * 60 * 24)) + 1;
+                
+                if (request.fromDayType === 'half_day') days -= 0.5;
+                if (request.untilDayType === 'half_day') days -= 0.5;
+                
+                totalPendingDays += days;
+            });
+        }
+
+        const effectiveRemainingLeaves = remainingLeaves - totalPendingDays;
+        console.log(`Balance check - Remaining: ${remainingLeaves}, Pending: ${totalPendingDays}, Effective: ${effectiveRemainingLeaves}, Requested: ${daysRequested}`);
+
+        if (effectiveRemainingLeaves < daysRequested) {
+            console.log(`Insufficient leave balance. Effective remaining: ${effectiveRemainingLeaves}, Requested: ${daysRequested}`);
+            return res.status(400).json({ 
+                message: `Insufficient leave balance. You have ${effectiveRemainingLeaves} effective days remaining but requested ${daysRequested} days.` 
+            });
         }
 
         // Prepare leave request data
@@ -1860,7 +1914,6 @@ submitLeaveRequest: async function(req, res) {
             } else if (daysRequested > 2) {
                 // Medical certificate required for longer sick leave
                 if (certificationPath) {
-                    // If a file was uploaded, store the path
                     leaveRequestData.certificationPath = certificationPath;
                     console.log('Medical certificate uploaded for extended sick leave');
                 } else {
@@ -1891,15 +1944,16 @@ submitLeaveRequest: async function(req, res) {
 
         console.log('Leave request inserted successfully:', insertedData);
 
-        // REMOVED: We no longer update leave balances here
-        // This will happen when the manager approves the request
+        // NOTE: We do NOT update leave balances here - this only happens when approved
+        // The effective balance calculation in getLeaveRequestForm handles pending requests
 
         // Return success with certification info
         res.status(200).json({ 
             message: 'Leave request submitted successfully.',
             leaveType: leaveTypeData.typeName,
             isSelfCertified: leaveRequestData.isSelfCertified || false,
-            hasCertification: !!certificationPath
+            hasCertification: !!certificationPath,
+            effectiveRemainingLeaves: effectiveRemainingLeaves - daysRequested
         });
     } catch (error) {
         console.error('Error submitting leave request:', error);
@@ -1989,6 +2043,7 @@ getLeaveRequestsByUserId: async function(req, res) {
         res.status(401).json({ message: 'Unauthorized access' });
     }
 },
+
 getLatestLeaveBalances: async function(req, res) {
     console.log('Fetching latest leave balances for user...');
     
@@ -2078,7 +2133,7 @@ getLatestLeaveBalances: async function(req, res) {
                     totalPendingDays += days;
                 });
 
-                // Calculate effective remaining leaves
+                // Calculate effective remaining leaves (subtract pending from remaining)
                 const effectiveRemainingLeaves = Math.max(0, currentBalance.remainingLeaves - totalPendingDays);
                 
                 console.log(`${leaveType.typeName} final calculation:`);
@@ -2091,14 +2146,14 @@ getLatestLeaveBalances: async function(req, res) {
                     typeName: leaveType.typeName,
                     totalLeaves: currentBalance.totalLeaves,
                     usedLeaves: currentBalance.usedLeaves,
-                    remainingLeaves: effectiveRemainingLeaves
+                    remainingLeaves: effectiveRemainingLeaves // This now shows effective remaining
                 };
             });
             
             const leaveBalances = await Promise.all(leaveBalancesPromises);
             console.log('\n=== API Response - Final leave balances ===');
             leaveBalances.forEach(balance => {
-                console.log(`${balance.typeName}: ${balance.remainingLeaves} remaining`);
+                console.log(`${balance.typeName}: ${balance.remainingLeaves} effective remaining`);
             });
             
             res.status(200).json({ leaveBalances });
