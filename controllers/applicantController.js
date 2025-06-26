@@ -636,99 +636,214 @@ updateApplicantStatus: async function(req, res) {
 },
    
 
-    getChatbotPage: async function(req, res) {
-        try {
-            const userId = req.session.userID;
-            console.log('✅ [getChatbotPage] User ID from session:', userId);
-    
-            // ✅ Check if user is authenticated
-            if (!userId) {
-                console.log('❌ [getChatbotPage] User not authenticated. Redirecting to login...');
-                return res.redirect('/applicant/login');
-            }
-    
-            // ✅ Check if there's already chat history in the session
-            let chatData = req.session.chatHistory || [];
-            let initialResponse = {};
-    
-            // ✅ Always define an initialResponse (even if empty)
-            const initialMessage = "Hi! Welcome to Prime Infrastructure Recruitment Screening Portal. What position are you going to apply for?";
-    
-            // ✅ If no chat history in session, fetch it from Supabase
-            if (chatData.length === 0) {
-                console.log('✅ [getChatbotPage] No chat history in session. Fetching from database...');
-    
-                const { data: chatHistory, error } = await supabase
-                    .from('chatbot_history')
-                    .select('message, sender, timestamp')
-                    .eq('userId', userId)
-                    .order('timestamp', { ascending: true });
-    
-                if (error) {
-                    console.error('❌ [getChatbotPage] Error fetching chat history from database:', error);
-                }
-    
-                if (chatHistory && chatHistory.length > 0) {
-                    console.log('✅ [getChatbotPage] Chat history found in database. Mapping it now...');
-    
-                    // ✅ Map the fetched data to session format
-                    chatData = chatHistory.map(chat => ({
-                        message: chat.message,
-                        sender: chat.sender,
-                        timestamp: chat.timestamp
-                    }));
-    
-                    // ✅ Store it in the session for faster loading next time
-                    req.session.chatHistory = chatData;
-                    console.log('✅ [getChatbotPage] Chat history stored in session.');
-                } else {
-                    console.log('✅ [getChatbotPage] No chat history in database. Preparing initial message.');
-    
-                    try {
-                        // ✅ Fetch job positions from your controller
-                        const positions = await applicantController.getActiveJobPositionsList();
-                        console.log('✅ [getChatbotPage] Job positions fetched successfully:', positions);
-    
-                        // ✅ Prepare the initial response
-                        initialResponse = {
-                            text: `${initialMessage}\nHere are our current job openings:`,
-                            buttons: positions.map(pos => ({
-                                text: pos.jobTitle,
-                                value: pos.jobTitle
-                            }))
-                        };
-    
-                        // ✅ Push the initial message to chat history
-                        chatData.push({
-                            message: JSON.stringify(initialResponse),
-                            sender: 'bot',
-                            timestamp: new Date().toISOString()
-                        });
-    
-                        // ✅ Save it in session
-                        req.session.chatHistory = chatData;
-                    } catch (jobError) {
-                        console.error("❌ [getChatbotPage] Error fetching job positions:", jobError);
-                        initialResponse = { text: initialMessage, buttons: [] };
-                    }
-                }
-            }
-    
-            // ✅ Render the chatbot page with chatData
-          // Render the chatbot page with chatData
-res.render('applicant_pages/chatbot', {
-    initialResponse,
-    chatData: JSON.stringify(chatData) // Pass as a JSON string
-});
-    
-        } catch (error) {
-            console.error('❌ [getChatbotPage] Error rendering chatbot page:', error);
-            res.status(500).send('Error loading chatbot page');
-        }
-    },
+getChatbotPage: async function(req, res) {
+    try {
+        const userId = req.session.userID;
+        console.log('✅ [getChatbotPage] User ID from session:', userId);
 
-// Updated handleChatbotMessage function - Replace your existing function with this
-handleChatbotMessage: async function (req, res) {
+        // Check if user is authenticated
+        if (!userId) {
+            console.log('❌ [getChatbotPage] User not authenticated. Redirecting to login...');
+            return res.redirect('/applicant/login');
+        }
+
+        // Check if there's already chat history in the session
+        let chatData = req.session.chatHistory || [];
+        let initialResponse = {};
+
+        // Always define an initialResponse (even if empty)
+        const initialMessage = "Hi! Welcome to Prime Infrastructure Recruitment Screening Portal. What position are you going to apply for?";
+
+        // If no chat history in session, fetch it from Supabase
+        if (chatData.length === 0) {
+            console.log('✅ [getChatbotPage] No chat history in session. Fetching from database...');
+
+            const { data: chatHistory, error } = await supabase
+                .from('chatbot_history')
+                .select('message, sender, timestamp, applicantStage')
+                .eq('userId', userId)
+                .order('timestamp', { ascending: true });
+
+            if (error) {
+                console.error('❌ [getChatbotPage] Error fetching chat history from database:', error);
+            }
+
+            if (chatHistory && chatHistory.length > 0) {
+                console.log('✅ [getChatbotPage] Chat history found in database. Restoring session state...');
+
+                // Map the fetched data to session format
+                chatData = chatHistory.map(chat => ({
+                    message: chat.message,
+                    sender: chat.sender,
+                    timestamp: chat.timestamp,
+                    applicantStage: chat.applicantStage
+                }));
+
+                // 🔥 NEW: Restore session state from chat history
+                await this.restoreSessionFromChatHistory(req, chatHistory, userId);
+
+                // Store it in the session for faster loading next time
+                req.session.chatHistory = chatData;
+                console.log('✅ [getChatbotPage] Chat history and session state restored.');
+            } else {
+                console.log('✅ [getChatbotPage] No chat history in database. Preparing initial message.');
+
+                try {
+                    // Fetch job positions from your controller
+                    const positions = await applicantController.getActiveJobPositionsList();
+                    console.log('✅ [getChatbotPage] Job positions fetched successfully:', positions);
+
+                    // Prepare the initial response
+                    initialResponse = {
+                        text: `${initialMessage}\nHere are our current job openings:`,
+                        buttons: positions.map(pos => ({
+                            text: pos.jobTitle,
+                            value: pos.jobTitle
+                        }))
+                    };
+
+                    // Push the initial message to chat history
+                    chatData.push({
+                        message: JSON.stringify(initialResponse),
+                        sender: 'bot',
+                        timestamp: new Date().toISOString()
+                    });
+
+                    // Save it in session
+                    req.session.chatHistory = chatData;
+                } catch (jobError) {
+                    console.error("❌ [getChatbotPage] Error fetching job positions:", jobError);
+                    initialResponse = { text: initialMessage, buttons: [] };
+                }
+            }
+        }
+
+        // Render the chatbot page with chatData
+        res.render('applicant_pages/chatbot', {
+            initialResponse,
+            chatData: JSON.stringify(chatData) // Pass as a JSON string
+        });
+
+    } catch (error) {
+        console.error('❌ [getChatbotPage] Error rendering chatbot page:', error);
+        res.status(500).send('Error loading chatbot page');
+    }
+},
+
+// 🔥 NEW FUNCTION: Restore session state from chat history
+restoreSessionFromChatHistory: async function(req, chatHistory, userId) {
+    try {
+        console.log('🔄 [Restore] Restoring session state from chat history...');
+        
+        let selectedPosition = null;
+        let currentQuestionIndex = 0;
+        let screeningQuestions = null;
+        let screeningScores = [];
+        let applicantStage = 'initial';
+        let awaitingFileUpload = null;
+        
+        // Analyze chat history to restore state
+        for (const chat of chatHistory) {
+            // Update applicant stage
+            if (chat.applicantStage) {
+                applicantStage = chat.applicantStage;
+            }
+            
+            // Look for job selection
+            if (chat.sender === 'user' && !selectedPosition) {
+                try {
+                    const positions = await this.getActiveJobPositionsList();
+                    const foundPosition = positions.find(pos => 
+                        chat.message.toLowerCase().includes(pos.jobTitle.toLowerCase())
+                    );
+                    if (foundPosition) {
+                        selectedPosition = foundPosition.jobTitle;
+                        console.log('🔄 [Restore] Found selected position:', selectedPosition);
+                    }
+                } catch (error) {
+                    console.error('❌ [Restore] Error finding position:', error);
+                }
+            }
+            
+            // Count screening question answers
+            if (chat.sender === 'user' && (chat.message.toLowerCase().includes('yes') || chat.message.toLowerCase().includes('no'))) {
+                if (applicantStage === 'screening_questions' || applicantStage === 'file_upload') {
+                    // This was likely a screening question answer
+                    screeningScores.push({
+                        answer: chat.message.toLowerCase().includes('yes') ? 1 : 0,
+                        timestamp: chat.timestamp
+                    });
+                }
+            }
+            
+            // Check for file upload requests
+            if (chat.sender === 'bot') {
+                try {
+                    const botMessage = JSON.parse(chat.message);
+                    if (botMessage.buttons) {
+                        const fileUploadButton = botMessage.buttons.find(btn => 
+                            btn.type === 'file_upload' || btn.type === 'file_upload_reupload'
+                        );
+                        if (fileUploadButton) {
+                            if (botMessage.text.includes('degree')) {
+                                awaitingFileUpload = 'degree';
+                            } else if (botMessage.text.includes('certification')) {
+                                awaitingFileUpload = 'certification';
+                            } else if (botMessage.text.includes('resume')) {
+                                awaitingFileUpload = 'resume';
+                            } else {
+                                awaitingFileUpload = 'reupload';
+                            }
+                        }
+                    }
+                } catch (e) {
+                    // Not JSON, skip
+                }
+            }
+        }
+        
+        // Get screening questions if we have a selected position
+        if (selectedPosition && !screeningQuestions) {
+            try {
+                const jobDetails = await this.getJobDetailsbyTitle(selectedPosition);
+                if (jobDetails && jobDetails.jobId) {
+                    screeningQuestions = await this.getInitialScreeningQuestions(jobDetails.jobId);
+                    currentQuestionIndex = screeningScores.length;
+                    console.log('🔄 [Restore] Loaded screening questions, current index:', currentQuestionIndex);
+                }
+            } catch (error) {
+                console.error('❌ [Restore] Error loading screening questions:', error);
+            }
+        }
+        
+        // Restore session variables
+        req.session.selectedPosition = selectedPosition;
+        req.session.currentQuestionIndex = currentQuestionIndex;
+        req.session.screeningQuestions = screeningQuestions;
+        req.session.screeningScores = screeningScores;
+        req.session.applicantStage = applicantStage;
+        if (awaitingFileUpload) {
+            req.session.awaitingFileUpload = awaitingFileUpload;
+        }
+        
+        // Initialize screening counters
+        req.session.screeningCounters = req.session.screeningCounters || {
+            degree: 0, experience: 0, certification: 0,
+            hardSkill: 0, softSkill: 0, work_setup: 0, availability: 0
+        };
+        
+        console.log('✅ [Restore] Session state restored:', {
+            selectedPosition,
+            currentQuestionIndex,
+            applicantStage,
+            awaitingFileUpload,
+            hasScreeningQuestions: !!screeningQuestions
+        });
+        
+    } catch (error) {
+        console.error('❌ [Restore] Error restoring session state:', error);
+    }
+},handleChatbotMessage: async function (req, res) {
     try {
         console.log('✅ [Chatbot] Start processing chatbot message');
         const today = new Date().toISOString().split('T')[0]; // Get today's date in "YYYY-MM-DD" format
@@ -783,54 +898,74 @@ handleChatbotMessage: async function (req, res) {
         console.log(`✅ [Chatbot] UserID: ${userId}, Message: ${userMessage}, Timestamp: ${timestamp}`);
 
         // Handle status_check command first (before saving to chat history)
-        // UPDATED SECTION: Don't save status_check to chat history, use new reupload system
-        if (userMessage === 'status_check') {
-            console.log('📋 [Chatbot] Status check requested - NOT saving to chat history');
-            
-            // Check for document reupload requests
-            const { data: assessmentData, error: assessmentError } = await supabase
-                .from('applicant_initialscreening_assessment')
-                .select('hrVerification')
-                .eq('userId', userId)
-                .single();
-            
-            if (!assessmentError && assessmentData && assessmentData.hrVerification) {
-                const hrRemarks = assessmentData.hrVerification;
-                console.log('📋 [Chatbot] Found HR verification:', hrRemarks);
-                
-                const botResponse = {
-                    text: `Hello! We have reviewed your application and would like to request some document updates. Please re-upload the following documents: Additional Document (as specified below). 
-            
-HR Instructions: ${hrRemarks}
-            
-Please use the file upload feature in the chat to submit the requested documents.`,
-                    buttons: [
-                        { text: 'Upload Document', type: 'file_upload_reupload' } // CHANGED: Use new reupload type
-                    ]
+// Update the status_check section in your handleChatbotMessage function
+
+// Handle status_check command first (before saving to chat history)
+if (userMessage === 'status_check') {
+    console.log('📋 [Chatbot] Status check requested - NOT saving to chat history');
+    
+    // Check applicant status for reupload requests
+    const { data: applicantStatusData, error: applicantStatusError } = await supabase
+        .from('applicantaccounts')
+        .select('applicantStatus')
+        .eq('userId', userId)
+        .single();
+    
+    if (!applicantStatusError && applicantStatusData && 
+        applicantStatusData.applicantStatus.includes('Requested for Reupload')) {
+        
+        console.log('📋 [Chatbot] Found reupload request in applicant status');
+        
+        // Check for document reupload requests
+        const { data: assessmentData, error: assessmentError } = await supabase
+            .from('applicant_initialscreening_assessment')
+            .select('hrVerification')
+            .eq('userId', userId)
+            .single();
+        
+        if (!assessmentError && assessmentData && assessmentData.hrVerification) {
+            let reuploadData;
+            try {
+                reuploadData = JSON.parse(assessmentData.hrVerification);
+            } catch (e) {
+                // Fallback for old format
+                reuploadData = {
+                    documentsRequested: ['additional'],
+                    remarks: assessmentData.hrVerification
                 };
-                
-                // Set the applicant stage to expect file upload
-                req.session.applicantStage = 'file_upload_reupload'; // CHANGED: New stage for reuploads
-                req.session.awaitingFileUpload = 'reupload';
-                
-                // Save bot response (but NOT the status_check user message)
-                await supabase
-                    .from('chatbot_history')
-                    .insert([{
-                        userId,
-                        message: JSON.stringify(botResponse),
-                        sender: 'bot',
-                        timestamp,
-                        applicantStage: req.session.applicantStage
-                    }]);
-                
-                return res.status(200).json({ response: botResponse });
             }
             
-            // If no reupload request, provide general status
+            console.log('📋 [Chatbot] Found reupload data:', reuploadData);
+            
+            const documentNames = reuploadData.documentsRequested.map(doc => {
+                switch(doc) {
+                    case 'degree': return 'Degree Certificate';
+                    case 'certification': return 'Certification Document';
+                    case 'resume': return 'Resume';
+                    case 'additional': return 'Additional Document';
+                    default: return doc;
+                }
+            });
+            
             const botResponse = {
-                text: "Your application is currently being reviewed. You will be notified once there are updates."
+                text: `Hello! We have reviewed your application and would like to request some document updates. Please re-upload the following documents: ${documentNames.join(', ')}. 
+            
+HR Instructions: ${reuploadData.remarks}
+            
+Please upload each requested document using the buttons below. You need to upload ${reuploadData.documentsRequested.length} document(s).`,
+                // 🔥 CRITICAL FIX: Create buttons for each document type
+                buttons: reuploadData.documentsRequested.map(docType => ({
+                    text: `Upload ${documentNames[reuploadData.documentsRequested.indexOf(docType)]}`,
+                    type: 'file_upload_reupload',
+                    docType: docType
+                })),
+                reuploadData: reuploadData
             };
+            
+            // Set the applicant stage to expect file upload
+            req.session.applicantStage = 'file_upload_reupload';
+            req.session.awaitingFileUpload = 'reupload';
+            req.session.reuploadData = reuploadData; // Store in session
             
             // Save bot response (but NOT the status_check user message)
             await supabase
@@ -843,10 +978,187 @@ Please use the file upload feature in the chat to submit the requested documents
                     applicantStage: req.session.applicantStage
                 }]);
             
+            console.log('✅ [Chatbot] Reupload request with multiple buttons sent to user');
             return res.status(200).json({ response: botResponse });
         }
+    }
+    
+    // If no reupload request, return null (no message to display)
+    console.log('📋 [Chatbot] No reupload request - returning empty response');
+    return res.status(200).json({ response: null });
+}
 
-        // Save user message (for all messages except status_check)
+if (userMessage === 'check_reupload_progress') {
+    console.log('📋 [Chatbot] Reupload progress check requested');
+    
+    // Get current reupload status
+    const { data: assessmentData, error: assessmentError } = await supabase
+        .from('applicant_initialscreening_assessment')
+        .select('hrVerification, degree_url, cert_url, resume_url, addtlfile_url')
+        .eq('userId', userId)
+        .single();
+    
+    if (assessmentError || !assessmentData || !assessmentData.hrVerification) {
+        console.log('📋 [Chatbot] No active reupload request found');
+        return res.status(200).json({ response: null });
+    }
+    
+    let reuploadData;
+    try {
+        reuploadData = JSON.parse(assessmentData.hrVerification);
+    } catch (e) {
+        console.log('📋 [Chatbot] Invalid reupload data format');
+        return res.status(200).json({ response: null });
+    }
+    
+    // Check which documents have been uploaded
+    const uploadedDocs = [];
+    const documentFields = {
+        'degree': assessmentData.degree_url,
+        'certification': assessmentData.cert_url,
+        'resume': assessmentData.resume_url,
+        'additional': assessmentData.addtlfile_url
+    };
+    
+    reuploadData.documentsRequested.forEach(docType => {
+        if (documentFields[docType]) {
+            uploadedDocs.push(docType);
+        }
+    });
+    
+    console.log('📋 [Chatbot] Requested docs:', reuploadData.documentsRequested);
+    console.log('📋 [Chatbot] Uploaded docs:', uploadedDocs);
+    
+    // Check if all documents have been uploaded
+    const allUploaded = reuploadData.documentsRequested.every(doc => uploadedDocs.includes(doc));
+    
+    if (allUploaded) {
+        console.log('✅ [Chatbot] All documents uploaded - completing reupload process');
+        
+        // Update applicant status
+        await supabase
+            .from('applicantaccounts')
+            .update({ applicantStatus: "P1 - Awaiting for HR Action" })
+            .eq('userId', userId);
+        
+        // Clear HR verification
+        await supabase
+            .from('applicant_initialscreening_assessment')
+            .update({ hrVerification: null })
+            .eq('userId', userId);
+        
+        const completionMessage = {
+            text: "Thank you for uploading all requested documents. Your application has been submitted and is now awaiting review by our HR team. You will be notified once a decision has been made."
+        };
+        
+        // Save completion message
+        await supabase
+            .from('chatbot_history')
+            .insert([{
+                userId,
+                message: JSON.stringify(completionMessage),
+                sender: 'bot',
+                timestamp,
+                applicantStage: "P1 - Awaiting for HR Action"
+            }]);
+        
+        req.session.applicantStage = "P1 - Awaiting for HR Action";
+        return res.status(200).json({ response: completionMessage });
+    } else {
+        // Some documents are still missing
+        const remainingDocs = reuploadData.documentsRequested.filter(doc => !uploadedDocs.includes(doc));
+        const remainingDocNames = remainingDocs.map(doc => {
+            switch(doc) {
+                case 'degree': return 'Degree Certificate';
+                case 'certification': return 'Certification Document';
+                case 'resume': return 'Resume';
+                case 'additional': return 'Additional Document';
+                default: return doc;
+            }
+        });
+        
+        const progressMessage = {
+            text: `You still need to upload the following document(s): ${remainingDocNames.join(', ')}.`,
+            buttons: remainingDocs.map(docType => ({
+                text: `Upload ${remainingDocNames[remainingDocs.indexOf(docType)]}`,
+                type: 'file_upload_reupload',
+                docType: docType
+            }))
+        };
+        
+        console.log('📋 [Chatbot] Sending progress update with remaining documents');
+        return res.status(200).json({ response: progressMessage });
+    }
+}
+
+        // Handle conversation restoration after page refresh
+        if (userMessage === 'continue_after_upload') {
+            console.log('🔄 [Restore] Continue after upload requested');
+            
+            const stage = req.body.stage || req.session.applicantStage;
+            console.log('🔄 [Restore] Current stage:', stage);
+            
+            // Check what type of file upload was completed and continue accordingly
+            if (stage === 'file_upload' && req.session.screeningQuestions) {
+                // User was in the middle of screening questions with file upload
+                const currentIndex = req.session.currentQuestionIndex || 0;
+                const questions = req.session.screeningQuestions;
+                
+                if (currentIndex < questions.length) {
+                    // Continue with next question
+                    const nextQuestion = questions[currentIndex];
+                    const botResponse = {
+                        text: nextQuestion.text,
+                        buttons: [
+                            { text: 'Yes', value: 1 },
+                            { text: 'No', value: 0 }
+                        ]
+                    };
+                    
+                    req.session.applicantStage = 'screening_questions';
+                    
+                    // Save to chat history
+                    await supabase
+                        .from('chatbot_history')
+                        .insert([{
+                            userId,
+                            message: JSON.stringify(botResponse),
+                            sender: 'bot',
+                            timestamp,
+                            applicantStage: req.session.applicantStage
+                        }]);
+                    
+                    return res.status(200).json({ response: botResponse });
+                } else {
+                    // All questions completed, proceed to resume upload
+                    const botResponse = {
+                        text: "All screening questions have been completed. Please upload your resume.",
+                        buttons: [{ text: 'Upload Resume', type: 'file_upload' }]
+                    };
+                    
+                    req.session.applicantStage = 'resume_upload';
+                    req.session.awaitingFileUpload = 'resume';
+                    
+                    // Save to chat history
+                    await supabase
+                        .from('chatbot_history')
+                        .insert([{
+                            userId,
+                            message: JSON.stringify(botResponse),
+                            sender: 'bot',
+                            timestamp,
+                            applicantStage: req.session.applicantStage
+                        }]);
+                    
+                    return res.status(200).json({ response: botResponse });
+                }
+            }
+            
+            // If no specific continuation needed, return empty response
+            return res.status(200).json({ response: null });
+        }
+
+        // Save user message (for all messages except status_check and continue_after_upload)
         await supabase
             .from('chatbot_history')
             .insert([{ userId, message: userMessage, sender: 'user', timestamp, applicantStage: req.session.applicantStage }]);
@@ -941,7 +1253,7 @@ Please use the file upload feature in the chat to submit the requested documents
                 });
             }
 
-            // Inside the code that handles P2 - PASSED status in handleChatbotMessage
+            // Handle P2 - PASSED status
             else if (applicantData.applicantStatus === 'P2 - PASSED') {
                 console.log('✅ [Chatbot] Applicant status is P2 - PASSED. Sending second interview message.');
                 
@@ -972,7 +1284,7 @@ Please use the file upload feature in the chat to submit the requested documents
                                 { 
                                     text: "Schedule Final Interview", 
                                     value: "schedule_final_interview",
-                                    url: "/applicant/schedule-interview?stage=P2" // Make sure to include stage=P2 parameter
+                                    url: "/applicant/schedule-interview?stage=P2"
                                 }
                             ]
                         }),
@@ -993,7 +1305,7 @@ Please use the file upload feature in the chat to submit the requested documents
                                 { 
                                     text: "Schedule Final Interview", 
                                     value: "schedule_final_interview",
-                                    url: "/applicant/schedule-interview?stage=P2" // Make sure to include stage=P2 parameter
+                                    url: "/applicant/schedule-interview?stage=P2"
                                 }
                             ]
                         } 
@@ -1022,9 +1334,6 @@ Please use the file upload feature in the chat to submit the requested documents
                 
                 return res.status(200).json({ response: { text: rejectionMessage } });
             }
-        }
-        else {
-            console.log(`✅ [Chatbot] Applicant status is: ${applicantData.applicantStatus}`);
         }
 
         // Continue with the rest of your logic...
@@ -1060,13 +1369,24 @@ Please use the file upload feature in the chat to submit the requested documents
                 const updateJobResult = await applicantController.updateApplicantJobAndDepartmentOnATS(
                     userId,
                     jobDetails.jobId,
-                    jobDetails.departmentId  // departmentId fetched from jobDetails
+                    jobDetails.departmentId
                 );
                 if (!updateJobResult.success) {
                     console.error(updateJobResult.message);
                     botResponse = "Error updating your application details. Please try again later.";
-                    res.status(500).json({ response: botResponse });
-                    return;
+                    
+                    // Save error response to chat history
+                    await supabase
+                        .from('chatbot_history')
+                        .insert([{
+                            userId,
+                            message: JSON.stringify({ text: botResponse }),
+                            sender: 'bot',
+                            timestamp,
+                            applicantStage: req.session.applicantStage
+                        }]);
+                        
+                    return res.status(500).json({ response: botResponse });
                 }
 
                 const degrees = jobDetails.jobreqdegrees && jobDetails.jobreqdegrees.length > 0
@@ -1077,12 +1397,6 @@ Please use the file upload feature in the chat to submit the requested documents
                     : 'None';                 
                 const experiences = jobDetails.jobreqexperiences
                     ? jobDetails.jobreqexperiences.map(exp => `${exp.jobReqExperienceType}: ${exp.jobReqExperienceDescrpt}`).join(', ')
-                    : 'None';
-                const hardSkills = jobDetails.jobreqskills
-                    ? jobDetails.jobreqskills.filter(skill => skill.jobReqSkillType === 'Hard').map(skill => skill.jobReqSkillName).join(', ')
-                    : 'None';
-                const softSkills = jobDetails.jobreqskills
-                    ? jobDetails.jobreqskills.filter(skill => skill.jobReqSkillType === 'Soft').map(skill => skill.jobReqSkillName).join(', ')
                     : 'None';
 
                 // Proceed to screening questions
@@ -1097,9 +1411,34 @@ Please use the file upload feature in the chat to submit the requested documents
                     ]
                 };
                 req.session.applicantStage = 'job_selection';
+                
+                // Save bot response to chat history
+                await supabase
+                    .from('chatbot_history')
+                    .insert([{
+                        userId,
+                        message: JSON.stringify(botResponse),
+                        sender: 'bot',
+                        timestamp,
+                        applicantStage: req.session.applicantStage
+                    }]);
             } else {
                 botResponse = "Sorry, I couldn't find the job details.";
+                
+                // Save error response to chat history
+                await supabase
+                    .from('chatbot_history')
+                    .insert([{
+                        userId,
+                        message: JSON.stringify({ text: botResponse }),
+                        sender: 'bot',
+                        timestamp,
+                        applicantStage: req.session.applicantStage
+                    }]);
             }
+            
+            // Return the response
+            return res.status(200).json({ response: botResponse });
         }
         else if (applicantStage === 'job_selection' && userMessage.includes('yes')) {
             const jobDetails = await applicantController.getJobDetailsbyTitle(req.session.selectedPosition);
@@ -1116,11 +1455,23 @@ Please use the file upload feature in the chat to submit the requested documents
                 return res.status(500).json({ response: result.message });
             }
 
-            // ✅ Retrieve Screening Questions
+            // Retrieve Screening Questions
             if (!req.session.screeningQuestions) {
                 const questions = await applicantController.getInitialScreeningQuestions(jobId);
                 if (!questions || questions.length === 0) {
                     botResponse = "No screening questions available for this position.";
+                    
+                    // Save error response to chat history
+                    await supabase
+                        .from('chatbot_history')
+                        .insert([{
+                            userId,
+                            message: JSON.stringify({ text: botResponse }),
+                            sender: 'bot',
+                            timestamp,
+                            applicantStage: req.session.applicantStage
+                        }]);
+                        
                     return res.status(200).json({ response: botResponse });
                 }
 
@@ -1129,7 +1480,7 @@ Please use the file upload feature in the chat to submit the requested documents
                 req.session.screeningScores = [];
             }
 
-            // ✅ Ask the first question
+            // Ask the first question
             const questions = req.session.screeningQuestions;
             const currentIndex = req.session.currentQuestionIndex;
             botResponse = {
@@ -1140,8 +1491,21 @@ Please use the file upload feature in the chat to submit the requested documents
                 ]
             };
             req.session.applicantStage = 'screening_questions';
+            
+            // Save bot response to chat history
+            await supabase
+                .from('chatbot_history')
+                .insert([{
+                    userId,
+                    message: JSON.stringify(botResponse),
+                    sender: 'bot',
+                    timestamp,
+                    applicantStage: req.session.applicantStage
+                }]);
+                
+            return res.status(200).json({ response: botResponse });
 
-        // ✅ Process Answered Questions
+        // Process Answered Questions
         } else if (applicantStage === 'screening_questions') {
             const questions = req.session.screeningQuestions;
             const currentIndex = req.session.currentQuestionIndex;
@@ -1153,7 +1517,7 @@ Please use the file upload feature in the chat to submit the requested documents
                 // Track the type of question being answered
                 const questionType = currentQuestion.type;
         
-                // After storing the question and answer
+                // Store the question and answer
                 req.session.screeningScores.push({
                     question: currentQuestion.text,
                     answer: answerValue,
@@ -1174,25 +1538,49 @@ Please use the file upload feature in the chat to submit the requested documents
                 // File upload request for degree and certification "Yes" answers
                 if (questionType === 'degree' && answerValue === 1) {
                     req.session.awaitingFileUpload = 'degree';
+                    req.session.applicantStage = 'file_upload'; // Change stage to file_upload
+                    
                     botResponse = {
                         text: "Please upload your degree certificate.",
                         buttons: [{ text: 'Upload Degree File', type: 'file_upload' }]
                     };
                     
-                    // We don't increment the question index here, as it should be incremented 
-                    // after the file upload is complete
+                    // Save request to chat history
+                    await supabase
+                        .from('chatbot_history')
+                        .insert([{
+                            userId,
+                            message: JSON.stringify(botResponse),
+                            sender: 'bot',
+                            timestamp,
+                            applicantStage: req.session.applicantStage
+                        }]);
+                    
+                    // Don't increment question index here - it will be incremented after file upload
                     return res.status(200).json({ response: botResponse });
                 }
         
                 if (questionType === 'certification' && answerValue === 1) {
                     req.session.awaitingFileUpload = 'certification';
+                    req.session.applicantStage = 'file_upload'; // Change stage to file_upload
+                    
                     botResponse = {
                         text: "Please upload your certification document.",
                         buttons: [{ text: 'Upload Certification File', type: 'file_upload' }]
                     };
                     
-                    // We don't increment the question index here, as it should be incremented 
-                    // after the file upload is complete
+                    // Save request to chat history
+                    await supabase
+                        .from('chatbot_history')
+                        .insert([{
+                            userId,
+                            message: JSON.stringify(botResponse),
+                            sender: 'bot',
+                            timestamp,
+                            applicantStage: req.session.applicantStage
+                        }]);
+                    
+                    // Don't increment question index here - it will be incremented after file upload
                     return res.status(200).json({ response: botResponse });
                 }
         
@@ -1220,6 +1608,19 @@ Please use the file upload feature in the chat to submit the requested documents
                     };
                     
                     req.session.applicantStage = 'rejected';
+                    
+                    // Save rejection to chat history
+                    await supabase
+                        .from('chatbot_history')
+                        .insert([{
+                            userId,
+                            message: JSON.stringify(botResponse),
+                            sender: 'bot',
+                            timestamp,
+                            applicantStage: req.session.applicantStage
+                        }]);
+                        
+                    return res.status(200).json({ response: botResponse });
                 } else {
                     // For questions that don't require file upload, move to the next question
                     req.session.currentQuestionIndex++;
@@ -1234,6 +1635,19 @@ Please use the file upload feature in the chat to submit the requested documents
                                 { text: 'No', value: 0 }
                             ]
                         };
+                        
+                        // Save next question to chat history
+                        await supabase
+                            .from('chatbot_history')
+                            .insert([{
+                                userId,
+                                message: JSON.stringify(botResponse),
+                                sender: 'bot',
+                                timestamp,
+                                applicantStage: req.session.applicantStage
+                            }]);
+                            
+                        return res.status(200).json({ response: botResponse });
                     } else {
                         // If all questions are answered, proceed to final step
                         const saveResult = await applicantController.saveScreeningScores(
@@ -1248,6 +1662,7 @@ Please use the file upload feature in the chat to submit the requested documents
                             
                             if (!saveResult.message.includes("not met the requirements")) {
                                 req.session.awaitingFileUpload = 'resume';
+                                req.session.applicantStage = 'resume_upload';
                             }
                         } else {
                             botResponse = { text: "There was an error processing your application. Please try again later." };
@@ -1255,6 +1670,19 @@ Please use the file upload feature in the chat to submit the requested documents
                     
                         req.session.applicantStage = (saveResult.message.includes("not met the requirements")) ? 
                             'rejected' : 'resume_upload';
+                            
+                        // Save final message to chat history
+                        await supabase
+                            .from('chatbot_history')
+                            .insert([{
+                                userId,
+                                message: JSON.stringify(botResponse),
+                                sender: 'bot',
+                                timestamp,
+                                applicantStage: req.session.applicantStage
+                            }]);
+                            
+                        return res.status(200).json({ response: botResponse });
                     }
                 }
             }
@@ -1263,37 +1691,37 @@ Please use the file upload feature in the chat to submit the requested documents
             if (req.session.awaitingFileUpload) {
                 const fileType = req.session.awaitingFileUpload;
                 console.log(`📂 [Chatbot] File Upload Detected: ${fileType}`);
-        
+
                 const fileUrl = await fileUpload(req, fileType); // Upload file
-        
+
                 let successMessage = "";
                 if (fileType === 'degree') {
                     req.session.degreeUrl = fileUrl;
                     console.log(`✅ [Chatbot] Degree Uploaded: ${fileUrl}`);
-        
+
                     await supabase
                         .from('applicant_initialscreening_assessment')
                         .update({ degree_url: fileUrl })
                         .eq('userId', userId);
-        
+
                     successMessage = "✅ Degree uploaded successfully. Let's continue.";
                 } else if (fileType === 'certification') {
                     req.session.certificationUrl = fileUrl;
                     console.log(`✅ [Chatbot] Certification Uploaded: ${fileUrl}`);
-        
+
                     await supabase
                         .from('applicant_initialscreening_assessment')
                         .update({ cert_url: fileUrl })
                         .eq('userId', userId);
-        
+
                     successMessage = "✅ Certification uploaded successfully. Let's continue.";
                 }
-        
+
                 // Reset file upload status
                 delete req.session.awaitingFileUpload;
                 console.log(`🔄 [Chatbot] Awaiting file upload reset. Moving to next question.`);
-        
-                // Save the success message in chat history
+
+                // Save success message to chat history
                 await supabase
                     .from('chatbot_history')
                     .insert([{
@@ -1303,71 +1731,86 @@ Please use the file upload feature in the chat to submit the requested documents
                         timestamp,
                         applicantStage: req.session.applicantStage
                     }]);
-        
-                // Update the question index and get the next question
+
+                // Change stage back to screening_questions
+                req.session.applicantStage = 'screening_questions';
+
+                // Increment question index after file upload
                 req.session.currentQuestionIndex++;
                 console.log(`➡️ [Chatbot] Next Question Index: ${req.session.currentQuestionIndex}`);
-        
+
+                // Check if there are more questions
                 if (req.session.currentQuestionIndex < req.session.screeningQuestions.length) {
                     const nextQuestion = req.session.screeningQuestions[req.session.currentQuestionIndex];
-                    botResponse = {
-                        text: successMessage,
-                        nextQuestion: {
-                            text: nextQuestion.text,
-                            buttons: [
-                                { text: 'Yes', value: 1 },
-                                { text: 'No', value: 0 }
-                            ]
-                        }
+                    
+                    // Save next question to chat history
+                    const nextQuestionResponse = {
+                        text: nextQuestion.text,
+                        buttons: [
+                            { text: 'Yes', value: 1 },
+                            { text: 'No', value: 0 }
+                        ]
                     };
                     
-                    // Also save the next question to chat history for continuous flow
                     await supabase
                         .from('chatbot_history')
                         .insert([{
                             userId,
-                            message: JSON.stringify({
-                                text: nextQuestion.text,
-                                buttons: [
-                                    { text: 'Yes', value: 1 },
-                                    { text: 'No', value: 0 }
-                                ]
-                            }),
+                            message: JSON.stringify(nextQuestionResponse),
                             sender: 'bot',
                             timestamp: new Date(Date.now() + 1000).toISOString(), // Slight delay
                             applicantStage: req.session.applicantStage
                         }]);
-                } else {
-                    // All questions answered, proceed to resume upload
+                    
                     botResponse = {
                         text: successMessage,
-                        nextQuestion: {
-                            text: "All screening questions have been completed. Please upload your resume.",
-                            buttons: [{ text: 'Upload Resume', type: 'file_upload' }]
-                        }
+                        nextMessage: nextQuestionResponse
                     };
+                } else {
+                    // All questions answered, proceed to resume upload
+                    const resumeUploadMessage = {
+                        text: "All screening questions have been completed. Please upload your resume.",
+                        buttons: [{ text: 'Upload Resume', type: 'file_upload' }]
+                    };
+                    
+                    // Save resume upload request to chat history
+                    await supabase
+                        .from('chatbot_history')
+                        .insert([{
+                            userId,
+                            message: JSON.stringify(resumeUploadMessage),
+                            sender: 'bot',
+                            timestamp: new Date(Date.now() + 1000).toISOString(),
+                            applicantStage: 'resume_upload'
+                        }]);
+                    
                     req.session.applicantStage = 'resume_upload';
                     req.session.awaitingFileUpload = 'resume';
                     
-                    // Save the resume request to chat history
-                    await supabase
-                        .from('chatbot_history')
-                        .insert([{
-                            userId,
-                            message: JSON.stringify({
-                                text: "All screening questions have been completed. Please upload your resume.",
-                                buttons: [{ text: 'Upload Resume', type: 'file_upload' }]
-                            }),
-                            sender: 'bot',
-                            timestamp: new Date(Date.now() + 1000).toISOString(), // Slight delay
-                            applicantStage: req.session.applicantStage
-                        }]);
+                    botResponse = {
+                        text: successMessage,
+                        nextMessage: resumeUploadMessage
+                    };
                 }
                 
-                // Send only one response
+                // Return response immediately
                 return res.status(200).json({ response: botResponse });
             } else {
                 console.log(`⚠️ [Chatbot] No pending file upload detected!`);
+                botResponse = { text: "No file upload is currently expected. Please continue with the screening questions." };
+                
+                // Save error message to chat history
+                await supabase
+                    .from('chatbot_history')
+                    .insert([{
+                        userId,
+                        message: JSON.stringify(botResponse),
+                        sender: 'bot',
+                        timestamp,
+                        applicantStage: req.session.applicantStage
+                    }]);
+                    
+                return res.status(200).json({ response: botResponse });
             }
         }
 
@@ -1424,6 +1867,19 @@ Please use the file upload feature in the chat to submit the requested documents
                 return res.status(200).json({ response: botResponse });
             } else {
                 botResponse = { text: "There was an error uploading your resume. Please try again." };
+                
+                // Save error message to chat history
+                await supabase
+                    .from('chatbot_history')
+                    .insert([{
+                        userId,
+                        message: JSON.stringify(botResponse),
+                        sender: 'bot',
+                        timestamp,
+                        applicantStage: req.session.applicantStage
+                    }]);
+                    
+                return res.status(200).json({ response: botResponse });
             }
         }
         
@@ -1450,19 +1906,129 @@ Please use the file upload feature in the chat to submit the requested documents
                     text: "Your application is currently being reviewed by our HR team. You will be notified once a decision has been made. Thank you for your patience."
                 };
             }
+            
+            // Save bot response to chat history
+            await supabase
+                .from('chatbot_history')
+                .insert([{
+                    userId,
+                    message: JSON.stringify(botResponse),
+                    sender: 'bot',
+                    timestamp,
+                    applicantStage: req.session.applicantStage
+                }]);
+                
+            return res.status(200).json({ response: botResponse });
         }
         
-        // ✅ Save bot response to chatbot history
-        await supabase
-            .from('chatbot_history')
-            .insert([{
-                userId,
-                message: JSON.stringify(botResponse),
-                sender: 'bot',
-                timestamp,
-                applicantStage: req.session.applicantStage
-            }]);
+        // Handle "No" response to job application continuation
+        else if (applicantStage === 'job_selection' && userMessage.includes('no')) {
+            botResponse = {
+                text: "Thank you for your interest. Feel free to explore other positions or return when you're ready to apply."
+            };
+            
+            req.session.applicantStage = 'initial';
+            
+            // Save response to chat history
+            await supabase
+                .from('chatbot_history')
+                .insert([{
+                    userId,
+                    message: JSON.stringify(botResponse),
+                    sender: 'bot',
+                    timestamp,
+                    applicantStage: req.session.applicantStage
+                }]);
+                
+            return res.status(200).json({ response: botResponse });
+        }
         
+        // Handle file upload reupload scenarios
+        else if (applicantStage === 'file_upload_reupload') {
+            console.log('📂 [Chatbot] Document reupload scenario detected');
+            
+            // This would be handled by the handleReuploadsFileUpload function
+            // which is called from the frontend when a file is actually uploaded
+            botResponse = { 
+                text: "Please use the file upload button to submit your requested document." 
+            };
+            
+            // Save response to chat history
+            await supabase
+                .from('chatbot_history')
+                .insert([{
+                    userId,
+                    message: JSON.stringify(botResponse),
+                    sender: 'bot',
+                    timestamp,
+                    applicantStage: req.session.applicantStage
+                }]);
+                
+            return res.status(200).json({ response: botResponse });
+        }
+        
+        // Handle final application stages
+        else if (applicantStage === 'P1 - PASSED' || applicantStage === 'P2 - PASSED' || 
+                 applicantStage === 'P3 - Awaiting for Line Manager Evaluation' ||
+                 applicantStage === 'P2 - Awaiting for HR Evaluation') {
+            
+            botResponse = { 
+                text: "Your application is currently in progress. You will be notified of any updates via email or through this chat system." 
+            };
+            
+            // Save response to chat history
+            await supabase
+                .from('chatbot_history')
+                .insert([{
+                    userId,
+                    message: JSON.stringify(botResponse),
+                    sender: 'bot',
+                    timestamp,
+                    applicantStage: req.session.applicantStage
+                }]);
+                
+            return res.status(200).json({ response: botResponse });
+        }
+        
+        // Handle rejected applications
+        else if (applicantStage === 'rejected' || applicantStage === 'P1 - FAILED') {
+            botResponse = { 
+                text: "Your application has been completed. Thank you for your interest in Prime Infrastructure. You may apply for other positions if available." 
+            };
+            
+            // Save response to chat history
+            await supabase
+                .from('chatbot_history')
+                .insert([{
+                    userId,
+                    message: JSON.stringify(botResponse),
+                    sender: 'bot',
+                    timestamp,
+                    applicantStage: req.session.applicantStage
+                }]);
+                
+            return res.status(200).json({ response: botResponse });
+        }
+        
+        // Handle any other unrecognized input
+        if (!botResponse) {
+            botResponse = { 
+                text: "I didn't understand that. Please try again or select from the available options." 
+            };
+            
+            // Save fallback response to chat history
+            await supabase
+                .from('chatbot_history')
+                .insert([{
+                    userId,
+                    message: JSON.stringify(botResponse),
+                    sender: 'bot',
+                    timestamp,
+                    applicantStage: req.session.applicantStage
+                }]);
+        }
+        
+        // Final response (this should rarely be reached now)
         res.status(200).json({ response: botResponse });
         
     } catch (error) {
@@ -1588,16 +2154,49 @@ handleReuploadsFileUpload: async function(req, res) {
         const userId = req.session.userID;
         if (!userId) {
             console.error('❌ [Reupload] No user session found.');
-            return res.status(400).json({ response: 'User session not found.' });
+            return res.status(400).json({ response: { text: 'User session not found.' } });
         }
+
+        console.log('📂 [Reupload] Request body:', req.body);
+        console.log('📂 [Reupload] Request files:', req.files ? Object.keys(req.files) : 'No files');
 
         if (!req.files || !req.files.file) {
             console.log('❌ [Reupload] No file uploaded.');
-            return res.status(400).json({ response: 'No file uploaded.' });
+            return res.status(400).json({ response: { text: 'No file uploaded.' } });
         }
 
         const file = req.files.file;
-        console.log(`📎 [Reupload] File received: ${file.name} (Type: ${file.mimetype}, Size: ${file.size} bytes)`);
+        // 🔥 CRITICAL FIX: Better document type handling with debugging
+        let docType = req.body.docType || 'additional';
+        
+        // Normalize the document type
+        switch(docType.toLowerCase()) {
+            case 'degree':
+            case 'degree_certificate':
+            case 'degree certificate':
+                docType = 'degree';
+                break;
+            case 'certification':
+            case 'cert':
+            case 'certificate':
+                docType = 'certification';
+                break;
+            case 'resume':
+            case 'cv':
+                docType = 'resume';
+                break;
+            case 'additional':
+            case 'additional_document':
+            case 'additional document':
+            case 'addtl':
+                docType = 'additional';
+                break;
+            default:
+                console.log('⚠️ [Reupload] Unknown document type, defaulting to additional:', docType);
+                docType = 'additional';
+        }
+        
+        console.log(`📎 [Reupload] File received: ${file.name} for ${docType} (Type: ${file.mimetype}, Size: ${file.size} bytes)`);
 
         // File validation
         const allowedTypes = [
@@ -1607,13 +2206,13 @@ handleReuploadsFileUpload: async function(req, res) {
         const maxSize = 5 * 1024 * 1024; // 5 MB
         
         if (!allowedTypes.includes(file.mimetype)) {
-            console.log('❌ [Reupload] Invalid file type.');
-            return res.status(400).json({ response: 'Invalid file type. Please upload PDF, DOC, DOCX, or image files.' });
+            console.log('❌ [Reupload] Invalid file type:', file.mimetype);
+            return res.status(400).json({ response: { text: 'Invalid file type. Please upload PDF, DOC, DOCX, or image files.' } });
         }
         
         if (file.size > maxSize) {
-            console.log('❌ [Reupload] File size exceeds the 5 MB limit.');
-            return res.status(400).json({ response: 'File size exceeds the 5 MB limit.' });
+            console.log('❌ [Reupload] File size exceeds the 5 MB limit:', file.size);
+            return res.status(400).json({ response: { text: 'File size exceeds the 5 MB limit.' } });
         }
 
         // Check if this is actually a reupload request
@@ -1625,16 +2224,18 @@ handleReuploadsFileUpload: async function(req, res) {
         
         if (applicantError || !applicantData) {
             console.error('❌ [Reupload] Error checking applicant status:', applicantError);
-            return res.status(400).json({ response: 'Error checking applicant status' });
+            return res.status(400).json({ response: { text: 'Error checking applicant status' } });
         }
+        
+        console.log('📂 [Reupload] Current applicant status:', applicantData.applicantStatus);
         
         const isReuploadRequest = applicantData.applicantStatus.includes('Requested for Reupload');
         if (!isReuploadRequest) {
-            console.log('❌ [Reupload] Not a valid reupload request.');
-            return res.status(400).json({ response: 'This is not a valid reupload request.' });
+            console.log('❌ [Reupload] Not a valid reupload request. Status:', applicantData.applicantStatus);
+            return res.status(400).json({ response: { text: 'This is not a valid reupload request.' } });
         }
 
-        // Get HR verification to understand what was requested
+        // Get current reupload data
         const { data: assessmentData, error: assessmentError } = await supabase
             .from('applicant_initialscreening_assessment')
             .select('hrVerification')
@@ -1643,41 +2244,60 @@ handleReuploadsFileUpload: async function(req, res) {
         
         if (assessmentError) {
             console.error('❌ [Reupload] Error getting assessment data:', assessmentError);
-            return res.status(400).json({ response: 'Error retrieving reupload instructions' });
+            return res.status(400).json({ response: { text: 'Error retrieving reupload instructions' } });
         }
         
-        const hrRemarks = assessmentData.hrVerification || '';
-        console.log('📂 [Reupload] HR Remarks:', hrRemarks);
+        console.log('📂 [Reupload] Raw HR verification data:', assessmentData.hrVerification);
+        
+        let reuploadData;
+        try {
+            reuploadData = JSON.parse(assessmentData.hrVerification);
+        } catch (e) {
+            console.log('📂 [Reupload] Failed to parse JSON, using fallback format');
+            // Fallback for old format
+            reuploadData = {
+                documentsRequested: ['additional'],
+                remarks: assessmentData.hrVerification
+            };
+        }
+        
+        console.log('📂 [Reupload] Parsed reupload data:', reuploadData);
+        console.log('📂 [Reupload] Document type to upload:', docType);
+        console.log('📂 [Reupload] Requested documents:', reuploadData.documentsRequested);
 
-        // Generate unique file name
-        const uniqueName = `${Date.now()}-${file.name}`;
-        const filePath = path.join(__dirname, '../uploads', uniqueName);
-
-        // Ensure uploads directory exists
-        if (!fs.existsSync(path.join(__dirname, '../uploads'))) {
-            fs.mkdirSync(path.join(__dirname, '../uploads'), { recursive: true });
+        // Verify that this document type was actually requested
+        if (!reuploadData.documentsRequested.includes(docType)) {
+            console.log('❌ [Reupload] Document type not in requested list.');
+            console.log('📂 [Reupload] Requested:', reuploadData.documentsRequested);
+            console.log('📂 [Reupload] Attempting to upload:', docType);
+            return res.status(400).json({ 
+                response: { 
+                    text: `The document type "${docType}" was not requested for reupload. Please upload only the requested documents: ${reuploadData.documentsRequested.join(', ')}.` 
+                } 
+            });
         }
 
-        // Save file locally first
-        await file.mv(filePath);
-        console.log('📂 [Reupload] File successfully saved locally. Uploading to Supabase...');
+        // Generate unique file name
+        const timestamp = Date.now();
+        const fileExtension = file.name.split('.').pop();
+        const uniqueName = `${timestamp}-${docType}-reupload.${fileExtension}`;
+        
+        console.log('📂 [Reupload] Generated filename:', uniqueName);
 
-        // Upload to Supabase
+        // Upload directly to Supabase (skip local file handling to avoid permission issues)
+        console.log('📂 [Reupload] Uploading directly to Supabase...');
+        
         const { error: uploadError } = await supabase.storage
             .from('uploads')
-            .upload(uniqueName, fs.readFileSync(filePath), {
+            .upload(uniqueName, file.data, {
                 contentType: file.mimetype,
                 cacheControl: '3600',
                 upsert: false,
             });
 
-        // Clean up local file
-        fs.unlinkSync(filePath);
-        console.log('📂 [Reupload] Local file deleted after upload to Supabase.');
-
         if (uploadError) {
             console.error('❌ [Reupload] Error uploading file to Supabase:', uploadError);
-            return res.status(500).json({ response: 'Error uploading file to Supabase.' });
+            return res.status(500).json({ response: { text: `Error uploading file to Supabase: ${uploadError.message}` } });
         }
 
         const fileUrl = `https://amzzxgaqoygdgkienkwf.supabase.co/storage/v1/object/public/uploads/${uniqueName}`;
@@ -1696,41 +2316,43 @@ handleReuploadsFileUpload: async function(req, res) {
 
         if (insertError) {
             console.error('❌ [Reupload] Error inserting file metadata:', insertError);
-            return res.status(500).json({ response: 'Error inserting file metadata into database.' });
+            // Don't fail the upload for metadata insertion error, just log it
         }
 
-        console.log('✅ [Reupload] File metadata successfully inserted into database.');
+        console.log('✅ [Reupload] File metadata inserted into database.');
 
-        // Determine which field to update based on HR remarks
+        // 🔥 CRITICAL: Update the correct field based on document type with detailed logging
         let updateField = {};
         let successMessage = '';
         
-        const remarksLower = hrRemarks.toLowerCase();
-        
-        if (remarksLower.includes('degree')) {
-            updateField = { degree_url: fileUrl };
-            successMessage = '✅ Degree document uploaded successfully.';
-            console.log('📂 [Reupload] Updating degree_url field');
-        } else if (remarksLower.includes('certification') || remarksLower.includes('certificate') || remarksLower.includes('cert')) {
-            updateField = { cert_url: fileUrl };
-            successMessage = '✅ Certification document uploaded successfully.';
-            console.log('📂 [Reupload] Updating cert_url field');
-        } else if (remarksLower.includes('resume')) {
-            updateField = { resume_url: fileUrl };
-            successMessage = '✅ Resume uploaded successfully.';
-            console.log('📂 [Reupload] Updating resume_url field');
-        } else if (remarksLower.includes('additional') || remarksLower.includes('work permit') || remarksLower.includes('visa') || remarksLower.includes('addtl')) {
-            updateField = { addtlfile_url: fileUrl };
-            successMessage = '✅ Additional document uploaded successfully.';
-            console.log('📂 [Reupload] Updating addtlfile_url field');
-        } else {
-            // Default to additional document if unclear
-            updateField = { addtlfile_url: fileUrl };
-            successMessage = '✅ Document uploaded successfully.';
-            console.log('📂 [Reupload] Defaulting to addtlfile_url field');
+        switch(docType) {
+            case 'degree':
+                updateField = { degree_url: fileUrl };
+                successMessage = '✅ Degree certificate uploaded successfully.';
+                console.log('📂 [Reupload] Updating degree_url field');
+                break;
+            case 'certification':
+                updateField = { cert_url: fileUrl };
+                successMessage = '✅ Certification document uploaded successfully.';
+                console.log('📂 [Reupload] Updating cert_url field');
+                break;
+            case 'resume':
+                updateField = { resume_url: fileUrl };
+                successMessage = '✅ Resume uploaded successfully.';
+                console.log('📂 [Reupload] Updating resume_url field');
+                break;
+            case 'additional':
+                updateField = { addtlfile_url: fileUrl };
+                successMessage = '✅ Additional document uploaded successfully.';
+                console.log('📂 [Reupload] Updating addtlfile_url field');
+                break;
+            default:
+                console.error('❌ [Reupload] Unknown document type for field mapping:', docType);
+                updateField = { addtlfile_url: fileUrl };
+                successMessage = '✅ Document uploaded successfully.';
         }
         
-        console.log('📂 [Reupload] Updating field:', updateField);
+        console.log('📂 [Reupload] Update field object:', updateField);
         
         // Update the file URL in the assessment table
         const { error: updateError } = await supabase
@@ -1739,67 +2361,131 @@ handleReuploadsFileUpload: async function(req, res) {
             .eq('userId', userId);
         
         if (updateError) {
-            console.error('❌ [Reupload] Error updating document:', updateError);
-            return res.status(400).json({ response: 'Error updating document in database' });
+            console.error('❌ [Reupload] Error updating document in database:', updateError);
+            return res.status(400).json({ response: { text: `Error updating document in database: ${updateError.message}` } });
         }
         
-        // Update applicant status back to normal P1 awaiting (so HR can make final decision)
-        const { error: statusUpdateError } = await supabase
-            .from('applicantaccounts')
-            .update({ applicantStatus: "P1 - Awaiting for HR Action" })
-            .eq('userId', userId);
+        console.log('✅ [Reupload] Database updated successfully');
         
-        if (statusUpdateError) {
-            console.error('❌ [Reupload] Error updating status:', statusUpdateError);
+        // Track uploaded documents
+        if (!req.session.uploadedDocuments) {
+            req.session.uploadedDocuments = [];
+        }
+        
+        if (!req.session.uploadedDocuments.includes(docType)) {
+            req.session.uploadedDocuments.push(docType);
+        }
+        
+        console.log('📂 [Reupload] Uploaded documents so far:', req.session.uploadedDocuments);
+        console.log('📂 [Reupload] Total requested documents:', reuploadData.documentsRequested);
+        
+        // Check if all requested documents have been uploaded
+        const allUploaded = reuploadData.documentsRequested.every(doc => 
+            req.session.uploadedDocuments.includes(doc)
+        );
+        
+        let nextMessage = null;
+        
+        if (allUploaded) {
+            console.log('✅ [Reupload] All requested documents have been uploaded!');
+            
+            // Update applicant status back to normal P1 awaiting
+            const { error: statusUpdateError } = await supabase
+                .from('applicantaccounts')
+                .update({ applicantStatus: "P1 - Awaiting for HR Action" })
+                .eq('userId', userId);
+            
+            if (statusUpdateError) {
+                console.error('❌ [Reupload] Error updating status:', statusUpdateError);
+            } else {
+                console.log('✅ [Reupload] Applicant status updated back to P1 - Awaiting for HR Action');
+            }
+            
+            // Clear HR verification since all documents have been reuploaded
+            await supabase
+                .from('applicant_initialscreening_assessment')
+                .update({ hrVerification: null })
+                .eq('userId', userId);
+            
+            // Clear session data
+            delete req.session.uploadedDocuments;
+            delete req.session.reuploadData;
+            
+            nextMessage = {
+                text: "Thank you for uploading all requested documents. Your application has been submitted and is now awaiting review by our HR team. You will be notified once a decision has been made."
+            };
         } else {
-            console.log('✅ [Reupload] Applicant status updated back to P1 - Awaiting for HR Action');
+            const remainingDocs = reuploadData.documentsRequested.filter(doc => 
+                !req.session.uploadedDocuments.includes(doc)
+            );
+            
+            const remainingDocNames = remainingDocs.map(doc => {
+                switch(doc) {
+                    case 'degree': return 'Degree Certificate';
+                    case 'certification': return 'Certification Document';
+                    case 'resume': return 'Resume';
+                    case 'additional': return 'Additional Document';
+                    default: return doc;
+                }
+            });
+            
+            nextMessage = {
+                text: `Please upload the remaining document(s): ${remainingDocNames.join(', ')}.`,
+                buttons: remainingDocs.map(docType => ({
+                    text: `Upload ${remainingDocNames[remainingDocs.indexOf(docType)]}`,
+                    type: 'file_upload_reupload',
+                    docType: docType
+                }))
+            };
         }
         
-        // Clear HR verification since document has been reuploaded
-        await supabase
-            .from('applicant_initialscreening_assessment')
-            .update({ hrVerification: null })
-            .eq('userId', userId);
+        // Save messages to chat history
+        const timestamp2 = new Date().toISOString();
+        const messagesToSave = [{
+            userId,
+            message: JSON.stringify({ text: successMessage }),
+            sender: 'bot',
+            timestamp: timestamp2,
+            applicantStage: allUploaded ? "P1 - Awaiting for HR Action" : req.session.applicantStage
+        }];
         
-        // Final completion message
-        const finalMessage = "Thank you for uploading your document. Your application has been submitted and is now awaiting review by our HR team. You will be notified once a decision has been made.";
+        if (nextMessage) {
+            messagesToSave.push({
+                userId,
+                message: JSON.stringify(nextMessage),
+                sender: 'bot',
+                timestamp: new Date(Date.now() + 1000).toISOString(),
+                applicantStage: allUploaded ? "P1 - Awaiting for HR Action" : req.session.applicantStage
+            });
+        }
         
-        // Save both messages to chat history
-        const timestamp = new Date().toISOString();
-        await supabase
+        const { error: chatSaveError } = await supabase
             .from('chatbot_history')
-            .insert([
-                {
-                    userId,
-                    message: JSON.stringify({ text: successMessage }),
-                    sender: 'bot',
-                    timestamp,
-                    applicantStage: "P1 - Awaiting for HR Action"
-                },
-                {
-                    userId,
-                    message: JSON.stringify({ text: finalMessage }),
-                    sender: 'bot',
-                    timestamp: new Date(Date.now() + 1000).toISOString(), // 1 second delay
-                    applicantStage: "P1 - Awaiting for HR Action"
-                }
-            ]);
+            .insert(messagesToSave);
+            
+        if (chatSaveError) {
+            console.error('❌ [Reupload] Error saving chat messages:', chatSaveError);
+        }
         
         console.log('✅ [Reupload] Process completed successfully');
         
-        return res.status(200).json({
-            response: {
-                text: successMessage,
-                nextMessage: {
-                    text: finalMessage
-                },
-                applicantStage: "P1 - Awaiting for HR Action"
-            }
-        });
+        // Return response
+        const response = {
+            text: successMessage,
+            applicantStage: allUploaded ? "P1 - Awaiting for HR Action" : req.session.applicantStage,
+            uploadComplete: allUploaded
+        };
+        
+        if (nextMessage) {
+            response.nextMessage = nextMessage;
+        }
+        
+        return res.status(200).json({ response });
         
     } catch (error) {
         console.error('❌ [Reupload] Unexpected error:', error);
-        return res.status(500).json({ response: 'An unexpected error occurred during reupload.' });
+        console.error('❌ [Reupload] Error stack:', error.stack);
+        return res.status(500).json({ response: { text: `An unexpected error occurred during reupload: ${error.message}` } });
     }
 },
 
@@ -2343,250 +3029,236 @@ getJobPositionsList: async function() {
             return { success: false, message: 'Internal error occurred.' };
         }
     },
-    
-    
-    handleFileUpload: async function (req, res) {
-        console.log('📂 [File Upload] Initiating file upload process...');
-    
-        try {
-            const userId = req.session.userID;
-            if (!userId) {
-                console.error('❌ [File Upload] No user session found.');
-                return res.status(400).send('User session not found.');
-            }
-    
-            if (!req.files || !req.files.file) {
-                console.log('❌ [File Upload] No file uploaded.');
-                return res.status(400).send('No file uploaded.');
-            }
-    
-            const file = req.files.file;
-            console.log(`📎 [File Upload] File received: ${file.name} (Type: ${file.mimetype}, Size: ${file.size} bytes)`);
-    
-            // File validation
-            const allowedTypes = [
-                'application/pdf', 'image/jpeg', 'image/png',
-                'application/msword', 'application/vnd.openxmlformats-officedocument.wordprocessingml.document'
-            ];
-            const maxSize = 5 * 1024 * 1024; // 5 MB
-            if (file.size > maxSize) {
-                console.log('❌ [File Upload] File size exceeds the 5 MB limit.');
-                return res.status(400).send('File size exceeds the 5 MB limit.');
-            }
-    
-            // Generate unique file name
-            const uniqueName = `${Date.now()}-${file.name}`;
-            const filePath = path.join(__dirname, '../uploads', uniqueName);
-    
-            if (!fs.existsSync(path.join(__dirname, '../uploads'))) {
-                fs.mkdirSync(path.join(__dirname, '../uploads'), { recursive: true });
-            }
-    
-            await file.mv(filePath);
-            console.log('📂 [File Upload] File successfully saved locally. Uploading to Supabase...');
-    
-            // Upload to Supabase
-            const { error: uploadError } = await supabase.storage
-                .from('uploads')
-                .upload(uniqueName, fs.readFileSync(filePath), {
-                    contentType: file.mimetype,
-                    cacheControl: '3600',
-                    upsert: false,
-                });
-    
-            fs.unlinkSync(filePath); // Remove local file after upload
-            console.log('📂 [File Upload] Local file deleted after upload to Supabase.');
-    
-            if (uploadError) {
-                console.error('❌ [File Upload] Error uploading file to Supabase:', uploadError);
-                return res.status(500).send('Error uploading file to Supabase.');
-            }
-    
-            const fileUrl = `https://amzzxgaqoygdgkienkwf.supabase.co/storage/v1/object/public/uploads/${uniqueName}`;
-            console.log(`✅ [File Upload] File uploaded successfully: ${fileUrl}`);
-    
-            // Insert file metadata into database
-            const { error: insertError } = await supabase
-                .from('user_files')
-                .insert([{
-                    userId: userId,
-                    file_name: uniqueName,
-                    file_url: fileUrl,
-                    uploaded_at: new Date(),
-                    file_size: file.size,
-                }]);
-    
-            if (insertError) {
-                console.error('❌ [File Upload] Error inserting file metadata:', insertError);
-                return res.status(500).send('Error inserting file metadata into database.');
-            }
-    
-            console.log('✅ [File Upload] File metadata successfully inserted into database.');
-    
-            // Determine file type and update session & database
-            const fileType = req.session.awaitingFileUpload;
-            if (!fileType) {
-                console.error('❌ [File Upload] Missing fileType in session.');
-                return res.status(400).send('File type not specified.');
-            }
-    
-            let updateField = {};
-            let successMessage = "";
-    
-            if (fileType === 'degree') {
-                req.session.degreeUrl = fileUrl;
-                updateField = { degree_url: fileUrl };
-                successMessage = "✅ Degree uploaded successfully. Let's continue.";
-            } else if (fileType === 'certification') {
-                req.session.certificationUrl = fileUrl;
-                updateField = { cert_url: fileUrl };
-                successMessage = "✅ Certification uploaded successfully. Let's continue.";
-            } else if (fileType === 'resume') {
-                req.session.resumeUrl = fileUrl;
-                updateField = { resume_url: fileUrl };
-                successMessage = "✅ Resume uploaded successfully. Thank you for answering, this marks the end of the initial screening process. We have forwarded your resume to the HR department , and we will notify you once a decision has been made.";
+    handleFileUpload: async function(req, res) {
+    console.log('📂 [Upload] Initiating file upload process...');
+
+    try {
+        const userId = req.session.userID;
+        if (!userId) {
+            console.error('❌ [Upload] No user session found.');
+            return res.status(400).json({ response: { text: 'User session not found.' } });
+        }
+
+        if (!req.files || !req.files.file) {
+            console.log('❌ [Upload] No file uploaded.');
+            return res.status(400).json({ response: { text: 'No file uploaded.' } });
+        }
+
+        const file = req.files.file;
+        console.log(`📎 [Upload] File received: ${file.name} (Type: ${file.mimetype}, Size: ${file.size} bytes)`);
+
+        // File validation
+        const allowedTypes = [
+            'application/pdf', 'image/jpeg', 'image/png', 'image/jpg',
+            'application/msword', 'application/vnd.openxmlformats-officedocument.wordprocessingml.document'
+        ];
+        const maxSize = 5 * 1024 * 1024; // 5 MB
+        
+        if (!allowedTypes.includes(file.mimetype)) {
+            console.log('❌ [Upload] Invalid file type.');
+            return res.status(400).json({ response: { text: 'Invalid file type. Please upload PDF, DOC, DOCX, or image files.' } });
+        }
+        
+        if (file.size > maxSize) {
+            console.log('❌ [Upload] File size exceeds the 5 MB limit.');
+            return res.status(400).json({ response: { text: 'File size exceeds the 5 MB limit.' } });
+        }
+
+        // Check what type of file upload this is
+        const awaitingFileUpload = req.session.awaitingFileUpload;
+        console.log('📂 [Upload] Upload type:', awaitingFileUpload);
+
+        // Generate unique file name
+        const uniqueName = `${Date.now()}-${file.name}`;
+        const filePath = path.join(__dirname, '../uploads', uniqueName);
+
+        // Ensure uploads directory exists
+        if (!fs.existsSync(path.join(__dirname, '../uploads'))) {
+            fs.mkdirSync(path.join(__dirname, '../uploads'), { recursive: true });
+        }
+
+        // Save file locally first
+        await file.mv(filePath);
+        console.log('📂 [Upload] File successfully saved locally. Uploading to Supabase...');
+
+        // Upload to Supabase
+        const { error: uploadError } = await supabase.storage
+            .from('uploads')
+            .upload(uniqueName, fs.readFileSync(filePath), {
+                contentType: file.mimetype,
+                cacheControl: '3600',
+                upsert: false,
+            });
+
+        // Clean up local file
+        fs.unlinkSync(filePath);
+        console.log('📂 [Upload] Local file deleted after upload to Supabase.');
+
+        if (uploadError) {
+            console.error('❌ [Upload] Error uploading file to Supabase:', uploadError);
+            return res.status(500).json({ response: { text: 'Error uploading file to Supabase.' } });
+        }
+
+        const fileUrl = `https://amzzxgaqoygdgkienkwf.supabase.co/storage/v1/object/public/uploads/${uniqueName}`;
+        console.log(`✅ [Upload] File uploaded successfully: ${fileUrl}`);
+
+        // Insert file metadata into database
+        const { error: insertError } = await supabase
+            .from('user_files')
+            .insert([{
+                userId: userId,
+                file_name: uniqueName,
+                file_url: fileUrl,
+                uploaded_at: new Date(),
+                file_size: file.size,
+            }]);
+
+        if (insertError) {
+            console.error('❌ [Upload] Error inserting file metadata:', insertError);
+            return res.status(500).json({ response: { text: 'Error inserting file metadata into database.' } });
+        }
+
+        console.log('✅ [Upload] File metadata successfully inserted into database.');
+
+        let updateField = {};
+        let successMessage = '';
+        
+        // Handle different upload types
+        if (awaitingFileUpload === 'degree') {
+            updateField = { degree_url: fileUrl };
+            successMessage = '✅ Degree uploaded successfully. Let\'s continue.';
+            req.session.degreeUrl = fileUrl;
+            console.log('📂 [Upload] Updating degree_url field');
+        } else if (awaitingFileUpload === 'certification') {
+            updateField = { cert_url: fileUrl };
+            successMessage = '✅ Certification uploaded successfully. Let\'s continue.';
+            req.session.certificationUrl = fileUrl;
+            console.log('📂 [Upload] Updating cert_url field');
+        } else if (awaitingFileUpload === 'resume') {
+            updateField = { resume_url: fileUrl };
+            successMessage = '✅ Resume uploaded successfully. Thank you for answering, this marks the end of the initial screening process. We have forwarded your resume to the HR department, and we will notify you once a decision has been made.';
+            req.session.resumeUrl = fileUrl;
+            console.log('📂 [Upload] Updating resume_url field');
+        } else {
+            updateField = { addtlfile_url: fileUrl };
+            successMessage = '✅ Document uploaded successfully.';
+            console.log('📂 [Upload] Updating addtlfile_url field');
+        }
+        
+        // Update the file URL in the assessment table
+        const { error: updateError } = await supabase
+            .from('applicant_initialscreening_assessment')
+            .update(updateField)
+            .eq('userId', userId);
+        
+        if (updateError) {
+            console.error('❌ [Upload] Error updating document:', updateError);
+            return res.status(400).json({ response: { text: 'Error updating document in database' } });
+        }
+        
+        console.log('✅ [Upload] Database updated successfully');
+        
+        // Reset file upload flag
+        delete req.session.awaitingFileUpload;
+        
+        let nextMessage = null;
+        
+        // 🔥 CRITICAL FIX: Handle continuation for degree/certification uploads
+        if (awaitingFileUpload === 'degree' || awaitingFileUpload === 'certification') {
+            console.log('🔄 [Upload] Continuing with next screening question...');
+            
+            // Change stage back to screening_questions
+            req.session.applicantStage = 'screening_questions';
+            
+            // Increment question index
+            req.session.currentQuestionIndex++;
+            console.log(`➡️ [Upload] Next Question Index: ${req.session.currentQuestionIndex}`);
+            
+            // Check if there are more questions
+            if (req.session.screeningQuestions && 
+                req.session.currentQuestionIndex < req.session.screeningQuestions.length) {
                 
-                // Update applicant status to 'P1 - Awaiting for HR Action'
-                console.log('📂 [File Upload] Updating applicant status to P1 - Awaiting for HR Action...');
-                const { error: statusError } = await supabase
-                    .from('applicantaccounts')
-                    .update({ applicantStatus: 'P1 - Awaiting for HR Action' })
-                    .eq('userId', userId);
+                const nextQuestion = req.session.screeningQuestions[req.session.currentQuestionIndex];
+                nextMessage = {
+                    text: nextQuestion.text,
+                    buttons: [
+                        { text: 'Yes', value: 1 },
+                        { text: 'No', value: 0 }
+                    ]
+                };
                 
-                if (statusError) {
-                    console.error('❌ [File Upload] Error updating applicant status:', statusError);
-                    return res.status(500).send('Error updating applicant status.');
-                } else {
-                    console.log('✅ [File Upload] Applicant status updated to P1 - Awaiting for HR Action');
-                }
+                console.log('✅ [Upload] Next question prepared:', nextQuestion.text);
+            } else {
+                // All questions completed, proceed to resume upload
+                nextMessage = {
+                    text: "All screening questions have been completed. Please upload your resume.",
+                    buttons: [{ text: 'Upload Resume', type: 'file_upload' }]
+                };
                 
-                // Calculate and update total score
-                const { data: assessmentData } = await supabase
-                    .from('applicant_initialscreening_assessment')
-                    .select('*')
-                    .eq('userId', userId)
-                    .single();
-                    
-                if (assessmentData) {
-                    const totalScore = (
-                        (assessmentData.degreeScore || 0) + 
-                        (assessmentData.experienceScore || 0) + 
-                        (assessmentData.certificationScore || 0) + 
-                        (assessmentData.hardSkillsScore || 0) + 
-                        (assessmentData.softSkillsScore || 0)
-                    );
-                    
-                    updateField = { 
-                        ...updateField, 
-                        totalScore: totalScore,
-                        totalScoreCalculatedAt: new Date()
-                    };
-                }
+                req.session.applicantStage = 'resume_upload';
+                req.session.awaitingFileUpload = 'resume';
+                
+                console.log('✅ [Upload] All questions completed, requesting resume upload');
             }
-    
-            // Update database
-            const { error: updateError } = await supabase
-                .from('applicant_initialscreening_assessment')
-                .update(updateField)
+        } else if (awaitingFileUpload === 'resume') {
+            // Update applicant status for resume upload
+            const { error: statusUpdateError } = await supabase
+                .from('applicantaccounts')
+                .update({ applicantStatus: 'P1 - Awaiting for HR Action' })
                 .eq('userId', userId);
-    
-            if (updateError) {
-                console.error('❌ [File Upload] Database update failed:', updateError);
-                return res.status(500).send('Error updating applicant record.');
+            
+            if (statusUpdateError) {
+                console.error('❌ [Upload] Error updating applicant status:', statusUpdateError);
+            } else {
+                req.session.applicantStage = 'P1 - Awaiting for HR Action';
+                console.log('✅ [Upload] Applicant status updated to P1 - Awaiting for HR Action');
             }
-    
-            // Save success message to chat history
-            const timestamp = new Date().toISOString();
+        }
+        
+        // Save the success message to chat history
+        const timestamp = new Date().toISOString();
+        await supabase
+            .from('chatbot_history')
+            .insert([{
+                userId,
+                message: JSON.stringify({ text: successMessage }),
+                sender: 'bot',
+                timestamp,
+                applicantStage: req.session.applicantStage
+            }]);
+        
+        // Save the next message to chat history if it exists
+        if (nextMessage) {
             await supabase
                 .from('chatbot_history')
                 .insert([{
                     userId,
-                    message: JSON.stringify({ text: successMessage }),
+                    message: JSON.stringify(nextMessage),
                     sender: 'bot',
-                    timestamp,
+                    timestamp: new Date(Date.now() + 1000).toISOString(), // 1 second delay
                     applicantStage: req.session.applicantStage
                 }]);
-    
-            // Remove awaiting upload flag after successful upload
-            delete req.session.awaitingFileUpload;
-            
-            // Prepare the next question (if not final upload)
-            let nextResponse = { text: successMessage };
-            
-            // Only for degree and certification uploads, proceed to next question
-            if (fileType !== 'resume') {
-                // Increment question index to move to next question
-                req.session.currentQuestionIndex++;
-                
-                if (req.session.currentQuestionIndex < req.session.screeningQuestions.length) {
-                    const nextQuestion = req.session.screeningQuestions[req.session.currentQuestionIndex];
-                    
-                    // Add the next question as part of the response
-                    nextResponse = {
-                        text: successMessage,
-                        nextQuestion: {
-                            text: nextQuestion.text,
-                            buttons: [
-                                { text: 'Yes', value: 1 },
-                                { text: 'No', value: 0 }
-                            ]
-                        }
-                    };
-                    
-                    // Also save the next question to chat history for continuous flow
-                    await supabase
-                        .from('chatbot_history')
-                        .insert([{
-                            userId,
-                            message: JSON.stringify({
-                                text: nextQuestion.text,
-                                buttons: [
-                                    { text: 'Yes', value: 1 },
-                                    { text: 'No', value: 0 }
-                                ]
-                            }),
-                            sender: 'bot',
-                            timestamp: new Date(Date.now() + 1000).toISOString(), // Slight delay
-                            applicantStage: req.session.applicantStage
-                        }]);
-                } else if (fileType === 'certification' || fileType === 'degree') {
-                    // If all questions are answered after certification/degree
-                    nextResponse = {
-                        text: successMessage,
-                        nextQuestion: {
-                            text: "All screening questions have been completed. Please upload your resume.",
-                            buttons: [{ text: 'Upload Resume', type: 'file_upload' }]
-                        }
-                    };
-                    
-                    req.session.applicantStage = 'resume_upload';
-                    req.session.awaitingFileUpload = 'resume';
-                    
-                    // Save the resume request to chat history
-                    await supabase
-                        .from('chatbot_history')
-                        .insert([{
-                            userId,
-                            message: JSON.stringify({
-                                text: "All screening questions have been completed. Please upload your resume.",
-                                buttons: [{ text: 'Upload Resume', type: 'file_upload' }]
-                            }),
-                            sender: 'bot',
-                            timestamp: new Date(Date.now() + 1000).toISOString(), // Slight delay
-                            applicantStage: 'resume_upload'
-                        }]);
-                }
-            }
-            
-            console.log('✅ [File Upload] Response prepared:', nextResponse);
-            // Send only one response
-            return res.status(200).json({ response: nextResponse });
-    
-        } catch (error) {
-            console.error('❌ [File Upload] Unexpected error:', error);
-            return res.status(500).send('An unexpected error occurred.');
         }
-    },
+        
+        console.log('✅ [Upload] Process completed successfully');
+        
+        // Return response with nextMessage if available
+        const response = {
+            text: successMessage,
+            applicantStage: req.session.applicantStage
+        };
+        
+        if (nextMessage) {
+            response.nextMessage = nextMessage;
+        }
+        
+        return res.status(200).json({ response });
+        
+    } catch (error) {
+        console.error('❌ [Upload] Unexpected error:', error);
+        return res.status(500).json({ response: { text: 'An unexpected error occurred during upload.' } });
+    }
+},
 
 /* STATUS UPDATE FUNCTIONS */
 updateApplicantJobAndDepartmentOnATS: async function (userId, jobId, departmentId) {

@@ -1707,8 +1707,6 @@ res.render('staffpages/hr_pages/hrapplicanttracking-jobposition', { applicants }
             res.json({ success: false, message: error.message });
         }
     },
-
-
 requestDocumentReupload: async function(req, res) {
     const { userId, documentsToReupload, remarks, hrComments } = req.body;
     
@@ -1717,12 +1715,45 @@ requestDocumentReupload: async function(req, res) {
         console.log('📂 [Reupload Request] Documents to reupload:', documentsToReupload);
         console.log('📂 [Reupload Request] HR Remarks:', remarks);
         
+        // 🔥 FIX: Ensure document types are standardized
+        const normalizedDocuments = documentsToReupload.map(doc => {
+            switch(doc.toLowerCase()) {
+                case 'degree':
+                case 'degree_certificate':
+                case 'degree certificate':
+                    return 'degree';
+                case 'certification':
+                case 'cert':
+                case 'certificate':
+                    return 'certification';
+                case 'resume':
+                case 'cv':
+                    return 'resume';
+                case 'additional':
+                case 'additional_document':
+                case 'additional document':
+                case 'addtl':
+                    return 'additional';
+                default:
+                    return doc.toLowerCase();
+            }
+        });
+        
+        console.log('📂 [Reupload Request] Normalized documents:', normalizedDocuments);
+        
+        // Store the document types AND remarks
+        const reuploadData = {
+            documentsRequested: normalizedDocuments, // Use normalized document types
+            remarks: remarks,
+            requestedAt: new Date().toISOString()
+        };
+        
         // Update applicant_initialscreening_assessment with HR verification remarks
         const { error: assessmentError } = await supabase
             .from('applicant_initialscreening_assessment')
             .update({ 
-                hrVerification: remarks,
-                isHRChosen: null // Reset HR chosen status for reupload
+                hrVerification: JSON.stringify(reuploadData),
+                isHRChosen: null
             })
             .eq('userId', userId);
         
@@ -1738,21 +1769,29 @@ requestDocumentReupload: async function(req, res) {
         
         if (statusError) throw statusError;
         
-        // Create chatbot message for the applicant
+        // Create display names for documents
+        const documentNames = normalizedDocuments.map(doc => {
+            switch(doc) {
+                case 'degree': return 'Degree Certificate';
+                case 'certification': return 'Certification Document';
+                case 'resume': return 'Resume';
+                case 'additional': return 'Additional Document';
+                default: return doc;
+            }
+        });
+        
         const chatbotMessage = {
-            text: `Hello! We have reviewed your application and would like to request some document updates. Please re-upload the following documents: ${documentsToReupload.map(doc => {
-                switch(doc) {
-                    case 'degree': return 'Degree Certificate';
-                    case 'certification': return 'Certification Document';
-                    case 'resume': return 'Resume';
-                    case 'additional': return 'Additional Document (as specified below)';
-                    default: return doc;
-                }
-            }).join(', ')}. 
+            text: `Hello! We have reviewed your application and would like to request some document updates. Please re-upload the following documents: ${documentNames.join(', ')}. 
             
 HR Instructions: ${remarks}
             
-Please use the file upload feature in the chat to submit the requested documents.`,
+Please upload each requested document using the buttons below. You need to upload ${normalizedDocuments.length} document(s).`,
+            buttons: normalizedDocuments.map((docType, index) => ({
+                text: `Upload ${documentNames[index]}`,
+                type: 'file_upload_reupload',
+                docType: docType // Use normalized document type
+            })),
+            reuploadData: reuploadData,
             applicantStage: "P1 - Awaiting for HR Action; Requested for Reupload"
         };
         
@@ -1768,6 +1807,8 @@ Please use the file upload feature in the chat to submit the requested documents
             }]);
         
         if (chatError) throw chatError;
+        
+        console.log('✅ [Reupload Request] Chatbot message with normalized document types saved successfully');
         
         res.json({ 
             success: true, 

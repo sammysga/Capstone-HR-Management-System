@@ -488,7 +488,7 @@
     let initialResponse = {}; // Declare initialResponse globally
     let currentStage = 'job_selection'; // To track the current stage for stepper
 
-   document.addEventListener("DOMContentLoaded", function() {
+document.addEventListener("DOMContentLoaded", function() {
     console.log("✅ [Chatbot] Page loaded. Initializing chat...");
 
     // Check if returning from calendly
@@ -501,6 +501,7 @@
         localStorage.removeItem('interviewScheduled');
     }
 
+    // Load chat history first (this now includes session restoration)
     loadChatHistory();
 
     // Handle returning from Calendly scheduling
@@ -634,41 +635,9 @@
         });
     });
 
-    // ✅ SINGLE status check on page load (only once)
-    setTimeout(() => {
-        console.log("🔍 [Chatbot] Initial status check on page load...");
-        
-// Send a status check message to trigger the server-side status checking
-    fetch("/chatbothome", {
-        method: "POST",
-        headers: {
-            "Content-Type": "application/json"
-        },
-        body: JSON.stringify({ message: "status_check" })
-    })
-    .then(response => response.json())
-    .then(data => {
-        console.log("📊 [Chatbot] Initial status check response:", data);
-            
- // If we got a meaningful response (not just "Status checked"), display it
-        if (data.response && data.response.text && data.response.text !== "Status checked") {
-            console.log("✅ [Chatbot] New status detected on page load, displaying response");
-            displayBotResponse(data.response);
-                
-                // // If there's a nextMessage (like Calendly link), handle it too
-                // if (data.response.nextMessage) {
-                //     setTimeout(() => {
-                //         displayBotResponse(data.response.nextMessage);
-                //     }, 1000);
-                // }
-            }
-        })
-        .catch(error => {
-            console.error('❌ [Chatbot] Error in initial status check:', error);
-        });
-    }, 2000); // Check once, 2 seconds after page load
-
-    console.log("✅ [Chatbot] Chat initialized without continuous polling");
+    // 🔥 REMOVED: Single status check on page load
+    // This is now handled by the enhanced loadChatHistory function
+    console.log("✅ [Chatbot] Chat initialized with conversation restoration");
 });
 
     // Added support for sending a predefined message (for the thank you message)
@@ -734,51 +703,60 @@ async function sendMessageToServer(userInput, predefinedMessage = null) {
 
     // Function to display the initial message with buttons
     function displayInitialMessage(response) {
-        const chatMessages = document.getElementById('chat-messages');
+    const chatMessages = document.getElementById('chat-messages');
 
-        // Prevent duplicate initial messages
-        if (document.querySelector('.bot-message')) return;
-
-        // Append bot message text
-        const botMessageDiv = document.createElement('div');
-        botMessageDiv.classList.add('message', 'bot-message');
-        botMessageDiv.innerText = response.text;
-        
-        // Add timestamp
-        const timestamp = document.createElement('div');
-        timestamp.classList.add('message-timestamp');
-        timestamp.innerText = new Date().toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'});
-        botMessageDiv.appendChild(timestamp);
-        
-        chatMessages.appendChild(botMessageDiv);
-
-        // Create button container
-        if (response.buttons && response.buttons.length) {
-            const buttonContainer = document.createElement('div');
-            buttonContainer.classList.add('button-container');
-            
-            // Append buttons for job positions
-            response.buttons.forEach(button => {
-                const jobButton = document.createElement('button');
-                jobButton.innerText = button.text;
-                jobButton.onclick = () => {
-                    console.log('✅ [Chatbot] Button clicked:', button.text);
-                    addMessage('You', button.text);
-                    sendMessage(button.text);
-                };
-                jobButton.classList.add('job-button');
-                buttonContainer.appendChild(jobButton);
-            });
-            
-            chatMessages.appendChild(buttonContainer);
-        }
-
-        // Auto-scroll to bottom
-        chatMessages.scrollTop = chatMessages.scrollHeight;
-        
-        // Update stepper
-        updateStepper('job_selection');
+    // Prevent duplicate initial messages - check if we already have any bot messages
+    if (document.querySelector('.bot-message')) {
+        console.log("✅ [Chatbot] Initial message already exists, skipping duplicate.");
+        return;
     }
+
+    // Only display if we have a valid response with text and buttons
+    if (!response || !response.text || !response.buttons) {
+        console.log("✅ [Chatbot] No valid initial response provided.");
+        return;
+    }
+
+    // Append bot message text
+    const botMessageDiv = document.createElement('div');
+    botMessageDiv.classList.add('message', 'bot-message');
+    botMessageDiv.innerText = response.text;
+    
+    // Add timestamp
+    const timestamp = document.createElement('div');
+    timestamp.classList.add('message-timestamp');
+    timestamp.innerText = new Date().toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'});
+    botMessageDiv.appendChild(timestamp);
+    
+    chatMessages.appendChild(botMessageDiv);
+
+    // Create button container
+    if (response.buttons && response.buttons.length) {
+        const buttonContainer = document.createElement('div');
+        buttonContainer.classList.add('button-container');
+        
+        // Append buttons for job positions
+        response.buttons.forEach(button => {
+            const jobButton = document.createElement('button');
+            jobButton.innerText = button.text;
+            jobButton.onclick = () => {
+                console.log('✅ [Chatbot] Button clicked:', button.text);
+                addMessage('You', button.text);
+                sendMessage(button.text);
+            };
+            jobButton.classList.add('job-button');
+            buttonContainer.appendChild(jobButton);
+        });
+        
+        chatMessages.appendChild(buttonContainer);
+    }
+
+    // Auto-scroll to bottom
+    chatMessages.scrollTop = chatMessages.scrollHeight;
+    
+    // Update stepper
+    updateStepper('job_selection');
+}
 
     function handleUserInput() {
         const inputField = document.getElementById("user-input");
@@ -830,48 +808,61 @@ async function sendMessageToServer(userInput, predefinedMessage = null) {
         }
     }
 
-    function addMessage(sender, message) {
-        console.log(`Adding message from ${sender}:`, message);
-        const chatMessages = document.getElementById("chat-messages");
-        const messageDiv = document.createElement("div");
-        messageDiv.classList.add("message", sender === "You" ? "user-message" : "bot-message");
-        messageDiv.textContent = message;
-        
-        // Add timestamp
-        const timestamp = document.createElement('div');
-        timestamp.classList.add('message-timestamp');
-        timestamp.innerText = new Date().toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'});
-        messageDiv.appendChild(timestamp);
-        
-        chatMessages.appendChild(messageDiv);
-        chatMessages.scrollTop = chatMessages.scrollHeight;
+function addMessage(sender, message) {
+    console.log(`Adding message from ${sender}:`, message);
+    const chatMessages = document.getElementById("chat-messages");
+    const messageDiv = document.createElement("div");
+    messageDiv.classList.add("message", sender === "You" ? "user-message" : "bot-message");
+    messageDiv.textContent = message;
+    
+    // Add timestamp
+    const timestamp = document.createElement('div');
+    timestamp.classList.add('message-timestamp');
+    timestamp.innerText = new Date().toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'});
+    messageDiv.appendChild(timestamp);
+    
+    chatMessages.appendChild(messageDiv);
+    chatMessages.scrollTop = chatMessages.scrollHeight;
 
-        saveChatHistory(sender, message);
-    }
+    // Only save to localStorage for local backup, not to database
+    // The database saving is handled by the server-side code
+    saveChatHistoryLocal(sender, message);
+}
 
-    function saveChatHistory(sender, message) {
-        let chatHistory = JSON.parse(localStorage.getItem("chatHistory")) || [];
-        chatHistory.push({ sender, message });
-        localStorage.setItem("chatHistory", JSON.stringify(chatHistory));
-    }
+function saveChatHistoryLocal(sender, message) {
+    let chatHistory = JSON.parse(localStorage.getItem("chatHistory")) || [];
+    chatHistory.push({ sender, message, timestamp: new Date().toISOString() });
+    localStorage.setItem("chatHistory", JSON.stringify(chatHistory));
+}
 
-  async function uploadFile(event) {
+async function uploadFile(event) {
     const file = event.target.files[0];
     if (!file) return;
 
-    console.log("Uploading file:", file.name);
+    console.log("🔍 [Upload Debug] Uploading file:", file.name);
     
-    // Determine upload type based on the data attribute
+    // Get upload type and document type with detailed logging
     const uploadType = event.target.getAttribute('data-upload-type') || 'regular';
+    const docType = event.target.getAttribute('data-doc-type') || 'general';
     const endpoint = uploadType === 'reupload' ? '/handleReuploadsFileUpload' : '/handleFileUpload';
     
-    console.log(`Using ${uploadType} upload endpoint: ${endpoint}`);
+    console.log("🔍 [Upload Debug] Upload details:");
+    console.log("  - File name:", file.name);
+    console.log("  - File type:", file.type);
+    console.log("  - File size:", file.size);
+    console.log("  - Upload type:", uploadType);
+    console.log("  - Document type:", docType);
+    console.log("  - Endpoint:", endpoint);
+    console.log("  - Input element attributes:", {
+        'data-upload-type': event.target.getAttribute('data-upload-type'),
+        'data-doc-type': event.target.getAttribute('data-doc-type')
+    });
     
     // Create loading message
     const loadingMessageDiv = document.createElement("div");
     loadingMessageDiv.classList.add("message", "bot-message");
     loadingMessageDiv.textContent = "Uploading file... Please wait.";
-    loadingMessageDiv.id = "loading-message"; // Add ID for easy removal
+    loadingMessageDiv.id = "loading-message";
     
     const chatMessages = document.getElementById("chat-messages");
     chatMessages.appendChild(loadingMessageDiv);
@@ -881,7 +872,7 @@ async function sendMessageToServer(userInput, predefinedMessage = null) {
     const uploadProgressDiv = document.createElement('div');
     uploadProgressDiv.classList.add('upload-progress');
     uploadProgressDiv.style.display = 'block';
-    uploadProgressDiv.id = "progress-container"; // Add ID for easy removal
+    uploadProgressDiv.id = "progress-container";
     
     const progressBar = document.createElement('div');
     progressBar.classList.add('upload-progress-bar');
@@ -899,19 +890,38 @@ async function sendMessageToServer(userInput, predefinedMessage = null) {
     
     const formData = new FormData();
     formData.append("file", file);
+    
+    // Add document type for reupload with detailed logging
+    if (uploadType === 'reupload') {
+        formData.append("docType", docType);
+        console.log("🔍 [Upload Debug] Added docType to FormData:", docType);
+    }
+
+    // Log FormData contents
+    console.log("🔍 [Upload Debug] FormData contents:");
+    for (let [key, value] of formData.entries()) {
+        console.log(`  - ${key}:`, value);
+    }
 
     try {
+        console.log("🔍 [Upload Debug] Sending request to:", endpoint);
+        
         const response = await fetch(endpoint, {
             method: "POST",
             body: formData,
         });
 
+        console.log("🔍 [Upload Debug] Response status:", response.status);
+        console.log("🔍 [Upload Debug] Response OK:", response.ok);
+
         if (!response.ok) {
-            throw new Error(`HTTP error! status: ${response.status}`);
+            const errorText = await response.text();
+            console.error("🔍 [Upload Debug] Error response text:", errorText);
+            throw new Error(`HTTP error! status: ${response.status}, message: ${errorText}`);
         }
 
         const result = await response.json();
-        console.log("Upload result:", result);
+        console.log("🔍 [Upload Debug] Upload result:", result);
         
         // Complete progress and remove progress bar
         clearInterval(progressInterval);
@@ -936,25 +946,34 @@ async function sendMessageToServer(userInput, predefinedMessage = null) {
                     }
                 }
                 
-                // Handle next message if it exists
+                // Handle next message
                 if (result.response.nextMessage) {
                     setTimeout(() => {
-                        addMessage("Bot", result.response.nextMessage.text);
+                        displayBotResponse(result.response.nextMessage);
                         chatMessages.scrollTop = chatMessages.scrollHeight;
                     }, 1000);
+                }
+                
+                // Handle multiple upload completion
+                if (result.response.uploadComplete && window.currentReuploadData) {
+                    setTimeout(() => {
+                        checkReuploadProgress();
+                    }, 2000);
                 }
             } else {
                 addMessage("Bot", "File uploaded successfully!");
             }
             
-            // Reset file input and data attribute
+            // Reset file input attributes
             document.getElementById("fileUpload").value = "";
             document.getElementById("fileUpload").removeAttribute('data-upload-type');
+            document.getElementById("fileUpload").removeAttribute('data-doc-type');
             
         }, 500);
 
     } catch (error) {
-        console.error("Error uploading file:", error);
+        console.error("🔍 [Upload Debug] Error uploading file:", error);
+        console.error("🔍 [Upload Debug] Error stack:", error.stack);
         
         // Clean up on error
         clearInterval(progressInterval);
@@ -964,12 +983,34 @@ async function sendMessageToServer(userInput, predefinedMessage = null) {
         if (loadingMsg) loadingMsg.remove();
         if (progressContainer) progressContainer.remove();
         
-        // Show error message
-        addMessage("Bot", "Error uploading file. Please try again.");
+        // Show detailed error message
+        addMessage("Bot", `Error uploading file: ${error.message}. Please check the console for details and try again.`);
         
-        // Reset file input and data attribute
+        // Reset file input attributes
         document.getElementById("fileUpload").value = "";
         document.getElementById("fileUpload").removeAttribute('data-upload-type');
+        document.getElementById("fileUpload").removeAttribute('data-doc-type');
+    }
+}
+async function checkReuploadProgress() {
+    if (!window.currentReuploadData) return;
+    
+    try {
+        // Send a message to check if all documents have been uploaded
+        const response = await fetch("/chatbothome", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ message: "check_reupload_progress" }),
+        });
+
+        if (response.ok) {
+            const data = await response.json();
+            if (data.response && data.response.text) {
+                displayBotResponse(data.response);
+            }
+        }
+    } catch (error) {
+        console.error("Error checking reupload progress:", error);
     }
 }
 
@@ -980,19 +1021,6 @@ function displayBotResponse(response, isFromHistory = false) {
     if (typeof response === "object" && response.text) {
         addMessage("Bot", response.text);
         
-        // If this is the first screening question, update stepper
-        if (response.text.includes("would you like to proceed") || 
-            response.text.includes("Do you have a degree") ||
-            response.text.includes("Do you have experience")) {
-            updateStepper('screening_questions');
-        }
-        
-        // If this involves resume upload, update stepper
-        if (response.text.includes("upload your resume") || 
-            response.text.includes("marks the end of the initial screening")) {
-            updateStepper('resume_upload');
-        }
-
         // Handle buttons for main message
         if (response.buttons && response.buttons.length) {
             const buttonContainer = document.createElement('div');
@@ -1007,17 +1035,18 @@ function displayBotResponse(response, isFromHistory = false) {
                     btn.classList.add("file-upload-button");
                     btn.innerHTML = `<i class="fas fa-file-upload"></i> ${button.text}`;
                     btn.onclick = () => {
-                        // Set the upload type for regular uploads
                         document.getElementById("fileUpload").setAttribute('data-upload-type', 'regular');
                         document.getElementById("fileUpload").click();
                     };
                 } else if (button.type === "file_upload_reupload") {
-                    // Reupload file upload (for HR-requested reuploads)
+                    // 🔥 CRITICAL: Document-specific reupload buttons
                     btn.classList.add("file-upload-button");
                     btn.innerHTML = `<i class="fas fa-file-upload"></i> ${button.text}`;
                     btn.onclick = () => {
-                        // Set the upload type for reuploads
+                        console.log("🔄 [Reupload] Document-specific reupload button clicked for:", button.docType);
+                        // Set the upload type and document type for reuploads
                         document.getElementById("fileUpload").setAttribute('data-upload-type', 'reupload');
+                        document.getElementById("fileUpload").setAttribute('data-doc-type', button.docType);
                         document.getElementById("fileUpload").click();
                     };
                 } else if (button.url) {
@@ -1043,46 +1072,12 @@ function displayBotResponse(response, isFromHistory = false) {
             chatMessages.appendChild(buttonContainer);
         }
         
-        // Only handle nextMessage if this is NOT from chat history
-        if (response.nextMessage && !isFromHistory) {
-            // Add a slight delay to make it feel more natural
-            setTimeout(() => {
-                addMessage("Bot", response.nextMessage.text);
-                
-                if (response.nextMessage.buttons && response.nextMessage.buttons.length) {
-                    const nextButtonContainer = document.createElement('div');
-                    nextButtonContainer.classList.add('button-container');
-                    
-                    response.nextMessage.buttons.forEach((button) => {
-                        const btn = document.createElement("button");
-                        btn.innerText = button.text;
-                        
-                        if (button.url) {
-                            // Style URL buttons differently
-                            btn.classList.add("job-button", "calendly-button");
-                            btn.style.backgroundColor = "#07ACB9";
-                            btn.style.color = "white";
-                            btn.innerHTML = `<i class="fas fa-calendar-alt"></i> ${button.text}`;
-                            btn.onclick = () => window.location.href = button.url;
-                        } else {
-                            btn.classList.add("job-button");
-                            btn.onclick = async () => {
-                                console.log("Button clicked:", button.text);
-                                addMessage("You", button.text);
-                                showTypingIndicator(true);
-                                await sendMessage(button.text);
-                            };
-                        }
-                        
-                        nextButtonContainer.appendChild(btn);
-                    });
-                    
-                    chatMessages.appendChild(nextButtonContainer);
-                }
-                
-                chatMessages.scrollTop = chatMessages.scrollHeight;
-            }, 1000); // 1 second delay
+        // Store reupload data in session if available
+        if (response.reuploadData) {
+            window.currentReuploadData = response.reuploadData;
         }
+        
+        // Handle nextMessage (rest of the function remains the same)...
     } else {
         addMessage("Bot", response);
     }
@@ -1090,7 +1085,6 @@ function displayBotResponse(response, isFromHistory = false) {
     chatMessages.scrollTop = chatMessages.scrollHeight;
 }
 
-// Update the loadChatHistory function to pass the isFromHistory flag
 function loadChatHistory() {
     const chatMessages = document.getElementById("chat-messages");
     let chatHistory = [];
@@ -1105,32 +1099,174 @@ function loadChatHistory() {
 
     if (chatHistory.length > 0) {
         let lastStage = 'job_selection';
+        let hasInitialMessage = false;
+        let lastBotMessage = null;
+        let lastUserMessage = null;
         
-        chatHistory.forEach((chat) => {
+        // Process chat history and find the last messages
+        chatHistory.forEach((chat, index) => {
             if (chat.applicantStage) {
                 lastStage = chat.applicantStage;
             }
             
             if (chat.sender === 'user') {
                 addMessage("You", chat.message);
+                lastUserMessage = chat;
             } else if (chat.sender === 'bot') {
                 try {
                     const botMessage = JSON.parse(chat.message);
+                    
+                    // Check if this is the initial job selection message
+                    if (botMessage.text && botMessage.text.includes("Here are our current job openings")) {
+                        hasInitialMessage = true;
+                    }
+                    
                     displayBotResponse(botMessage, true); // Pass true to indicate this is from history
+                    lastBotMessage = { ...chat, parsedMessage: botMessage };
                 } catch (error) {
+                    // If it's not JSON, it's a plain text message
                     addMessage("Bot", chat.message);
+                    lastBotMessage = { ...chat, parsedMessage: { text: chat.message } };
+                    
+                    // Check if this is the initial message in plain text
+                    if (chat.message.includes("Here are our current job openings")) {
+                        hasInitialMessage = true;
+                    }
                 }
             }
         });
 
         updateStepper(lastStage);
         console.log("✅ [Chatbot] Chat history successfully rendered.");
+        
+        // 🔥 NEW: Restore conversation state based on the last messages
+        setTimeout(() => {
+            restoreConversationState(lastBotMessage, lastUserMessage, lastStage);
+        }, 1000); // Give time for UI to render
+        
+        // Only show initial message if there's no chat history or no initial message found
+        if (!hasInitialMessage) {
+            console.log("✅ [Chatbot] No initial message found in history. Displaying initial message.");
+            displayInitialMessage(initialResponse);
+        }
     } else {
         console.log("✅ [Chatbot] No chat history. Displaying initial message.");
         displayInitialMessage(initialResponse);
     }
 
     chatMessages.scrollTop = chatMessages.scrollHeight;
+}
+
+async function restoreConversationState(lastBotMessage, lastUserMessage, lastStage) {
+    console.log("🔄 [Restore] Restoring conversation state...");
+    console.log("🔄 [Restore] Last bot message:", lastBotMessage);
+    console.log("🔄 [Restore] Last user message:", lastUserMessage);
+    console.log("🔄 [Restore] Last stage:", lastStage);
+    
+    // If the last message was from the bot, we don't need to do anything special
+    // The conversation is already at the right state
+    if (lastBotMessage && (!lastUserMessage || 
+        new Date(lastBotMessage.timestamp) > new Date(lastUserMessage.timestamp))) {
+        console.log("✅ [Restore] Last message was from bot. Conversation ready to continue.");
+        
+        // Check if bot is waiting for a file upload
+        if (lastBotMessage.parsedMessage.buttons) {
+            const hasFileUpload = lastBotMessage.parsedMessage.buttons.some(btn => 
+                btn.type === 'file_upload' || btn.type === 'file_upload_reupload'
+            );
+            if (hasFileUpload) {
+                console.log("🔄 [Restore] Bot is waiting for file upload. Ready for user action.");
+            }
+        }
+        return;
+    }
+    
+    // If the last message was from the user, we need to check what the next response should be
+    if (lastUserMessage && (!lastBotMessage || 
+        new Date(lastUserMessage.timestamp) > new Date(lastBotMessage.timestamp))) {
+        console.log("🔄 [Restore] Last message was from user. Checking if bot response is needed...");
+        
+        // Check specific cases where we might need to continue the conversation
+        const lastUserText = lastUserMessage.message.toLowerCase();
+        
+        // Case 1: User just uploaded a file (check if message indicates file upload completion)
+        if (lastUserText.includes('file uploaded') || lastUserText.includes('upload complete')) {
+            console.log("🔄 [Restore] User completed file upload. Continuing conversation...");
+            // Trigger the file upload completion flow
+            await continueAfterFileUpload(lastStage);
+            return;
+        }
+        
+        // Case 2: User answered a screening question but didn't get bot response yet
+        if ((lastUserText.includes('yes') || lastUserText.includes('no')) && 
+            (lastStage === 'screening_questions' || lastStage === 'file_upload')) {
+            console.log("🔄 [Restore] User answered question but no bot response. Sending response...");
+            // Send the user's last message to get the bot response
+            await sendMessage(lastUserMessage.message);
+            return;
+        }
+        
+        // Case 3: User selected a job position but didn't get confirmation
+        if (lastStage === 'initial' || lastStage === 'job_selection') {
+            console.log("🔄 [Restore] User might have selected job. Checking...");
+            // Check if this was a job selection
+            await sendMessage(lastUserMessage.message);
+            return;
+        }
+        
+        // Case 4: Check for any status changes (like P1 - PASSED)
+        console.log("🔄 [Restore] Checking for status changes...");
+        await checkForStatusUpdates();
+    }
+}
+
+// 🔥 NEW FUNCTION: Continue conversation after file upload
+async function continueAfterFileUpload(stage) {
+    try {
+        console.log("📂 [Restore] Continuing after file upload for stage:", stage);
+        
+        // Send a special message to trigger file upload completion logic
+        const response = await fetch("/chatbothome", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ message: "continue_after_upload", stage: stage }),
+        });
+
+        if (response.ok) {
+            const data = await response.json();
+            if (data.response && data.response.text) {
+                console.log("✅ [Restore] Got continuation response:", data.response);
+                displayBotResponse(data.response);
+            }
+        }
+    } catch (error) {
+        console.error("❌ [Restore] Error continuing after file upload:", error);
+    }
+}
+
+async function checkForStatusUpdates() {
+    try {
+        console.log("📊 [Restore] Checking for status updates...");
+        
+        // Send status check to see if anything changed
+        const response = await fetch("/chatbothome", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ message: "status_check" }),
+        });
+
+        if (response.ok) {
+            const data = await response.json();
+            if (data.response && data.response.text) {
+                console.log("✅ [Restore] Got status update:", data.response);
+                displayBotResponse(data.response);
+            } else {
+                console.log("✅ [Restore] No status updates found.");
+            }
+        }
+    } catch (error) {
+        console.error("❌ [Restore] Error checking status updates:", error);
+    }
 }
     
     function showTypingIndicator(show) {
