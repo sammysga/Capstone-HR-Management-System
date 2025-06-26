@@ -3750,6 +3750,9 @@ function updateCharCounter(fieldId) {
     
     if (field && counter) {
         counter.textContent = field.value.length;
+        
+        // Update progress when character count changes
+        updateIDPProgress();
     }
 }
 // Enhanced function to show category notification with better UX
@@ -4350,7 +4353,11 @@ if (typeof loadMidYearIDPDataWithCategories === 'undefined') {
         console.log('loadMidYearIDPDataWithCategories called but not implemented');
     };
 }
-
+window.loadMidYearIDPDataWithCategories = loadMidYearIDPDataWithCategories;
+window.setIDPFormValues = setIDPFormValues;
+window.enableMidYearIDPForm = enableMidYearIDPForm;
+window.navigateToMidYearIDP = navigateToMidYearIDP;
+window.createViewOnlyMidYearIDPWithCategories = createViewOnlyMidYearIDPWithCategories;
 // Make functions globally available
 window.exportQuarterlyFeedbackReport = exportQuarterlyFeedbackReport;
 window.testExportNow = testExportNow;
@@ -5506,7 +5513,6 @@ function getSelectedTrainingName() {
     }
     return '';
 }
-
 function validateIDPForm(formType) {
     const prefix = formType === 'final' ? 'final' : '';
     
@@ -5524,6 +5530,7 @@ function validateIDPForm(formType) {
     
     let isValid = true;
     let firstInvalidField = null;
+    let invalidFields = [];
     
     requiredFields.forEach(fieldId => {
         // Handle both naming conventions (with and without prefix)
@@ -5536,19 +5543,22 @@ function validateIDPForm(formType) {
         }
         
         if (field) {
-            // FIXED: Ensure we're checking the actual string value, not an array
-            const fieldValue = Array.isArray(field.value) ? 
-                (field.value.find(val => val && val.trim() !== '') || '') : 
-                field.value;
-                
-            if (!fieldValue.trim()) {
+            const fieldValue = field.value ? field.value.trim() : '';
+            
+            if (!fieldValue || fieldValue.length === 0) {
                 field.classList.add("error");
+                field.style.borderColor = '#f44336';
+                field.style.backgroundColor = '#ffebee';
                 isValid = false;
+                invalidFields.push(field);
+                
                 if (!firstInvalidField) {
                     firstInvalidField = field;
                 }
             } else {
                 field.classList.remove("error");
+                field.style.borderColor = '#ddd';
+                field.style.backgroundColor = 'white';
             }
         } else {
             console.warn(`Field with ID ${fieldId} not found.`);
@@ -5556,26 +5566,113 @@ function validateIDPForm(formType) {
     });
     
     if (!isValid) {
-        alert("Please fill all required fields.");
+        // Enhanced error message
+        const fieldNames = invalidFields.map(field => {
+            const label = field.previousElementSibling;
+            return label ? label.textContent.replace('*', '').trim() : field.id;
+        });
+        
+        alert(`Please fill all required fields:\n\n${fieldNames.join('\n')}`);
         
         // Scroll to the first invalid field
         if (firstInvalidField) {
             firstInvalidField.scrollIntoView({ behavior: 'smooth', block: 'center' });
-            firstInvalidField.focus();
+            
+            // Highlight the field with animation
+            firstInvalidField.style.animation = 'shake 0.5s ease-in-out';
+            setTimeout(() => {
+                firstInvalidField.style.animation = '';
+            }, 500);
+            
+            // Focus after scroll
+            setTimeout(() => {
+                firstInvalidField.focus();
+            }, 300);
         }
     }
     
     return isValid;
 }
+// ADD: CSS for shake animation
+const shakeStyle = document.createElement('style');
+shakeStyle.textContent = `
+    @keyframes shake {
+        0%, 100% { transform: translateX(0); }
+        10%, 30%, 50%, 70%, 90% { transform: translateX(-10px); }
+        20%, 40%, 60%, 80% { transform: translateX(10px); }
+    }
+    
+    .error {
+        border-color: #f44336 !important;
+        background-color: #ffebee !important;
+        box-shadow: 0 0 5px rgba(244, 67, 54, 0.3) !important;
+    }
+`;
+document.head.appendChild(shakeStyle);
+// Make all functions globally available
+window.submitMidYearIDPFormWithTrainingCategories = submitMidYearIDPFormWithTrainingCategories;
+window.showMidYearIDPSuccessNotification = showMidYearIDPSuccessNotification;
+window.updateIDPProgress = updateIDPProgress;
+window.updateCharCounter = updateCharCounter;
+window.validateIDPForm = validateIDPForm;
+
+
+// Function to get top 5 development areas from feedback data
+function getTop5DevelopmentAreas() {
+    console.log("=== COLLECTING TOP 5 DEVELOPMENT AREAS ===");
+    
+    if (!midYearFeedbackData || !midYearFeedbackData.categorizedFeedback) {
+        console.log("No feedback data available for development areas");
+        return [];
+    }
+    
+    // Combine all areas that need development (average and below average ratings)
+    const developmentAreas = [
+        ...midYearFeedbackData.categorizedFeedback.average,
+        ...midYearFeedbackData.categorizedFeedback.belowAverage
+    ];
+    
+    console.log("Found development areas:", developmentAreas.length);
+    
+    // Sort by lowest rating first (most critical areas)
+    const sortedAreas = developmentAreas
+        .sort((a, b) => a.averageRating - b.averageRating)
+        .slice(0, 5); // Take top 5
+    
+    // Format for database storage
+    const top5Areas = sortedAreas.map((area, index) => {
+        const formattedArea = {
+            rank: index + 1,
+            type: area.type, // 'objective' or 'skill'
+            averageRating: area.averageRating,
+            quarterRatings: area.quarterRatings || {}
+        };
+        
+        if (area.type === 'objective') {
+            formattedArea.objectiveId = area.objectiveId;
+            formattedArea.name = area.objectiveDescrpt;
+            formattedArea.kpi = area.objectiveKPI;
+        } else {
+            formattedArea.skillId = area.jobReqSkillId;
+            formattedArea.name = area.jobReqSkillName;
+            formattedArea.skillType = area.jobReqSkillType;
+        }
+        
+        return formattedArea;
+    });
+    
+    console.log("Top 5 development areas formatted:", top5Areas);
+    console.log("=== END COLLECTING TOP 5 DEVELOPMENT AREAS ===");
+    
+    return top5Areas;
+}
 async function submitMidYearIDPFormWithTrainingCategories(event) {
     event.preventDefault();
     
-    console.log("=== STARTING SUBMISSION ===");
-    console.log("submitMidYearIDPFormWithTrainingCategories called");
+    console.log("=== STARTING ENHANCED FORM SUBMISSION WITH CATEGORIES AND TOP 5 ===");
     
     // Debug categories before validation
-    debugSelectedCategories();
-    debugFormSubmissionData();
+    debugCategoryState();
     
     // Validate the form
     if (!validateIDPForm('mid')) {
@@ -5583,17 +5680,30 @@ async function submitMidYearIDPFormWithTrainingCategories(event) {
         return;
     }
     
-    // Get selected training categories with debugging
+    // Get selected training categories with enhanced debugging
     const trainingCategories = getSelectedCategoriesForSubmission();
-    console.log("Final trainingCategories for submission:", trainingCategories);
-    console.log("trainingCategories type:", typeof trainingCategories);
-    console.log("trainingCategories isArray:", Array.isArray(trainingCategories));
-    console.log("trainingCategories length:", trainingCategories.length);
     
-    // Validate that we have proper array of strings
+    // ENHANCED: Get top 5 development areas from feedback data
+    const top5DevelopmentAreas = getTop5DevelopmentAreas();
+    
+    console.log("=== ENHANCED SUBMISSION DATA ===");
+    console.log("Training Categories:", trainingCategories);
+    console.log("Top 5 Development Areas:", top5DevelopmentAreas);
+    console.log("Training Categories Length:", trainingCategories.length);
+    console.log("Top 5 Development Areas Length:", top5DevelopmentAreas.length);
+    
+    // Validate that we have proper array of strings for training categories
     if (!Array.isArray(trainingCategories)) {
         console.error("trainingCategories is not an array:", trainingCategories);
         alert("Error: Training categories data is invalid. Please try again.");
+        return;
+    }
+    
+    // Additional validation: ensure all items are strings
+    const invalidItems = trainingCategories.filter(item => typeof item !== 'string' || item.trim() === '');
+    if (invalidItems.length > 0) {
+        console.error("Invalid items found in trainingCategories:", invalidItems);
+        alert("Error: Some training categories are invalid. Please try again.");
         return;
     }
     
@@ -5608,16 +5718,30 @@ async function submitMidYearIDPFormWithTrainingCategories(event) {
         nextRoleShortTerm: document.getElementById("nextRoleShortTerm").value.trim(),
         nextRoleLongTerm: document.getElementById("nextRoleLongTerm").value.trim(),
         nextRoleMobility: document.getElementById("nextRoleMobility").value.trim(),
-        trainingCategories: trainingCategories, // This should be an array of strings
+        trainingCategories: trainingCategories, // Array of strings
         trainingRemarks: document.getElementById("trainingRemarks")?.value.trim() || "",
+        topDevAreas: top5DevelopmentAreas, // ENHANCED: Add top 5 development areas
         year: new Date().getFullYear()
     };
     
-    console.log("=== FINAL FORM DATA ===");
-    console.log("Complete form data:", formData);
-    console.log("trainingCategories in formData:", formData.trainingCategories);
-    console.log("JSON representation:", JSON.stringify(formData, null, 2));
-    console.log("=== END FINAL FORM DATA ===");
+    console.log("=== COMPLETE ENHANCED FORM DATA ===");
+    console.log("Form data with top 5 development areas:", {
+        ...formData,
+        profStrengths: formData.profStrengths.substring(0, 50) + '...',
+        profAreasForDevelopment: formData.profAreasForDevelopment.substring(0, 50) + '...',
+        profActionsToTake: formData.profActionsToTake.substring(0, 50) + '...',
+        leaderStrengths: formData.leaderStrengths.substring(0, 50) + '...',
+        leaderAreasForDevelopment: formData.leaderAreasForDevelopment.substring(0, 50) + '...',
+        leaderActionsToTake: formData.leaderActionsToTake.substring(0, 50) + '...',
+        nextRoleShortTerm: formData.nextRoleShortTerm.substring(0, 50) + '...',
+        nextRoleLongTerm: formData.nextRoleLongTerm.substring(0, 50) + '...',
+        nextRoleMobility: formData.nextRoleMobility.substring(0, 50) + '...',
+        trainingCategories: formData.trainingCategories, // Show full array
+        topDevAreas: formData.topDevAreas // Show full array
+    });
+    console.log("topDevAreas in formData:", formData.topDevAreas);
+    console.log("JSON.stringify of complete formData:", JSON.stringify(formData, null, 2));
+    console.log("=== END COMPLETE ENHANCED FORM DATA ===");
     
     // Disable the submit button and show loading state
     const submitButton = document.getElementById("submitMidYearIDP");
@@ -5627,9 +5751,11 @@ async function submitMidYearIDPFormWithTrainingCategories(event) {
     }
     
     try {
-        console.log("Sending POST request to server...");
+        console.log("Sending enhanced POST request to server...");
+        console.log("Request URL:", `/linemanager/midyear-idp/${currentUserId}`);
+        console.log("Request body:", JSON.stringify(formData, null, 2));
         
-        const response = await fetch(`/linemanager/midyear-idp/${userId}`, {
+        const response = await fetch(`/linemanager/midyear-idp/${currentUserId}`, {
             method: "POST",
             headers: {
                 "Content-Type": "application/json",
@@ -5639,6 +5765,7 @@ async function submitMidYearIDPFormWithTrainingCategories(event) {
         });
         
         console.log("Server response status:", response.status);
+        console.log("Server response headers:", Object.fromEntries(response.headers.entries()));
         
         if (!response.ok) {
             const errorText = await response.text();
@@ -5647,7 +5774,7 @@ async function submitMidYearIDPFormWithTrainingCategories(event) {
         }
         
         const result = await response.json();
-        console.log("Server response:", result);
+        console.log("Server response data:", result);
         
         if (result.success) {
             let successMessage = "Mid-Year IDP saved successfully!";
@@ -5657,21 +5784,48 @@ async function submitMidYearIDPFormWithTrainingCategories(event) {
                     successMessage += `\n• ${category}`;
                 });
             }
+            if (top5DevelopmentAreas.length > 0) {
+                successMessage += `\n\nTop ${top5DevelopmentAreas.length} development areas identified and saved.`;
+            }
             
+            console.log("✅ ENHANCED SUCCESS:", successMessage);
             alert(successMessage);
             
             // Update viewState to reflect the new status
             if (typeof viewState !== 'undefined') {
                 viewState.viewOnlyStatus.midyearidp = true;
+                viewState.midYearData = result.data?.[0] || formData;
+                
                 if (typeof updateStepperAccessibility === 'function') {
                     updateStepperAccessibility();
                 }
             }
             
-            // Redirect to refresh the page and show view-only mode
-            window.location.href = `/linemanager/records-performance-tracker/${userId}`;
+            // Store the saved data globally for immediate view-only display
+            window.savedMidYearIDPData = result.data?.[0] || formData;
+            window.savedTrainingCategories = trainingCategories;
+            window.savedTrainingRemarks = formData.trainingRemarks;
+            window.savedTop5DevAreas = top5DevelopmentAreas; // ENHANCED: Store top 5 areas
+            
+            console.log("Stored enhanced saved data globally:", {
+                midYearData: !!window.savedMidYearIDPData,
+                categoriesCount: window.savedTrainingCategories.length,
+                hasRemarks: !!window.savedTrainingRemarks,
+                top5AreasCount: window.savedTop5DevAreas.length // ENHANCED
+            });
+            
+            // Convert form to view-only mode
+            setTimeout(() => {
+                console.log("Converting enhanced form to view-only mode...");
+                createViewOnlyMidYearIDPWithCategories(window.savedMidYearIDPData);
+                
+                // Show success notification
+                showMidYearIDPSuccessNotification();
+                
+            }, 500);
+            
         } else {
-            console.error("Server returned error:", result);
+            console.error("❌ Server returned error:", result);
             alert("Error saving Mid-Year IDP: " + (result.message || "Unknown error"));
             
             // Re-enable the submit button
@@ -5681,7 +5835,7 @@ async function submitMidYearIDPFormWithTrainingCategories(event) {
             }
         }
     } catch (error) {
-        console.error("Error submitting Mid-Year IDP:", error);
+        console.error("❌ Error submitting Enhanced Mid-Year IDP:", error);
         alert("An error occurred while submitting the Mid-Year IDP. Please try again.\n\nError: " + error.message);
         
         // Re-enable the submit button
@@ -5690,7 +5844,246 @@ async function submitMidYearIDPFormWithTrainingCategories(event) {
             submitButton.innerHTML = '<i class="fas fa-paper-plane"></i> Submit Mid-Year IDP';
         }
     }
+    
+    console.log("=== END ENHANCED FORM SUBMISSION ===");
 }
+// Enhanced Final-Year IDP submission function
+async function submitFinalYearIDPFormWithEnhancements(event) {
+    event.preventDefault();
+    
+    console.log("=== STARTING ENHANCED FINAL-YEAR IDP SUBMISSION ===");
+    
+    // Validate the form
+    if (!validateIDPForm('final')) {
+        return;
+    }
+    
+    // Get selected training categories if available
+    const trainingCategories = typeof getSelectedCategoriesForSubmission === 'function' 
+        ? getSelectedCategoriesForSubmission() 
+        : [];
+    
+    // Get top 5 development areas from feedback data (for Final-Year, this would be Q1-Q4)
+    const top5DevelopmentAreas = getFinalYearTop5DevelopmentAreas();
+    
+    console.log("=== FINAL-YEAR ENHANCED SUBMISSION DATA ===");
+    console.log("Training Categories:", trainingCategories);
+    console.log("Top 5 Development Areas:", top5DevelopmentAreas);
+    
+    // Get form data
+    const formData = {
+        profStrengths: document.getElementById("profStrengths").value.trim(),
+        profAreasForDevelopment: document.getElementById("profAreasForDevelopment").value.trim(),
+        profActionsToTake: document.getElementById("profActionsToTake").value.trim(),
+        leaderStrengths: document.getElementById("leaderStrengths").value.trim(),
+        leaderAreasForDevelopment: document.getElementById("leaderAreasForDevelopment").value.trim(),
+        leaderActionsToTake: document.getElementById("leaderActionsToTake").value.trim(),
+        nextRoleShortTerm: document.getElementById("nextRoleShortTerm").value.trim(),
+        nextRoleLongTerm: document.getElementById("nextRoleLongTerm").value.trim(),
+        nextRoleMobility: document.getElementById("nextRoleMobility").value.trim(),
+        trainingCategories: trainingCategories, // Array of strings
+        trainingRemarks: document.getElementById("trainingRemarks")?.value.trim() || "",
+        topDevAreas: top5DevelopmentAreas, // ENHANCED: Add top 5 development areas
+        year: new Date().getFullYear()
+    };
+    
+    console.log("=== COMPLETE ENHANCED FINAL-YEAR FORM DATA ===");
+    console.log("Final-Year form data with top 5 development areas:", formData);
+    
+    // Disable the submit button and show loading state
+    const submitButton = document.getElementById("submitFinalYearIDP");
+    if (submitButton) {
+        submitButton.disabled = true;
+        submitButton.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Submitting...';
+    }
+    
+    try {
+        console.log("Sending enhanced Final-Year POST request to server...");
+        
+        const response = await fetch(`/linemanager/finalyear-idp/${currentUserId}`, {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json",
+                "Accept": "application/json"
+            },
+            body: JSON.stringify(formData)
+        });
+        
+        if (!response.ok) {
+            const errorText = await response.text();
+            console.error("Server error response:", errorText);
+            throw new Error(`Server responded with status ${response.status}: ${errorText}`);
+        }
+        
+        const result = await response.json();
+        console.log("Server response data:", result);
+        
+        if (result.success) {
+            let successMessage = "Final-Year IDP saved successfully!";
+            if (trainingCategories.length > 0) {
+                successMessage += `\n\nSelected ${trainingCategories.length} training categor${trainingCategories.length === 1 ? 'y' : 'ies'}.`;
+            }
+            if (top5DevelopmentAreas.length > 0) {
+                successMessage += `\n\nTop ${top5DevelopmentAreas.length} development areas identified and saved.`;
+            }
+            
+            console.log("✅ ENHANCED FINAL-YEAR SUCCESS:", successMessage);
+            alert(successMessage);
+            
+            // Update viewState to reflect the new status
+            if (typeof viewState !== 'undefined') {
+                viewState.viewOnlyStatus.finalyearidp = true;
+                
+                if (typeof updateStepperAccessibility === 'function') {
+                    updateStepperAccessibility();
+                }
+            }
+            
+            // Redirect to refresh the page
+            window.location.href = `/linemanager/records-performance-tracker/${currentUserId}`;
+        } else {
+            console.error("❌ Server returned error:", result);
+            alert("Error saving Final-Year IDP: " + (result.message || "Unknown error"));
+            
+            // Re-enable the submit button
+            if (submitButton) {
+                submitButton.disabled = false;
+                submitButton.innerHTML = '<i class="fas fa-paper-plane"></i> Submit Final-Year IDP';
+            }
+        }
+    } catch (error) {
+        console.error("❌ Error submitting Enhanced Final-Year IDP:", error);
+        alert("An error occurred while submitting the Final-Year IDP. Please try again.\n\nError: " + error.message);
+        
+        // Re-enable the submit button
+        if (submitButton) {
+            submitButton.disabled = false;
+            submitButton.innerHTML = '<i class="fas fa-paper-plane"></i> Submit Final-Year IDP';
+        }
+    }
+    
+    console.log("=== END ENHANCED FINAL-YEAR FORM SUBMISSION ===");
+}
+
+// Function to get top 5 development areas for Final-Year (all 4 quarters)
+function getFinalYearTop5DevelopmentAreas() {
+    console.log("=== COLLECTING FINAL-YEAR TOP 5 DEVELOPMENT AREAS ===");
+    
+    // Check if we have final year feedback data (Q1-Q4)
+    if (!window.finalYearFeedbackData || !window.finalYearFeedbackData.categorizedFeedback) {
+        console.log("No final year feedback data available for development areas");
+        return [];
+    }
+    
+    // Combine all areas that need development
+    const developmentAreas = [
+        ...window.finalYearFeedbackData.categorizedFeedback.satisfactory || [],
+        ...window.finalYearFeedbackData.categorizedFeedback.needsImprovement || [],
+        ...window.finalYearFeedbackData.categorizedFeedback.critical || []
+    ];
+    
+    console.log("Found final year development areas:", developmentAreas.length);
+    
+    // Sort by lowest rating first (most critical areas)
+    const sortedAreas = developmentAreas
+        .sort((a, b) => a.averageRating - b.averageRating)
+        .slice(0, 5); // Take top 5
+    
+    // Format for database storage
+    const top5Areas = sortedAreas.map((area, index) => {
+        const formattedArea = {
+            rank: index + 1,
+            type: area.type, // 'objective' or 'skill'
+            averageRating: area.averageRating,
+            quarterRatings: area.quarterRatings || {}
+        };
+        
+        if (area.type === 'objective') {
+            formattedArea.objectiveId = area.objectiveId;
+            formattedArea.name = area.objectiveDescrpt;
+            formattedArea.kpi = area.objectiveKPI;
+        } else {
+            formattedArea.skillId = area.jobReqSkillId;
+            formattedArea.name = area.jobReqSkillName;
+            formattedArea.skillType = area.jobReqSkillType;
+        }
+        
+        return formattedArea;
+    });
+    
+    console.log("Final-Year Top 5 development areas formatted:", top5Areas);
+    console.log("=== END COLLECTING FINAL-YEAR TOP 5 DEVELOPMENT AREAS ===");
+    
+    return top5Areas;
+}
+
+function showMidYearIDPSuccessNotification() {
+    // Remove any existing notifications
+    const existingNotifications = document.querySelectorAll('.midyear-idp-notification');
+    existingNotifications.forEach(notification => {
+        if (document.body.contains(notification)) {
+            document.body.removeChild(notification);
+        }
+    });
+    
+    const notification = document.createElement('div');
+    notification.className = 'midyear-idp-notification';
+    
+    notification.style.cssText = `
+        position: fixed;
+        top: 20px;
+        right: 20px;
+        background: linear-gradient(135deg, #4CAF50, #388E3C);
+        color: white;
+        padding: 20px 25px;
+        border-radius: 8px;
+        box-shadow: 0 6px 20px rgba(0, 0, 0, 0.15);
+        z-index: 10001;
+        font-weight: 500;
+        transform: translateX(100%);
+        transition: all 0.4s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+        max-width: 400px;
+        border: 2px solid rgba(255, 255, 255, 0.2);
+        backdrop-filter: blur(10px);
+    `;
+    
+    notification.innerHTML = `
+        <div style="display: flex; align-items: center; gap: 12px;">
+            <i class="fas fa-check-circle" style="font-size: 24px; flex-shrink: 0;"></i>
+            <div style="flex: 1; line-height: 1.4;">
+                <div style="font-size: 16px; font-weight: 600; margin-bottom: 4px;">Mid-Year IDP Submitted!</div>
+                <div style="font-size: 14px; opacity: 0.9;">Form has been converted to view-only mode</div>
+            </div>
+            <button onclick="this.parentElement.parentElement.remove()" 
+                    style="background: none; border: none; color: white; cursor: pointer; padding: 4px; border-radius: 4px; opacity: 0.8; transition: opacity 0.2s;"
+                    onmouseover="this.style.opacity='1'; this.style.backgroundColor='rgba(255,255,255,0.1)'"
+                    onmouseout="this.style.opacity='0.8'; this.style.backgroundColor='transparent'">
+                <i class="fas fa-times" style="font-size: 12px;"></i>
+            </button>
+        </div>
+    `;
+    
+    document.body.appendChild(notification);
+    
+    // Animate in
+    setTimeout(() => {
+        notification.style.transform = 'translateX(0)';
+    }, 100);
+    
+    // Auto-remove after 5 seconds
+    setTimeout(() => {
+        if (document.body.contains(notification)) {
+            notification.style.transform = 'translateX(100%)';
+            setTimeout(() => {
+                if (document.body.contains(notification)) {
+                    notification.remove();
+                }
+            }, 400);
+        }
+    }, 5000);
+}
+
+
 // FIXED: Debug function to check the submission data
 function debugCategorySubmission() {
     console.log("=== CATEGORY SUBMISSION DEBUG ===");
@@ -7428,6 +7821,8 @@ function navigateToMidYearIDP() {
         return;
     }
     
+    console.log("Navigating to Mid-Year IDP...");
+    
     // Hide other sections
     hideAllSections();
     
@@ -7445,34 +7840,95 @@ function navigateToMidYearIDP() {
     // Load feedback aggregates when form is shown
     loadMidYearFeedbackAggregates();
     
-    // Check if in view-only mode
-    const isViewOnly = viewState.viewOnlyStatus.midyearidp;
+    // FIXED: Check if in view-only mode and handle accordingly
+    const isViewOnly = viewState && viewState.viewOnlyStatus && viewState.viewOnlyStatus.midyearidp;
+    
+    console.log("Mid-Year IDP mode:", isViewOnly ? "View-Only" : "Edit");
     
     if (isViewOnly) {
-        // If in view-only mode, load the existing data
-        if (midYearIDPData) {
-            createViewOnlyMidYearIDPWithCategories(midYearIDPData);
+        console.log("Setting up view-only mode...");
+        
+        // Check if we have saved data available
+        if (window.savedMidYearIDPData) {
+            console.log("Using globally stored Mid-Year IDP data");
+            createViewOnlyMidYearIDPWithCategories(window.savedMidYearIDPData);
+        } else if (viewState && viewState.midYearData) {
+            console.log("Using viewState Mid-Year IDP data");
+            createViewOnlyMidYearIDPWithCategories(viewState.midYearData);
         } else {
-            // If data isn't loaded yet, fetch it
-            loadMidYearIDPDataWithCategories(userId);
+            console.log("Loading Mid-Year IDP data from server...");
+            // Load the data from server
+            loadMidYearIDPDataWithCategories(userId).then(() => {
+                if (window.savedMidYearIDPData) {
+                    createViewOnlyMidYearIDPWithCategories(window.savedMidYearIDPData);
+                } else {
+                    console.error("Failed to load Mid-Year IDP data");
+                    alert("Error loading Mid-Year IDP data. Please refresh the page.");
+                }
+            });
         }
     } else {
+        console.log("Setting up edit mode...");
         // If in edit mode, ensure form fields are enabled
         enableMidYearIDPForm();
-        // Initialize training categories functionality
-        initializeTrainingCategories();
+        
+        // Initialize training categories functionality for new input
+        if (typeof initializeTrainingCategories === 'function') {
+            initializeTrainingCategories();
+        }
     }
     
     midYearIDPForm.scrollIntoView({ behavior: "smooth" });
-    console.log("Navigated to the Mid-Year IDP form with training categories system.", isViewOnly ? "(View-Only Mode)" : "(Edit Mode)");
+    console.log("Navigated to Mid-Year IDP form.", isViewOnly ? "(View-Only Mode)" : "(Edit Mode)");
 }
+
+async function loadMidYearIDPDataWithCategories(userId) {
+    try {
+        console.log("Loading Mid-Year IDP data with categories for userId:", userId);
+        
+        const response = await fetch(`/linemanager/midyear-idp-trainings/${userId}`, {
+            method: "GET",
+            headers: {
+                "Accept": "application/json"
+            }
+        });
+        
+        if (!response.ok) {
+            throw new Error(`Server responded with status ${response.status}`);
+        }
+        
+        const result = await response.json();
+        
+        if (result.success && result.data.midYearData) {
+            console.log("Successfully loaded Mid-Year IDP data:", result.data);
+            
+            // Store globally for use when navigating to Mid-Year IDP
+            window.savedMidYearIDPData = result.data.midYearData;
+            window.savedTrainingCategories = result.data.trainingCategories || [];
+            window.savedTrainingRemarks = result.data.trainingRemarks || '';
+            
+            console.log("Stored Mid-Year IDP data globally:", {
+                midYearData: !!window.savedMidYearIDPData,
+                categoriesCount: window.savedTrainingCategories.length,
+                hasRemarks: !!window.savedTrainingRemarks
+            });
+            
+        } else {
+            console.error("No Mid-Year IDP data found or error:", result.message);
+        }
+    } catch (error) {
+        console.error("Error loading Mid-Year IDP data with categories:", error);
+    }
+}
+
+// Enhanced view-only function for Mid-Year IDP with top 5 development areas display
 function createViewOnlyMidYearIDPWithCategories(data) {
     if (!data) {
         console.error("No Mid-Year IDP data available for view-only mode");
         return;
     }
     
-    console.log("Creating view-only Mid-Year IDP with training categories:", data);
+    console.log("Creating enhanced view-only Mid-Year IDP with training categories and top 5 dev areas:", data);
     
     // Create view-only form
     const form = document.getElementById("midYearIDPFormDetails");
@@ -7509,35 +7965,61 @@ function createViewOnlyMidYearIDPWithCategories(data) {
     // Set values for view-only
     setIDPFormValues(data);
     
-    // FIXED: Set training categories to view-only mode and load categories
-    setTrainingCategoriesViewOnly(true);
-    
-    // FIXED: Load and display training categories from JSONB field
-    if (data.trainingCategories && Array.isArray(data.trainingCategories)) {
-        console.log('Displaying training categories from JSONB:', data.trainingCategories);
-        
-        selectedCategories = data.trainingCategories.map((categoryName, index) => ({
-            id: `category_${index}`,
-            name: categoryName,
-            category: categoryName,
-            isNew: false
-        }));
-        
-        updateSelectedCategoriesDisplay();
-    } else {
-        // Fallback to loading via API
-        loadExistingSelectedCategories();
+    // Set training categories to view-only mode and load categories
+    if (typeof setTrainingCategoriesViewOnly === 'function') {
+        setTrainingCategoriesViewOnly(true);
     }
     
-    // Set training remarks
-    if (data.trainingRemarks) {
-        const remarksField = document.getElementById('trainingRemarks');
-        if (remarksField) {
-            remarksField.value = data.trainingRemarks;
+    // Load and display training categories from JSONB field or global data
+    let categoriesToDisplay = [];
+    
+    if (data.trainingCategories && Array.isArray(data.trainingCategories)) {
+        categoriesToDisplay = data.trainingCategories;
+        console.log('Using training categories from data:', categoriesToDisplay);
+    } else if (window.savedTrainingCategories && Array.isArray(window.savedTrainingCategories)) {
+        categoriesToDisplay = window.savedTrainingCategories;
+        console.log('Using training categories from global storage:', categoriesToDisplay);
+    }
+    
+    if (categoriesToDisplay.length > 0) {
+        console.log('Displaying training categories:', categoriesToDisplay);
+        
+        if (typeof selectedCategories !== 'undefined') {
+            selectedCategories = categoriesToDisplay.map((categoryName, index) => ({
+                id: `category_${index}`,
+                name: categoryName,
+                category: categoryName,
+                isNew: false
+            }));
+            
+            if (typeof updateSelectedCategoriesDisplay === 'function') {
+                updateSelectedCategoriesDisplay();
+            }
+        }
+    } else {
+        console.log('No training categories to display');
+        if (typeof selectedCategories !== 'undefined') {
+            selectedCategories = [];
+            if (typeof updateSelectedCategoriesDisplay === 'function') {
+                updateSelectedCategoriesDisplay();
+            }
         }
     }
     
-    // Show last updated info
+    // Set training remarks
+    const remarksToDisplay = data.trainingRemarks || window.savedTrainingRemarks || '';
+    if (remarksToDisplay) {
+        const remarksField = document.getElementById('trainingRemarks');
+        if (remarksField) {
+            remarksField.value = remarksToDisplay;
+        }
+    }
+    
+    // ENHANCED: Display top 5 development areas if available
+    const top5AreasToDisplay = data.topDevAreas || window.savedTop5DevAreas || [];
+    displayTop5DevelopmentAreas(top5AreasToDisplay, 'Mid-Year');
+    
+    // Show last updated info with enhanced details
     let lastUpdatedInfo = document.querySelector("#midYearIDPForm .last-updated-info");
     if (!lastUpdatedInfo) {
         lastUpdatedInfo = document.createElement('div');
@@ -7546,7 +8028,8 @@ function createViewOnlyMidYearIDPWithCategories(data) {
     }
     
     const lastUpdatedDate = data.created_at ? new Date(data.created_at).toLocaleString() : 'Unknown';
-    const categoriesCount = data.trainingCategories ? data.trainingCategories.length : 0;
+    const categoriesCount = categoriesToDisplay.length;
+    const top5Count = top5AreasToDisplay.length;
     
     lastUpdatedInfo.innerHTML = `
         <div style="margin-top: 20px; padding: 15px; background-color: #e8f5e8; border-radius: 8px; border-left: 4px solid #4CAF50;">
@@ -7562,11 +8045,17 @@ function createViewOnlyMidYearIDPWithCategories(data) {
                     Training categories selected: ${categoriesCount}
                 </div>
             ` : ''}
+            ${top5Count > 0 ? `
+                <div style="margin-top: 8px; font-size: 14px; color: #555;">
+                    Top development areas identified: ${top5Count}
+                </div>
+            ` : ''}
         </div>
     `;
     
-    console.log("View-only Mid-Year IDP with training categories created successfully");
+    console.log("Enhanced view-only Mid-Year IDP with training categories and top 5 dev areas created successfully");
 }
+
 
 // Function to hide all sections
 function hideAllSections() {
@@ -9919,163 +10408,56 @@ function replaceTrainingFunctions() {
     console.log('Training functions replaced with categories versions');
 }
 
+document.addEventListener("DOMContentLoaded", function() {
+    console.log("Initializing enhanced performance tracker with top 5 development areas...");
+    
+    // ... your existing initialization code ...
+    
+    // ENHANCED: Replace form submission functions with enhanced versions
+    window.submitMidYearIDPForm = submitMidYearIDPFormWithTrainingCategories;
+    window.submitFinalYearIDPForm = submitFinalYearIDPFormWithEnhancements;
+    
+    // Make enhanced functions globally available
+    window.getTop5DevelopmentAreas = getTop5DevelopmentAreas;
+    window.getFinalYearTop5DevelopmentAreas = getFinalYearTop5DevelopmentAreas;
+    window.submitMidYearIDPFormWithTrainingCategories = submitMidYearIDPFormWithTrainingCategories;
+    window.submitFinalYearIDPFormWithEnhancements = submitFinalYearIDPFormWithEnhancements;
+    
+    console.log("Enhanced IDP functions with top 5 development areas loaded successfully");
+});
+
+
 window.submitMidYearIDPFormWithTrainingCategories = submitMidYearIDPFormWithTrainingCategories;
 window.initializeTrainingDropdown = initializeTrainingDropdown;
 window.replaceTrainingFunctions = replaceTrainingFunctions;
 window.debugCategoryState = debugCategoryState;
 
-// Updated function to submit Mid-Year IDP form with training categories
-async function submitMidYearIDPFormWithTrainingCategories(event) {
-    event.preventDefault();
-    
-    console.log("=== STARTING FORM SUBMISSION WITH CATEGORIES ===");
-    
-    // Debug categories before validation
-    debugCategoryState();
-    
-    // Validate the form
-    if (!validateIDPForm('mid')) {
-        console.log("Form validation failed");
-        return;
-    }
-    
-    // Get selected training categories with enhanced debugging
-    const trainingCategories = getSelectedCategoriesForSubmission();
-    
-    console.log("=== FINAL SUBMISSION DATA ===");
-    console.log("Final trainingCategories:", trainingCategories);
-    console.log("Type:", typeof trainingCategories);
-    console.log("IsArray:", Array.isArray(trainingCategories));
-    console.log("Length:", trainingCategories.length);
-    console.log("JSON representation:", JSON.stringify(trainingCategories));
-    
-    // Validate that we have proper array of strings
-    if (!Array.isArray(trainingCategories)) {
-        console.error("trainingCategories is not an array:", trainingCategories);
-        alert("Error: Training categories data is invalid. Please try again.");
-        return;
-    }
-    
-    // Additional validation: ensure all items are strings
-    const invalidItems = trainingCategories.filter(item => typeof item !== 'string' || item.trim() === '');
-    if (invalidItems.length > 0) {
-        console.error("Invalid items found in trainingCategories:", invalidItems);
-        alert("Error: Some training categories are invalid. Please try again.");
-        return;
-    }
-    
-    // Get form data
-    const formData = {
-        profStrengths: document.getElementById("profStrengths").value.trim(),
-        profAreasForDevelopment: document.getElementById("profAreasForDevelopment").value.trim(),
-        profActionsToTake: document.getElementById("profActionsToTake").value.trim(),
-        leaderStrengths: document.getElementById("leaderStrengths").value.trim(),
-        leaderAreasForDevelopment: document.getElementById("leaderAreasForDevelopment").value.trim(),
-        leaderActionsToTake: document.getElementById("leaderActionsToTake").value.trim(),
-        nextRoleShortTerm: document.getElementById("nextRoleShortTerm").value.trim(),
-        nextRoleLongTerm: document.getElementById("nextRoleLongTerm").value.trim(),
-        nextRoleMobility: document.getElementById("nextRoleMobility").value.trim(),
-        trainingCategories: trainingCategories, // This should be an array of strings
-        trainingRemarks: document.getElementById("trainingRemarks")?.value.trim() || "",
-        year: new Date().getFullYear()
-    };
-    
-    console.log("=== COMPLETE FORM DATA ===");
-    console.log("Form data structure:", {
-        ...formData,
-        profStrengths: formData.profStrengths.substring(0, 50) + '...',
-        profAreasForDevelopment: formData.profAreasForDevelopment.substring(0, 50) + '...',
-        profActionsToTake: formData.profActionsToTake.substring(0, 50) + '...',
-        leaderStrengths: formData.leaderStrengths.substring(0, 50) + '...',
-        leaderAreasForDevelopment: formData.leaderAreasForDevelopment.substring(0, 50) + '...',
-        leaderActionsToTake: formData.leaderActionsToTake.substring(0, 50) + '...',
-        nextRoleShortTerm: formData.nextRoleShortTerm.substring(0, 50) + '...',
-        nextRoleLongTerm: formData.nextRoleLongTerm.substring(0, 50) + '...',
-        nextRoleMobility: formData.nextRoleMobility.substring(0, 50) + '...',
-        trainingCategories: formData.trainingCategories // Show full array
-    });
-    console.log("trainingCategories in formData:", formData.trainingCategories);
-    console.log("JSON.stringify of complete formData:", JSON.stringify(formData, null, 2));
-    console.log("=== END COMPLETE FORM DATA ===");
-    
-    // Disable the submit button and show loading state
-    const submitButton = document.getElementById("submitMidYearIDP");
-    if (submitButton) {
-        submitButton.disabled = true;
-        submitButton.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Submitting...';
-    }
-    
-    try {
-        console.log("Sending POST request to server...");
-        console.log("Request URL:", `/linemanager/midyear-idp/${currentUserId}`);
-        console.log("Request body:", JSON.stringify(formData, null, 2));
-        
-        const response = await fetch(`/linemanager/midyear-idp/${currentUserId}`, {
-            method: "POST",
-            headers: {
-                "Content-Type": "application/json",
-                "Accept": "application/json"
-            },
-            body: JSON.stringify(formData)
+
+// Function to attach enhanced form listeners
+function attachEnhancedFormListeners() {
+    // Mid-Year IDP form - ENHANCED
+    const midYearIDPForm = document.getElementById('midYearIDPFormDetails');
+    if (midYearIDPForm) {
+        midYearIDPForm.removeEventListener('submit', submitMidYearIDPForm); // Remove old listener
+        midYearIDPForm.addEventListener('submit', function(event) {
+            event.preventDefault();
+            submitMidYearIDPFormWithTrainingCategories(event);
         });
-        
-        console.log("Server response status:", response.status);
-        console.log("Server response headers:", Object.fromEntries(response.headers.entries()));
-        
-        if (!response.ok) {
-            const errorText = await response.text();
-            console.error("Server error response:", errorText);
-            throw new Error(`Server responded with status ${response.status}: ${errorText}`);
-        }
-        
-        const result = await response.json();
-        console.log("Server response data:", result);
-        
-        if (result.success) {
-            let successMessage = "Mid-Year IDP saved successfully!";
-            if (trainingCategories.length > 0) {
-                successMessage += `\n\nSelected ${trainingCategories.length} training categor${trainingCategories.length === 1 ? 'y' : 'ies'}:`;
-                trainingCategories.forEach(category => {
-                    successMessage += `\n• ${category}`;
-                });
-            }
-            
-            console.log("✅ SUCCESS:", successMessage);
-            alert(successMessage);
-            
-            // Update viewState to reflect the new status
-            if (typeof viewState !== 'undefined') {
-                viewState.viewOnlyStatus.midyearidp = true;
-                if (typeof updateStepperAccessibility === 'function') {
-                    updateStepperAccessibility();
-                }
-            }
-            
-            // Redirect to refresh the page and show view-only mode
-            window.location.href = `/linemanager/records-performance-tracker/${currentUserId}`;
-        } else {
-            console.error("❌ Server returned error:", result);
-            alert("Error saving Mid-Year IDP: " + (result.message || "Unknown error"));
-            
-            // Re-enable the submit button
-            if (submitButton) {
-                submitButton.disabled = false;
-                submitButton.innerHTML = '<i class="fas fa-paper-plane"></i> Submit Mid-Year IDP';
-            }
-        }
-    } catch (error) {
-        console.error("❌ Error submitting Mid-Year IDP:", error);
-        alert("An error occurred while submitting the Mid-Year IDP. Please try again.\n\nError: " + error.message);
-        
-        // Re-enable the submit button
-        if (submitButton) {
-            submitButton.disabled = false;
-            submitButton.innerHTML = '<i class="fas fa-paper-plane"></i> Submit Mid-Year IDP';
-        }
+        console.log("Enhanced Mid-Year IDP form listener attached");
     }
     
-    console.log("=== END FORM SUBMISSION ===");
+    // Final-Year IDP form - ENHANCED
+    const finalYearIDPForm = document.getElementById('finalYearIDPFormDetails');
+    if (finalYearIDPForm) {
+        finalYearIDPForm.removeEventListener('submit', submitFinalYearIDPForm); // Remove old listener
+        finalYearIDPForm.addEventListener('submit', function(event) {
+            event.preventDefault();
+            submitFinalYearIDPFormWithEnhancements(event);
+        });
+        console.log("Enhanced Final-Year IDP form listener attached");
+    }
 }
+
 
 // FIXED: Debug function to check category selection
 function debugCategorySelection() {
@@ -10372,6 +10754,159 @@ function refreshFeedbackDataOnYearChange() {
         loadMidYearFeedbackAggregates();
     }
 }
+
+// Function to load Final-Year feedback aggregates (similar to Mid-Year but for all 4 quarters)
+async function loadFinalYearFeedbackAggregates() {
+    console.log("Loading Final-Year feedback aggregates (Q1-Q4)...");
+    
+    try {
+        let selectedYear = new Date().getFullYear();
+        
+        const yearSelect = document.getElementById('yearSelect');
+        if (yearSelect && yearSelect.value) {
+            selectedYear = yearSelect.value;
+        }
+        
+        const urlParams = new URLSearchParams(window.location.search);
+        if (urlParams.has('year')) {
+            selectedYear = urlParams.get('year');
+        }
+        
+        // Fetch Final-Year feedback aggregates from server (Q1-Q4)
+        const response = await fetch(`/linemanager/finalyear-feedback-aggregates/${userId}?year=${selectedYear}`);
+        
+        if (!response.ok) {
+            throw new Error(`Server responded with status ${response.status}`);
+        }
+        
+        const result = await response.json();
+        
+        if (result.success) {
+            window.finalYearFeedbackData = result.data;
+            console.log("Final-Year feedback data loaded:", window.finalYearFeedbackData);
+            
+            // Display the feedback in circular format if needed
+            // displayFinalYearFeedbackInCircularFormat(window.finalYearFeedbackData);
+            
+        } else {
+            console.error("Error loading Final-Year feedback aggregates:", result.message);
+        }
+        
+    } catch (error) {
+        console.error("Error fetching Final-Year feedback aggregates:", error);
+    }
+}
+
+// Function to navigate to Final-Year IDP with enhanced functionality
+function navigateToFinalYearIDP() {
+    const finalYearIDPButton = document.getElementById("finalYearIDP");
+    
+    // Check if the button is accessible
+    if (!finalYearIDPButton || !finalYearIDPButton.classList.contains('accessible')) {
+        alert("You must complete the previous steps first.");
+        return;
+    }
+    
+    console.log("Navigating to Enhanced Final-Year IDP...");
+    
+    // Hide other sections
+    hideAllSections();
+    
+    // Show the Final-Year IDP form (reusing Mid-Year form structure)
+    const midYearIDPForm = document.getElementById("midYearIDPForm");
+    if (!midYearIDPForm) {
+        console.error("IDP form not found.");
+        return;
+    }
+    
+    midYearIDPForm.style.display = "block";
+    midYearIDPForm.classList.remove("fade-out");
+    midYearIDPForm.classList.add("fade-in");
+    
+    // Load Final-Year feedback aggregates when form is shown
+    loadFinalYearFeedbackAggregates();
+    
+    // Check if in view-only mode and handle accordingly
+    const isViewOnly = viewState && viewState.viewOnlyStatus && viewState.viewOnlyStatus.finalyearidp;
+    
+    console.log("Final-Year IDP mode:", isViewOnly ? "View-Only" : "Edit");
+    
+    if (isViewOnly) {
+        console.log("Setting up Final-Year view-only mode...");
+        
+        // Check if we have saved data available
+        if (viewState && viewState.finalYearData) {
+            console.log("Using viewState Final-Year IDP data");
+            createViewOnlyFinalYearIDPWithCategories(viewState.finalYearData);
+        } else {
+            console.log("Loading Final-Year IDP data from server...");
+            // Load the data from server
+            loadFinalYearIDPData(userId).then(() => {
+                if (viewState && viewState.finalYearData) {
+                    createViewOnlyFinalYearIDPWithCategories(viewState.finalYearData);
+                } else {
+                    console.error("Failed to load Final-Year IDP data");
+                    alert("Error loading Final-Year IDP data. Please refresh the page.");
+                }
+            });
+        }
+    } else {
+        console.log("Setting up Final-Year edit mode...");
+        
+        // Update form title for Final-Year
+        const title = document.querySelector("#midYearIDPForm h2");
+        if (title) {
+            title.innerHTML = '<i class="fas fa-clipboard-check"></i> Final-Year Individual Development Plan (IDP)';
+        }
+        
+        // Update submit button for Final-Year
+        const submitButton = document.getElementById("submitMidYearIDP");
+        if (submitButton) {
+            submitButton.id = "submitFinalYearIDP";
+            submitButton.innerHTML = '<i class="fas fa-paper-plane"></i> Submit Final-Year IDP';
+        }
+        
+        // If in edit mode, ensure form fields are enabled
+        enableFinalYearIDPForm();
+        
+        // Initialize training categories functionality for new input
+        if (typeof initializeTrainingCategories === 'function') {
+            initializeTrainingCategories();
+        }
+        
+        // Attach enhanced form listener
+        attachEnhancedFormListeners();
+    }
+    
+    midYearIDPForm.scrollIntoView({ behavior: "smooth" });
+    console.log("Navigated to Enhanced Final-Year IDP form.", isViewOnly ? "(View-Only Mode)" : "(Edit Mode)");
+}
+
+// Update the existing navigation function to use enhanced version
+window.navigateToFinalYearIDP = navigateToFinalYearIDP;
+// Debug function to test top 5 development areas collection
+function debugTop5Collection() {
+    console.log("=== DEBUGGING TOP 5 COLLECTION ===");
+    
+    console.log("Mid-Year feedback data available:", !!midYearFeedbackData);
+    if (midYearFeedbackData) {
+        console.log("Mid-Year categorized feedback:", midYearFeedbackData.categorizedFeedback);
+        const midYearTop5 = getTop5DevelopmentAreas();
+        console.log("Mid-Year Top 5:", midYearTop5);
+    }
+    
+    console.log("Final-Year feedback data available:", !!window.finalYearFeedbackData);
+    if (window.finalYearFeedbackData) {
+        console.log("Final-Year categorized feedback:", window.finalYearFeedbackData.categorizedFeedback);
+        const finalYearTop5 = getFinalYearTop5DevelopmentAreas();
+        console.log("Final-Year Top 5:", finalYearTop5);
+    }
+    
+    console.log("=== END DEBUGGING TOP 5 COLLECTION ===");
+}
+
+// Make debug function globally available
+window.debugTop5Collection = debugTop5Collection;
 // Function to show loading placeholders
 function showLoadingPlaceholders() {
     const containers = [
@@ -10706,14 +11241,14 @@ function createViewOnlyMidYearIDP(data) {
     
     console.log("View-only Mid-Year IDP created successfully");
 }
-
+// Enhanced view-only function for Final-Year IDP with top 5 development areas display
 function createViewOnlyFinalYearIDPWithCategories(data) {
     if (!data) {
         console.error("No Final-Year IDP data available for view-only mode");
         return;
     }
     
-    console.log("Creating view-only Final-Year IDP with training categories:", data);
+    console.log("Creating enhanced view-only Final-Year IDP with training categories and top 5 dev areas:", data);
     
     // Create view-only form (reusing the Mid-Year form layout)
     const form = document.getElementById("midYearIDPFormDetails");
@@ -10750,7 +11285,7 @@ function createViewOnlyFinalYearIDPWithCategories(data) {
     // Set values for view-only
     setIDPFormValues(data);
     
-    // FIXED: Display training categories for Final-Year IDP if available
+    // Display training categories for Final-Year IDP if available
     if (data.trainingCategories && Array.isArray(data.trainingCategories)) {
         console.log('Displaying Final-Year training categories from JSONB:', data.trainingCategories);
         
@@ -10774,7 +11309,11 @@ function createViewOnlyFinalYearIDPWithCategories(data) {
         }
     }
     
-    // Show last updated info
+    // ENHANCED: Display top 5 development areas for Final-Year if available
+    const top5AreasToDisplay = data.topDevAreas || [];
+    displayTop5DevelopmentAreas(top5AreasToDisplay, 'Final-Year');
+    
+    // Show last updated info with enhanced details
     let lastUpdatedInfo = document.querySelector("#midYearIDPForm .last-updated-info");
     if (!lastUpdatedInfo) {
         lastUpdatedInfo = document.createElement('div');
@@ -10784,6 +11323,7 @@ function createViewOnlyFinalYearIDPWithCategories(data) {
     
     const lastUpdatedDate = data.lastUpdated ? new Date(data.lastUpdated).toLocaleString() : 'Unknown';
     const categoriesCount = data.trainingCategories ? data.trainingCategories.length : 0;
+    const top5Count = top5AreasToDisplay.length;
     
     lastUpdatedInfo.innerHTML = `
         <div style="margin-top: 20px; padding: 15px; background-color: #e8f5e8; border-radius: 8px; border-left: 4px solid #4CAF50;">
@@ -10799,51 +11339,193 @@ function createViewOnlyFinalYearIDPWithCategories(data) {
                     Training categories selected: ${categoriesCount}
                 </div>
             ` : ''}
+            ${top5Count > 0 ? `
+                <div style="margin-top: 8px; font-size: 14px; color: #555;">
+                    Top development areas identified: ${top5Count}
+                </div>
+            ` : ''}
         </div>
     `;
     
-    console.log("View-only Final-Year IDP with training categories created successfully");
+    console.log("Enhanced view-only Final-Year IDP with training categories and top 5 dev areas created successfully");
 }
 
 // Function to enable Mid-Year IDP form for editing
 function enableMidYearIDPForm() {
+    console.log("Enabling Mid-Year IDP form for editing");
+    
     const form = document.getElementById("midYearIDPFormDetails");
-    if (form) {
-        // Remove view-only mode class if present
-        form.classList.remove('view-only-mode');
-        
-        // Enable all form inputs
-        const inputs = form.querySelectorAll("input, textarea");
-        inputs.forEach(input => {
-            input.disabled = false;
-            input.removeAttribute('readonly');
-        });
-        
-        // Show submit button
-        const submitButton = document.getElementById("submitMidYearIDP");
-        if (submitButton) {
-            submitButton.style.display = "inline-block";
-        }
-        
-        // Remove any last updated info
-        const lastUpdatedInfo = form.querySelector(".last-updated-info");
-        if (lastUpdatedInfo) {
-            lastUpdatedInfo.remove();
-        }
-        
-        // Update form title if needed
-        const title = document.querySelector("#midYearIDPForm h2");
-        if (title) {
-            title.innerHTML = '<i class="fas fa-clipboard-check"></i> Mid-Year Individual Development Plan (IDP)';
-        }
-        
-        // Update the progress bar based on filled fields
-        updateIDPProgress();
+    if (!form) {
+        console.error("Mid-Year IDP form not found");
+        return;
     }
+    
+    // Remove view-only class
+    form.classList.remove('view-only-mode');
+    
+    // Enable all form inputs
+    const inputs = form.querySelectorAll("input, textarea, select");
+    inputs.forEach(input => {
+        input.disabled = false;
+        input.removeAttribute('readonly');
+        input.style.backgroundColor = 'white';
+        input.style.border = '1px solid #ddd';
+        input.style.cursor = 'text';
+    });
+    
+    // Show submit button
+    const submitButton = document.getElementById("submitMidYearIDP");
+    if (submitButton) {
+        submitButton.style.display = "inline-block";
+        submitButton.disabled = false;
+    }
+    
+    // Remove view-only indicator
+    const viewOnlyIndicator = document.querySelector(".last-updated-info");
+    if (viewOnlyIndicator) {
+        viewOnlyIndicator.remove();
+    }
+    
+    // Enable training categories for editing
+    if (typeof setTrainingCategoriesViewOnly === 'function') {
+        setTrainingCategoriesViewOnly(false);
+    }
+    
+    console.log("Mid-Year IDP form enabled for editing");
 }
 
+// Function to display top 5 development areas in a dedicated section
+function displayTop5DevelopmentAreas(top5Areas, idpType) {
+    console.log(`Displaying top 5 development areas for ${idpType} IDP:`, top5Areas);
+    
+    if (!Array.isArray(top5Areas) || top5Areas.length === 0) {
+        console.log(`No top 5 development areas to display for ${idpType} IDP`);
+        return;
+    }
+    
+    // Find a suitable container or create one
+    const form = document.getElementById("midYearIDPFormDetails");
+    if (!form) return;
+    
+    // Remove existing top 5 display if any
+    const existingDisplay = form.querySelector('.top5-dev-areas-display');
+    if (existingDisplay) {
+        existingDisplay.remove();
+    }
+    
+    // Create the top 5 development areas display
+    const top5Display = document.createElement('div');
+    top5Display.className = 'top5-dev-areas-display';
+    top5Display.style.cssText = `
+        margin-top: 20px;
+        padding: 20px;
+        background-color: #fff3cd;
+        border-radius: 8px;
+        border-left: 4px solid #ffc107;
+    `;
+    
+    let displayHTML = `
+        <div style="display: flex; align-items: center; gap: 8px; color: #856404; margin-bottom: 15px;">
+            <i class="fas fa-chart-line"></i>
+            <strong style="font-size: 16px;">Top 5 Development Areas (${idpType})</strong>
+        </div>
+        <div style="font-size: 14px; color: #666; margin-bottom: 15px;">
+            These areas were identified based on Q1${idpType === 'Final-Year' ? '-Q4' : '-Q2'} feedback and saved automatically.
+        </div>
+    `;
+    
+    // Display each development area
+    top5Areas.forEach((area, index) => {
+        const ratingColor = area.averageRating < 2 ? '#dc3545' : 
+                           area.averageRating < 3 ? '#fd7e14' : 
+                           area.averageRating < 4 ? '#ffc107' : '#28a745';
+        
+        const typeIcon = area.type === 'objective' ? 'fas fa-bullseye' : 'fas fa-cogs';
+        const typeLabel = area.type === 'objective' ? 'Objective' : `${area.skillType || ''} Skill`;
+        
+        displayHTML += `
+            <div style="
+                display: flex; 
+                align-items: center; 
+                justify-content: space-between;
+                padding: 12px;
+                background-color: white;
+                border-radius: 6px;
+                margin-bottom: 10px;
+                border-left: 3px solid ${ratingColor};
+                box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+            ">
+                <div style="flex: 1;">
+                    <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 4px;">
+                        <span style="
+                            background-color: ${ratingColor};
+                            color: white;
+                            padding: 2px 6px;
+                            border-radius: 12px;
+                            font-size: 11px;
+                            font-weight: bold;
+                            min-width: 20px;
+                            text-align: center;
+                        ">${area.rank}</span>
+                        <i class="${typeIcon}" style="color: var(--primary-color);"></i>
+                        <span style="font-weight: 500; color: var(--primary-color);">${area.name}</span>
+                        <span style="
+                            background-color: #f8f9fa;
+                            color: #6c757d;
+                            padding: 2px 6px;
+                            border-radius: 10px;
+                            font-size: 10px;
+                        ">${typeLabel}</span>
+                    </div>
+                    ${area.kpi ? `
+                        <div style="font-size: 11px; color: #666; margin-left: 32px;">
+                            KPI: ${area.kpi}
+                        </div>
+                    ` : ''}
+                </div>
+                <div style="text-align: right; margin-left: 15px;">
+                    <div style="font-weight: bold; color: ${ratingColor}; font-size: 14px;">
+                        ${area.averageRating.toFixed(1)}/5.0
+                    </div>
+                    <div style="font-size: 10px; color: #666;">
+                        Avg Rating
+                    </div>
+                </div>
+            </div>
+        `;
+    });
+    
+    // Add note about quarter ratings if available
+    const hasQuarterRatings = top5Areas.some(area => 
+        area.quarterRatings && Object.keys(area.quarterRatings).length > 0
+    );
+    
+    if (hasQuarterRatings) {
+        displayHTML += `
+            <div style="margin-top: 15px; padding: 10px; background-color: rgba(255,255,255,0.7); border-radius: 4px; font-size: 12px; color: #666;">
+                <i class="fas fa-info-circle"></i> 
+                <strong>Note:</strong> Ratings are averaged across all quarters with available feedback.
+            </div>
+        `;
+    }
+    
+    top5Display.innerHTML = displayHTML;
+    
+    // Insert before the last updated info or at the end of the form
+    const lastUpdatedInfo = form.querySelector('.last-updated-info');
+    if (lastUpdatedInfo) {
+        form.insertBefore(top5Display, lastUpdatedInfo);
+    } else {
+        form.appendChild(top5Display);
+    }
+    
+    console.log(`Successfully displayed ${top5Areas.length} development areas for ${idpType} IDP`);
+}
 
-
+// Make enhanced functions globally available
+window.createViewOnlyMidYearIDPWithCategories = createViewOnlyMidYearIDPWithCategories;
+window.createViewOnlyFinalYearIDPWithCategories = createViewOnlyFinalYearIDPWithCategories;
+window.displayTop5DevelopmentAreas = displayTop5DevelopmentAreas;
 
 // Function to enable Final-Year IDP form for editing
 function enableFinalYearIDPForm() {
@@ -10881,44 +11563,63 @@ function enableFinalYearIDPForm() {
         updateFinalIDPProgress();
     }
 }
-
-// Function to set IDP form values
 function setIDPFormValues(data) {
-    if (!data) return;
+    if (!data) {
+        console.error("No data provided to setIDPFormValues");
+        return;
+    }
     
-    // Helper function to set field value if it exists
-    function setFieldValue(fieldId, value) {
+    console.log("Setting IDP form values with data:", data);
+    
+    // Map of form field IDs to data properties
+    const fieldMappings = {
+        'profStrengths': 'profStrengths',
+        'profAreasForDevelopment': 'profAreasForDevelopment', 
+        'profActionsToTake': 'profActionsToTake',
+        'leaderStrengths': 'leaderStrengths',
+        'leaderAreasForDevelopment': 'leaderAreasForDevelopment',
+        'leaderActionsToTake': 'leaderActionsToTake',
+        'nextRoleShortTerm': 'nextRoleShortTerm',
+        'nextRoleLongTerm': 'nextRoleLongTerm',
+        'nextRoleMobility': 'nextRoleMobility',
+        'trainingRemarks': 'trainingRemarks'
+    };
+    
+    // Set each field value
+    Object.entries(fieldMappings).forEach(([fieldId, dataProperty]) => {
         const field = document.getElementById(fieldId);
-        if (field && value) {
-            field.value = value;
+        if (field && data[dataProperty]) {
+            field.value = data[dataProperty];
+            console.log(`Set ${fieldId} with value length:`, data[dataProperty].length);
+        } else if (field) {
+            field.value = '';
+            console.log(`Cleared ${fieldId} (no data)`);
+        } else {
+            console.warn(`Field ${fieldId} not found in DOM`);
+        }
+    });
+    
+    // Set training categories if available
+    if (data.trainingCategories && Array.isArray(data.trainingCategories)) {
+        console.log('Setting training categories:', data.trainingCategories);
+        
+        if (typeof selectedCategories !== 'undefined') {
+            selectedCategories = data.trainingCategories.map((categoryName, index) => ({
+                id: `category_${index}`,
+                name: categoryName,
+                category: categoryName,
+                isNew: false
+            }));
+            
+            if (typeof updateSelectedCategoriesDisplay === 'function') {
+                updateSelectedCategoriesDisplay();
+            }
         }
     }
     
-    // Set each field value
-    setFieldValue("profStrengths", data.profStrengths);
-    setFieldValue("profAreasForDevelopment", data.profAreasForDevelopment);
-    setFieldValue("profActionsToTake", data.profActionsToTake);
-    setFieldValue("leaderStrengths", data.leaderStrengths);
-    setFieldValue("leaderAreasForDevelopment", data.leaderAreasForDevelopment);
-    setFieldValue("leaderActionsToTake", data.leaderActionsToTake);
-    setFieldValue("nextRoleShortTerm", data.nextRoleShortTerm);
-    setFieldValue("nextRoleLongTerm", data.nextRoleLongTerm);
-    setFieldValue("nextRoleMobility", data.nextRoleMobility);
-    
-    // Also try with "final" prefix for Final-Year IDP
-    setFieldValue("finalProfStrengths", data.profStrengths);
-    setFieldValue("finalProfAreasForDevelopment", data.profAreasForDevelopment);
-    setFieldValue("finalProfActionsToTake", data.profActionsToTake);
-    setFieldValue("finalLeaderStrengths", data.leaderStrengths);
-    setFieldValue("finalLeaderAreasForDevelopment", data.leaderAreasForDevelopment);
-    setFieldValue("finalLeaderActionsToTake", data.leaderActionsToTake);
-    setFieldValue("finalNextRoleShortTerm", data.nextRoleShortTerm);
-    setFieldValue("finalNextRoleLongTerm", data.nextRoleLongTerm);
-    setFieldValue("finalNextRoleMobility", data.nextRoleMobility);
-    
-    // Update character counters
-    updateAllCharCounters();
+    console.log("IDP form values set successfully");
 }
+
 
 // Function to update all character counters
 function updateAllCharCounters() {
@@ -10935,52 +11636,51 @@ function updateAllCharCounters() {
 // Function to update Mid-Year IDP progress
 function updateIDPProgress() {
     const fields = [
-        "profStrengths", 
-        "profAreasForDevelopment", 
-        "profActionsToTake", 
-        "leaderStrengths", 
-        "leaderAreasForDevelopment", 
-        "leaderActionsToTake", 
-        "nextRoleShortTerm", 
-        "nextRoleLongTerm", 
-        "nextRoleMobility"
+        'profStrengths',
+        'profAreasForDevelopment', 
+        'profActionsToTake',
+        'leaderStrengths',
+        'leaderAreasForDevelopment',
+        'leaderActionsToTake',
+        'nextRoleShortTerm',
+        'nextRoleLongTerm',
+        'nextRoleMobility'
     ];
     
     let filledFields = 0;
+    const totalFields = fields.length;
     
     fields.forEach(fieldId => {
         const field = document.getElementById(fieldId);
-        if (field && field.value.trim().length > 0) {
+        if (field && field.value && field.value.trim().length > 0) {
             filledFields++;
-            
-            // Update character counter
-            const counterId = fieldId + 'Count';
-            const counterElement = document.getElementById(counterId);
-            if (counterElement) {
-                counterElement.textContent = field.value.length;
-            }
         }
     });
     
-    // Calculate progress percentage
-    const progressPercentage = (filledFields / fields.length) * 100;
+    const progressPercentage = (filledFields / totalFields) * 100;
     
-    // Update progress bar
     const progressBar = document.getElementById('midYearIDPProgressBar');
     if (progressBar) {
-        progressBar.style.width = progressPercentage + '%';
+        progressBar.style.width = `${progressPercentage}%`;
     }
     
-    // Enable/disable submit button based on progress
+    // Update submit button state
     const submitButton = document.getElementById('submitMidYearIDP');
     if (submitButton) {
         if (progressPercentage === 100) {
             submitButton.disabled = false;
+            submitButton.style.backgroundColor = 'var(--primary-color)';
+            submitButton.style.cursor = 'pointer';
         } else {
             submitButton.disabled = true;
+            submitButton.style.backgroundColor = '#ccc';
+            submitButton.style.cursor = 'not-allowed';
         }
     }
+    
+    console.log(`IDP Progress: ${filledFields}/${totalFields} fields completed (${progressPercentage.toFixed(1)}%)`);
 }
+
 
 // Function to update Final-Year IDP progress
 function updateFinalIDPProgress() {

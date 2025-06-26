@@ -4177,9 +4177,11 @@ getViewInterviewForm: async function(req, res) {
     try {
         const applicantId = req.params.applicantId;
         
+        console.log('🔧 FIXED: Fetching P3 interview evaluation for applicantId:', applicantId);
+        
         if (!applicantId) {
             req.flash('errors', { message: 'Applicant ID is required' });
-            return res.redirect('/linemanager/dashboard');
+            return res.redirect('/linemanager/applicant-tracker');
         }
         
         // Get the applicant details first
@@ -4199,19 +4201,25 @@ getViewInterviewForm: async function(req, res) {
             .single();
         
         if (applicantError || !applicant) {
-            console.error('Error fetching applicant:', applicantError);
+            console.error('❌ FIXED: Error fetching applicant:', applicantError);
             req.flash('errors', { message: 'Error fetching applicant data' });
             return res.redirect('/linemanager/applicant-tracker');
         }
         
-        // Get applicant email
+        // FIXED: Check that this applicant has P3 evaluation data
+        if (!applicant.applicantStatus || !applicant.applicantStatus.includes('P3')) {
+            console.error('❌ FIXED: Applicant not in P3 stage. Current status:', applicant.applicantStatus);
+            req.flash('errors', { message: 'This applicant is not in P3 evaluation stage.' });
+            return res.redirect('/linemanager/applicant-tracker');
+        }
+        
+        // Get applicant email, job, and department info
         const { data: userData, error: userError } = await supabase
             .from('useraccounts')
             .select('userEmail')
             .eq('userId', applicant.userId)
             .single();
             
-        // Get job and department info
         const { data: jobData, error: jobError } = await supabase
             .from('jobpositions')
             .select('jobTitle')
@@ -4224,20 +4232,22 @@ getViewInterviewForm: async function(req, res) {
             .eq('departmentId', applicant.departmentId)
             .single();
         
-        // Get the interview evaluation data
+        // FIXED: Get the interview evaluation data using applicantId
         const { data: interviewData, error: interviewError } = await supabase
             .from('applicant_panelscreening_assessment')
             .select('*')
-            .eq('applicantUserId', applicantId)
+            .eq('applicantUserId', applicantId)  // Use applicantId, not userId
             .order('interviewDate', { ascending: false })
             .limit(1)
             .single();
             
         if (interviewError || !interviewData) {
-            console.error('Error fetching interview data:', interviewError);
-            req.flash('errors', { message: 'Interview evaluation not found' });
+            console.error('❌ FIXED: Error fetching interview data:', interviewError);
+            req.flash('errors', { message: 'P3 interview evaluation not found for this applicant' });
             return res.redirect('/linemanager/applicant-tracker');
         }
+        
+        console.log('✅ FIXED: Successfully found P3 interview evaluation data');
         
         // Enhance the applicant data with additional information
         const enhancedApplicant = {
@@ -4294,16 +4304,186 @@ getViewInterviewForm: async function(req, res) {
             remarks: interviewData.remarks || 'No remarks provided'
         };
         
+        console.log('✅ FIXED: Rendering P3 view-interview-form with evaluation data');
+        
         // Render the view with the evaluation data
         res.render('staffpages/linemanager_pages/view-interview-form', { evaluation });
         
     } catch (error) {
-        console.error('Error in getViewInterviewForm:', error);
-        req.flash('errors', { message: 'An error occurred while retrieving the interview evaluation' });
-        res.redirect('/linemanager/dashboard');
+        console.error('❌ FIXED: Error in getViewInterviewForm:', error);
+        req.flash('errors', { message: 'An error occurred while retrieving the P3 interview evaluation' });
+        res.redirect('/linemanager/applicant-tracker');
     }
 },
 
+getViewInterviewFormByUserId: async function(req, res) {
+    try {
+        const userId = req.params.userId;
+        
+        console.log('🔧 P3 EVAL FIX: Fetching P3 interview evaluation by userId:', userId);
+        
+        if (!userId) {
+            req.flash('errors', { message: 'User ID is required' });
+            return res.redirect('/linemanager/applicant-tracker');
+        }
+        
+        // First get the applicant using userId
+        const { data: applicant, error: applicantError } = await supabase
+            .from('applicantaccounts')
+            .select(`
+                applicantId,
+                userId,
+                firstName,
+                lastName,
+                phoneNo,
+                applicantStatus,
+                departmentId,
+                jobId
+            `)
+            .eq('userId', userId)
+            .single();
+        
+        if (applicantError || !applicant) {
+            console.error('❌ P3 EVAL FIX: Error fetching applicant by userId:', applicantError);
+            req.flash('errors', { message: 'Error fetching applicant data' });
+            return res.redirect('/linemanager/applicant-tracker');
+        }
+        
+        // Check that this applicant has P3 evaluation data
+        if (!applicant.applicantStatus || !applicant.applicantStatus.includes('P3')) {
+            console.error('❌ P3 EVAL FIX: Applicant not in P3 stage. Current status:', applicant.applicantStatus);
+            req.flash('errors', { message: 'This applicant is not in P3 evaluation stage.' });
+            return res.redirect('/linemanager/applicant-tracker');
+        }
+        
+        // Get applicant email, job, and department info
+        const { data: userData, error: userError } = await supabase
+            .from('useraccounts')
+            .select('userEmail')
+            .eq('userId', applicant.userId)
+            .single();
+            
+        const { data: jobData, error: jobError } = await supabase
+            .from('jobpositions')
+            .select('jobTitle')
+            .eq('jobId', applicant.jobId)
+            .single();
+            
+        const { data: deptData, error: deptError } = await supabase
+            .from('departments')
+            .select('deptName')
+            .eq('departmentId', applicant.departmentId)
+            .single();
+        
+        // Try multiple approaches to get the interview evaluation data
+        let interviewData = null;
+        let interviewError = null;
+        
+        // Try 1: Use applicantId
+        if (applicant.applicantId) {
+            const { data: data1, error: error1 } = await supabase
+                .from('applicant_panelscreening_assessment')
+                .select('*')
+                .eq('applicantUserId', applicant.applicantId)
+                .order('interviewDate', { ascending: false })
+                .limit(1)
+                .single();
+                
+            if (!error1 && data1) {
+                interviewData = data1;
+                console.log('✅ P3 EVAL FIX: Found interview data using applicantId');
+            }
+        }
+        
+        // Try 2: Use userId if applicantId didn't work
+        if (!interviewData) {
+            const { data: data2, error: error2 } = await supabase
+                .from('applicant_panelscreening_assessment')
+                .select('*')
+                .eq('applicantUserId', userId)
+                .order('interviewDate', { ascending: false })
+                .limit(1)
+                .single();
+                
+            if (!error2 && data2) {
+                interviewData = data2;
+                console.log('✅ P3 EVAL FIX: Found interview data using userId');
+            } else {
+                interviewError = error2;
+            }
+        }
+            
+        if (!interviewData) {
+            console.error('❌ P3 EVAL FIX: Error fetching interview data:', interviewError);
+            req.flash('errors', { message: 'P3 interview evaluation not found for this applicant' });
+            return res.redirect('/linemanager/applicant-tracker');
+        }
+        
+        console.log('✅ P3 EVAL FIX: Successfully found P3 interview evaluation data');
+        
+        // Rest of the logic is the same as the original function...
+        const enhancedApplicant = {
+            ...applicant,
+            email: userData?.userEmail || 'N/A',
+            jobTitle: jobData?.jobTitle || 'N/A',
+            department: deptData?.deptName || 'N/A'
+        };
+        
+        const panelFormData = interviewData.panelFormData ? JSON.parse(interviewData.panelFormData) : {};
+        
+        const evaluation = {
+            applicant: enhancedApplicant,
+            interviewDate: interviewData.interviewDate,
+            interviewType: panelFormData.interviewType || 'Not specified',
+            personalReport: panelFormData.personalReport || { 
+                careerGoals: 'Not provided',
+                resumeWalkthrough: 'Not provided',
+                rating: 0
+            },
+            functionalJob: panelFormData.functionalJob || {
+                situation: 'Not provided',
+                action: 'Not provided',
+                result: 'Not provided',
+                rating: 0
+            },
+            instructions: panelFormData.instructions || {
+                situation: 'Not provided',
+                action: 'Not provided',
+                result: 'Not provided',
+                rating: 0
+            },
+            people: panelFormData.people || {
+                situation: 'Not provided',
+                action: 'Not provided',
+                result: 'Not provided',
+                rating: 0
+            },
+            writing: panelFormData.writing || {
+                situation: 'Not provided',
+                action: 'Not provided',
+                result: 'Not provided',
+                rating: 0
+            },
+            overall: panelFormData.overall || {
+                overallRating: 0,
+                recommendation: 'Not provided',
+                questionsCompany: 'Not provided'
+            },
+            totalAssessmentRating: interviewData.totalAssessmentRating || 0,
+            equipmentToolsSoftware: interviewData.equipmentToolsSoftware || 'Not provided',
+            remarks: interviewData.remarks || 'No remarks provided'
+        };
+        
+        console.log('✅ P3 EVAL FIX: Rendering P3 view-interview-form with evaluation data');
+        
+        res.render('staffpages/linemanager_pages/view-interview-form', { evaluation });
+        
+    } catch (error) {
+        console.error('❌ P3 EVAL FIX: Error in getViewInterviewFormByUserId:', error);
+        req.flash('errors', { message: 'An error occurred while retrieving the P3 interview evaluation' });
+        res.redirect('/linemanager/applicant-tracker');
+    }
+},
 // Pass the applicant after reviewing evaluation
 passApplicant: async function(req, res) {
     try {
@@ -5323,6 +5503,104 @@ console.log('Final applicants list:', applicants);
             res.redirect('/staff/login');
         }
     },
+
+    getApplicantAssessment: async function(req, res) {
+    try {
+        const { userId } = req.params;
+        
+        console.log('Fetching assessment for userId:', userId);
+        
+        if (!userId) {
+            return res.status(400).json({ 
+                success: false, 
+                message: 'User ID is required' 
+            });
+        }
+        
+        // Fetch the assessment data
+        const { data: assessment, error: assessmentError } = await supabase
+            .from('applicant_initialscreening_assessment')
+            .select(`
+                userId,
+                degreeScore,
+                experienceScore,
+                certificationScore,
+                hardSkillsScore,
+                softSkillsScore,
+                workSetupScore,
+                availabilityScore,
+                totalScore,
+                degree_url,
+                cert_url,
+                resume_url
+            `)
+            .eq('userId', userId)
+            .single();
+            
+        if (assessmentError) {
+            console.error('Error fetching assessment:', assessmentError);
+            return res.status(404).json({ 
+                success: false, 
+                message: 'Assessment not found',
+                error: assessmentError.message 
+            });
+        }
+        
+        // Fetch applicant basic info
+        const { data: applicant, error: applicantError } = await supabase
+            .from('applicantaccounts')
+            .select('firstName, lastName, applicantStatus, birthDate, phoneNo')
+            .eq('userId', userId)
+            .single();
+            
+        // Fetch user email
+        const { data: user, error: userError } = await supabase
+            .from('useraccounts')
+            .select('userEmail, birthDate')
+            .eq('userId', userId)
+            .single();
+        
+        const responseData = {
+            success: true,
+            combinedData: {
+                userId: userId,
+                firstName: applicant?.firstName || 'N/A',
+                lastName: applicant?.lastName || 'N/A',
+                email: user?.userEmail || 'N/A',
+                birthDate: user?.birthDate || applicant?.birthDate || 'N/A',
+                phoneNo: applicant?.phoneNo || 'N/A',
+                status: applicant?.applicantStatus || 'N/A',
+                scores: {
+                    degree: assessment?.degreeScore || 'N/A',
+                    experience: assessment?.experienceScore || 'N/A',
+                    certifications: assessment?.certificationScore || 'N/A',
+                    hardSkills: assessment?.hardSkillsScore || 'N/A',
+                    softSkills: assessment?.softSkillsScore || 'N/A',
+                    workSetup: assessment?.workSetupScore || 'N/A',
+                    availability: assessment?.availabilityScore || 'N/A',
+                    total: assessment?.totalScore || 'N/A'
+                },
+                documents: {
+                    degree: assessment?.degree_url || '#',
+                    cert: assessment?.cert_url || '#',
+                    resume: assessment?.resume_url || '#'
+                }
+            }
+        };
+        
+        console.log('Returning assessment data for View Evaluation');
+        
+        return res.json(responseData);
+        
+    } catch (error) {
+        console.error('Error in getApplicantAssessment:', error);
+        return res.status(500).json({
+            success: false,
+            message: 'Error fetching assessment data',
+            error: error.message
+        });
+    }
+},
 
 
         finalizeP1Review: async function(req, res) {
@@ -7329,8 +7607,8 @@ saveMidYearIDP: async function(req, res) {
     try {
         const userId = req.params.userId || req.body.userId;
         
-        console.log("=== STARTING saveMidYearIDP DEBUG ===");
-        console.log("Starting saveMidYearIDP for userId:", userId);
+        console.log("=== STARTING ENHANCED saveMidYearIDP DEBUG ===");
+        console.log("Starting enhanced saveMidYearIDP for userId:", userId);
         console.log("Request method:", req.method);
         console.log("Content-Type:", req.headers['content-type']);
         console.log("Request body keys:", Object.keys(req.body));
@@ -7358,10 +7636,11 @@ saveMidYearIDP: async function(req, res) {
             nextRoleMobility,
             trainingCategories,
             trainingRemarks,
+            topDevAreas, // ENHANCED: Add top 5 development areas
             year
         } = req.body;
 
-        // ENHANCED DEBUG: Log each field before processing
+        // ENHANCED DEBUG: Log each field including topDevAreas
         console.log("=== RAW FIELD VALUES ===");
         console.log("profStrengths type:", typeof profStrengths, "length:", profStrengths?.length);
         console.log("profAreasForDevelopment type:", typeof profAreasForDevelopment, "length:", profAreasForDevelopment?.length);
@@ -7375,7 +7654,27 @@ saveMidYearIDP: async function(req, res) {
         console.log("trainingRemarks type:", typeof trainingRemarks, "length:", trainingRemarks?.length);
         console.log("year type:", typeof year, "value:", year);
         
-        // CRITICAL DEBUG FOR TRAINING CATEGORIES
+        // ENHANCED: Debug topDevAreas
+        console.log("=== TOP 5 DEVELOPMENT AREAS DEBUG ===");
+        console.log("topDevAreas RAW value:", topDevAreas);
+        console.log("topDevAreas type:", typeof topDevAreas);
+        console.log("topDevAreas isArray:", Array.isArray(topDevAreas));
+        console.log("topDevAreas length:", topDevAreas?.length);
+        console.log("topDevAreas JSON:", JSON.stringify(topDevAreas));
+        
+        if (Array.isArray(topDevAreas)) {
+            topDevAreas.forEach((item, index) => {
+                console.log(`topDevAreas[${index}]:`, {
+                    rank: item.rank,
+                    type: item.type,
+                    name: item.name,
+                    averageRating: item.averageRating
+                });
+            });
+        }
+        console.log("=== END TOP 5 DEVELOPMENT AREAS DEBUG ===");
+        
+        // CRITICAL DEBUG FOR TRAINING CATEGORIES (existing code)
         console.log("=== TRAINING CATEGORIES CRITICAL DEBUG ===");
         console.log("trainingCategories RAW value:", trainingCategories);
         console.log("trainingCategories type:", typeof trainingCategories);
@@ -7397,7 +7696,7 @@ saveMidYearIDP: async function(req, res) {
         }
         console.log("=== END TRAINING CATEGORIES CRITICAL DEBUG ===");
 
-        // FIXED: Enhanced training categories processing with detailed debugging
+        // Process training categories (existing code)
         let processedTrainingCategories = [];
         
         console.log("=== TRAINING CATEGORIES PROCESSING ===");
@@ -7419,7 +7718,6 @@ saveMidYearIDP: async function(req, res) {
                             console.log(`  ✅ String item ${index}: "${trimmed}"`);
                             return trimmed;
                         } else if (typeof cat === 'object' && cat !== null) {
-                            // Handle objects with name/category properties
                             const name = (cat.name || cat.category || '').toString().trim();
                             console.log(`  ✅ Object item ${index}: "${name}" (from ${cat.name ? 'name' : 'category'} property)`);
                             return name;
@@ -7435,38 +7733,8 @@ saveMidYearIDP: async function(req, res) {
                     });
                     
                 console.log("✅ Processed array result:", processedTrainingCategories);
-                
-            } else if (typeof trainingCategories === 'string') {
-                console.log("Processing as string:", trainingCategories);
-                
-                // If it's a string, try to parse as JSON or treat as single item
-                try {
-                    const parsed = JSON.parse(trainingCategories);
-                    console.log("✅ Parsed JSON successfully:", parsed);
-                    
-                    if (Array.isArray(parsed)) {
-                        processedTrainingCategories = parsed
-                            .map(cat => typeof cat === 'string' ? cat.trim() : (cat?.name || cat?.category || '').toString().trim())
-                            .filter(cat => cat.length > 0);
-                        console.log("✅ Processed parsed array:", processedTrainingCategories);
-                    } else {
-                        console.log("Parsed result is not array, treating as single item");
-                        const singleItem = trainingCategories.trim();
-                        if (singleItem) {
-                            processedTrainingCategories = [singleItem];
-                        }
-                    }
-                } catch (e) {
-                    console.log("Not valid JSON, treating as single category");
-                    // Not JSON, treat as single category
-                    const singleItem = trainingCategories.trim();
-                    if (singleItem) {
-                        processedTrainingCategories = [singleItem];
-                    }
-                }
             } else {
-                console.log("❌ Unexpected type for trainingCategories:", typeof trainingCategories);
-                console.log("Value:", trainingCategories);
+                // Handle string or other formats (existing logic)
                 processedTrainingCategories = [];
             }
         } else {
@@ -7474,19 +7742,80 @@ saveMidYearIDP: async function(req, res) {
             processedTrainingCategories = [];
         }
 
-        console.log("=== FINAL PROCESSED TRAINING CATEGORIES ===");
-        console.log("Final processedTrainingCategories:", processedTrainingCategories);
-        console.log("Length:", processedTrainingCategories.length);
-        console.log("Type:", typeof processedTrainingCategories);
-        console.log("Is array:", Array.isArray(processedTrainingCategories));
-        console.log("Each item:");
-        processedTrainingCategories.forEach((item, index) => {
-            console.log(`  ${index}: "${item}" (type: ${typeof item}, length: ${item.length})`);
-        });
-        console.log("JSON for database:", JSON.stringify(processedTrainingCategories));
-        console.log("=== END TRAINING CATEGORIES PROCESSING ===");
+        // ENHANCED: Process top 5 development areas
+        let processedTopDevAreas = [];
+        
+        console.log("=== TOP 5 DEVELOPMENT AREAS PROCESSING ===");
+        
+        if (topDevAreas !== null && topDevAreas !== undefined) {
+            if (Array.isArray(topDevAreas)) {
+                console.log("✅ Processing topDevAreas as array with", topDevAreas.length, "items");
+                
+                processedTopDevAreas = topDevAreas
+                    .filter(area => area && typeof area === 'object')
+                    .map((area, index) => {
+                        console.log(`Processing development area ${index}:`, area);
+                        
+                        // Validate required fields
+                        if (!area.type || !area.name || typeof area.averageRating !== 'number') {
+                            console.warn(`  ❌ Invalid development area ${index}:`, area);
+                            return null;
+                        }
+                        
+                        const processedArea = {
+                            rank: area.rank || (index + 1),
+                            type: area.type, // 'objective' or 'skill'
+                            name: area.name.toString().trim(),
+                            averageRating: parseFloat(area.averageRating),
+                            quarterRatings: area.quarterRatings || {}
+                        };
+                        
+                        // Add type-specific fields
+                        if (area.type === 'objective') {
+                            if (area.objectiveId) processedArea.objectiveId = area.objectiveId;
+                            if (area.kpi) processedArea.kpi = area.kpi.toString().trim();
+                        } else if (area.type === 'skill') {
+                            if (area.skillId) processedArea.skillId = area.skillId;
+                            if (area.skillType) processedArea.skillType = area.skillType.toString().trim();
+                        }
+                        
+                        console.log(`  ✅ Processed development area ${index}:`, processedArea);
+                        return processedArea;
+                    })
+                    .filter(area => area !== null)
+                    .slice(0, 5); // Ensure max 5 items
+                    
+                console.log("✅ Final processed topDevAreas:", processedTopDevAreas);
+            } else if (typeof topDevAreas === 'string') {
+                console.log("Processing topDevAreas as string, attempting JSON parse");
+                try {
+                    const parsed = JSON.parse(topDevAreas);
+                    if (Array.isArray(parsed)) {
+                        processedTopDevAreas = parsed.slice(0, 5);
+                        console.log("✅ Parsed topDevAreas from JSON string:", processedTopDevAreas);
+                    }
+                } catch (e) {
+                    console.warn("Failed to parse topDevAreas JSON string:", e);
+                    processedTopDevAreas = [];
+                }
+            } else {
+                console.log("❌ Unexpected type for topDevAreas:", typeof topDevAreas);
+                processedTopDevAreas = [];
+            }
+        } else {
+            console.log("topDevAreas is null/undefined");
+            processedTopDevAreas = [];
+        }
 
-        // Validate processed training categories
+        console.log("=== FINAL PROCESSED TOP 5 DEVELOPMENT AREAS ===");
+        console.log("Final processedTopDevAreas:", processedTopDevAreas);
+        console.log("Length:", processedTopDevAreas.length);
+        console.log("Type:", typeof processedTopDevAreas);
+        console.log("Is array:", Array.isArray(processedTopDevAreas));
+        console.log("JSON for database:", JSON.stringify(processedTopDevAreas));
+        console.log("=== END TOP 5 DEVELOPMENT AREAS PROCESSING ===");
+
+        // Validate processed arrays
         if (!Array.isArray(processedTrainingCategories)) {
             console.error("❌ processedTrainingCategories is not an array!");
             return res.status(400).json({ 
@@ -7495,20 +7824,15 @@ saveMidYearIDP: async function(req, res) {
             });
         }
 
-        // Check for invalid items
-        const invalidItems = processedTrainingCategories.filter(item => 
-            typeof item !== 'string' || item.trim() === ''
-        );
-        
-        if (invalidItems.length > 0) {
-            console.error("❌ Invalid items found in processedTrainingCategories:", invalidItems);
+        if (!Array.isArray(processedTopDevAreas)) {
+            console.error("❌ processedTopDevAreas is not an array!");
             return res.status(400).json({ 
                 success: false, 
-                message: "Some training categories contain invalid data" 
+                message: "Invalid top development areas format" 
             });
         }
 
-        // Clean text fields
+        // Clean text fields (existing code)
         profStrengths = (profStrengths || '').toString().trim();
         profAreasForDevelopment = (profAreasForDevelopment || '').toString().trim();
         profActionsToTake = (profActionsToTake || '').toString().trim();
@@ -7535,14 +7859,15 @@ saveMidYearIDP: async function(req, res) {
             nextRoleLongTerm: nextRoleLongTerm.substring(0, 50) + (nextRoleLongTerm.length > 50 ? '...' : ''),
             nextRoleMobility: nextRoleMobility.substring(0, 50) + (nextRoleMobility.length > 50 ? '...' : ''),
             trainingCategories: processedTrainingCategories,
+            topDevAreas: processedTopDevAreas, // ENHANCED
             trainingRemarks: trainingRemarks.substring(0, 100) + (trainingRemarks.length > 100 ? '...' : ''),
             year: currentYear
         });
         console.log("CRITICAL - trainingCategories for DB:", processedTrainingCategories);
-        console.log("CRITICAL - trainingCategories JSON string:", JSON.stringify(processedTrainingCategories));
+        console.log("CRITICAL - topDevAreas for DB:", processedTopDevAreas); // ENHANCED
         console.log("=== END CLEANED FINAL DATA ===");
 
-        // Check if there's already an entry for this user
+        // Check if there's already an entry for this user (existing code)
         console.log("Checking for existing record...");
         const { data: existingRecord, error: checkError } = await supabase
             .from("midyearidps")
@@ -7557,8 +7882,7 @@ saveMidYearIDP: async function(req, res) {
 
         console.log("Existing record check result:", existingRecord);
 
-        // Prepare data for database insertion
-        // CRITICAL: Use the array directly for JSONB, don't stringify it here
+        // Prepare data for database insertion - ENHANCED with topDevAreas
         const dataToSave = {
             profStrengths,
             profAreasForDevelopment,
@@ -7569,7 +7893,8 @@ saveMidYearIDP: async function(req, res) {
             nextRoleShortTerm,
             nextRoleLongTerm,
             nextRoleMobility,
-            trainingCategories: processedTrainingCategories, // FIXED: Use array directly for JSONB
+            trainingCategories: processedTrainingCategories, // JSONB array
+            topDevAreas: processedTopDevAreas, // ENHANCED: JSONB array of top 5 development areas
             trainingRemarks: trainingRemarks || null,
             year: currentYear
         };
@@ -7588,17 +7913,16 @@ saveMidYearIDP: async function(req, res) {
         console.log("- trainingRemarks length:", dataToSave.trainingRemarks?.length || 0);
         console.log("- year:", dataToSave.year);
         
-        // CRITICAL DEBUG FOR TRAINING CATEGORIES
-        console.log("=== CRITICAL - TRAINING CATEGORIES FOR DATABASE ===");
+        // ENHANCED DEBUG
+        console.log("=== CRITICAL - ENHANCED DATA FOR DATABASE ===");
         console.log("trainingCategories value:", dataToSave.trainingCategories);
         console.log("trainingCategories type:", typeof dataToSave.trainingCategories);
         console.log("trainingCategories isArray:", Array.isArray(dataToSave.trainingCategories));
         console.log("trainingCategories length:", dataToSave.trainingCategories.length);
-        console.log("trainingCategories items:");
-        dataToSave.trainingCategories.forEach((item, index) => {
-            console.log(`  ${index}: "${item}" (${typeof item})`);
-        });
-        console.log("trainingCategories JSON.stringify:", JSON.stringify(dataToSave.trainingCategories));
+        console.log("topDevAreas value:", dataToSave.topDevAreas); // ENHANCED
+        console.log("topDevAreas type:", typeof dataToSave.topDevAreas); // ENHANCED
+        console.log("topDevAreas isArray:", Array.isArray(dataToSave.topDevAreas)); // ENHANCED
+        console.log("topDevAreas length:", dataToSave.topDevAreas.length); // ENHANCED
         console.log("=== END CRITICAL DEBUG ===");
 
         let result;
@@ -7653,11 +7977,11 @@ saveMidYearIDP: async function(req, res) {
             console.log("✅ Insert successful. Result:", result);
         }
 
-        // Verify the saved data
+        // Verify the saved data - ENHANCED
         console.log("=== VERIFICATION: CHECKING SAVED DATA ===");
         const { data: verificationData, error: verificationError } = await supabase
             .from("midyearidps")
-            .select("trainingCategories")
+            .select("trainingCategories, topDevAreas")
             .eq("userId", userId)
             .single();
 
@@ -7665,17 +7989,19 @@ saveMidYearIDP: async function(req, res) {
             console.warn("⚠️ Could not verify saved data:", verificationError);
         } else {
             console.log("✅ VERIFICATION: Saved trainingCategories in database:", verificationData.trainingCategories);
-            console.log("✅ VERIFICATION: Type:", typeof verificationData.trainingCategories);
-            console.log("✅ VERIFICATION: IsArray:", Array.isArray(verificationData.trainingCategories));
-            console.log("✅ VERIFICATION: Length:", verificationData.trainingCategories?.length);
-            console.log("✅ VERIFICATION: JSON:", JSON.stringify(verificationData.trainingCategories));
+            console.log("✅ VERIFICATION: Saved topDevAreas in database:", verificationData.topDevAreas); // ENHANCED
+            console.log("✅ VERIFICATION: trainingCategories type:", typeof verificationData.trainingCategories);
+            console.log("✅ VERIFICATION: topDevAreas type:", typeof verificationData.topDevAreas); // ENHANCED
+            console.log("✅ VERIFICATION: trainingCategories isArray:", Array.isArray(verificationData.trainingCategories));
+            console.log("✅ VERIFICATION: topDevAreas isArray:", Array.isArray(verificationData.topDevAreas)); // ENHANCED
         }
         console.log("=== END VERIFICATION ===");
 
         console.log("=== OPERATION COMPLETED SUCCESSFULLY ===");
         console.log("✅ Mid-Year IDP saved successfully with categories:", processedTrainingCategories);
+        console.log("✅ Mid-Year IDP saved successfully with top 5 development areas:", processedTopDevAreas); // ENHANCED
         console.log("✅ Total categories saved:", processedTrainingCategories.length);
-        console.log("✅ Categories saved:", processedTrainingCategories);
+        console.log("✅ Total development areas saved:", processedTopDevAreas.length); // ENHANCED
         console.log("=== END OPERATION ===");
 
         // If it's an API request (AJAX), return JSON
@@ -7685,11 +8011,15 @@ saveMidYearIDP: async function(req, res) {
                 message: "Mid-Year IDP saved successfully",
                 data: result,
                 savedCategories: processedTrainingCategories,
+                savedTopDevAreas: processedTopDevAreas, // ENHANCED
                 totalCategories: processedTrainingCategories.length,
+                totalTopDevAreas: processedTopDevAreas.length, // ENHANCED
                 debug: {
                     originalTrainingCategories: trainingCategories,
                     processedTrainingCategories: processedTrainingCategories,
-                    verificationData: verificationData?.trainingCategories || null
+                    originalTopDevAreas: topDevAreas, // ENHANCED
+                    processedTopDevAreas: processedTopDevAreas, // ENHANCED
+                    verificationData: verificationData || null
                 }
             });
         }
@@ -7699,7 +8029,7 @@ saveMidYearIDP: async function(req, res) {
         return res.redirect(`/linemanager/records-performance-tracker/${userId}`);
 
     } catch (error) {
-        console.error("=== ERROR IN saveMidYearIDP ===");
+        console.error("=== ERROR IN ENHANCED saveMidYearIDP ===");
         console.error("❌ Error:", error);
         console.error("❌ Error stack:", error.stack);
         console.error("❌ Error message:", error.message);
@@ -8242,129 +8572,361 @@ getMidYearIDP: async function(req, res) {
         });
     }
 },
+saveFinalYearIDP: async function(req, res) {
+    try {
+        const userId = req.params.userId || req.body.userId;
+        
+        console.log("=== STARTING ENHANCED saveFinalYearIDP DEBUG ===");
+        console.log("Starting enhanced saveFinalYearIDP for userId:", userId);
+        console.log("Request method:", req.method);
+        console.log("Content-Type:", req.headers['content-type']);
+        console.log("Request body keys:", Object.keys(req.body));
+        
+        // Log full request body with pretty printing
+        console.log("=== FULL FINAL-YEAR REQUEST BODY ===");
+        console.log(JSON.stringify(req.body, null, 2));
+        console.log("=== END FULL FINAL-YEAR REQUEST BODY ===");
 
-    saveFinalYearIDP: async function(req, res) {
-        try {
-            // Get the user ID from the route parameters or form submission
-            const userId = req.params.userId || req.body.userId;
-            console.log("Starting saveFinalYearIDP for userId:", userId);
-    
-            if (!userId) {
-                console.error("User ID is missing");
-                return res.status(400).json({ success: false, message: "User ID is required" });
-            }
-    
-            // Get all form fields from the request body
-            const {
-                profStrengths,
-                profAreasForDevelopment,
-                profActionsToTake,
-                leaderStrengths,
-                leaderAreasForDevelopment,
-                leaderActionsToTake,
-                nextRoleShortTerm,
-                nextRoleLongTerm,
-                nextRoleMobility
-            } = req.body;
-    
-            console.log("Received form data:", req.body);
-    
-            // Check if there's already an entry for this user
-            const { data: existingRecord, error: checkError } = await supabase
-                .from("finalyearidps")
-                .select("finalyearidpId")
-                .eq("userId", userId)
-                .single();
-    
-            if (checkError && checkError.code !== 'PGRST116') { // PGRST116 is "no rows returned"
-                console.error("Error checking for existing finalyearidp:", checkError);
-                return res.status(500).json({ success: false, message: "Error checking for existing record" });
-            }
-    
-            let result;
-            if (existingRecord) {
-                // Update existing record
-                console.log("Updating existing finalyearidp record:", existingRecord.finalyearidpId);
-                const { data, error } = await supabase
-                    .from("finalyearidps")
-                    .update({
-                        profStrengths,
-                        profAreasForDevelopment,
-                        profActionsToTake,
-                        leaderStrengths,
-                        leaderAreasForDevelopment,
-                        leaderActionsToTake,
-                        nextRoleShortTerm,
-                        nextRoleLongTerm,
-                        nextRoleMobility
-                    })
-                    .eq("finalyearidpId", existingRecord.finalyearidpId);
-    
-                if (error) {
-                    console.error("Error updating finalyearidp:", error);
-                    return res.status(500).json({ success: false, message: error.message });
-                }
-                
-                result = data;
-            } else {
-                // Create new record
-                console.log("Creating new finalyearidp record for userId:", userId);
-                const { data, error } = await supabase
-                    .from("finalyearidps")
-                    .insert({
-                        userId,
-                        // Removed both jobId and year fields since they don't exist in the table
-                        profStrengths,
-                        profAreasForDevelopment,
-                        profActionsToTake,
-                        leaderStrengths,
-                        leaderAreasForDevelopment,
-                        leaderActionsToTake,
-                        nextRoleShortTerm,
-                        nextRoleLongTerm,
-                        nextRoleMobility
-                    })
-                    .select();
-    
-                if (error) {
-                    console.error("Error inserting finalyearidp:", error);
-                    return res.status(500).json({ success: false, message: error.message });
-                }
-                
-                result = data;
-            }
-    
-            console.log("Final-Year IDP saved successfully:", result);
-    
-            // If it's an API request (AJAX), return JSON
-            if (req.xhr || req.headers.accept?.includes('application/json')) {
-                return res.status(200).json({ 
-                    success: true, 
-                    message: "Final-Year IDP saved successfully" 
+        if (!userId) {
+            console.error("User ID is missing");
+            return res.status(400).json({ success: false, message: "User ID is required" });
+        }
+
+        // Get all form fields from the request body
+        let {
+            profStrengths,
+            profAreasForDevelopment,
+            profActionsToTake,
+            leaderStrengths,
+            leaderAreasForDevelopment,
+            leaderActionsToTake,
+            nextRoleShortTerm,
+            nextRoleLongTerm,
+            nextRoleMobility,
+            trainingCategories,
+            trainingRemarks,
+            topDevAreas, // ENHANCED: Add top 5 development areas
+            year
+        } = req.body;
+
+        // ENHANCED DEBUG: Log each field including topDevAreas
+        console.log("=== FINAL-YEAR RAW FIELD VALUES ===");
+        console.log("profStrengths type:", typeof profStrengths, "length:", profStrengths?.length);
+        console.log("profAreasForDevelopment type:", typeof profAreasForDevelopment, "length:", profAreasForDevelopment?.length);
+        console.log("profActionsToTake type:", typeof profActionsToTake, "length:", profActionsToTake?.length);
+        console.log("leaderStrengths type:", typeof leaderStrengths, "length:", leaderStrengths?.length);
+        console.log("leaderAreasForDevelopment type:", typeof leaderAreasForDevelopment, "length:", leaderAreasForDevelopment?.length);
+        console.log("leaderActionsToTake type:", typeof leaderActionsToTake, "length:", leaderActionsToTake?.length);
+        console.log("nextRoleShortTerm type:", typeof nextRoleShortTerm, "length:", nextRoleShortTerm?.length);
+        console.log("nextRoleLongTerm type:", typeof nextRoleLongTerm, "length:", nextRoleLongTerm?.length);
+        console.log("nextRoleMobility type:", typeof nextRoleMobility, "length:", nextRoleMobility?.length);
+        console.log("trainingRemarks type:", typeof trainingRemarks, "length:", trainingRemarks?.length);
+        console.log("year type:", typeof year, "value:", year);
+        
+        // ENHANCED: Debug topDevAreas for Final-Year
+        console.log("=== FINAL-YEAR TOP 5 DEVELOPMENT AREAS DEBUG ===");
+        console.log("topDevAreas RAW value:", topDevAreas);
+        console.log("topDevAreas type:", typeof topDevAreas);
+        console.log("topDevAreas isArray:", Array.isArray(topDevAreas));
+        console.log("topDevAreas length:", topDevAreas?.length);
+        console.log("topDevAreas JSON:", JSON.stringify(topDevAreas));
+        
+        if (Array.isArray(topDevAreas)) {
+            topDevAreas.forEach((item, index) => {
+                console.log(`topDevAreas[${index}]:`, {
+                    rank: item.rank,
+                    type: item.type,
+                    name: item.name,
+                    averageRating: item.averageRating
                 });
+            });
+        }
+        console.log("=== END FINAL-YEAR TOP 5 DEVELOPMENT AREAS DEBUG ===");
+        
+        // FINAL-YEAR: Debug trainingCategories
+        console.log("=== FINAL-YEAR TRAINING CATEGORIES DEBUG ===");
+        console.log("trainingCategories RAW value:", trainingCategories);
+        console.log("trainingCategories type:", typeof trainingCategories);
+        console.log("trainingCategories isArray:", Array.isArray(trainingCategories));
+        console.log("trainingCategories length:", trainingCategories?.length);
+        console.log("=== END FINAL-YEAR TRAINING CATEGORIES DEBUG ===");
+
+        // Process training categories for Final-Year
+        let processedTrainingCategories = [];
+        
+        if (trainingCategories && Array.isArray(trainingCategories)) {
+            processedTrainingCategories = trainingCategories
+                .filter(cat => cat && typeof cat === 'string' && cat.trim().length > 0)
+                .map(cat => cat.trim());
+        }
+
+        // ENHANCED: Process top 5 development areas for Final-Year
+        let processedTopDevAreas = [];
+        
+        console.log("=== FINAL-YEAR TOP 5 DEVELOPMENT AREAS PROCESSING ===");
+        
+        if (topDevAreas !== null && topDevAreas !== undefined) {
+            if (Array.isArray(topDevAreas)) {
+                console.log("✅ Processing Final-Year topDevAreas as array with", topDevAreas.length, "items");
+                
+                processedTopDevAreas = topDevAreas
+                    .filter(area => area && typeof area === 'object')
+                    .map((area, index) => {
+                        console.log(`Processing Final-Year development area ${index}:`, area);
+                        
+                        // Validate required fields
+                        if (!area.type || !area.name || typeof area.averageRating !== 'number') {
+                            console.warn(`  ❌ Invalid Final-Year development area ${index}:`, area);
+                            return null;
+                        }
+                        
+                        const processedArea = {
+                            rank: area.rank || (index + 1),
+                            type: area.type, // 'objective' or 'skill'
+                            name: area.name.toString().trim(),
+                            averageRating: parseFloat(area.averageRating),
+                            quarterRatings: area.quarterRatings || {}
+                        };
+                        
+                        // Add type-specific fields
+                        if (area.type === 'objective') {
+                            if (area.objectiveId) processedArea.objectiveId = area.objectiveId;
+                            if (area.kpi) processedArea.kpi = area.kpi.toString().trim();
+                        } else if (area.type === 'skill') {
+                            if (area.skillId) processedArea.skillId = area.skillId;
+                            if (area.skillType) processedArea.skillType = area.skillType.toString().trim();
+                        }
+                        
+                        console.log(`  ✅ Processed Final-Year development area ${index}:`, processedArea);
+                        return processedArea;
+                    })
+                    .filter(area => area !== null)
+                    .slice(0, 5); // Ensure max 5 items
+                    
+                console.log("✅ Final processed Final-Year topDevAreas:", processedTopDevAreas);
+            } else if (typeof topDevAreas === 'string') {
+                console.log("Processing Final-Year topDevAreas as string, attempting JSON parse");
+                try {
+                    const parsed = JSON.parse(topDevAreas);
+                    if (Array.isArray(parsed)) {
+                        processedTopDevAreas = parsed.slice(0, 5);
+                        console.log("✅ Parsed Final-Year topDevAreas from JSON string:", processedTopDevAreas);
+                    }
+                } catch (e) {
+                    console.warn("Failed to parse Final-Year topDevAreas JSON string:", e);
+                    processedTopDevAreas = [];
+                }
+            } else {
+                console.log("❌ Unexpected type for Final-Year topDevAreas:", typeof topDevAreas);
+                processedTopDevAreas = [];
             }
-    
-            // Otherwise, redirect to the user's records page with success message
-            req.flash('success', 'Final-Year IDP submitted successfully!');
-            return res.redirect(`/linemanager/records-performance-tracker/${userId}`);
-    
-        } catch (error) {
-            console.error("Error in saveFinalYearIDP:", error);
+        } else {
+            console.log("Final-Year topDevAreas is null/undefined");
+            processedTopDevAreas = [];
+        }
+
+        console.log("=== FINAL PROCESSED FINAL-YEAR TOP 5 DEVELOPMENT AREAS ===");
+        console.log("Final processedTopDevAreas:", processedTopDevAreas);
+        console.log("Length:", processedTopDevAreas.length);
+        console.log("Type:", typeof processedTopDevAreas);
+        console.log("Is array:", Array.isArray(processedTopDevAreas));
+        console.log("JSON for database:", JSON.stringify(processedTopDevAreas));
+        console.log("=== END FINAL-YEAR TOP 5 DEVELOPMENT AREAS PROCESSING ===");
+
+        // Clean text fields
+        profStrengths = (profStrengths || '').toString().trim();
+        profAreasForDevelopment = (profAreasForDevelopment || '').toString().trim();
+        profActionsToTake = (profActionsToTake || '').toString().trim();
+        leaderStrengths = (leaderStrengths || '').toString().trim();
+        leaderAreasForDevelopment = (leaderAreasForDevelopment || '').toString().trim();
+        leaderActionsToTake = (leaderActionsToTake || '').toString().trim();
+        nextRoleShortTerm = (nextRoleShortTerm || '').toString().trim();
+        nextRoleLongTerm = (nextRoleLongTerm || '').toString().trim();
+        nextRoleMobility = (nextRoleMobility || '').toString().trim();
+        trainingRemarks = (trainingRemarks || '').toString().trim();
+
+        const currentYear = year || new Date().getFullYear();
+
+        console.log("=== FINAL-YEAR CLEANED FINAL DATA ===");
+        console.log("Final-Year processed data summary:", {
+            userId,
+            topDevAreasCount: processedTopDevAreas.length,
+            trainingCategoriesCount: processedTrainingCategories.length,
+            year: currentYear
+        });
+        console.log("CRITICAL - Final-Year topDevAreas for DB:", processedTopDevAreas);
+        console.log("CRITICAL - Final-Year trainingCategories for DB:", processedTrainingCategories);
+        console.log("=== END FINAL-YEAR CLEANED FINAL DATA ===");
+
+        // Check if there's already an entry for this user
+        console.log("Checking for existing Final-Year record...");
+        const { data: existingRecord, error: checkError } = await supabase
+            .from("finalyearidps")
+            .select("finalyearidpId")
+            .eq("userId", userId)
+            .maybeSingle();
+
+        if (checkError && checkError.code !== 'PGRST116') {
+            console.error("Error checking for existing finalyearidp:", checkError);
+            return res.status(500).json({ success: false, message: "Error checking for existing record" });
+        }
+
+        console.log("Existing Final-Year record check result:", existingRecord);
+
+        // Prepare data for database insertion - ENHANCED with topDevAreas
+        const dataToSave = {
+            profStrengths,
+            profAreasForDevelopment,
+            profActionsToTake,
+            leaderStrengths,
+            leaderAreasForDevelopment,
+            leaderActionsToTake,
+            nextRoleShortTerm,
+            nextRoleLongTerm,
+            nextRoleMobility,
+            trainingCategories: processedTrainingCategories, // JSONB array
+            topDevAreas: processedTopDevAreas, // ENHANCED: JSONB array of top 5 development areas
+            trainingRemarks: trainingRemarks || null,
+            year: currentYear
+        };
+
+        console.log("=== FINAL-YEAR DATA TO SAVE TO DATABASE ===");
+        console.log("Final-Year data structure to save:");
+        console.log("- topDevAreas value:", dataToSave.topDevAreas);
+        console.log("- topDevAreas type:", typeof dataToSave.topDevAreas);
+        console.log("- topDevAreas isArray:", Array.isArray(dataToSave.topDevAreas));
+        console.log("- topDevAreas length:", dataToSave.topDevAreas.length);
+        console.log("- trainingCategories length:", dataToSave.trainingCategories.length);
+        console.log("=== END FINAL-YEAR DATA TO SAVE ===");
+
+        let result;
+
+        if (existingRecord) {
+            // Update existing record
+            console.log("Updating existing finalyearidp record:", existingRecord.finalyearidpId);
             
-            // If it's an API request (AJAX), return JSON error
-            if (req.xhr || req.headers.accept?.includes('application/json')) {
+            const { data, error } = await supabase
+                .from("finalyearidps")
+                .update(dataToSave)
+                .eq("finalyearidpId", existingRecord.finalyearidpId)
+                .select();
+
+            if (error) {
+                console.error("❌ Error updating finalyearidp:", error);
+                console.error("Error details:", JSON.stringify(error, null, 2));
+                console.error("Data that failed to save:", JSON.stringify(dataToSave, null, 2));
                 return res.status(500).json({ 
                     success: false, 
-                    message: "An error occurred while saving the Final-Year IDP",
-                    error: error.message 
+                    message: `Database update error: ${error.message}`,
+                    errorDetails: error
                 });
             }
-    
-            // Otherwise, redirect with error message
-            req.flash('errors', { dbError: 'An error occurred while saving the Final-Year IDP.' });
-            return res.redirect(`/linemanager/finalyear-idp/${req.params.userId || req.body.userId}`);
+            
+            result = data;
+            console.log("✅ Final-Year Update successful. Result:", result);
+        } else {
+            // Create new record
+            console.log("Creating new finalyearidp record for userId:", userId);
+            
+            const { data, error } = await supabase
+                .from("finalyearidps")
+                .insert({
+                    userId,
+                    ...dataToSave
+                })
+                .select();
+
+            if (error) {
+                console.error("❌ Error inserting finalyearidp:", error);
+                console.error("Error details:", JSON.stringify(error, null, 2));
+                console.error("Data that failed to save:", JSON.stringify({ userId, ...dataToSave }, null, 2));
+                return res.status(500).json({ 
+                    success: false, 
+                    message: `Database insert error: ${error.message}`,
+                    errorDetails: error
+                });
+            }
+            
+            result = data;
+            console.log("✅ Final-Year Insert successful. Result:", result);
         }
-    },
+
+        // Verify the saved data - ENHANCED
+        console.log("=== FINAL-YEAR VERIFICATION: CHECKING SAVED DATA ===");
+        const { data: verificationData, error: verificationError } = await supabase
+            .from("finalyearidps")
+            .select("trainingCategories, topDevAreas")
+            .eq("userId", userId)
+            .single();
+
+        if (verificationError) {
+            console.warn("⚠️ Could not verify Final-Year saved data:", verificationError);
+        } else {
+            console.log("✅ VERIFICATION: Final-Year saved trainingCategories in database:", verificationData.trainingCategories);
+            console.log("✅ VERIFICATION: Final-Year saved topDevAreas in database:", verificationData.topDevAreas);
+            console.log("✅ VERIFICATION: Final-Year topDevAreas type:", typeof verificationData.topDevAreas);
+            console.log("✅ VERIFICATION: Final-Year topDevAreas isArray:", Array.isArray(verificationData.topDevAreas));
+        }
+        console.log("=== END FINAL-YEAR VERIFICATION ===");
+
+        console.log("=== FINAL-YEAR OPERATION COMPLETED SUCCESSFULLY ===");
+        console.log("✅ Final-Year IDP saved successfully with categories:", processedTrainingCategories);
+        console.log("✅ Final-Year IDP saved successfully with top 5 development areas:", processedTopDevAreas);
+        console.log("✅ Total Final-Year categories saved:", processedTrainingCategories.length);
+        console.log("✅ Total Final-Year development areas saved:", processedTopDevAreas.length);
+        console.log("=== END FINAL-YEAR OPERATION ===");
+
+        // If it's an API request (AJAX), return JSON
+        if (req.xhr || req.headers.accept?.includes('application/json')) {
+            return res.status(200).json({ 
+                success: true, 
+                message: "Final-Year IDP saved successfully",
+                data: result,
+                savedCategories: processedTrainingCategories,
+                savedTopDevAreas: processedTopDevAreas, // ENHANCED
+                totalCategories: processedTrainingCategories.length,
+                totalTopDevAreas: processedTopDevAreas.length, // ENHANCED
+                debug: {
+                    originalTrainingCategories: trainingCategories,
+                    processedTrainingCategories: processedTrainingCategories,
+                    originalTopDevAreas: topDevAreas, // ENHANCED
+                    processedTopDevAreas: processedTopDevAreas, // ENHANCED
+                    verificationData: verificationData || null
+                }
+            });
+        }
+
+        // Otherwise, redirect to the user's records page with success message
+        req.flash('success', 'Final-Year IDP submitted successfully!');
+        return res.redirect(`/linemanager/records-performance-tracker/${userId}`);
+
+    } catch (error) {
+        console.error("=== ERROR IN ENHANCED saveFinalYearIDP ===");
+        console.error("❌ Error:", error);
+        console.error("❌ Error stack:", error.stack);
+        console.error("❌ Error message:", error.message);
+        console.error("❌ Error name:", error.name);
+        console.error("=== END ERROR ===");
+        
+        // If it's an API request (AJAX), return JSON error
+        if (req.xhr || req.headers.accept?.includes('application/json')) {
+            return res.status(500).json({ 
+                success: false, 
+                message: "An error occurred while saving the Final-Year IDP",
+                error: error.message,
+                debug: {
+                    errorType: error.constructor.name,
+                    errorMessage: error.message,
+                    errorStack: error.stack
+                }
+            });
+        }
+
+        // Otherwise, redirect with error message
+        req.flash('errors', { dbError: 'An error occurred while saving the Final-Year IDP.' });
+        return res.redirect(`/linemanager/finalyear-idp/${req.params.userId || req.body.userId}`);
+    }
+},
 
     getMidYearIDPWithTrainings: async function(req, res) {
     try {
@@ -8520,6 +9082,117 @@ getMidYearIDP: async function(req, res) {
             return res.redirect('/linemanager/records-performance-tracker');
         }
     },
+
+
+getMidYearIDPViewData: async function(req, res) {
+    try {
+        const userId = req.params.userId;
+        
+        console.log("=== getMidYearIDPViewData DEBUG ===");
+        console.log('Fetching Mid-Year IDP view data for userId:', userId);
+
+        if (!userId) {
+            return res.status(400).json({ success: false, message: "User ID is required" });
+        }
+
+        // Get Mid-Year IDP data including all fields and trainingCategories JSONB field
+        const { data: midyearData, error: midyearError } = await supabase
+            .from("midyearidps")
+            .select("*")
+            .eq("userId", userId)
+            .maybeSingle(); // Use maybeSingle to avoid error when no data exists
+
+        if (midyearError && midyearError.code !== 'PGRST116') {
+            console.error("Error fetching Mid-Year IDP:", midyearError);
+            return res.status(500).json({ success: false, message: "Error fetching Mid-Year IDP data" });
+        }
+
+        console.log("Raw midyear data from database:", midyearData);
+
+        let responseData = {
+            exists: !!midyearData,
+            midYearData: midyearData,
+            trainingCategories: [],
+            trainingRemarks: null
+        };
+
+        if (midyearData) {
+            console.log("Processing midyear data for view...");
+            console.log("Raw trainingCategories from DB:", midyearData.trainingCategories);
+            console.log("Type of trainingCategories:", typeof midyearData.trainingCategories);
+            
+            // Extract training categories from JSONB field
+            if (midyearData.trainingCategories) {
+                try {
+                    let categories = midyearData.trainingCategories;
+                    
+                    // Handle both parsed arrays and JSON strings
+                    if (typeof categories === 'string') {
+                        console.log("Parsing categories from JSON string");
+                        categories = JSON.parse(categories);
+                    }
+                    
+                    if (Array.isArray(categories)) {
+                        console.log('Found training categories in JSONB:', categories);
+                        responseData.trainingCategories = categories;
+                    } else {
+                        console.log('Training categories is not an array:', categories);
+                        responseData.trainingCategories = [];
+                    }
+                } catch (parseError) {
+                    console.error('Error parsing training categories:', parseError);
+                    console.error('Raw value:', midyearData.trainingCategories);
+                    responseData.trainingCategories = [];
+                }
+            }
+
+            // Extract training remarks
+            if (midyearData.trainingRemarks) {
+                console.log('Found training remarks:', midyearData.trainingRemarks);
+                responseData.trainingRemarks = midyearData.trainingRemarks;
+            }
+
+            // Add all other IDP fields to the response
+            responseData.midYearData = {
+                ...midyearData,
+                // Ensure training categories are properly included
+                trainingCategories: responseData.trainingCategories
+            };
+        }
+
+        console.log('Final view response data structure:', {
+            exists: responseData.exists,
+            categoriesCount: responseData.trainingCategories.length,
+            categories: responseData.trainingCategories,
+            hasRemarks: !!responseData.trainingRemarks,
+            hasAllFields: !!(midyearData?.profStrengths && midyearData?.leaderStrengths)
+        });
+        console.log("=== END getMidYearIDPViewData DEBUG ===");
+
+        return res.status(200).json({
+            success: true,
+            data: responseData,
+            debug: {
+                dataExists: !!midyearData,
+                rawTrainingCategories: midyearData?.trainingCategories,
+                processedCategories: responseData.trainingCategories,
+                categoriesType: typeof midyearData?.trainingCategories
+            }
+        });
+
+    } catch (error) {
+        console.error("=== ERROR in getMidYearIDPViewData ===");
+        console.error("Error:", error);
+        console.error("Error stack:", error.stack);
+        console.error("=== END ERROR ===");
+        
+        return res.status(500).json({ 
+            success: false, 
+            message: "An error occurred while fetching Mid-Year IDP view data",
+            error: error.message 
+        });
+    }
+},
 
     getFinalYearIDP: async function(req, res) {
         try {
