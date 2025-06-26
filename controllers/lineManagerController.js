@@ -4315,7 +4315,6 @@ getViewInterviewForm: async function(req, res) {
         res.redirect('/linemanager/applicant-tracker');
     }
 },
-
 getViewInterviewFormByUserId: async function(req, res) {
     try {
         const userId = req.params.userId;
@@ -4485,7 +4484,7 @@ getViewInterviewFormByUserId: async function(req, res) {
     }
 },
 // Pass the applicant after reviewing evaluation
-passApplicant: async function(req, res) {
+passP3Applicant: async function(req, res) {
     try {
         const applicantId = req.params.applicantId;
         
@@ -4497,9 +4496,7 @@ passApplicant: async function(req, res) {
         // Update the applicant status to P3 - PASSED (removed updatedAt)
         const { error } = await supabase
             .from('applicantaccounts')
-            .update({ 
-                applicantStatus: 'P3 - PASSED'
-            })
+            .update({ applicantStatus: 'P3 - PASSED (Pending Finalization)' })
             .eq('applicantId', applicantId);
             
         if (error) {
@@ -4546,7 +4543,7 @@ passApplicant: async function(req, res) {
 },
 
 // Reject the applicant after reviewing evaluation
-rejectApplicant: async function(req, res) {
+rejectP3Applicant: async function(req, res) {
     try {
         const applicantId = req.params.applicantId;
         
@@ -4564,10 +4561,7 @@ rejectApplicant: async function(req, res) {
         // Update the applicant status to P3 - FAILED (removed updatedAt)
         const { error } = await supabase
             .from('applicantaccounts')
-            .update({ 
-                applicantStatus: 'P3 - FAILED',
-                rejectionReason: rejectionReason
-            })
+           .update({ applicantStatus: 'P3 - FAILED (Pending Finalization)' })
             .eq('applicantId', applicantId);
             
         if (error) {

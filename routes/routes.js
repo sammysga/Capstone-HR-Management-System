@@ -229,8 +229,8 @@ router.get('/linemanager/view-interview-form/:applicantId', lineManagerControlle
 router.get('/linemanager/view-interview-form-by-userid/:userId', lineManagerController.getViewInterviewFormByUserId);
 
 // Routes for passing and rejecting applicants through web interface
-router.get('/pass-applicant/:applicantId', lineManagerController.passApplicant);
-router.get('/reject-applicant/:applicantId', lineManagerController.rejectApplicant);
+router.get('/linemanager/passp3-applicant/:applicantId', lineManagerController.passP3Applicant);
+router.get('/linemanager/rejectp3-applicant/:applicantId', lineManagerController.rejectP3Applicant);
 router.post('/reject-applicant/:applicantId', lineManagerController.rejectApplicant); // For form submission with reason
 
 // API routes for handling pass/reject actions from main applicant list

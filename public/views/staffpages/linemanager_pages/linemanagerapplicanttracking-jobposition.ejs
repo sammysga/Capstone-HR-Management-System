@@ -3112,7 +3112,6 @@ async function applyP1DeclaredFilters() {
   
   console.log(`P1 Declared filters applied: ${filteredRows.length} rows displayed`);
 }
-
 async function enhanceRowWithWorkSetupData(row) {
   const userId = row.getAttribute('data-userid');
   if (!userId || userId === 'undefined') return;
@@ -3191,6 +3190,7 @@ async function enhanceRowWithWorkSetupData(row) {
   
   return false;
 }
+
 // EMERGENCY FUNCTION: Force fix all visible work setup cells right now
 async function emergencyFixAllWorkSetupCells() {
   console.log("🚨 EMERGENCY: FIXING ALL WORK SETUP CELLS NOW");
@@ -3222,6 +3222,7 @@ async function emergencyFixAllWorkSetupCells() {
   
   console.log("🚨 EMERGENCY: Work setup fix completed");
 }
+
 
 // Make globally available
 window.emergencyFixAllWorkSetupCells = emergencyFixAllWorkSetupCells;
@@ -3587,7 +3588,6 @@ function compareP1Rows(rowA, rowB, sortBy) {
 window.viewP3Evaluation = viewP3Evaluation;
 window.extractApplicantIdForP3 = extractApplicantIdForP3;
 window.viewP3EvaluationByUserId = viewP3EvaluationByUserId;
-window.createP3AwaitingStatusCellWithApplicantId = createP3AwaitingStatusCellWithApplicantId;
 // Helper function to get name from row
 function getRowName(row) {
   const nameCell = row.querySelector('td:nth-child(2)');
@@ -4318,6 +4318,7 @@ function viewP3EvaluationByUserId(userId) {
     
     window.location.href = evaluationUrl;
 }
+
 
 function populateP3DeclaredResultsTableFixed(declaredRowsP3) {
   console.log(`=== POPULATING P3 DECLARED RESULTS (${declaredRowsP3.length} rows) ===`);
