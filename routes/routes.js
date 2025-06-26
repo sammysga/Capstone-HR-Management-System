@@ -225,7 +225,8 @@ router.get('/applicant/:applicantId', lineManagerController.getApplicantDetails)
 
 // Route to view the completed interview form
 router.get('/interview-form/:applicantId', lineManagerController.getInterviewForm);
-router.get('/view-interview-form/:applicantId', lineManagerController.getViewInterviewForm);
+router.get('/linemanager/view-interview-form/:applicantId', lineManagerController.getViewInterviewForm);
+router.get('/linemanager/view-interview-form-by-userid/:userId', lineManagerController.getViewInterviewFormByUserId);
 
 // Routes for passing and rejecting applicants through web interface
 router.get('/pass-applicant/:applicantId', lineManagerController.passApplicant);
@@ -298,7 +299,10 @@ router.get('/hr/get-additional-document/:userId', hrController.getAdditionalDocu
 
 router.get('/linemanager/applicant-tracker', lineManagerController.getApplicantTracker);
 router.get('/linemanager/applicant-tracker-jobposition', lineManagerController.getApplicantTrackerByJobPositions);
+
+
 // Routes for P1 review management
+router.get('/linemanager/get-assessment/:userId', lineManagerController.getApplicantAssessment);
 router.post('/linemanager/applicant-tracker-jobposition/finalizeP1Review', lineManagerController.finalizeP1Review);
 router.post('/linemanager/applicant-tracker-jobposition/updateP1Statuses', lineManagerController.updateP1Statuses); 
 router.post('/linemanager/applicant-tracker-jobposition/markAsP1Passed',  lineManagerController.markAsP1Passed);
@@ -355,7 +359,7 @@ router.get('/api/reports/quarterly-feedback/:userId',
 router.get('/linemanager/midyear-idp/:userId', lineManagerController.getMidYearIDP);
 router.post('/linemanager/midyear-idp/:userId', lineManagerController.saveMidYearIDP);
 router.get('/linemanager/midyear-idp-trainings/:userId', lineManagerController.getMidYearIDPWithTrainings);
-
+router.get('/midyear-idp-view/:userId', lineManagerController.getMidYearIDPViewData);
 router.get('/linemanager/training-categories/:userId', lineManagerController.getTrainingCategories);
 router.post('/linemanager/training-categories', lineManagerController.addTrainingCategory);
 
