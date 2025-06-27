@@ -1020,6 +1020,7 @@ For Review
     
 </table>
 
+<!-- Replace your onboarding table section with this fixed version -->
 <h2 class="header-section" style="margin-top: 30px; margin-bottom: 10px;">Onboarding</h2>
 
 <table class="tracking-table" id="onboardingTable" style="width: 100%; border-collapse: collapse;">
@@ -1035,8 +1036,18 @@ For Review
     <tbody>
         <% if (applicants && applicants.length) { %>
             <% applicants.forEach((applicant, index) => { %>
-                <% if (applicant.applicantStatus === 'P3 - PASSED - Job Offer Sent') { %>
-                    <tr>
+                <% if (applicant.applicantStatus === 'P3 - PASSED - Job Offer Sent' || applicant.applicantStatus === 'Onboarding - First Day Checklist Sent') { %>
+                    <tr class="applicant-row onboarding-row" 
+                        data-userid="<%= applicant.userId %>"
+                        data-applicantid="<%= applicant.applicantId %>"
+                        data-firstname="<%= applicant.firstName %>"
+                        data-lastname="<%= applicant.lastName %>"
+                        data-birthdate="<%= applicant.birthDate %>"
+                        data-email="<%= applicant.userEmail %>"
+                        data-phone="<%= applicant.phoneNo %>"
+                        data-jobid="<%= applicant.jobId %>"
+                        data-jobtitle="<%= applicant.jobTitle %>"
+                        data-status="<%= applicant.applicantStatus %>">
                         <td><%= index + 1 %></td>
                         <td>
                             <%= applicant.lastName %>, <%= applicant.firstName %>
@@ -1048,17 +1059,13 @@ For Review
                         <td>
                             <span><strong>Status:</strong> <%= applicant.applicantStatus %></span>
                             <div style="margin-top: 10px;">
-                                <button class="btn-onboarding" onclick="openOnboardingModal(
-                                    '<%= applicant.userId %>',
-                                    '<%= applicant.applicantId %>',
-                                    '<%= applicant.firstName %>',
-                                    '<%= applicant.lastName %>',
-                                    '<%= applicant.birthDate %>',
-                                    '<%= applicant.userEmail %>',
-                                    '<%= applicant.phoneNo %>',
-                                    '<%= applicant.jobId %>',
-                                    '<%= applicant.jobTitle %>'
-                                )">For Onboarding</button>
+                                <% if (applicant.applicantStatus === 'P3 - PASSED - Job Offer Sent') { %>
+                                    <button class="btn-onboarding onboarding-trigger">For Onboarding</button>
+                                <% } else if (applicant.applicantStatus === 'Onboarding - First Day Checklist Sent') { %>
+                                    <span style="color: #28a745; font-weight: bold;">
+                                        <i class="fas fa-check-circle"></i> Checklist Sent
+                                    </span>
+                                <% } %>
                             </div>
                         </td>
                     </tr>
@@ -1071,8 +1078,6 @@ For Review
         <% } %>
     </tbody>
 </table>
-
-
 <!--Frontend Modals-->
 
 <!-- Modal for Confirm Release of Job Offer -->
@@ -1434,7 +1439,7 @@ For Review
         <span class="close-button" onclick="closeModal('moveToOnboardingModal')" style="color: #666; font-size: 28px; font-weight: bold; position: absolute; right: 20px; top: 15px; cursor: pointer;">&times;</span>
         
         <h1 style="color: #07ACB9; text-align: center; margin-bottom: 30px; font-weight: 600;">
-            Move Applicant to Onboarding and Send First Day Checklist?
+            Moving of Applicant to Onboarding and Send First Day Checklist
         </h1>
                 
         <input type="hidden" id="onboarding-user-id">
@@ -3549,25 +3554,166 @@ function sendNotification() {
     closeModal('releaseJobOfferModal');
 }
 
+document.addEventListener('DOMContentLoaded', function() {
+    // Add click event listener for onboarding buttons
+    document.addEventListener('click', function(event) {
+        if (event.target.classList.contains('onboarding-trigger')) {
+            const row = event.target.closest('tr');
+            if (!row) {
+                console.error('❌ Could not find parent row');
+                alert('Error: Could not find applicant data');
+                return;
+            }
+            
+            // Extract data from row attributes
+            const userId = row.getAttribute('data-userid') || '';
+            const applicantId = row.getAttribute('data-applicantid') || '';
+            const firstName = row.getAttribute('data-firstname') || '';
+            const lastName = row.getAttribute('data-lastname') || '';
+            const birthDate = row.getAttribute('data-birthdate') || '';
+            const email = row.getAttribute('data-email') || '';
+            const phoneNo = row.getAttribute('data-phone') || '';
+            const jobId = row.getAttribute('data-jobid') || '';
+            const jobTitle = row.getAttribute('data-jobtitle') || '';
+            
+            console.log('🔍 Extracted data from row:', {
+                userId, applicantId, firstName, lastName, birthDate, email, phoneNo, jobId, jobTitle
+            });
+            
+            // Validate that we have the essential data
+            if (!userId) {
+                console.error('❌ Missing userId in row data');
+                alert('Error: Missing user ID. Please refresh the page and try again.');
+                return;
+            }
+            
+            if (!jobId) {
+                console.error('❌ Missing jobId in row data');
+                console.log('🔍 All row attributes:', {
+                    userId: row.getAttribute('data-userid'),
+                    applicantId: row.getAttribute('data-applicantid'),
+                    jobId: row.getAttribute('data-jobid'),
+                    firstName: row.getAttribute('data-firstname'),
+                    lastName: row.getAttribute('data-lastname')
+                });
+                alert('Error: Missing job ID. Please ensure the applicant has a valid job assignment.');
+                return;
+            }
+            
+            // Use userId as applicantId fallback if needed
+            const finalApplicantId = applicantId || userId;
+            
+            // Call the modal function
+            openOnboardingModal(userId, finalApplicantId, firstName, lastName, birthDate, email, phoneNo, jobId, jobTitle);
+        }
+    });
+});
+
 function openOnboardingModal(userId, applicantId, firstName, lastName, birthDate, email, phoneNo, jobId, jobTitle) {
+    console.log('🔧 DEBUG: Opening onboarding modal with parameters:');
+    console.log('  userId:', userId, typeof userId);
+    console.log('  applicantId:', applicantId, typeof applicantId);
+    console.log('  firstName:', firstName, typeof firstName);
+    console.log('  lastName:', lastName, typeof lastName);
+    console.log('  birthDate:', birthDate, typeof birthDate);
+    console.log('  email:', email, typeof email);
+    console.log('  phoneNo:', phoneNo, typeof phoneNo);
+    console.log('  jobId:', jobId, typeof jobId);
+    console.log('  jobTitle:', jobTitle, typeof jobTitle);
+    
+    // Check if modal element exists
+    const modal = document.getElementById('moveToOnboardingModal');
+    if (!modal) {
+        console.error('❌ Modal element "moveToOnboardingModal" not found!');
+        alert('Error: Onboarding modal not found in the DOM');
+        return;
+    }
+    
+    // Validate required parameters with better error handling
+    if (!userId || userId === 'undefined' || userId === '' || userId === 'null') {
+        console.error('❌ Missing or invalid userId:', userId);
+        alert('Error: Invalid User ID. Please check if the applicant data is complete.');
+        return;
+    }
+    
+    if (!applicantId || applicantId === 'undefined' || applicantId === '' || applicantId === 'null') {
+        console.error('❌ Missing or invalid applicantId:', applicantId);
+        console.log('🔍 Available applicant data:', { userId, firstName, lastName, email, jobId, jobTitle });
+        
+        // Try to continue with userId if applicantId is missing
+        console.warn('⚠️ Using userId as fallback for applicantId');
+        applicantId = userId;
+    }
+    
+    if (!jobId || jobId === 'undefined' || jobId === '' || jobId === 'null') {
+        console.error('❌ Missing or invalid jobId:', jobId);
+        alert('Error: Invalid Job ID. Please ensure the job position data is complete.');
+        return;
+    }
+    
     // Set the hidden input values
-    document.getElementById('onboarding-user-id').value = userId;
-    document.getElementById('onboarding-applicant-id').value = applicantId;
-    document.getElementById('onboarding-job-id').value = jobId;
+    const userIdInput = document.getElementById('onboarding-user-id');
+    const applicantIdInput = document.getElementById('onboarding-applicant-id');
+    const jobIdInput = document.getElementById('onboarding-job-id');
     
+    if (!userIdInput || !applicantIdInput || !jobIdInput) {
+        console.error('❌ Missing hidden input elements');
+        alert('Error: Modal form elements not found');
+        return;
+    }
+    
+    userIdInput.value = userId;
+    applicantIdInput.value = applicantId;
+    jobIdInput.value = jobId;
+    
+    console.log('✅ Set hidden inputs:', {
+        userId: userIdInput.value,
+        applicantId: applicantIdInput.value,
+        jobId: jobIdInput.value
+    });
+
     // Set the visible applicant information
-    document.getElementById('applicant-name-onboarding').textContent = lastName + ', ' + firstName;
-    document.getElementById('applicant-birthday-onboarding').textContent = birthDate || 'Not available';
-    document.getElementById('applicant-email-onboarding').textContent = email || 'Not available';
-    document.getElementById('applicant-contact-onboarding').textContent = phoneNo || 'Not available';
-    document.getElementById('applicant-position-onboarding').textContent = jobTitle || 'Not available';
+    const nameElement = document.getElementById('applicant-name-onboarding');
+    const birthdayElement = document.getElementById('applicant-birthday-onboarding');
+    const emailElement = document.getElementById('applicant-email-onboarding');
+    const contactElement = document.getElementById('applicant-contact-onboarding');
+    const positionElement = document.getElementById('applicant-position-onboarding');
     
-    // Fetch the Line Manager's set date from the database
-    fetch(`/hr/get-start-date?jobId=${jobId}`)
-        .then(response => response.json())
+    if (nameElement) nameElement.textContent = `${lastName}, ${firstName}`;
+    if (birthdayElement) birthdayElement.textContent = birthDate || 'Not available';
+    if (emailElement) emailElement.textContent = email || 'Not available';
+    if (contactElement) contactElement.textContent = phoneNo || 'Not available';
+    if (positionElement) positionElement.textContent = jobTitle || 'Not available';
+
+    console.log('✅ Set visible information:', {
+        name: nameElement?.textContent,
+        birthday: birthdayElement?.textContent,
+        email: emailElement?.textContent,
+        contact: contactElement?.textContent,
+        position: positionElement?.textContent
+    });
+
+    // Fetch start date
+    const lmSetDateElement = document.getElementById('lm-set-date');
+    if (lmSetDateElement) {
+        lmSetDateElement.textContent = 'Loading start date...';
+        lmSetDateElement.style.color = '#6c757d';
+    }
+
+    console.log('📡 Fetching start date for userId:', userId);
+    
+    fetch(`/hr/get-start-date?userId=${encodeURIComponent(userId)}`)
+        .then(response => {
+            console.log('📡 Start date response status:', response.status);
+            if (!response.ok) {
+                throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+            }
+            return response.json();
+        })
         .then(data => {
+            console.log('📡 Start date response data:', data);
+            
             if (data.success && data.startDate) {
-                // Format the date for display
                 const date = new Date(data.startDate);
                 const formattedDate = date.toLocaleDateString('en-US', { 
                     weekday: 'long', 
@@ -3575,78 +3721,410 @@ function openOnboardingModal(userId, applicantId, firstName, lastName, birthDate
                     month: 'long', 
                     day: 'numeric' 
                 });
+
+                if (lmSetDateElement) {
+                    lmSetDateElement.textContent = formattedDate;
+                    lmSetDateElement.style.color = '#28a745';
+                    lmSetDateElement.style.fontWeight = 'bold';
+                }
+
+                const startDateInput = document.getElementById('start-date-input');
+                if (startDateInput) {
+                    const formattedInputDate = date.toISOString().split('T')[0];
+                    startDateInput.value = formattedInputDate;
+                }
                 
-                // Display Line Manager's set date
-                document.getElementById('lm-set-date').textContent = formattedDate;
-                
-                // Set the default value for HR's confirmation field
-                document.getElementById('start-date-input').value = data.startDate;
+                console.log('✅ Successfully set start date:', formattedDate);
             } else {
-                document.getElementById('lm-set-date').textContent = 'No date set by Line Manager';
-                
-                // Set a default start date (2 weeks from today)
-                const twoWeeksFromNow = new Date();
-                twoWeeksFromNow.setDate(twoWeeksFromNow.getDate() + 14);
-                const formattedDate = twoWeeksFromNow.toISOString().split('T')[0];
-                document.getElementById('start-date-input').value = formattedDate;
+                console.log('ℹ️ No start date found');
+                handleNoStartDate();
             }
         })
         .catch(error => {
-            console.error('Error fetching start date:', error);
-            document.getElementById('lm-set-date').textContent = 'Error loading date';
-            
-            // Set a default start date (2 weeks from today)
-            const twoWeeksFromNow = new Date();
-            twoWeeksFromNow.setDate(twoWeeksFromNow.getDate() + 14);
-            const formattedDate = twoWeeksFromNow.toISOString().split('T')[0];
-            document.getElementById('start-date-input').value = formattedDate;
+            console.error('❌ Error fetching start date:', error);
+            if (lmSetDateElement) {
+                lmSetDateElement.textContent = 'Error loading date';
+                lmSetDateElement.style.color = '#dc3545';
+            }
+            setDefaultStartDate();
         });
-    
+
     // Display the modal
-    document.getElementById('moveToOnboardingModal').style.display = 'block';
+    modal.style.display = 'block';
+    console.log('✅ Modal displayed successfully');
 }
 
-// Function for confirming onboarding - Updated version
+// Helper function to set default start date if none found
+function setDefaultStartDate() {
+    const startDateInput = document.getElementById('start-date-input');
+    if (startDateInput) {
+        const nextWeek = new Date();
+        nextWeek.setDate(nextWeek.getDate() + 7);
+        startDateInput.value = nextWeek.toISOString().split('T')[0];
+        console.log('✅ Set default start date:', startDateInput.value);
+    }
+}
+
+function handleNoStartDate() {
+    const lmSetDateElement = document.getElementById('lm-set-date');
+    if (lmSetDateElement) {
+        lmSetDateElement.textContent = 'No start date set by Line Manager yet';
+        lmSetDateElement.style.color = '#ffc107';
+    }
+    setDefaultStartDate();
+}
+// Helper function to set default start date
+function setDefaultStartDate() {
+    console.log('🔧 Setting default start date');
+    const startDateInput = document.getElementById('start-date-input');
+    if (startDateInput) {
+        // Set default to next Monday or a week from today
+        const today = new Date();
+        const nextWeek = new Date(today.getTime() + 7 * 24 * 60 * 60 * 1000);
+        startDateInput.value = nextWeek.toISOString().split('T')[0];
+        console.log('✅ Default start date set:', startDateInput.value);
+    } else {
+        console.warn('⚠️ Start date input element not found');
+    }
+}
 function confirmOnboarding() {
-    const userId = document.getElementById('onboarding-user-id').value;
-    const applicantId = document.getElementById('onboarding-applicant-id').value;
-    const jobId = document.getElementById('onboarding-job-id').value;
-    const startDate = document.getElementById('start-date-input').value;
+    console.log('🔧 ENHANCED: Starting onboarding confirmation...');
     
-    if (!userId || !applicantId || !jobId || !startDate) {
-        alert('Error: Missing required information. Please make sure all fields are filled.');
+    // Get values from the modal with null checks
+    const userIdInput = document.getElementById('onboarding-user-id');
+    const applicantIdInput = document.getElementById('onboarding-applicant-id');
+    const jobIdInput = document.getElementById('onboarding-job-id');
+    const startDateInput = document.getElementById('start-date-input');
+    
+    if (!userIdInput || !applicantIdInput || !jobIdInput || !startDateInput) {
+        console.error('❌ Required modal elements not found');
+        alert('Error: Modal form elements not found. Please try refreshing the page.');
         return;
     }
     
-    // Send request to update applicant status and save start date
+    const userId = userIdInput.value;
+    const applicantId = applicantIdInput.value;
+    const jobId = jobIdInput.value;
+    const startDate = startDateInput.value;
+    
+    console.log('Onboarding data:', { userId, applicantId, jobId, startDate });
+    
+    // Validate required fields
+    if (!userId || !applicantId || !jobId || !startDate) {
+        alert('Missing required information. Please ensure all fields are filled.');
+        console.error('❌ Missing required fields:', { userId, applicantId, jobId, startDate });
+        return;
+    }
+    
+    // Validate start date is not in the past
+    const selectedDate = new Date(startDate);
+    const today = new Date();
+    today.setHours(0, 0, 0, 0); // Reset time to start of day for comparison
+    
+    if (selectedDate < today) {
+        alert('Start date cannot be in the past. Please select a valid future date.');
+        return;
+    }
+    
+    // Show loading state
+    const confirmButton = document.getElementById('confirmButton');
+    if (confirmButton) {
+        const originalButtonText = confirmButton.textContent;
+        confirmButton.disabled = true;
+        confirmButton.textContent = 'Processing...';
+        confirmButton.style.backgroundColor = '#6c757d';
+    }
+    
+    // Send the onboarding checklist
     fetch('/hr/send-onboarding-checklist', {
         method: 'POST',
         headers: {
             'Content-Type': 'application/json',
         },
-        body: JSON.stringify({ 
+        body: JSON.stringify({
             userId: userId,
             applicantId: applicantId,
             jobId: jobId,
             startDate: startDate
         }),
     })
-    .then(response => response.json())
+    .then(response => {
+        console.log('✅ Onboarding API response status:', response.status);
+        
+        if (!response.ok) {
+            return response.text().then(text => {
+                throw new Error(`HTTP ${response.status}: ${response.statusText} - ${text}`);
+            });
+        }
+        
+        return response.json();
+    })
     .then(data => {
+        console.log('✅ Onboarding API response data:', data);
+        
         if (data.success) {
-            alert('Status updated and job offer sent successfully. Start date has been set for ' + startDate);
+            // Success message
+            alert(`✅ Success! ${data.message || 'Applicant has been moved to onboarding and the checklist has been sent.'}`);
+            
+            // Close the modal
             closeModal('moveToOnboardingModal');
-            location.reload(); // Reload to update the UI
+            
+            // Refresh the page or update the UI
+            setTimeout(() => {
+                window.location.reload(); // Refresh to show updated status
+            }, 1000);
+            
         } else {
-            alert('Error: ' + (data.message || 'Failed to update status.'));
+            throw new Error(data.message || 'Failed to send onboarding checklist');
         }
     })
     .catch(error => {
-        console.error('Error:', error);
-        alert('An error occurred while processing your request. Please try again.');
+        console.error('❌ Error sending onboarding checklist:', error);
+        alert(`❌ Error: ${error.message || 'Failed to send onboarding checklist. Please try again.'}`);
+    })
+    .finally(() => {
+        // Reset button state
+        const confirmButton = document.getElementById('confirmButton');
+        if (confirmButton) {
+            confirmButton.disabled = false;
+            confirmButton.textContent = 'Confirm';
+            confirmButton.style.backgroundColor = '#124A5C';
+        }
     });
 }
+function closeModal(modalId) {
+    const modal = document.getElementById(modalId);
+    if (modal) {
+        modal.style.display = 'none';
+        console.log(`✅ Closed modal: ${modalId}`);
+    } else {
+        console.warn(`⚠️ Modal not found: ${modalId}`);
+    }
+}
 
+document.addEventListener('DOMContentLoaded', function() {
+    console.log('🚀 Initializing enhanced onboarding system...');
+    
+    // Check if required elements exist
+    const requiredElements = [
+        'moveToOnboardingModal',
+        'onboarding-user-id', 
+        'onboarding-applicant-id',
+        'onboarding-job-id',
+        'start-date-input'
+    ];
+    
+    const missingElements = requiredElements.filter(id => !document.getElementById(id));
+    
+    if (missingElements.length > 0) {
+        console.warn('⚠️ Missing required elements:', missingElements);
+    } else {
+        console.log('✅ All required modal elements found');
+    }
+    
+    // Fix for addEventListener error - check if elements exist before adding listeners
+    const searchButton = document.querySelector(".search-button");
+    if (searchButton) {
+        searchButton.addEventListener("click", function() {
+            // Search functionality if needed
+            console.log('Search button clicked');
+        });
+    }
+    
+    const searchBar = document.getElementById("searchBar");
+    if (searchBar) {
+        searchBar.addEventListener("keypress", function(e) {
+            if (e.key === "Enter") {
+                e.preventDefault();
+                console.log('Search triggered from Enter key');
+            }
+        });
+    }
+    
+    // Fix for element with textContent error
+    const phaseElements = document.querySelectorAll('#currentPhase, #currentPhase2');
+    phaseElements.forEach(element => {
+        if (element) {
+            // Only set textContent if element exists
+            console.log('Found phase element:', element.id);
+        }
+    });
+    
+    // Update onboarding buttons after a delay to ensure data is loaded
+    setTimeout(() => {
+        try {
+            updateOnboardingButtonsForUserIdEnhanced();
+        } catch (error) {
+            console.error('❌ Error updating onboarding buttons:', error);
+        }
+    }, 2000);
+    
+    // Re-update buttons when filters are applied
+    const filterButtons = document.querySelectorAll('.filter-button');
+    filterButtons.forEach(button => {
+        if (button) {
+            button.addEventListener('click', function() {
+                setTimeout(() => {
+                    try {
+                        updateOnboardingButtonsForUserIdEnhanced();
+                    } catch (error) {
+                        console.error('❌ Error updating onboarding buttons after filter:', error);
+                    }
+                }, 1000);
+            });
+        }
+    });
+});
+
+// Make functions globally available
+if (typeof window !== 'undefined') {
+    window.openOnboardingModal = openOnboardingModal;
+    window.confirmOnboarding = confirmOnboarding;
+    window.updateOnboardingButtonsForUserIdEnhanced = updateOnboardingButtonsForUserIdEnhanced;
+    window.handleNoStartDate = handleNoStartDate;
+    window.setDefaultStartDate = setDefaultStartDate;
+    window.closeModal = closeModal;
+}
+
+function updateOnboardingButtonsForUserIdEnhanced() {
+   console.log('🔧 ENHANCED: Updating onboarding buttons to use correct data...');
+    
+    // Find all onboarding buttons
+    const onboardingButtons = document.querySelectorAll('.btn-onboarding, button[onclick*="openOnboardingModal"]');
+    console.log(`Found ${onboardingButtons.length} onboarding buttons to update`);
+    
+    if (onboardingButtons.length === 0) {
+        console.log('ℹ️ No onboarding buttons found to update');
+        return;
+    }
+    
+    onboardingButtons.forEach((button, index) => {
+        const row = button.closest('tr');
+        if (!row) {
+            console.warn(`Button ${index}: No parent row found`);
+            return;
+        }
+        
+        // Try to get userId from data attribute first
+        let userId = row.getAttribute('data-userid');
+        
+        // If no userId in data attribute, try to extract from existing onclick
+        if (!userId) {
+            const currentOnclick = button.getAttribute('onclick');
+            if (currentOnclick) {
+                const userIdMatch = currentOnclick.match(/openOnboardingModal\s*\(\s*['"]([^'"]*)['"]/);
+                if (userIdMatch && userIdMatch[1]) {
+                    userId = userIdMatch[1];
+                    row.setAttribute('data-userid', userId); // Cache it for future use
+                }
+            }
+        }
+        
+        if (!userId) {
+            console.warn(`Button ${index}: No userId found - skipping`);
+            return;
+        }
+        
+        // Extract other data from the row
+        const cells = row.querySelectorAll('td');
+        let applicantId = '';
+        let firstName = '';
+        let lastName = '';
+        let email = '';
+        let phoneNo = '';
+        let jobId = '';
+        let jobTitle = '';
+        let birthDate = '';
+        
+        // Try to get data from row attributes first
+        applicantId = row.getAttribute('data-applicant-id') || '';
+        jobId = row.getAttribute('data-job-id') || '';
+        
+        // Extract from cell content
+        if (cells.length >= 2) {
+            const nameCell = cells[1];
+            if (nameCell) {
+                const nameContent = nameCell.innerHTML || nameCell.textContent;
+                const lines = nameContent.split(/\n|<br\s*\/?>/i).map(line => line.trim()).filter(line => line);
+                
+                if (lines.length > 0) {
+                    const fullName = lines[0];
+                    const nameParts = fullName.split(',');
+                    lastName = nameParts[0] ? nameParts[0].trim() : '';
+                    firstName = nameParts[1] ? nameParts[1].trim() : '';
+                }
+                
+                if (lines.length > 1) {
+                    // Extract email from second line
+                    const emailMatch = lines[1].match(/([a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,})/);
+                    if (emailMatch) {
+                        email = emailMatch[1];
+                    }
+                }
+            }
+        }
+        
+        // Get job title from position column
+        if (cells.length >= 4) {
+            const positionCell = cells[3];
+            if (positionCell) {
+                jobTitle = positionCell.textContent.trim();
+            }
+        }
+        
+        // Try to get missing data from global applicantsData if available
+        if (typeof window !== 'undefined' && window.applicantsData && (!applicantId || !jobId || !email)) {
+            const applicantData = window.applicantsData.find(a => a.userId == userId);
+            if (applicantData) {
+                if (!applicantId) applicantId = applicantData.applicantId || '';
+                if (!jobId) jobId = applicantData.jobId || '';
+                if (!email) email = applicantData.userEmail || '';
+                if (!jobTitle) jobTitle = applicantData.jobTitle || '';
+                if (!birthDate) birthDate = applicantData.birthDate || '';
+                if (!phoneNo) phoneNo = applicantData.phoneNo || '';
+                
+                console.log(`Button ${index}: Enhanced data from applicantsData for userId ${userId}`);
+            }
+        }
+        
+        // Update button onclick with all available data
+        const newOnclick = `openOnboardingModal('${userId}', '${applicantId}', '${firstName}', '${lastName}', '${birthDate}', '${email}', '${phoneNo}', '${jobId}', '${jobTitle}')`;
+        button.setAttribute('onclick', newOnclick);
+        
+        console.log(`✅ Button ${index} updated for userId: ${userId}`);
+        console.log(`  Data: ${firstName} ${lastName}, ${email}, ${jobTitle}`);
+    });
+    
+    console.log('✅ Onboarding buttons update completed');
+}
+
+
+document.addEventListener('DOMContentLoaded', function() {
+    console.log('🚀 Initializing enhanced onboarding system...');
+    
+    // Update onboarding buttons after a delay to ensure data is loaded
+    setTimeout(() => {
+        updateOnboardingButtonsForUserIdEnhanced();
+    }, 2000);
+    
+    // Re-update buttons when filters are applied
+    const filterButtons = document.querySelectorAll('.filter-button');
+    filterButtons.forEach(button => {
+        button.addEventListener('click', function() {
+            setTimeout(() => {
+                updateOnboardingButtonsForUserIdEnhanced();
+            }, 1000);
+        });
+    });
+});
+
+
+// Make functions globally available
+window.openOnboardingModal = openOnboardingModal;
+window.confirmOnboarding = confirmOnboarding;
+window.updateOnboardingButtonsForUserIdEnhanced = updateOnboardingButtonsForUserIdEnhanced;
+window.handleNoStartDate = handleNoStartDate;
+window.setDefaultStartDate = setDefaultStartDate;
 // Function for confirming account setup
 function confirmAccountSetup() {
     alert("Account setup confirmed");

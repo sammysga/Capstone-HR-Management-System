@@ -3902,39 +3902,115 @@ submitInterviewEvaluation: async function(req, res) {
 //         });
 //     }
 // },
-
-
+// 
+// 
 sendJobOffer: async function(req, res) {
     if (req.session.user && req.session.user.userRole === 'Line Manager') {
         try {
-            const { applicantId, startDate, additionalNotes } = req.body;
+            const { userId, startDate, additionalNotes } = req.body;
             
-            if (!applicantId || !startDate) {
+            console.log('🔧 BACKEND DEBUG - Job Offer Send:');
+            console.log('Received User ID:', userId);
+            console.log('Start Date:', startDate);
+            console.log('Additional Notes:', additionalNotes);
+            
+            if (!userId || !startDate) {
                 return res.status(400).json({ success: false, message: 'Missing required information' });
             }
             
-            // Get the jobId from the applicant record
-            const { data: applicantData, error: applicantError } = await supabase
-                .from('applicantaccounts')
-                .select('jobId')
-                .eq('applicantId', applicantId)
-                .single();
-                
-            if (applicantError || !applicantData) {
-                console.error('Error fetching applicant data:', applicantError);
-                return res.status(500).json({ success: false, message: 'Failed to fetch applicant data' });
+            // STEP 1: Find the applicant data using the CORRECT userId
+            console.log('=== FINDING APPLICANT DATA ===');
+            
+            let applicantData = null;
+            let jobId = null;
+            let applicantId = null;
+            let actualUserId = parseInt(userId); // The actual userId we should use
+            
+            // CORRECTED APPROACH: Try to find by userId first (this should be the primary lookup)
+            console.log('Approach 1: Looking for applicantaccounts by userId:', actualUserId);
+            try {
+                const { data: approach1Data, error: approach1Error } = await supabase
+                    .from('applicantaccounts')
+                    .select('*')
+                    .eq('userId', actualUserId)
+                    .single();
+                    
+                if (approach1Data && !approach1Error) {
+                    console.log('✅ Found data by userId:', approach1Data);
+                    applicantData = approach1Data;
+                    applicantId = approach1Data.applicantId;
+                    jobId = approach1Data.jobId;
+                    console.log('🎯 CORRECT MAPPING: userId', actualUserId, '-> applicantId', applicantId);
+                } else {
+                    console.log('❌ Approach 1 failed:', approach1Error);
+                }
+            } catch (error) {
+                console.log('❌ Approach 1 exception:', error.message);
             }
             
-            const jobId = applicantData.jobId;
+            // FALLBACK: If not found by userId, try by applicantId (but this suggests wrong data)
+            if (!applicantData) {
+                console.log('Approach 2: Looking for applicantaccounts by applicantId (FALLBACK):', actualUserId);
+                try {
+                    const { data: approach2Data, error: approach2Error } = await supabase
+                        .from('applicantaccounts')
+                        .select('*')
+                        .eq('applicantId', actualUserId)
+                        .single();
+                        
+                    if (approach2Data && !approach2Error) {
+                        console.log('⚠️ WARNING: Found by applicantId, but userId mismatch!');
+                        console.log('Found data:', approach2Data);
+                        console.log('🚨 FRONTEND ISSUE: You clicked userId', actualUserId, 'but this is actually applicantId', actualUserId);
+                        console.log('🚨 The REAL userId should be:', approach2Data.userId);
+                        
+                        applicantData = approach2Data;
+                        applicantId = approach2Data.applicantId;
+                        jobId = approach2Data.jobId;
+                        // CRITICAL: Use the REAL userId from the database
+                        actualUserId = approach2Data.userId;
+                        
+                        console.log('🔧 CORRECTED: Now using actual userId:', actualUserId);
+                    } else {
+                        console.log('❌ Approach 2 failed:', approach2Error);
+                    }
+                } catch (error) {
+                    console.log('❌ Approach 2 exception:', error.message);
+                }
+            }
             
-            // Save the start date to the onboarding_position-startdate table
+            // Final validation
+            if (!applicantData || !applicantId || !jobId) {
+                console.error('❌ FINAL ERROR: Could not find applicant data');
+                return res.status(500).json({ 
+                    success: false, 
+                    message: `Failed to fetch applicant data for userId: ${userId}`,
+                    debug: {
+                        receivedUserId: userId,
+                        parsedUserId: parseInt(userId),
+                        foundData: !!applicantData
+                    }
+                });
+            }
+            
+            console.log('✅ SUCCESS: Found applicant data');
+            console.log('📋 FINAL MAPPING:');
+            console.log('  - Received from frontend:', userId);
+            console.log('  - Actual userId to use:', actualUserId);
+            console.log('  - ApplicantId:', applicantId);
+            console.log('  - JobId:', jobId);
+            
+            // STEP 2: Save to onboarding table with CORRECT userId
+            console.log('Saving to onboarding_position-startdate table...');
+            
             const { error: startDateError } = await supabase
                 .from('onboarding_position-startdate')
-                .upsert({ 
+                .upsert({
+                    userId: actualUserId, // Use the CORRECT userId
                     jobId: jobId,
                     setStartDate: startDate,
                     updatedAt: new Date().toISOString(),
-                    isAccepted: false, // Initialize as false until applicant accepts
+                    isAccepted: false,
                     additionalNotes: additionalNotes || ''
                 });
                 
@@ -3943,7 +4019,9 @@ sendJobOffer: async function(req, res) {
                 return res.status(500).json({ success: false, message: 'Failed to save start date' });
             }
             
-            // Update the applicant status
+            console.log('✅ Start date saved with userId:', actualUserId);
+            
+            // STEP 3: Update applicant status
             const { error: updateError } = await supabase
                 .from('applicantaccounts')
                 .update({ applicantStatus: 'P3 - PASSED - Job Offer Sent' })
@@ -3954,16 +4032,203 @@ sendJobOffer: async function(req, res) {
                 return res.status(500).json({ success: false, message: 'Failed to update applicant status' });
             }
             
-            return res.json({ success: true, message: 'Job offer sent successfully' });
+            console.log('✅ Applicant status updated for applicantId:', applicantId);
+            
+            // STEP 4: Get applicant details using CORRECT userId
+            const { data: userDetails, error: userError } = await supabase
+                .from('users')
+                .select('firstName, lastName, email, userEmail')
+                .eq('userId', actualUserId)
+                .single();
+            
+            let applicantName = 'Unknown Applicant';
+            let applicantEmail = '';
+            
+            if (userDetails && !userError) {
+                applicantName = `${userDetails.firstName} ${userDetails.lastName}`;
+                applicantEmail = userDetails.email || userDetails.userEmail || '';
+                console.log('✅ Found user details:', { applicantName, applicantEmail });
+            } else {
+                console.log('❌ Could not fetch user details:', userError);
+                // Try from applicantaccounts table
+                applicantName = applicantData.firstName && applicantData.lastName ? 
+                    `${applicantData.firstName} ${applicantData.lastName}` : 'Unknown Applicant';
+                applicantEmail = applicantData.userEmail || '';
+            }
+            
+            console.log('✅ JOB OFFER SENT SUCCESSFULLY');
+            console.log('📋 FINAL SUMMARY:');
+            console.log('  - Frontend sent userId:', userId);
+            console.log('  - Actual userId used:', actualUserId);
+            console.log('  - ApplicantId:', applicantId);
+            console.log('  - Saved to onboarding with userId:', actualUserId);
+            console.log('  - Applicant name:', applicantName);
+            console.log('  - Applicant email:', applicantEmail);
+            
+            return res.json({ 
+                success: true, 
+                message: 'Job offer sent successfully',
+                applicantName: applicantName,
+                applicantEmail: applicantEmail,
+                applicantId: applicantId,
+                jobId: jobId,
+                userId: actualUserId, // Return the CORRECT userId
+                debug: {
+                    frontendSentUserId: userId,
+                    actualUserIdUsed: actualUserId,
+                    applicantId: applicantId,
+                    savedToOnboardingWithUserId: actualUserId
+                }
+            });
+            
         } catch (error) {
-            console.error('Error sending job offer:', error);
-            return res.status(500).json({ success: false, message: 'Internal server error' });
+            console.error('❌ CRITICAL ERROR in sendJobOffer:', error);
+            return res.status(500).json({ 
+                success: false, 
+                message: 'Internal server error',
+                debug: { error: error.message }
+            });
         }
     } else {
         return res.status(401).json({ success: false, message: 'Unauthorized access. Line Manager role required.' });
     }
 },
 
+sendJobOfferAlternative: async function(req, res) {
+    if (req.session.user && req.session.user.userRole === 'Line Manager') {
+        try {
+            const { userId, startDate, additionalNotes } = req.body;
+            
+            console.log('ALTERNATIVE APPROACH - Job Offer Send:');
+            console.log('User ID:', userId);
+            
+            if (!userId || !startDate) {
+                return res.status(400).json({ success: false, message: 'Missing required information' });
+            }
+            
+            // ALTERNATIVE: Get jobId from the URL params or session if available
+            // You might need to pass jobId from the frontend
+            const jobId = req.query.jobId || req.body.jobId;
+            
+            if (!jobId) {
+                return res.status(400).json({ success: false, message: 'Job ID is required for job offer' });
+            }
+            
+            // Save the start date using userId directly (since your onboarding table has userId)
+            const { error: startDateError } = await supabase
+                .from('onboarding_position-startdate')
+                .upsert({
+                    userId: parseInt(userId),
+                    jobId: parseInt(jobId),
+                    setStartDate: startDate,
+                    updatedAt: new Date().toISOString(),
+                    isAccepted: false,
+                    additionalNotes: additionalNotes || ''
+                });
+                
+            if (startDateError) {
+                console.error('Error saving start date:', startDateError);
+                return res.status(500).json({ success: false, message: 'Failed to save start date' });
+            }
+            
+            // Update applicant status - try multiple approaches
+            let updateSuccess = false;
+            
+            // Try updating by userId first
+            const { error: updateError1 } = await supabase
+                .from('applicantaccounts')
+                .update({ applicantStatus: 'P3 - PASSED - Job Offer Sent' })
+                .eq('userId', userId);
+                
+            if (!updateError1) {
+                updateSuccess = true;
+                console.log('Updated status using userId');
+            } else {
+                // Try updating by applicantId = userId
+                const { error: updateError2 } = await supabase
+                    .from('applicantaccounts')
+                    .update({ applicantStatus: 'P3 - PASSED - Job Offer Sent' })
+                    .eq('applicantId', userId);
+                    
+                if (!updateError2) {
+                    updateSuccess = true;
+                    console.log('Updated status using applicantId = userId');
+                } else {
+                    console.error('Both update attempts failed:', updateError1, updateError2);
+                }
+            }
+            
+            if (!updateSuccess) {
+                return res.status(500).json({ success: false, message: 'Failed to update applicant status' });
+            }
+            
+            // Get applicant name
+            const { data: applicantDetails } = await supabase
+                .from('users')
+                .select('firstName, lastName')
+                .eq('userId', userId)
+                .single();
+            
+            const applicantName = applicantDetails ? 
+                `${applicantDetails.firstName} ${applicantDetails.lastName}` : 
+                'applicant';
+            
+            return res.json({ 
+                success: true, 
+                message: 'Job offer sent successfully',
+                applicantName: applicantName
+            });
+            
+        } catch (error) {
+            console.error('Error in alternative sendJobOffer:', error);
+            return res.status(500).json({ success: false, message: 'Internal server error' });
+        }
+    } else {
+        return res.status(401).json({ success: false, message: 'Unauthorized access. Line Manager role required.' });
+    }
+},
+getUserEmail: async function(req, res) {
+    try {
+        const { userId } = req.params;
+        
+        console.log(`Fetching email for userId: ${userId}`);
+        
+        if (!userId) {
+            return res.status(400).json({ success: false, message: 'UserId is required' });
+        }
+        
+        // Try to get email from users table first
+        const { data: userData, error: userError } = await supabase
+            .from('users')
+            .select('email, userEmail')
+            .eq('userId', userId)
+            .single();
+            
+        if (userData && !userError) {
+            const email = userData.email || userData.userEmail;
+            if (email) {
+                return res.json({ success: true, email: email });
+            }
+        }
+        
+        // If not found in users table, try applicantaccounts table
+        const { data: applicantData, error: applicantError } = await supabase
+            .from('applicantaccounts')
+            .select('userEmail')
+            .eq('userId', userId)
+            .single();
+            
+        if (applicantData && !applicantError && applicantData.userEmail) {
+            return res.json({ success: true, email: applicantData.userEmail });
+        }
+        
+        return res.status(404).json({ success: false, message: 'Email not found for this user' });
+        
+    } catch (error) {
+        console.error('Error fetching user email:', error);
+        return res.status(500).json({ success: false, message: 'Internal server error' });
+    }
+},
 /**
  * Gets the job offer details
  */

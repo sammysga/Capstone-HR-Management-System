@@ -3423,7 +3423,7 @@ getJobOffer: async function(req, res) {
         
         // For testing purposes, you might want to temporarily disable this check
         // Comment this block if you want to see the page regardless of status
-        if (applicantData.applicantStatus !== 'P3 - PASSED - Job Offer Sent') {
+        if (applicantData.applicantStatus !== 'Onboarding - First Day Checklist Sent') {
             console.log(`❌ [getJobOffer] Applicant status does not qualify for job offer: ${applicantData.applicantStatus}`);
             return res.send('No job offer is currently available for you. Current status: ' + applicantData.applicantStatus);
         }
@@ -3487,8 +3487,7 @@ getJobOffer: async function(req, res) {
     }
 },
 
-// API endpoint to accept job offer
-// API endpoint to accept job offer
+
 // API endpoint to accept job offer
 acceptJobOffer: async function(req, res) {
     try {

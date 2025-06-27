@@ -2036,138 +2036,280 @@ getAdditionalDocument: async function(req, res) {
             res.redirect('staff/login');
         }
     },
+getOnboardingStartDate: async function(req, res) {
+    console.log('🔧 [DEBUG] getOnboardingStartDate called');
+    console.log('🔧 [DEBUG] req.query:', req.query);
+    console.log('🔧 [DEBUG] Session user:', req.session.user);
+    
+    if (req.session.user && req.session.user.userRole === 'HR') {
+        try {
+            const { userId } = req.query;
+            
+            console.log('🔧 [DEBUG] Extracted params:', { userId });
 
-    getOnboardingStartDate: async function(req, res) {
-        if (req.session.user && req.session.user.userRole === 'HR') {
-            try {
-                const { jobId } = req.query;
-                
-                if (!jobId) {
-                    return res.status(400).json({ success: false, message: 'Missing job ID parameter' });
-                }
-                
-                // Fetch the start date from the onboarding_position-startdate table
-                const { data, error } = await supabase
-                    .from('onboarding_position-startdate')
-                    .select('setStartDate, additionalNotes')
-                    .eq('jobId', jobId)
-                    .single();
-                    
-                if (error) {
-                    console.error('Error fetching start date:', error);
-                    return res.status(500).json({ success: false, message: 'Failed to fetch start date' });
-                }
-                
-                if (!data) {
-                    return res.json({ success: false, message: 'No start date found for this job' });
-                }
-                
+            if (!userId) {
+                console.error('❌ [DEBUG] userId is missing');
+                return res.status(400).json({ 
+                    success: false, 
+                    message: 'Missing required parameter: userId' 
+                });
+            }
+
+            console.log('🔧 [DEBUG] Querying onboarding_position-startdate with userId:', userId);
+
+            // FIXED: Query by userId instead of jobId
+            const { data, error } = await supabase
+                .from('onboarding_position-startdate')
+                .select('setStartDate, additionalNotes, isAccepted, jobId')
+                .eq('userId', userId)
+                .limit(1);
+
+            if (error) {
+                console.error('❌ [DEBUG] Error fetching start date from Supabase:', error);
+                return res.status(500).json({ 
+                    success: false, 
+                    message: 'Database error: ' + error.message 
+                });
+            }
+
+            console.log('🔧 [DEBUG] Supabase query result:', data);
+
+            // Check if we got any data
+            if (!data || data.length === 0) {
+                console.log('ℹ️ [DEBUG] No start date found for userId:', userId);
                 return res.json({ 
-                    success: true, 
-                    startDate: data.setStartDate,
-                    additionalNotes: data.additionalNotes || ''
+                    success: false, 
+                    message: 'No start date found for this user',
+                    userId: userId
                 });
-                
-            } catch (error) {
-                console.error('Error fetching start date:', error);
-                return res.status(500).json({ success: false, message: 'Internal server error' });
             }
-        } else {
-            return res.status(401).json({ success: false, message: 'Unauthorized access. HR role required.' });
-        }
-    },
 
-    sendOnboardingChecklist: async function(req, res) {
-        if (req.session.user && req.session.user.userRole === 'HR') {
-            try {
-                const { userId, applicantId, jobId, startDate } = req.body;
-                
-                if (!userId || !applicantId || !jobId || !startDate) {
-                    return res.status(400).json({ success: false, message: 'Missing required information' });
-                }
-                
-                // First, save the start date in the onboarding_position-startdate table
-                const { error: startDateError } = await supabase
-                    .from('onboarding_position-startdate')
-                    .upsert({ 
-                        jobId: jobId,
-                        setStartDate: startDate,
-                        updatedAt: new Date().toISOString()
-                    });
-                
-                if (startDateError) {
-                    console.error('Error saving start date:', startDateError);
-                    return res.status(500).json({ success: false, message: 'Failed to save start date' });
-                }
-                
-                // Update the applicant status in the database
-                const { error: updateError } = await supabase
-                    .from('applicantaccounts')
-                    .update({ applicantStatus: 'Onboarding - First Day Checklist Sent' })
-                    .eq('applicantId', applicantId);
-                
-                if (updateError) {
-                    console.error('Error updating applicant status:', updateError);
-                    return res.status(500).json({ success: false, message: 'Failed to update applicant status' });
-                }
-                
-                // Get job title for the message
-                const { data: jobData, error: jobError } = await supabase
-                    .from('jobpositions')
-                    .select('jobTitle')
-                    .eq('jobId', jobId)
-                    .single();
-                    
-                if (jobError) {
-                    console.error('Error fetching job title:', jobError);
-                }
-                
-                const jobTitle = jobData ? jobData.jobTitle : 'the position';
-                
-                // Send a congratulatory message through the chatbot
-                try {
-                    const currentTime = new Date().toISOString();
-                    
-                    // Send a predefined message to the user's chatbot
-                    await supabase
-                        .from('chatbot_history')
-                        .insert([{
-                            userId: userId,
-                            message: JSON.stringify({
-                                text: "Congratulations! We're thrilled to inform you that you have successfully passed all phases of our screening processes. Please press the button below if you would like to accept the job offer for " + jobTitle + ".",
-                                buttons: [
-                                    {
-                                        text: "Accept Job Offer",
-                                        url: "/applicant/job-offer"
-                                    }
-                                ]
-                            }),
-                            sender: 'bot',
-                            timestamp: currentTime,
-                            applicantStage: 'Onboarding - First Day Checklist Sent'
-                        }]);
-                    
-                    console.log('✅ [HR] Job offer message sent to applicant through chatbot');
-                    
-                } catch (chatError) {
-                    console.error('Error sending chatbot message:', chatError);
-                    // Continue execution - the status was updated successfully even if the message fails
-                }
-                
-                // Return success response
-                return res.json({
-                    success: true,
-                    message: 'Applicant status updated and job offer sent with start date: ' + startDate
+            // Get the first record
+            const startDateRecord = data[0];
+            
+            // Check if setStartDate exists and is not null
+            if (!startDateRecord.setStartDate) {
+                console.log('ℹ️ [DEBUG] Start date is null for userId:', userId);
+                return res.json({ 
+                    success: false, 
+                    message: 'Start date not set for this user',
+                    userId: userId
                 });
-                
-            } catch (error) {
-                console.error('Error updating applicant status:', error);
-                return res.status(500).json({ success: false, message: 'Internal server error' });
             }
-        } else {
-            return res.status(401).json({ success: false, message: 'Unauthorized access. HR role required.' });
+
+            console.log('✅ [DEBUG] Returning successful response with start date:', startDateRecord.setStartDate);
+            return res.json({ 
+                success: true, 
+                startDate: startDateRecord.setStartDate,
+                additionalNotes: startDateRecord.additionalNotes || '',
+                isAccepted: startDateRecord.isAccepted || false,
+                userId: userId,
+                jobId: startDateRecord.jobId
+            });
+
+        } catch (error) {
+            console.error('❌ [DEBUG] Unexpected error in getOnboardingStartDate:', error);
+            console.error('❌ [DEBUG] Error stack:', error.stack);
+            return res.status(500).json({ 
+                success: false, 
+                message: 'Internal server error: ' + error.message 
+            });
         }
-    },
+    } else {
+        console.error('❌ [DEBUG] Unauthorized access attempt');
+        return res.status(401).json({ 
+            success: false, 
+            message: 'Unauthorized access. HR role required.' 
+        });
+    }
+},
+
+sendOnboardingChecklist: async function(req, res) {
+    console.log('🔧 [DEBUG] sendOnboardingChecklist called');
+    console.log('🔧 [DEBUG] req.body:', req.body);
+    
+    if (req.session.user && req.session.user.userRole === 'HR') {
+        try {
+            const { userId, applicantId, jobId, startDate } = req.body;
+            
+            if (!userId || !applicantId || !jobId || !startDate) {
+                console.error('❌ [DEBUG] Missing required information:', { userId, applicantId, jobId, startDate });
+                return res.status(400).json({ success: false, message: 'Missing required information' });
+            }
+            
+            console.log('🔧 [DEBUG] Upserting start date with userId:', userId);
+            
+            // FIXED: Save the start date using userId as the key
+            const { error: startDateError } = await supabase
+                .from('onboarding_position-startdate')
+                .upsert({ 
+                    userId: userId,        // Use userId instead of jobId as primary key
+                    jobId: jobId,         // Keep jobId for reference
+                    setStartDate: startDate,
+                    updatedAt: new Date().toISOString()
+                });
+            
+            if (startDateError) {
+                console.error('❌ [DEBUG] Error saving start date:', startDateError);
+                return res.status(500).json({ success: false, message: 'Failed to save start date: ' + startDateError.message });
+            }
+            
+            console.log('✅ [DEBUG] Start date saved successfully');
+            
+            // Update the applicant status in the database
+            console.log('🔧 [DEBUG] Updating applicant status for applicantId:', applicantId);
+            const { error: updateError } = await supabase
+                .from('applicantaccounts')
+                .update({ applicantStatus: 'Onboarding - First Day Checklist Sent' })
+                .eq('applicantId', applicantId);
+            
+            if (updateError) {
+                console.error('❌ [DEBUG] Error updating applicant status:', updateError);
+                return res.status(500).json({ success: false, message: 'Failed to update applicant status: ' + updateError.message });
+            }
+            
+            console.log('✅ [DEBUG] Applicant status updated successfully');
+            
+            // Get job title for the message
+            const { data: jobData, error: jobError } = await supabase
+                .from('jobpositions')
+                .select('jobTitle')
+                .eq('jobId', jobId)
+                .single();
+                
+            if (jobError) {
+                console.error('❌ [DEBUG] Error fetching job title:', jobError);
+            }
+            
+            const jobTitle = jobData ? jobData.jobTitle : 'the position';
+            
+            // Send a congratulatory message through the chatbot
+            try {
+                const currentTime = new Date().toISOString();
+                
+                console.log('🔧 [DEBUG] Sending chatbot message to userId:', userId);
+                
+                // Send a predefined message to the user's chatbot
+                await supabase
+                    .from('chatbot_history')
+                    .insert([{
+                        userId: userId,
+                        message: JSON.stringify({
+                            text: "Congratulations! We're thrilled to inform you that you have successfully passed all phases of our screening processes. Please press the button below if you would like to accept the job offer for " + jobTitle + ".",
+                            buttons: [
+                                {
+                                    text: "Accept Job Offer",
+                                    url: "/applicant/job-offer"
+                                }
+                            ]
+                        }),
+                        sender: 'bot',
+                        timestamp: currentTime,
+                        applicantStage: 'Onboarding - First Day Checklist Sent'
+                    }]);
+                
+                console.log('✅ [DEBUG] Job offer message sent to applicant through chatbot');
+                
+            } catch (chatError) {
+                console.error('❌ [DEBUG] Error sending chatbot message:', chatError);
+                // Continue execution - the status was updated successfully even if the message fails
+            }
+            
+            // Return success response
+            console.log('✅ [DEBUG] Onboarding process completed successfully');
+            return res.json({
+                success: true,
+                message: 'Applicant status updated and job offer sent with start date: ' + startDate
+            });
+            
+        } catch (error) {
+            console.error('❌ [DEBUG] Unexpected error in sendOnboardingChecklist:', error);
+            console.error('❌ [DEBUG] Error stack:', error.stack);
+            return res.status(500).json({ success: false, message: 'Internal server error: ' + error.message });
+        }
+    } else {
+        console.error('❌ [DEBUG] Unauthorized access attempt');
+        return res.status(401).json({ success: false, message: 'Unauthorized access. HR role required.' });
+    }
+},
+getApplicantOnboardingData: async function(req, res) {
+    if (req.session.user && req.session.user.userRole === 'HR') {
+        try {
+            const { userId } = req.params;
+            
+            if (!userId) {
+                return res.status(400).json({ 
+                    success: false, 
+                    message: 'User ID is required' 
+                });
+            }
+            
+            console.log('HR DEBUG - Getting onboarding data for userId:', userId);
+            
+            // Get applicant data
+            const { data: applicantData, error: applicantError } = await supabase
+                .from('applicantaccounts')
+                .select(`
+                    applicantId,
+                    firstName,
+                    lastName,
+                    phoneNo,
+                    birthDate,
+                    jobId,
+                    useraccounts!inner(userEmail, birthDate)
+                `)
+                .eq('userId', userId)
+                .single();
+                
+            if (applicantError || !applicantData) {
+                console.error('Error fetching applicant data:', applicantError);
+                return res.status(404).json({ 
+                    success: false, 
+                    message: 'Applicant not found for userId: ' + userId 
+                });
+            }
+            
+            // Get job title
+            const { data: jobData, error: jobError } = await supabase
+                .from('jobpositions')
+                .select('jobTitle')
+                .eq('jobId', applicantData.jobId)
+                .single();
+            
+            const responseData = {
+                success: true,
+                applicant: {
+                    userId: userId,
+                    applicantId: applicantData.applicantId,
+                    firstName: applicantData.firstName,
+                    lastName: applicantData.lastName,
+                    email: applicantData.useraccounts?.userEmail || 'N/A',
+                    phoneNo: applicantData.phoneNo || 'N/A',
+                    birthDate: applicantData.useraccounts?.birthDate || applicantData.birthDate || 'N/A',
+                    jobId: applicantData.jobId,
+                    jobTitle: jobData?.jobTitle || 'N/A'
+                }
+            };
+            
+            console.log('Returning applicant data:', responseData);
+            return res.json(responseData);
+            
+        } catch (error) {
+            console.error('Error getting applicant onboarding data:', error);
+            return res.status(500).json({ 
+                success: false, 
+                message: 'Internal server error: ' + error.message 
+            });
+        }
+    } else {
+        return res.status(401).json({ 
+            success: false, 
+            message: 'Unauthorized access. HR role required.' 
+        });
+    }
+},
+
+
 
     getManageLeaveTypes: async function(req, res) {
         if (req.session.user && req.session.user.userRole === 'HR') {

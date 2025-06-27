@@ -319,6 +319,9 @@ router.post('/linemanager/applicant-tracker-jobposition/finalizeP3Review', lineM
 router.post('/linemanager/applicant-tracker-jobposition/markAsP3Passed',  lineManagerController.markAsP3Passed);
 router.post('/linemanager/applicant-tracker-jobposition/markAsP3Failed', lineManagerController.markAsP3Failed);
 
+
+router.get('/hr/get-applicant-onboarding-data/:userId', hrController.getApplicantOnboardingData);
+
 // Notification routes
 router.get('/api/employee/notifications', employeeController.getEmployeeNotifications);
 router.get('/employee/api/get360Feedback', employeeController.get360FeedbackToast);
