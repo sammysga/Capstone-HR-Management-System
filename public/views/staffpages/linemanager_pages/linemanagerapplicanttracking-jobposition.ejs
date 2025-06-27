@@ -1831,28 +1831,278 @@ let p3EmailsToUpdate = { passed: [], failed: [] };
 // ============================
 
 document.addEventListener("DOMContentLoaded", function () {
-  console.log("=== FIXED APPLICANT TRACKER INITIALIZATION START ===");
-  
-  // Initialize all systems
-  initializeApplicantTracker();
-  
-  // FIXED: Force refresh work setup data with correct boolean logic
-  setTimeout(() => {
-    console.log("🔧 FIXED: Starting work setup data refresh with correct boolean logic");
-    forceRefreshWorkSetupDataFixed();
-  }, 1000);
-  
-  // Set up P1 table filters after initialization
-  setTimeout(() => {
-    setupP1TableFilters();
-  }, 2000);
-  
-  // FIXED: Initialize P3 View Evaluation buttons
-  setTimeout(() => {
-    initializeP3ViewEvaluationButtons();
-  }, 2500);
+    console.log("=== ENHANCED APPLICANT TRACKER INITIALIZATION START ===");
+    
+    // Initialize all systems
+    initializeApplicantTracker();
+    
+    // FIXED: Force refresh work setup data with correct boolean logic
+    setTimeout(() => {
+        console.log("🔧 FIXED: Starting work setup data refresh with correct boolean logic");
+        forceRefreshWorkSetupDataFixed();
+    }, 1000);
+    
+    // Set up P1 table filters after initialization
+    setTimeout(() => {
+        setupP1TableFilters();
+    }, 2000);
+    
+    // ENHANCED: Initialize P3 filter controls
+    setTimeout(() => {
+        createP3FilterControls();
+    }, 2500);
+    
+    // FIXED: Initialize P3 View Evaluation buttons
+    setTimeout(() => {
+        initializeP3ViewEvaluationButtons();
+    }, 3000);
+
+    // ============================
+    // P1 FINALIZATION BUTTON SETUP
+    // ============================
+    
+    // P1 finalization buttons
+    const finalizeP1Buttons = document.querySelectorAll('#finalizeP1Button, button[onclick*="finalizeP1"]');
+    finalizeP1Buttons.forEach(button => {
+        button.addEventListener('click', function() {
+            console.log("P1 Finalize button clicked");
+            if (checkAllApplicantsMarked('P1')) {
+                document.getElementById('finalizeModalP1').style.display = 'block';
+            } else {
+                alert("Not all P1 applicants have been marked as passed or failed. Please make a decision for all applicants first.");
+            }
+        });
+    });
+    
+    // Update P1 confirm button for Gmail flow
+    const confirmButtonP1 = document.getElementById('confirmButtonP1');
+    if (confirmButtonP1) {
+        const newConfirmButton = confirmButtonP1.cloneNode(true);
+        confirmButtonP1.parentNode.replaceChild(newConfirmButton, confirmButtonP1);
+        newConfirmButton.addEventListener('click', startGmailIntegrationFlow);
+    }
+
+    // ============================
+    // P3 FINALIZATION BUTTON SETUP - FIXED
+    // ============================
+    
+    // P3 finalization buttons - FIXED EVENT LISTENERS
+    setTimeout(() => {
+        const finalizeP3Buttons = document.querySelectorAll('#finalizeP3Button, button[onclick*="finalizeP3"]');
+        console.log(`Found ${finalizeP3Buttons.length} P3 finalize buttons`);
+        
+        finalizeP3Buttons.forEach((button, index) => {
+            console.log(`Setting up P3 finalize button ${index + 1}`);
+            
+            // Remove existing onclick to prevent conflicts
+            button.removeAttribute('onclick');
+            
+            // Add proper event listener
+            button.addEventListener('click', function(e) {
+                e.preventDefault();
+                console.log("P3 Finalize button clicked - checking if all applicants marked");
+                
+                if (checkAllP3ApplicantsMarked()) {
+                    console.log("All P3 applicants marked - showing modal");
+                    document.getElementById('finalizeModalP3').style.display = 'block';
+                } else {
+                    console.log("Not all P3 applicants marked - showing alert");
+                    alert("Not all P3 applicants have been marked as passed or failed. Please make a decision for all applicants first.");
+                }
+            });
+        });
+    }, 4000);
+    
+    // Update P3 confirm button for Gmail flow - FIXED
+    setTimeout(() => {
+        const confirmButtonP3 = document.getElementById('confirmButtonP3');
+        if (confirmButtonP3) {
+            console.log("Setting up P3 confirm button");
+            
+            // Remove existing onclick to prevent conflicts
+            confirmButtonP3.removeAttribute('onclick');
+            
+            // Clone and replace to remove existing event listeners
+            const newConfirmButtonP3 = confirmButtonP3.cloneNode(true);
+            confirmButtonP3.parentNode.replaceChild(newConfirmButtonP3, confirmButtonP3);
+            
+            // Add new event listener for P3 Gmail flow
+            newConfirmButtonP3.addEventListener('click', function(e) {
+                e.preventDefault();
+                console.log("P3 Confirm button clicked - starting Gmail integration");
+                startP3GmailIntegrationFlow();
+            });
+        }
+    }, 4500);
+
+    // ============================
+    // MODAL SETUP
+    // ============================
+    
+    setupModalEventListeners();
+    setupGmailEventListeners();
 });
 
+// Enhanced review filter handler with P3 improvements
+function handleReviewFilterEnhanced(mainTable, applicantStatusSection, allMainRows) {
+    console.log("=== ENHANCED P1/P3 REVIEW FILTER - WITH ASSESSMENT DATA AND NO DATA MESSAGES ===");
+    
+    hideEvaluationSection();
+    
+    const onboardingHeader = document.getElementById('onboardingHeader');
+    const onboardingTable = document.getElementById('onboardingTable');
+    
+    if (onboardingHeader) onboardingHeader.style.display = 'none';
+    if (onboardingTable) onboardingTable.style.display = 'none';
+    if (mainTable) mainTable.style.display = 'none';
+    if (applicantStatusSection) applicantStatusSection.style.display = 'block';
+    
+    captureApplicantsDataEnhanced();
+    
+    const p1AwaitingRows = [];
+    const p1DeclaredRows = [];
+    const p3AwaitingRows = [];
+    const p3DeclaredRows = [];
+    
+    console.log(`Analyzing ${allMainRows.length} rows for P1/P3 statuses...`);
+    
+    // Enhanced row processing with comprehensive status detection
+    allMainRows.forEach((row, index) => {
+        const statusCell = row.querySelector('td:nth-child(5)');
+        if (!statusCell) return;
+        
+        // Extract status from multiple sources
+        let statusText = '';
+        
+        // Method 1: Check span element
+        const statusSpan = statusCell.querySelector('span');
+        if (statusSpan) {
+            statusText = statusSpan.textContent.replace(/Status:\s*/g, '').trim();
+        }
+        
+        // Method 2: Check data attributes
+        if (!statusText) {
+            statusText = row.getAttribute('data-status') || '';
+        }
+        
+        // Method 3: Parse from cell text
+        if (!statusText) {
+            const cellText = statusCell.textContent.replace(/Status:\s*/g, '').trim();
+            const statusMatch = cellText.match(/^([^]*?)(?:\s*(?:For Review|For Evaluation|Send Job Offer|Approve))/);
+            statusText = statusMatch ? statusMatch[1].trim() : cellText.split('\n')[0].trim();
+        }
+        
+        console.log(`Row ${index + 1}: Detected status = "${statusText}"`);
+        
+        const rowData = extractRowDataEnhanced(row, index);
+        if (!rowData) return;
+        
+        // Ensure userId is set
+        if (rowData.userId) {
+            row.setAttribute('data-userid', rowData.userId);
+        }
+        
+        // Enhanced status categorization including P3 statuses
+        
+        // P1 - Awaiting for Line Manager Action (with HR PASSED)
+        if (statusText.includes('P1') && statusText.includes('Awaiting for Line Manager Action') && statusText.includes('HR PASSED')) {
+            p1AwaitingRows.push(rowData);
+            console.log(`✅ Added to P1 Awaiting: ${rowData.name} (${statusText})`);
+        }
+        // P1 - PASSED (Pending Finalization) - FIXED DETECTION
+        else if (statusText.includes('P1') && statusText.includes('PASSED') && statusText.includes('Pending Finalization')) {
+            p1DeclaredRows.push(rowData);
+            console.log(`✅ Added to P1 Declared PASSED: ${rowData.name} (${statusText})`);
+        }
+        // P1 - FAILED (Pending Finalization) - FIXED DETECTION  
+        else if (statusText.includes('P1') && statusText.includes('FAILED') && statusText.includes('Pending Finalization')) {
+            p1DeclaredRows.push(rowData);
+            console.log(`✅ Added to P1 Declared FAILED: ${rowData.name} (${statusText})`);
+        }
+        // P1 - PASSED (without "Pending") - Additional catch
+        else if (statusText.includes('P1') && statusText.includes('PASSED') && !statusText.includes('Awaiting')) {
+            p1DeclaredRows.push(rowData);
+            console.log(`✅ Added to P1 Declared PASSED (Final): ${rowData.name} (${statusText})`);
+        }
+        // P1 - FAILED (without "Pending") - Additional catch
+        else if (statusText.includes('P1') && statusText.includes('FAILED') && !statusText.includes('Awaiting')) {
+            p1DeclaredRows.push(rowData);
+            console.log(`✅ Added to P1 Declared FAILED (Final): ${rowData.name} (${statusText})`);
+        }
+        // ENHANCED: P3 - Line Manager Evaluation Accomplished (for P3 Awaiting)
+        else if (statusText.includes('P3') && statusText.includes('Line Manager Evaluation Accomplished')) {
+            p3AwaitingRows.push(rowData);
+            console.log(`✅ Added to P3 Awaiting: ${rowData.name} (${statusText})`);
+        }
+        // ALTERNATIVE P3 Detection: Check for exact match
+        else if (statusText === 'P3 - Line Manager Evaluation Accomplished') {
+            p3AwaitingRows.push(rowData);
+            console.log(`✅ Added to P3 Awaiting (exact match): ${rowData.name} (${statusText})`);
+        }
+        // ENHANCED: P3 - PASSED (Pending Finalization) (for P3 Declared)
+        else if (statusText.includes('P3') && statusText.includes('PASSED') && statusText.includes('Pending Finalization')) {
+            p3DeclaredRows.push(rowData);
+            console.log(`✅ Added to P3 Declared PASSED: ${rowData.name} (${statusText})`);
+        }
+        // ENHANCED: P3 - FAILED (Pending Finalization) (for P3 Declared)
+        else if (statusText.includes('P3') && statusText.includes('FAILED') && statusText.includes('Pending Finalization')) {
+            p3DeclaredRows.push(rowData);
+            console.log(`✅ Added to P3 Declared FAILED: ${rowData.name} (${statusText})`);
+        }
+        // P3 - PASSED (without "Pending") - Additional catch
+        else if (statusText.includes('P3') && statusText.includes('PASSED') && !statusText.includes('Awaiting')) {
+            p3DeclaredRows.push(rowData);
+            console.log(`✅ Added to P3 Declared PASSED (Final): ${rowData.name} (${statusText})`);
+        }
+        // P3 - FAILED (without "Pending") - Additional catch
+        else if (statusText.includes('P3') && statusText.includes('FAILED') && !statusText.includes('Awaiting')) {
+            p3DeclaredRows.push(rowData);
+            console.log(`✅ Added to P3 Declared FAILED (Final): ${rowData.name} (${statusText})`);
+        }
+        else {
+            console.log(`❌ Row ${index + 1} not categorized: "${statusText}"`);
+        }
+    });
+
+    console.log(`\n=== ENHANCED CATEGORIZATION RESULTS ===`);
+    console.log(`P1 Awaiting: ${p1AwaitingRows.length}`);
+    console.log(`P1 Declared: ${p1DeclaredRows.length}`);
+    console.log(`P3 Awaiting: ${p3AwaitingRows.length}`);
+    console.log(`P3 Declared: ${p3DeclaredRows.length}`);
+
+    // ENHANCED: Table population with assessment data and no data messages
+    populateP1AwaitingActionTableEnhanced(p1AwaitingRows);
+    populateP1DeclaredResultsTableEnhanced(p1DeclaredRows);
+    populateP3AwaitingActionTableEnhanced(p3AwaitingRows); // Enhanced with assessment data
+    populateP3DeclaredResultsTableEnhanced(p3DeclaredRows); // Enhanced with assessment data
+    
+    // Update section visibilities
+    updateP1P3SectionsVisibility(
+        p1AwaitingRows.length > 0, 
+        p1DeclaredRows.length > 0, 
+        p3AwaitingRows.length > 0, 
+        p3DeclaredRows.length > 0
+    );
+    
+    // Update headers to show correct text
+    updateSectionHeaders(p1DeclaredRows.length > 0, p3DeclaredRows.length > 0);
+    
+    // Fix scores and buttons
+    setTimeout(() => {
+        fixAllTableScores();
+        fixChangeStatusButtons();
+    }, 300);
+    
+    // Set up enhanced P3 filters after tables are populated
+    setTimeout(() => {
+        if (p3AwaitingRows.length > 0 || p3DeclaredRows.length > 0) {
+            createP3FilterControls();
+        }
+    }, 500);
+    
+    highlightActiveFilter('forreview');
+    updateSectionHeaderButtons();
+}
 
 function initializeApplicantTracker() {
   console.log("Initializing applicant tracker systems...");
@@ -1885,6 +2135,437 @@ function initializeApplicantTracker() {
   
   console.log("=== APPLICANT TRACKER INITIALIZATION COMPLETE ===");
 }
+
+
+// Enhanced P3 status change functions with assessment data awareness
+function p3passApplicantEnhanced(userId) {
+    console.log(`Enhanced P3 Pass: Starting pass action for userId: ${userId}`);
+    
+    if (!userId) {
+        console.error('Enhanced P3 Pass: Missing userId');
+        alert("Error: Invalid User ID");
+        return;
+    }
+
+    // Show loading state
+    const loadingIndicator = document.createElement('div');
+    loadingIndicator.innerHTML = 'Processing...';
+    loadingIndicator.style.cssText = 'position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); background: rgba(0,0,0,0.8); color: white; padding: 20px; border-radius: 5px; z-index: 10000;';
+    document.body.appendChild(loadingIndicator);
+
+    fetch('/linemanager/applicant-tracker-jobposition/markAsP3Passed', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ userId: userId }),
+    })
+    .then(response => {
+        console.log(`Enhanced P3 Pass: API response status: ${response.status}`);
+        return response.json();
+    })
+    .then(data => {
+        console.log('Enhanced P3 Pass: API response data:', data);
+        
+        if (data.success) {
+            if (!window.pendingStatusChanges) {
+                window.pendingStatusChanges = {};
+            }
+            window.pendingStatusChanges[userId] = 'PASSED';
+            
+            // FIXED: Move row from awaiting to declared section with correct column structure
+            moveP3RowToSectionEnhanced(userId, 'p3AwaitingActionTable', 'p3DeclaredResultsTable');
+            
+            console.log(`Enhanced P3 Pass: Successfully marked userId ${userId} as P3 PASSED!`);
+            alert("Successfully marked applicant as P3 PASSED!");
+            
+        } else {
+            console.error(`Enhanced P3 Pass: API error: ${data.message}`);
+            alert("Error updating applicant status: " + (data.message || "Unknown error"));
+        }
+    })
+    .catch(error => {
+        console.error("Enhanced P3 Pass: Network error:", error);
+        alert("Failed to update applicant status.");
+    })
+    .finally(() => {
+        // Remove loading indicator
+        if (document.body.contains(loadingIndicator)) {
+            document.body.removeChild(loadingIndicator);
+        }
+    });
+}
+
+function p3rejectApplicantEnhanced(userId) {
+    console.log(`Enhanced P3 Reject: Starting reject action for userId: ${userId}`);
+    
+    if (!userId) {
+        console.error('Enhanced P3 Reject: Missing userId');
+        alert("Error: Invalid User ID");
+        return;
+    }
+
+    // Show loading state
+    const loadingIndicator = document.createElement('div');
+    loadingIndicator.innerHTML = 'Processing...';
+    loadingIndicator.style.cssText = 'position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); background: rgba(0,0,0,0.8); color: white; padding: 20px; border-radius: 5px; z-index: 10000;';
+    document.body.appendChild(loadingIndicator);
+
+    fetch('/linemanager/applicant-tracker-jobposition/markAsP3Failed', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ userId: userId }),
+    })
+    .then(response => {
+        console.log(`Enhanced P3 Reject: API response status: ${response.status}`);
+        return response.json();
+    })
+    .then(data => {
+        console.log('Enhanced P3 Reject: API response data:', data);
+        
+        if (data.success) {
+            if (!window.pendingStatusChanges) {
+                window.pendingStatusChanges = {};
+            }
+            window.pendingStatusChanges[userId] = 'FAILED';
+            
+            // FIXED: Move row from awaiting to declared section with correct column structure
+            moveP3RowToSectionEnhanced(userId, 'p3AwaitingActionTable', 'p3DeclaredResultsTable');
+            
+            console.log(`Enhanced P3 Reject: Successfully marked userId ${userId} as P3 FAILED!`);
+            alert("Successfully marked applicant as P3 FAILED!");
+            
+        } else {
+            console.error(`Enhanced P3 Reject: API error: ${data.message}`);
+            alert("Error updating applicant status: " + (data.message || "Unknown error"));
+        }
+    })
+    .catch(error => {
+        console.error("Enhanced P3 Reject: Network error:", error);
+        alert("Failed to update applicant status.");
+    })
+    .finally(() => {
+        // Remove loading indicator
+        if (document.body.contains(loadingIndicator)) {
+            document.body.removeChild(loadingIndicator);
+        }
+    });
+}
+
+
+// Enhanced row movement function that preserves assessment data
+function moveP3RowToSectionEnhanced(userId, fromTableId, toTableId) {
+    console.log(`Enhanced P3 Move: Moving userId ${userId} from ${fromTableId} to ${toTableId}`);
+    
+    const fromTable = document.getElementById(fromTableId);
+    const toTable = document.getElementById(toTableId);
+    
+    if (!fromTable || !toTable) {
+        console.error(`Enhanced P3 Move: Tables not found: ${fromTableId} or ${toTableId}`);
+        return;
+    }
+    
+    const rows = fromTable.querySelectorAll('tbody tr');
+    let rowToMove = null;
+    
+    for (const row of rows) {
+        if (row.getAttribute('data-userid') === userId) {
+            rowToMove = row;
+            break;
+        }
+    }
+    
+    if (!rowToMove) {
+        console.error(`Enhanced P3 Move: Row for userId ${userId} not found in ${fromTableId}`);
+        return;
+    }
+    
+    // Find and update the status cell
+    const cells = rowToMove.querySelectorAll('td');
+    let statusCell = null;
+    
+    for (let i = 0; i < cells.length; i++) {
+        if (cells[i].textContent.includes('Status:') || cells[i].textContent.includes('P3')) {
+            statusCell = cells[i];
+            break;
+        }
+    }
+    
+    if (statusCell) {
+        const isPassed = window.pendingStatusChanges[userId] === 'PASSED';
+        statusCell.innerHTML = `
+            <span><strong>Status:</strong> P3 - ${isPassed ? 'PASSED' : 'FAILED'} (Pending Finalization)</span>
+        `;
+        console.log(`Enhanced P3 Move: Updated status cell to P3 - ${isPassed ? 'PASSED' : 'FAILED'}`);
+    }
+    
+    // Add Actions column for declared results table if needed
+    if (toTableId === 'p3DeclaredResultsTable') {
+        const currentCells = rowToMove.querySelectorAll('td');
+        // Check if we need to add an actions column (look for existing Change Status button)
+        const hasActionsColumn = Array.from(currentCells).some(cell => 
+            cell.textContent.includes('Change Status')
+        );
+        
+        if (!hasActionsColumn) {
+            const actionsCell = document.createElement('td');
+            const isPassed = window.pendingStatusChanges[userId] === 'PASSED';
+            actionsCell.innerHTML = `
+                <button 
+                    class="btn-change-status ${isPassed ? 'status-passed' : 'status-failed'}" 
+                    data-userid="${userId}"
+                    onclick="changeApplicantStatusP3Enhanced('${userId}')"
+                >
+                    Change Status
+                </button>
+            `;
+            rowToMove.appendChild(actionsCell);
+            console.log(`Enhanced P3 Move: Added change status button for userId ${userId}`);
+        }
+    }
+    
+    // Remove from source table
+    rowToMove.remove();
+    
+    // Add to target table
+    const targetTbody = toTable.querySelector('tbody');
+    
+    // Remove no data message if present
+    const noDataRow = targetTbody.querySelector('.no-data-message')?.closest('tr');
+    if (noDataRow) {
+        noDataRow.remove();
+    }
+    
+    targetTbody.appendChild(rowToMove);
+    
+    console.log(`Enhanced P3 Move: Successfully moved userId ${userId} to ${toTableId}`);
+    
+    // Update the finalize button visibility
+    setTimeout(updateSectionHeaderButtons, 100);
+}
+
+
+// Enhanced Gmail integration for P3 with assessment data context
+function startP3GmailIntegrationFlow() {
+    console.log("🎯 FIXED: Starting P3 Gmail integration flow...");
+    
+    closeModal('finalizeModalP3');
+    finalizeP3ReviewForGmail();
+}
+
+// FIXED: P3 Review Finalization Function - Using Actual Table Structure
+function finalizeP3ReviewForGmail() {
+    console.log("🎯 FIXED: Starting P3 review finalization with Gmail compose integration...");
+
+    const p3DeclaredResultsTable = document.getElementById("p3DeclaredResultsTable");
+    if (!p3DeclaredResultsTable) {
+        console.error("❌ P3 declared results table not found");
+        alert("P3 declared results table not found.");
+        return;
+    }
+
+    const rows = p3DeclaredResultsTable.querySelectorAll('tbody tr:not(.section-header-row)') || [];
+    console.log(`🎯 FIXED: Found ${rows.length} rows in P3 declared results table`);
+
+    const passedUserIds = [];
+    const failedUserIds = [];
+
+    rows.forEach((row, index) => {
+        // Skip rows with colspan (no data messages)
+        if (row.querySelector('td[colspan]')) {
+            console.log(`Row ${index + 1}: Skipping colspan row (no data message)`);
+            return;
+        }
+        
+        const userId = row.getAttribute('data-userid');
+        console.log(`Row ${index + 1}: userId=${userId}`);
+        
+        if (!userId) {
+            console.log(`❌ Row ${index + 1}: No userId found`);
+            return;
+        }
+        
+        // FIXED: Based on actual table structure, we need to search for the status cell
+        // The debug shows the table has 6 cells with status in cell 5
+        let statusCell = null;
+        let statusText = '';
+        
+        // Try different column positions to find the status
+        for (let colIndex = 1; colIndex <= 8; colIndex++) {
+            const testCell = row.querySelector(`td:nth-child(${colIndex})`);
+            if (testCell && testCell.textContent.includes('Status:')) {
+                statusCell = testCell;
+                statusText = testCell.textContent.trim();
+                console.log(`✅ Row ${index + 1}: Found status in column ${colIndex}: "${statusText}"`);
+                break;
+            }
+        }
+        
+        // If no "Status:" found, check for P3 in any cell
+        if (!statusCell) {
+            for (let colIndex = 1; colIndex <= 8; colIndex++) {
+                const testCell = row.querySelector(`td:nth-child(${colIndex})`);
+                if (testCell && testCell.textContent.includes('P3')) {
+                    statusCell = testCell;
+                    statusText = testCell.textContent.trim();
+                    console.log(`✅ Row ${index + 1}: Found P3 status in column ${colIndex}: "${statusText}"`);
+                    break;
+                }
+            }
+        }
+        
+        if (statusCell && statusText) {
+            console.log(`Row ${index + 1}: Processing status = "${statusText}"`);
+            
+            // Check for P3 statuses with flexible matching
+            if (statusText.includes('P3')) {
+                if (statusText.includes('PASSED')) {
+                    passedUserIds.push(userId);
+                    console.log(`✅ Added ${userId} to P3 passed list (${statusText})`);
+                } else if (statusText.includes('FAILED')) {
+                    failedUserIds.push(userId);
+                    console.log(`✅ Added ${userId} to P3 failed list (${statusText})`);
+                } else {
+                    console.log(`⚠️ Row ${index + 1}: P3 status found but not PASSED/FAILED: "${statusText}"`);
+                }
+            } else {
+                console.log(`⚠️ Row ${index + 1}: No P3 status found: "${statusText}"`);
+            }
+        } else {
+            console.log(`❌ Row ${index + 1}: No status cell found`);
+        }
+    });
+
+    console.log(`🎯 FIXED: Final counts - Passed: ${passedUserIds.length}, Failed: ${failedUserIds.length}`);
+
+    if (passedUserIds.length === 0 && failedUserIds.length === 0) {
+        alert("No P3 applicants found with PASSED or FAILED status. Please mark some applicants first.");
+        return;
+    }
+
+    console.log(`🎯 FIXED: Preparing P3 Gmail compose for: ${passedUserIds.length} passed, ${failedUserIds.length} failed`);
+
+    // Store for later use
+    window.p3EmailsToUpdate = {
+        passed: passedUserIds,
+        failed: failedUserIds
+    };
+
+    // Fetch data and templates
+    Promise.all([
+        fetchP3ApplicantDataForEmails(passedUserIds, failedUserIds),
+        fetchP3EmailTemplates()
+    ])
+    .then(([applicantData, templates]) => {
+        window.currentP3PassedApplicants = applicantData.passedApplicants || [];
+        window.currentP3FailedApplicants = applicantData.failedApplicants || [];
+        window.p3EmailTemplates = templates;
+        
+        console.log(`🎯 FIXED: Loaded ${window.currentP3PassedApplicants.length} passed and ${window.currentP3FailedApplicants.length} failed P3 applicants`);
+        
+        if (window.currentP3PassedApplicants.length > 0) {
+            showP3PassedEmailModal();
+        } else if (window.currentP3FailedApplicants.length > 0) {
+            showP3FailedEmailModal();
+        } else {
+            alert("No P3 applicant data found for email composition.");
+        }
+    })
+    .catch(error => {
+        console.error("🎯 FIXED: Error preparing P3 email composition:", error);
+        alert("Error preparing P3 email composition: " + error.message);
+    });
+}
+
+
+function finalizeP3ReviewEnhanced() {
+    console.log("Starting enhanced P3 review finalization with Gmail compose integration...");
+
+    const p3DeclaredResultsTable = document.getElementById("p3DeclaredResultsTable");
+    const rows = p3DeclaredResultsTable?.querySelectorAll('tbody tr:not(.section-header-row)') || [];
+
+    const passedUserIds = [];
+    const failedUserIds = [];
+
+    rows.forEach(row => {
+        if (row.querySelector('td[colspan]')) return;
+        
+        // Updated for enhanced table structure (status is now in column 7)
+        const statusCell = row.querySelector('td:nth-child(7)');
+        const userId = row.getAttribute('data-userid');
+        
+        if (statusCell && userId) {
+            const statusText = statusCell.textContent.trim();
+            
+            if (statusText.includes('P3')) {
+                if (statusText.includes('PASSED')) {
+                    passedUserIds.push(userId);
+                    console.log(`Added ${userId} to P3 passed list (${statusText})`);
+                } else if (statusText.includes('FAILED')) {
+                    failedUserIds.push(userId);
+                    console.log(`Added ${userId} to P3 failed list (${statusText})`);
+                }
+            }
+        }
+    });
+
+    if (passedUserIds.length === 0 && failedUserIds.length === 0) {
+        alert("No P3 applicants found with PASSED or FAILED status.");
+        return;
+    }
+
+    console.log(`Preparing enhanced P3 Gmail compose for: ${passedUserIds.length} passed, ${failedUserIds.length} failed`);
+
+    p3EmailsToUpdate = {
+        passed: passedUserIds,
+        failed: failedUserIds
+    };
+
+    Promise.all([
+        fetchP3ApplicantDataForEmails(passedUserIds, failedUserIds),
+        fetchP3EmailTemplates()
+    ])
+    .then(([applicantData, templates]) => {
+        currentP3PassedApplicants = applicantData.passedApplicants || [];
+        currentP3FailedApplicants = applicantData.failedApplicants || [];
+        
+        if (currentP3PassedApplicants.length > 0) {
+            showP3PassedEmailModal();
+        } else if (currentP3FailedApplicants.length > 0) {
+            showP3FailedEmailModal();
+        } else {
+            alert("No P3 applicant data found for email composition.");
+        }
+    })
+    .catch(error => {
+        console.error("Error preparing enhanced P3 email composition:", error);
+        alert("Error preparing P3 email composition: " + error.message);
+    });
+}
+
+// Make enhanced functions globally available
+window.handleReviewFilterEnhanced = handleReviewFilterEnhanced;
+window.p3passApplicantEnhanced = p3passApplicantEnhanced;
+window.p3rejectApplicantEnhanced = p3rejectApplicantEnhanced;
+window.changeApplicantStatusP3Enhanced = changeApplicantStatusP3Enhanced;
+window.moveP3RowToSectionEnhanced = moveP3RowToSectionEnhanced;
+window.startP3GmailIntegrationFlowEnhanced = startP3GmailIntegrationFlowEnhanced;
+window.finalizeP3ReviewEnhanced = finalizeP3ReviewEnhanced;
+window.showP3PassedEmailModal = showP3PassedEmailModal;
+window.showP3FailedEmailModal = showP3FailedEmailModal;
+window.openGmailForP3Passed = openGmailForP3Passed;
+window.openGmailForP3Failed = openGmailForP3Failed;
+window.showP3StatusUpdateModal = showP3StatusUpdateModal;
+window.updateP3ApplicantStatuses = updateP3ApplicantStatuses;
+window.fetchP3ApplicantDataForEmails = fetchP3ApplicantDataForEmails;
+window.fetchP3EmailTemplates = fetchP3EmailTemplates;
+window.finalizeP3ReviewForGmail = finalizeP3ReviewForGmail;
+window.checkAllP3ApplicantsMarked = checkAllP3ApplicantsMarked;
+window.populateP1DeclaredResultsTableEnhanced = populateP1DeclaredResultsTableEnhanced;
+
+console.log('✅ Enhanced P3 Integration with Assessment Data loaded successfully');
 
 async function forceRefreshWorkSetupDataFixed() {
   console.log("🔧 FIXED: === FORCING REFRESH OF WORK SETUP DATA WITH CORRECT LOGIC ===");
@@ -2711,135 +3392,167 @@ function extractRowDataEnhanced(row, index) {
 // P1 TABLE MANAGEMENT FUNCTIONS
 // ============================
 
-
 function populateP1AwaitingActionTableEnhanced(awaitingRowsP1) {
-  console.log(`Populating P1 awaiting action table with ${awaitingRowsP1.length} rows`);
-  
-  const awaitingActionTable = document.getElementById('p1AwaitingActionTable');
-  if (!awaitingActionTable) {
-    console.error("❌ P1 awaiting action table not found");
-    return;
-  }
-  
-  const awaitingTbody = awaitingActionTable.querySelector('tbody');
-  if (!awaitingTbody) {
-    console.error("❌ Tbody not found in P1 awaiting action table");
-    return;
-  }
-  
-  // Empty the tbody first
-  awaitingTbody.innerHTML = '';
-  
-  if (awaitingRowsP1.length > 0) {
-    awaitingRowsP1.forEach((rowData, idx) => {
-      console.log(`Processing P1 awaiting row ${idx + 1}: ${rowData.name}`);
-      
-      const newRow = createP1AwaitingRowEnhanced(rowData);
-      awaitingTbody.appendChild(newRow);
-      
-      if (rowData.userId) {
-        newRow.setAttribute('data-userid', rowData.userId);
-        getTotalScoreDirectly(rowData.userId, newRow);
-      }
-      
-      console.log(`✅ Added P1 awaiting row ${idx + 1}`);
-    });
+    console.log(`Populating P1 awaiting action table with ${awaitingRowsP1.length} rows`);
     
-    console.log(`✅ Successfully populated P1 awaiting action table with ${awaitingRowsP1.length} rows`);
-  } else {
-    displayNoDataMessage(awaitingActionTable, 'No P1 applicants awaiting for action.');
-  }
+    const awaitingActionTable = document.getElementById('p1AwaitingActionTable');
+    if (!awaitingActionTable) {
+        console.error("❌ P1 awaiting action table not found");
+        return;
+    }
+    
+    const awaitingTbody = awaitingActionTable.querySelector('tbody');
+    if (!awaitingTbody) {
+        console.error("❌ Tbody not found in P1 awaiting action table");
+        return;
+    }
+    
+    // Empty the tbody first
+    awaitingTbody.innerHTML = '';
+    
+    if (awaitingRowsP1.length > 0) {
+        awaitingRowsP1.forEach((rowData, idx) => {
+            console.log(`Processing P1 awaiting row ${idx + 1}: ${rowData.name}`);
+            
+            const newRow = createP1AwaitingRowEnhanced(rowData);
+            awaitingTbody.appendChild(newRow);
+            
+            if (rowData.userId) {
+                newRow.setAttribute('data-userid', rowData.userId);
+                getTotalScoreDirectly(rowData.userId, newRow);
+            }
+            
+            console.log(`✅ Added P1 awaiting row ${idx + 1}`);
+        });
+        
+        console.log(`✅ Successfully populated P1 awaiting action table with ${awaitingRowsP1.length} rows`);
+    } else {
+        // FIXED: Show "No data" message when no rows
+        const messageRow = document.createElement('tr');
+        const messageCell = document.createElement('td');
+        messageCell.setAttribute('colspan', '7'); // P1 has 7 columns
+        messageCell.className = 'text-center no-data-message';
+        messageCell.style.cssText = `
+            padding: 30px;
+            background-color: #f8f9fa;
+            color: #6c757d;
+            font-style: italic;
+            font-size: 16px;
+            border-left: 4px solid #007bff;
+        `;
+        messageCell.textContent = 'No P1 applicants awaiting for action found.';
+        messageRow.appendChild(messageCell);
+        awaitingTbody.appendChild(messageRow);
+        
+        console.log("❌ No P1 awaiting rows - added no data message");
+    }
 }
-
 function populateP1DeclaredResultsTableEnhanced(declaredRowsP1) {
-  console.log(`=== POPULATING P1 DECLARED RESULTS (${declaredRowsP1.length} rows) ===`);
-  
-  const declaredResultsTable = document.getElementById('p1DeclaredResultsTable');
-  if (!declaredResultsTable) {
-    console.error("❌ P1 declared results table not found");
-    return;
-  }
-  
-  const declaredTbody = declaredResultsTable.querySelector('tbody');
-  if (!declaredTbody) {
-    console.error("❌ Tbody not found");
-    return;
-  }
-  
-  // Clear existing content
-  declaredTbody.innerHTML = '';
-  
-  if (declaredRowsP1.length > 0) {
-    declaredRowsP1.forEach((rowData, idx) => {
-      console.log(`Processing P1 declared row ${idx + 1}:`, {
-        name: rowData.name,
-        status: rowData.status,
-        userId: rowData.userId,
-        score: rowData.totalScore
-      });
-      
-      // Ensure we have proper score data
-      if (rowData.totalScore !== 'N/A') {
-        console.log(`Row already has score: ${rowData.totalScore}`);
-      } else {
-        if (rowData.userId) {
-          if (window.applicantsScores && window.applicantsScores[rowData.userId]) {
-            rowData.totalScore = window.applicantsScores[rowData.userId];
-            console.log(`Found score ${rowData.totalScore} for userId ${rowData.userId} from applicantsScores`);
-          } else if (window.mainTableScores && window.mainTableScores[rowData.userId]) {
-            rowData.totalScore = window.mainTableScores[rowData.userId];
-            console.log(`Found score ${rowData.totalScore} for userId ${rowData.userId} from mainTableScores`);
-          }
-        }
-        
-        if (rowData.totalScore === 'N/A' && rowData.name) {
-          const name = rowData.name.trim();
-          if (window.mainTableScores && window.mainTableScores[name]) {
-            rowData.totalScore = window.mainTableScores[name];
-            console.log(`Found score ${rowData.totalScore} for '${name}' from main table by name`);
-          }
-        }
-      }
-      
-      const newRow = createP1DeclaredRowEnhanced(rowData);
-      declaredTbody.appendChild(newRow);
-      
-      if (rowData.userId) {
-        newRow.setAttribute('data-userid', rowData.userId);
-        
-        const changeButton = newRow.querySelector('.btn-change-status');
-        if (changeButton) {
-          changeButton.setAttribute('data-userid', rowData.userId);
-          changeButton.setAttribute('onclick', `changeApplicantStatus('${rowData.userId}')`);
-        }
-        
-        if (rowData.totalScore && rowData.totalScore !== 'N/A') {
-          updateScoreCellWithFormatting(newRow, rowData.totalScore);
-        }
-      }
-      
-      console.log(`✅ Added P1 declared row ${idx + 1} to table`);
-    });
+    console.log(`=== POPULATING P1 DECLARED RESULTS (${declaredRowsP1.length} rows) ===`);
     
-    console.log(`✅ Successfully populated P1 declared results table`);
-    
-    // Show the table and its header
-    declaredResultsTable.style.display = 'table';
-    const p1Header = document.getElementById('p1DeclaredResultsHeader');
-    if (p1Header) {
-      p1Header.style.display = 'block';
-      p1Header.textContent = 'List of P1 Applicants on Review - Declared Results';
+    const declaredResultsTable = document.getElementById('p1DeclaredResultsTable');
+    if (!declaredResultsTable) {
+        console.error("❌ P1 declared results table not found");
+        return;
     }
-  } else {
-    displayNoDataMessage(declaredResultsTable, 'No P1 applicants with declared review results found.');
     
-    // Hide the table and its header
-    declaredResultsTable.style.display = 'none';
-    const p1Header = document.getElementById('p1DeclaredResultsHeader');
-    if (p1Header) {
-      p1Header.style.display = 'none';
+    const declaredTbody = declaredResultsTable.querySelector('tbody');
+    if (!declaredTbody) {
+        console.error("❌ Tbody not found");
+        return;
     }
-  }
+    
+    // Clear existing content
+    declaredTbody.innerHTML = '';
+    
+    if (declaredRowsP1.length > 0) {
+        declaredRowsP1.forEach((rowData, idx) => {
+            console.log(`Processing P1 declared row ${idx + 1}:`, {
+                name: rowData.name,
+                status: rowData.status,
+                userId: rowData.userId,
+                score: rowData.totalScore
+            });
+            
+            // Ensure we have proper score data
+            if (rowData.totalScore !== 'N/A') {
+                console.log(`Row already has score: ${rowData.totalScore}`);
+            } else {
+                if (rowData.userId) {
+                    if (window.applicantsScores && window.applicantsScores[rowData.userId]) {
+                        rowData.totalScore = window.applicantsScores[rowData.userId];
+                        console.log(`Found score ${rowData.totalScore} for userId ${rowData.userId} from applicantsScores`);
+                    } else if (window.mainTableScores && window.mainTableScores[rowData.userId]) {
+                        rowData.totalScore = window.mainTableScores[rowData.userId];
+                        console.log(`Found score ${rowData.totalScore} for userId ${rowData.userId} from mainTableScores`);
+                    }
+                }
+                
+                if (rowData.totalScore === 'N/A' && rowData.name) {
+                    const name = rowData.name.trim();
+                    if (window.mainTableScores && window.mainTableScores[name]) {
+                        rowData.totalScore = window.mainTableScores[name];
+                        console.log(`Found score ${rowData.totalScore} for '${name}' from main table by name`);
+                    }
+                }
+            }
+            
+            const newRow = createP1DeclaredRowEnhanced(rowData);
+            declaredTbody.appendChild(newRow);
+            
+            if (rowData.userId) {
+                newRow.setAttribute('data-userid', rowData.userId);
+                
+                const changeButton = newRow.querySelector('.btn-change-status');
+                if (changeButton) {
+                    changeButton.setAttribute('data-userid', rowData.userId);
+                    changeButton.setAttribute('onclick', `changeApplicantStatus('${rowData.userId}')`);
+                }
+                
+                if (rowData.totalScore && rowData.totalScore !== 'N/A') {
+                    updateScoreCellWithFormatting(newRow, rowData.totalScore);
+                }
+            }
+            
+            console.log(`✅ Added P1 declared row ${idx + 1} to table`);
+        });
+        
+        console.log(`✅ Successfully populated P1 declared results table`);
+        
+        // Show the table and its header
+        declaredResultsTable.style.display = 'table';
+        const p1Header = document.getElementById('p1DeclaredResultsHeader');
+        if (p1Header) {
+            p1Header.style.display = 'block';
+            p1Header.textContent = 'List of P1 Applicants on Review - Declared Results';
+        }
+    } else {
+        // ENHANCED: Show "No data" message when no rows
+        const messageRow = document.createElement('tr');
+        const messageCell = document.createElement('td');
+        messageCell.setAttribute('colspan', '8'); // P1 has 8 columns (including Actions)
+        messageCell.className = 'text-center no-data-message';
+        messageCell.style.cssText = `
+            padding: 30px;
+            background-color: #f8f9fa;
+            color: #6c757d;
+            font-style: italic;
+            font-size: 16px;
+            border-left: 4px solid #007bff;
+        `;
+        messageCell.textContent = 'No P1 applicants with declared review results found.';
+        messageRow.appendChild(messageCell);
+        declaredTbody.appendChild(messageRow);
+        
+        // Hide the table and its header
+        declaredResultsTable.style.display = 'none';
+        const p1Header = document.getElementById('p1DeclaredResultsHeader');
+        if (p1Header) {
+            p1Header.style.display = 'none';
+        }
+        
+        console.log("❌ No P1 declared rows - added no data message");
+    }
 }
 
 function setupP1TableFilters() {
@@ -3112,83 +3825,71 @@ async function applyP1DeclaredFilters() {
   
   console.log(`P1 Declared filters applied: ${filteredRows.length} rows displayed`);
 }
+
 async function enhanceRowWithWorkSetupData(row) {
-  const userId = row.getAttribute('data-userid');
-  if (!userId || userId === 'undefined') return;
-  
-  console.log(`🚨 EMERGENCY FIX: Processing userId: ${userId}`);
-  
-  try {
-    const response = await fetch(`/linemanager/get-assessment/${userId}`);
-    if (response.ok) {
-      const data = await response.json();
-      
-      if (data.success && data.combinedData && data.combinedData.scores) {
-        const workSetup = data.combinedData.scores.workSetup;
-        const availability = data.combinedData.scores.availability;
-        
-        console.log(`🚨 EMERGENCY: UserId ${userId} RAW VALUES:`);
-        console.log(`   workSetup: "${workSetup}" (${typeof workSetup})`);
-        console.log(`   availability: "${availability}" (${typeof availability})`);
-        
-        // MOST STRICT LOGIC: Only true if EXACTLY boolean true
-        let workSetupPassed = false;
-        let availabilityPassed = false;
-        
-        // Check workSetup
-        if (workSetup === true) {
-          workSetupPassed = true;
-        } else if (workSetup === 'true') {
-          workSetupPassed = true;
-        } else {
-          workSetupPassed = false;
+    const userId = row.getAttribute('data-userid');
+    if (!userId || userId === 'undefined') return;
+    
+    // Skip if already enhanced
+    if (row.getAttribute('data-worksetup-enhanced') === 'true') return;
+    
+    console.log(`🔧 FIXED: Processing userId: ${userId}`);
+    
+    try {
+        const response = await fetch(`/linemanager/get-assessment/${userId}`);
+        if (response.ok) {
+            const data = await response.json();
+            
+            if (data.success && data.combinedData && data.combinedData.scores) {
+                const workSetup = data.combinedData.scores.workSetup;
+                const availability = data.combinedData.scores.availability;
+                
+                console.log(`🔧 FIXED: UserId ${userId} RAW VALUES:`);
+                console.log(`   workSetup: "${workSetup}" (${typeof workSetup})`);
+                console.log(`   availability: "${availability}" (${typeof availability})`);
+                
+                // FIXED LOGIC: Only true if BOTH are explicitly true (boolean or string 'true')
+                const workSetupPassed = (workSetup === true || workSetup === 'true');
+                const availabilityPassed = (availability === true || availability === 'true');
+                
+                // CRITICAL: BOTH must be true for overall pass
+                const overallPassed = workSetupPassed && availabilityPassed;
+                
+                console.log(`🔧 FIXED: UserId ${userId} CORRECTED EVALUATION:`);
+                console.log(`   workSetup ${workSetup} -> ${workSetupPassed ? 'TRUE' : 'FALSE'}`);
+                console.log(`   availability ${availability} -> ${availabilityPassed ? 'TRUE' : 'FALSE'}`);
+                console.log(`   FINAL RESULT: ${overallPassed ? '✅ PASSED' : '❌ FAILED'}`);
+                
+                // Update the Work Setup/Availability cell (column 6)
+                const workSetupCell = row.querySelector('td:nth-child(6)');
+                if (workSetupCell) {
+                    workSetupCell.innerHTML = `<span class="${overallPassed ? 'criteria-passed' : 'criteria-failed'}" style="color: ${overallPassed ? 'green' : 'red'} !important; font-weight: bold !important;">${overallPassed ? 'Passed' : 'Failed'}</span>`;
+                    console.log(`🔧 FIXED: Updated cell for userId ${userId}: ${overallPassed ? 'PASSED' : 'FAILED'}`);
+                }
+                
+                // Set attributes for filtering
+                row.setAttribute('data-worksetup-score', String(workSetup));
+                row.setAttribute('data-availability-score', String(availability));
+                row.setAttribute('data-worksetup-passed', overallPassed ? 'true' : 'false');
+                row.setAttribute('data-worksetup-enhanced', 'true');
+                
+                return true;
+            }
         }
-        
-        // Check availability  
-        if (availability === true) {
-          availabilityPassed = true;
-        } else if (availability === 'true') {
-          availabilityPassed = true;
-        } else {
-          availabilityPassed = false;
-        }
-        
-        // BOTH MUST BE TRUE for overall pass
-        const overallPassed = workSetupPassed && availabilityPassed;
-        
-        console.log(`🚨 EMERGENCY: UserId ${userId} STRICT EVALUATION:`);
-        console.log(`   workSetup ${workSetup} -> ${workSetupPassed ? 'TRUE' : 'FALSE'}`);
-        console.log(`   availability ${availability} -> ${availabilityPassed ? 'TRUE' : 'FALSE'}`);
-        console.log(`   FINAL: ${overallPassed ? '✅ PASSED' : '❌ FAILED'}`);
-        
-        // Force update the cell regardless of current state
-        const workSetupCell = row.querySelector('td:nth-child(6)');
-        if (workSetupCell) {
-          // FORCE UPDATE - ignore any existing content
-          workSetupCell.innerHTML = `<span class="${overallPassed ? 'criteria-passed' : 'criteria-failed'}" style="color: ${overallPassed ? 'green' : 'red'} !important; font-weight: bold !important;">${overallPassed ? 'Passed' : 'Failed'}</span>`;
-          console.log(`🚨 EMERGENCY: FORCED UPDATE for userId ${userId}: ${overallPassed ? 'PASSED' : 'FAILED'}`);
-        }
-        
-        // Set attributes
-        row.setAttribute('data-worksetup-score', String(workSetup));
-        row.setAttribute('data-availability-score', String(availability));
-        row.setAttribute('data-worksetup-passed', overallPassed ? 'true' : 'false');
-        row.setAttribute('data-worksetup-enhanced', 'true');
-        
-        return true;
-      }
+    } catch (error) {
+        console.error(`🔧 FIXED: Error for userId ${userId}:`, error);
     }
-  } catch (error) {
-    console.error(`🚨 EMERGENCY: Error for userId ${userId}:`, error);
-  }
-  
-  // Default to FAILED
-  const workSetupCell = row.querySelector('td:nth-child(6)');
-  if (workSetupCell) {
-    workSetupCell.innerHTML = `<span class="criteria-failed" style="color: red !important; font-weight: bold !important;">Failed</span>`;
-  }
-  
-  return false;
+    
+    // Default to FAILED if no data or error
+    const workSetupCell = row.querySelector('td:nth-child(6)');
+    if (workSetupCell) {
+        workSetupCell.innerHTML = `<span class="criteria-failed" style="color: red !important; font-weight: bold !important;">Failed</span>`;
+    }
+    
+    row.setAttribute('data-worksetup-passed', 'false');
+    row.setAttribute('data-worksetup-enhanced', 'true');
+    
+    return false;
 }
 
 // EMERGENCY FUNCTION: Force fix all visible work setup cells right now
@@ -3348,102 +4049,84 @@ function testWorkSetupLogic() {
     console.log(`  Expected: ${testCase.expected}, Got: ${resultText} ${isCorrect ? '✅' : '❌'}`);
   });
 }
-// IMMEDIATE FIX: Run this function to immediately fix all current work setup displays
-async function immediateWorkSetupFix() {
-  console.log("🔧 IMMEDIATE WORK SETUP FIX STARTING...");
-  
-  // Find all P1 tables
-  const tables = [
-    document.getElementById('p1AwaitingActionTable'),
-    document.getElementById('p1DeclaredResultsTable')
-  ].filter(table => table !== null && table.style.display !== 'none');
-  
-  if (tables.length === 0) {
-    console.log("❌ No visible P1 tables found. Please click 'For Review' filter first.");
-    alert("Please click the 'For Review' filter first to see P1 tables, then run this function again.");
-    return;
-  }
-  
-  for (const table of tables) {
-    console.log(`\n🔧 Processing table: ${table.id}`);
-    const tbody = table.querySelector('tbody');
-    const rows = Array.from(tbody.querySelectorAll('tr')).filter(row => 
-      !row.querySelector('td[colspan]') && !row.classList.contains('section-header-row')
-    );
-    
-    console.log(`Found ${rows.length} data rows to process`);
-    
-    for (const row of rows) {
-      const userId = row.getAttribute('data-userid');
-      const nameCell = row.querySelector('td:nth-child(2)');
-      const name = nameCell ? nameCell.textContent.split('\n')[0].trim() : 'Unknown';
-      
-      if (userId && userId !== 'undefined') {
-        console.log(`\n--- Processing ${name} (${userId}) ---`);
-        
-        try {
-          const response = await fetch(`/linemanager/get-assessment/${userId}`);
-          if (response.ok) {
+
+// Function to fetch P3 assessment data
+async function fetchP3AssessmentData(userId) {
+    try {
+        console.log(`Fetching P3 assessment for userId: ${userId}`);
+        const response = await fetch(`/linemanager/get-p3-assessment/${userId}`);
+        if (response.ok) {
             const data = await response.json();
-            
-            if (data.success && data.combinedData && data.combinedData.scores) {
-              const workSetup = data.combinedData.scores.workSetup;
-              const availability = data.combinedData.scores.availability;
-              
-              console.log(`  Raw values: workSetup=${workSetup} (${typeof workSetup}), availability=${availability} (${typeof availability})`);
-              
-              // FIXED BOOLEAN LOGIC: Only true if BOTH are explicitly true
-              const workSetupPassed = (workSetup === true || workSetup === 'true');
-              const availabilityPassed = (availability === true || availability === 'true');
-              const overallPassed = workSetupPassed && availabilityPassed;
-              
-              console.log(`  Boolean results: workSetup=${workSetupPassed}, availability=${availabilityPassed}, overall=${overallPassed}`);
-              
-              // Update the row attributes
-              row.setAttribute('data-worksetup-score', workSetup || 'false');
-              row.setAttribute('data-availability-score', availability || 'false');
-              row.setAttribute('data-worksetup-passed', overallPassed ? 'true' : 'false');
-              row.setAttribute('data-worksetup-enhanced', 'true');
-              
-              // Update the Work Setup/Availability cell (column 6)
-              const workSetupCell = row.querySelector('td:nth-child(6)');
-              if (workSetupCell) {
-                const oldValue = workSetupCell.textContent;
-                workSetupCell.innerHTML = `<span class="${overallPassed ? 'criteria-passed' : 'criteria-failed'}" style="color: ${overallPassed ? 'green' : 'red'}; font-weight: bold;">${overallPassed ? 'Passed' : 'Failed'}</span>`;
-                
-                const newValue = workSetupCell.textContent;
-                if (oldValue !== newValue) {
-                  console.log(`  ✅ UPDATED: ${oldValue} → ${newValue}`);
-                } else {
-                  console.log(`  ℹ️ No change needed: ${newValue}`);
-                }
-              }
-              
-            } else {
-              console.log(`  ❌ No score data available`);
-              // Set as failed by default
-              const workSetupCell = row.querySelector('td:nth-child(6)');
-              if (workSetupCell) {
-                workSetupCell.innerHTML = `<span class="criteria-failed" style="color: red; font-weight: bold;">Failed</span>`;
-              }
+            if (data.success && data.assessmentData) {
+                return {
+                    totalAssessmentRating: data.assessmentData.totalAssessmentRating || 'N/A',
+                    conclusion: data.assessmentData.conclusion || 'N/A'
+                };
             }
-          } else {
-            console.log(`  ❌ API call failed: ${response.status}`);
-          }
-        } catch (error) {
-          console.log(`  ❌ Error: ${error.message}`);
         }
-        
-        // Small delay to avoid overwhelming the server
-        await new Promise(resolve => setTimeout(resolve, 100));
-      }
+    } catch (error) {
+        console.error(`Error fetching P3 assessment for userId ${userId}:`, error);
     }
-  }
-  
-  console.log("\n🎉 IMMEDIATE WORK SETUP FIX COMPLETED!");
-  alert("Work Setup/Availability fix completed! Check the console for detailed results.");
+    
+    return {
+        totalAssessmentRating: 'N/A',
+        conclusion: 'N/A'
+    };
 }
 
+
+// function to immediately fix all current work setup displays
+async function immediateWorkSetupFix() {
+    console.log("🔧 IMMEDIATE WORK SETUP FIX STARTING...");
+    
+    // Find all P1 tables
+    const tables = [
+        document.getElementById('p1AwaitingActionTable'),
+        document.getElementById('p1DeclaredResultsTable')
+    ].filter(table => table !== null && table.style.display !== 'none');
+    
+    if (tables.length === 0) {
+        console.log("❌ No visible P1 tables found. Please click 'For Review' filter first.");
+        alert("Please click the 'For Review' filter first to see P1 tables, then run this function again.");
+        return;
+    }
+    
+    for (const table of tables) {
+        console.log(`\n🔧 Processing table: ${table.id}`);
+        const tbody = table.querySelector('tbody');
+        const rows = Array.from(tbody.querySelectorAll('tr')).filter(row => 
+            !row.querySelector('td[colspan]') && !row.classList.contains('section-header-row')
+        );
+        
+        console.log(`Found ${rows.length} data rows to process`);
+        
+        for (const row of rows) {
+            const userId = row.getAttribute('data-userid');
+            const nameCell = row.querySelector('td:nth-child(2)');
+            const name = nameCell ? nameCell.textContent.split('\n')[0].trim() : 'Unknown';
+            
+            if (userId && userId !== 'undefined') {
+                console.log(`\n--- Processing ${name} (${userId}) ---`);
+                
+                // Remove enhanced flag to force re-processing
+                row.removeAttribute('data-worksetup-enhanced');
+                
+                // Apply the FIXED logic
+                await enhanceRowWithWorkSetupDataFixed(row);
+                
+                // Small delay to avoid overwhelming the server
+                await new Promise(resolve => setTimeout(resolve, 100));
+            }
+        }
+    }
+    
+    console.log("\n🎉 IMMEDIATE WORK SETUP FIX COMPLETED!");
+    alert("Work Setup/Availability fix completed! Check the console for detailed results.");
+}
+
+// Make functions globally available
+window.enhanceRowWithWorkSetupDataFixed = enhanceRowWithWorkSetupDataFixed;
+window.immediateWorkSetupFix = immediateWorkSetupFix;
 // Quick test to see what's currently wrong
 function quickWorkSetupDiagnosis() {
   console.log("🔍 QUICK WORK SETUP DIAGNOSIS");
@@ -4122,6 +4805,367 @@ function populateP3AwaitingActionTableFixed(awaitingRowsP3) {
     console.log("Added no data message to P3 awaiting table");
   }
 }
+
+
+
+// ENHANCED: P3 Awaiting Action Table with new columns
+async function populateP3AwaitingActionTableEnhanced(awaitingRowsP3) {
+    console.log(`=== ENHANCED P3 AWAITING ACTION TABLE (${awaitingRowsP3.length} rows) ===`);
+    
+    const awaitingActionTable = document.getElementById('p3AwaitingActionTable');
+    if (!awaitingActionTable) {
+        console.error("❌ P3 awaiting action table not found");
+        return;
+    }
+    
+    // Update table headers to include new columns
+    const thead = awaitingActionTable.querySelector('thead');
+    if (thead) {
+        thead.innerHTML = `
+            <tr>
+                <th>Applicant No.</th>
+                <th>Last Name, First Name</th>
+                <th>Department</th>
+                <th>Position Applied</th>
+                <th>Total Assessment Rating</th>
+                <th>Conclusion Statement</th>
+                <th>Applicant Status</th>
+            </tr>
+        `;
+    }
+    
+    const awaitingTbody = awaitingActionTable.querySelector('tbody');
+    if (!awaitingTbody) {
+        console.error("❌ Tbody not found in P3 awaiting action table");
+        return;
+    }
+    
+    // Clear existing content
+    awaitingTbody.innerHTML = '';
+    
+    if (awaitingRowsP3.length > 0) {
+        // Process each row with assessment data
+        for (let idx = 0; idx < awaitingRowsP3.length; idx++) {
+            const rowData = awaitingRowsP3[idx];
+            console.log(`Processing enhanced P3 awaiting row ${idx + 1}: ${rowData.name}`);
+            
+            // Fetch assessment data for this user
+            const assessmentData = await fetchP3AssessmentData(rowData.userId);
+            
+            const newRow = await createP3AwaitingRowEnhanced(rowData, assessmentData);
+            awaitingTbody.appendChild(newRow);
+            
+            if (rowData.userId) {
+                newRow.setAttribute('data-userid', rowData.userId);
+            }
+            
+            console.log(`✅ Added enhanced P3 awaiting row ${idx + 1}`);
+        }
+        
+        console.log(`✅ Successfully populated enhanced P3 awaiting action table with ${awaitingRowsP3.length} rows`);
+    } else {
+        // FIXED: Show "No data" message when no rows
+        const messageRow = document.createElement('tr');
+        const messageCell = document.createElement('td');
+        messageCell.setAttribute('colspan', '7'); // 7 columns now
+        messageCell.className = 'text-center no-data-message';
+        messageCell.style.cssText = `
+            padding: 30px;
+            background-color: #f8f9fa;
+            color: #6c757d;
+            font-style: italic;
+            font-size: 16px;
+            border-left: 4px solid #007bff;
+        `;
+        messageCell.textContent = 'No P3 applicants with declared review results found.';
+        messageRow.appendChild(messageCell);
+        declaredTbody.appendChild(messageRow);
+        
+        // Hide the table and its header
+        declaredResultsTable.style.display = 'none';
+        const p3Header = document.getElementById('p3DeclaredResultsHeader');
+        if (p3Header) {
+            p3Header.style.display = 'none';
+        }
+        
+        console.log("❌ No P3 declared rows - added no data message");
+    }
+}
+
+// ENHANCED: P3 Declared Results Table with new columns
+function populateP3DeclaredResultsTableEnhanced(declaredRowsP3) {
+    console.log(`=== ENHANCED P3 DECLARED RESULTS (${declaredRowsP3.length} rows) ===`);
+    
+    const declaredResultsTable = document.getElementById('p3DeclaredResultsTable');
+    if (!declaredResultsTable) {
+        console.error("❌ P3 declared results table not found");
+        return;
+    }
+    
+    // Update table headers to include new columns
+    const thead = declaredResultsTable.querySelector('thead');
+    if (thead) {
+        thead.innerHTML = `
+            <tr>
+                <th>Applicant No.</th>
+                <th>Last Name, First Name</th>
+                <th>Department</th>
+                <th>Position Applied</th>
+                <th>Total Assessment Rating</th>
+                <th>Conclusion Statement</th>
+                <th>Applicant Status</th>
+                <th>Actions</th>
+            </tr>
+        `;
+    }
+    
+    const declaredTbody = declaredResultsTable.querySelector('tbody');
+    if (!declaredTbody) {
+        console.error("❌ Tbody not found");
+        return;
+    }
+    
+    // Clear existing content
+    declaredTbody.innerHTML = '';
+    
+    if (declaredRowsP3.length > 0) {
+        declaredRowsP3.forEach(async (rowData, idx) => {
+            console.log(`Processing enhanced P3 declared row ${idx + 1}:`, {
+                name: rowData.name,
+                status: rowData.status,
+                userId: rowData.userId
+            });
+            
+            const newRow = await createP3DeclaredRowEnhanced(rowData);
+            declaredTbody.appendChild(newRow);
+            
+            if (rowData.userId) {
+                newRow.setAttribute('data-userid', rowData.userId);
+                
+                const changeButton = newRow.querySelector('.btn-change-status');
+                if (changeButton) {
+                    changeButton.setAttribute('data-userid', rowData.userId);
+                    changeButton.setAttribute('onclick', `changeApplicantStatus('${rowData.userId}')`);
+                }
+            }
+            
+            console.log(`✅ Added enhanced P3 declared row ${idx + 1} to table`);
+        });
+        
+        console.log(`✅ Successfully populated enhanced P3 declared results table`);
+        
+        // Show the table and its header
+        declaredResultsTable.style.display = 'table';
+        const p3Header = document.getElementById('p3DeclaredResultsHeader');
+        if (p3Header) {
+            p3Header.style.display = 'block';
+            p3Header.textContent = 'List of P3 Applicants on Review - Declared Results';
+        }
+    } else {
+        displayNoDataMessage(declaredResultsTable, 'No P3 applicants with declared review results found.');
+        
+        // Hide the table and its header
+        declaredResultsTable.style.display = 'none';
+        const p3Header = document.getElementById('p3DeclaredResultsHeader');
+        if (p3Header) {
+            p3Header.style.display = 'none';
+        }
+    }
+}
+
+
+// ENHANCED: Create P3 awaiting row with assessment data
+async function createP3AwaitingRowEnhanced(rowData, assessmentData) {
+    console.log("Creating enhanced P3 awaiting row for:", rowData.name);
+    
+    const newRow = document.createElement('tr');
+    
+    if (rowData.userId) {
+        newRow.setAttribute('data-userid', rowData.userId);
+    }
+    
+    // Enhanced applicantId extraction
+    let applicantId = extractApplicantIdForP3(rowData);
+    
+    console.log(`Enhanced P3 Row applicantId determined as: ${applicantId} for userId: ${rowData.userId}`);
+    
+    // P3 awaiting rows now have 7 columns (including assessment rating and conclusion)
+    const cells = [
+        rowData.cells[0] || 'N/A',                    // Applicant No.
+        rowData.cells[1] || 'Unknown Applicant',      // Name
+        rowData.cells[2] || 'Unknown Department',     // Department  
+        rowData.cells[3] || 'Unknown Position',       // Position
+        assessmentData.totalAssessmentRating,         // Total Assessment Rating
+        assessmentData.conclusion,                     // Conclusion Statement
+        createP3AwaitingStatusCellWithApplicantId(rowData, applicantId) // Status & Actions
+    ];
+    
+    cells.forEach((cellHTML, index) => {
+        const cell = document.createElement('td');
+        
+        if (typeof cellHTML === 'string') {
+            cell.innerHTML = cellHTML;
+        } else {
+            cell.textContent = String(cellHTML);
+        }
+        
+        newRow.appendChild(cell);
+        console.log(`Added enhanced P3 cell ${index + 1}`);
+    });
+    
+    return newRow;
+}
+
+
+// ENHANCED: Create P3 declared row with assessment data
+async function createP3DeclaredRowEnhanced(rowData, assessmentData) {
+    console.log("Creating enhanced P3 declared row for:", rowData.name);
+    
+    const newRow = document.createElement('tr');
+    
+    if (rowData.userId) {
+        newRow.setAttribute('data-userid', rowData.userId);
+    }
+    
+    // Extract and clean up the status for P3
+    let statusText = '';
+    if (rowData.status) {
+        statusText = rowData.status;
+    } else if (rowData.cells && rowData.cells[6]) {
+        const originalStatus = rowData.cells[6];
+        const statusMatches = [
+            /P3 - PASSED \(Pending Finalization\)/,
+            /P3 - FAILED \(Pending Finalization\)/,
+            /P3 - PASSED/,
+            /P3 - FAILED/
+        ];
+        
+        for (const regex of statusMatches) {
+            const match = originalStatus.match(regex);
+            if (match) {
+                statusText = match[0];
+                break;
+            }
+        }
+        
+        if (!statusText) {
+            const p3Match = originalStatus.match(/P3[^<\n]*/);
+            if (p3Match) {
+                statusText = p3Match[0].trim();
+            }
+        }
+    }
+    
+    if (!statusText) {
+        statusText = 'P3 - UNKNOWN STATUS';
+    }
+    
+    console.log(`Enhanced P3 row status determined as: "${statusText}"`);
+    
+    // P3 declared rows now have 8 columns (7 + actions)
+    const cells = [
+        rowData.cells[0] || 'N/A',                    // Applicant No.
+        rowData.cells[1] || 'Unknown Applicant',      // Name
+        rowData.cells[2] || 'Unknown Department',     // Department
+        rowData.cells[3] || 'Unknown Position',       // Position
+        assessmentData.totalAssessmentRating,         // Total Assessment Rating
+        assessmentData.conclusion,                     // Conclusion Statement
+        `<span><strong>Status:</strong> ${statusText}</span>` // Status
+    ];
+    
+    cells.forEach((cellHTML, index) => {
+        const cell = document.createElement('td');
+        cell.innerHTML = cellHTML;
+        newRow.appendChild(cell);
+    });
+    
+    // Add Actions column
+    const actionsCell = document.createElement('td');
+    const userId = rowData.userId || '';
+    
+    actionsCell.innerHTML = `
+        <button 
+            class="btn-change-status" 
+            data-userid="${userId}"
+            onclick="changeApplicantStatus('${userId}')"
+        >
+            Change Status
+        </button>
+    `;
+    
+    newRow.appendChild(actionsCell);
+    
+    return newRow;
+}
+
+// Enhanced sorting function for P3 tables
+function sortP3TablesByAssessment(sortBy) {
+    const tables = ['p3AwaitingActionTable', 'p3DeclaredResultsTable'];
+    
+    tables.forEach(tableId => {
+        const table = document.getElementById(tableId);
+        if (!table) return;
+        
+        const tbody = table.querySelector('tbody');
+        const rows = Array.from(tbody.querySelectorAll('tr')).filter(row => 
+            !row.querySelector('td[colspan]') && !row.classList.contains('section-header-row')
+        );
+        
+        if (rows.length === 0) return;
+        
+        // Sort rows based on criteria
+        rows.sort((rowA, rowB) => {
+            switch (sortBy) {
+                case 'rating-desc':
+                    const ratingA = parseFloat(rowA.querySelector('td:nth-child(5)')?.textContent) || 0;
+                    const ratingB = parseFloat(rowB.querySelector('td:nth-child(5)')?.textContent) || 0;
+                    return ratingB - ratingA; // Highest first
+                    
+                case 'rating-asc':
+                    const ratingA2 = parseFloat(rowA.querySelector('td:nth-child(5)')?.textContent) || 0;
+                    const ratingB2 = parseFloat(rowB.querySelector('td:nth-child(5)')?.textContent) || 0;
+                    return ratingA2 - ratingB2; // Lowest first
+                    
+                case 'conclusion-recommend':
+                    const conclusionA = rowA.querySelector('td:nth-child(6)')?.textContent || '';
+                    const conclusionB = rowB.querySelector('td:nth-child(6)')?.textContent || '';
+                    
+                    // Priority order: Strongly Recommend > Recommend > Recommend with Reservations > Do Not Recommend
+                    const getPriority = (conclusion) => {
+                        if (conclusion.includes('Strongly Recommend')) return 4;
+                        if (conclusion.includes('Recommend with Reservations')) return 2;
+                        if (conclusion.includes('Recommend')) return 3;
+                        if (conclusion.includes('Do Not Recommend')) return 1;
+                        return 0;
+                    };
+                    
+                    return getPriority(conclusionB) - getPriority(conclusionA);
+                    
+                case 'name-asc':
+                    const nameA = rowA.querySelector('td:nth-child(2)')?.textContent.trim() || '';
+                    const nameB = rowB.querySelector('td:nth-child(2)')?.textContent.trim() || '';
+                    return nameA.localeCompare(nameB);
+                    
+                case 'name-desc':
+                    const nameA2 = rowA.querySelector('td:nth-child(2)')?.textContent.trim() || '';
+                    const nameB2 = rowB.querySelector('td:nth-child(2)')?.textContent.trim() || '';
+                    return nameB2.localeCompare(nameA2);
+                    
+                default:
+                    return 0;
+            }
+        });
+        
+        // Clear and repopulate table
+        tbody.innerHTML = '';
+        rows.forEach(row => tbody.appendChild(row));
+        
+        console.log(`Sorted ${tableId} by ${sortBy}: ${rows.length} rows`);
+    });
+}
+
+
+
 function createP3AwaitingRowFixed(rowData) {
     console.log("Creating fixed P3 awaiting row for:", rowData.name);
     
@@ -4160,6 +5204,274 @@ function createP3AwaitingRowFixed(rowData) {
     
     return newRow;
 }
+
+// Enhanced P3 filtering function
+function filterP3TablesByAssessment(filterBy) {
+    const tables = ['p3AwaitingActionTable', 'p3DeclaredResultsTable'];
+    
+    tables.forEach(tableId => {
+        const table = document.getElementById(tableId);
+        if (!table) return;
+        
+        const tbody = table.querySelector('tbody');
+        const rows = Array.from(tbody.querySelectorAll('tr')).filter(row => 
+            !row.querySelector('td[colspan]') && !row.classList.contains('section-header-row')
+        );
+        
+        let filteredRows = rows.filter(row => {
+            switch (filterBy) {
+                case 'all':
+                    return true;
+                    
+                case 'strongly-recommend':
+                    const conclusion = row.querySelector('td:nth-child(6)')?.textContent || '';
+                    return conclusion.includes('Strongly Recommend');
+                    
+                case 'recommend':
+                    const conclusion2 = row.querySelector('td:nth-child(6)')?.textContent || '';
+                    return conclusion2.includes('Recommend') && !conclusion2.includes('Strongly') && !conclusion2.includes('Reservations');
+                    
+                case 'recommend-reservations':
+                    const conclusion3 = row.querySelector('td:nth-child(6)')?.textContent || '';
+                    return conclusion3.includes('Recommend with Reservations');
+                    
+                case 'do-not-recommend':
+                    const conclusion4 = row.querySelector('td:nth-child(6)')?.textContent || '';
+                    return conclusion4.includes('Do Not Recommend');
+                    
+                case 'rating-high':
+                    const rating = parseFloat(row.querySelector('td:nth-child(5)')?.textContent) || 0;
+                    return rating >= 4.0;
+                    
+                case 'rating-medium':
+                    const rating2 = parseFloat(row.querySelector('td:nth-child(5)')?.textContent) || 0;
+                    return rating2 >= 3.0 && rating2 < 4.0;
+                    
+                case 'rating-low':
+                    const rating3 = parseFloat(row.querySelector('td:nth-child(5)')?.textContent) || 0;
+                    return rating3 > 0 && rating3 < 3.0;
+                    
+                default:
+                    return true;
+            }
+        });
+        
+        // Clear and show filtered rows
+        tbody.innerHTML = '';
+        
+        if (filteredRows.length === 0) {
+            const messageRow = document.createElement('tr');
+            const messageCell = document.createElement('td');
+            const headerCount = table.querySelectorAll('thead th').length;
+            messageCell.setAttribute('colspan', headerCount.toString());
+            messageCell.className = 'text-center no-data-message';
+            messageCell.style.cssText = `
+                padding: 30px;
+                background-color: #f8f9fa;
+                color: #6c757d;
+                font-style: italic;
+                font-size: 16px;
+                border-left: 4px solid #ffc107;
+            `;
+            messageCell.textContent = 'No applicants match the selected criteria.';
+            messageRow.appendChild(messageCell);
+            tbody.appendChild(messageRow);
+        } else {
+            filteredRows.forEach(row => tbody.appendChild(row));
+        }
+        
+        console.log(`Filtered ${tableId} by ${filterBy}: ${filteredRows.length} rows displayed`);
+    });
+}
+
+// Add P3 filter controls
+function createP3FilterControls() {
+    // Create filter controls for P3 Awaiting Action Table
+    createP3AwaitingFilterControls();
+    
+    // Create filter controls for P3 Declared Results Table
+    createP3DeclaredFilterControls();
+}
+
+function createP3AwaitingFilterControls() {
+    const p3AwaitingTable = document.getElementById('p3AwaitingActionTable');
+    if (!p3AwaitingTable) return;
+    
+    const p3Section = document.getElementById('p3ReviewSection');
+    if (!p3Section) return;
+    
+    // Find the "Awaiting for Action - P3" header
+    const headers = p3Section.querySelectorAll('h4');
+    let awaitingHeader = null;
+    
+    headers.forEach(header => {
+        if (header.textContent.includes('Awaiting for Action - P3')) {
+            awaitingHeader = header;
+        }
+    });
+    
+    if (!awaitingHeader) return;
+    
+    // Create filter controls container
+    const filterContainer = document.createElement('div');
+    filterContainer.id = 'p3AwaitingFilterControls';
+    filterContainer.style.cssText = `
+        margin: 15px 0;
+        padding: 15px;
+        background-color: #f8f9fa;
+        border-radius: 5px;
+        border: 1px solid #dee2e6;
+    `;
+    
+    filterContainer.innerHTML = `
+        <div style="display: flex; align-items: center; gap: 15px; flex-wrap: wrap;">
+            <div style="display: flex; align-items: center; gap: 10px;">
+                <label for="p3AwaitingSortBy" style="font-weight: bold; color: #124A5C;">Sort By:</label>
+                <select id="p3AwaitingSortBy" style="padding: 8px; border: 1px solid #ddd; border-radius: 4px; background-color: white; min-width: 200px;">
+                    <option value="rating-desc">Total Assessment Rating (Highest First)</option>
+                    <option value="rating-asc">Total Assessment Rating (Lowest First)</option>
+                    <option value="conclusion-recommend">Conclusion (Strongly Recommend First)</option>
+                    <option value="name-asc">Name (A-Z)</option>
+                    <option value="name-desc">Name (Z-A)</option>
+                </select>
+            </div>
+            <div style="display: flex; align-items: center; gap: 10px;">
+                <label for="p3AwaitingFilterBy" style="font-weight: bold; color: #124A5C;">Filter By:</label>
+                <select id="p3AwaitingFilterBy" style="padding: 8px; border: 1px solid #ddd; border-radius: 4px; background-color: white; min-width: 180px;">
+                    <option value="all">All Applicants</option>
+                    <option value="strongly-recommend">Strongly Recommend</option>
+                    <option value="recommend">Recommend</option>
+                    <option value="recommend-reservations">Recommend with Reservations</option>
+                    <option value="do-not-recommend">Do Not Recommend</option>
+                    <option value="rating-high">High Rating (≥4.0)</option>
+                    <option value="rating-medium">Medium Rating (3.0-3.9)</option>
+                    <option value="rating-low">Low Rating (<3.0)</option>
+                </select>
+            </div>
+            <button id="p3AwaitingApplyFilters" style="padding: 10px 20px; background-color: #124A5C; color: white; border: none; border-radius: 4px; cursor: pointer; font-weight: bold;">
+                Apply
+            </button>
+            <button id="p3AwaitingClearFilters" style="padding: 10px 20px; background-color: #6c757d; color: white; border: none; border-radius: 4px; cursor: pointer;">
+                Clear
+            </button>
+        </div>
+    `;
+    
+    // Insert filter container after the awaiting header
+    awaitingHeader.insertAdjacentElement('afterend', filterContainer);
+    
+    // Set up event listeners
+    document.getElementById('p3AwaitingApplyFilters').addEventListener('click', () => {
+        const sortBy = document.getElementById('p3AwaitingSortBy').value;
+        const filterBy = document.getElementById('p3AwaitingFilterBy').value;
+        
+        filterP3TablesByAssessment(filterBy);
+        sortP3TablesByAssessment(sortBy);
+    });
+    
+    document.getElementById('p3AwaitingClearFilters').addEventListener('click', () => {
+        document.getElementById('p3AwaitingSortBy').value = 'rating-desc';
+        document.getElementById('p3AwaitingFilterBy').value = 'all';
+        filterP3TablesByAssessment('all');
+        sortP3TablesByAssessment('rating-desc');
+    });
+}
+
+function createP3DeclaredFilterControls() {
+    const p3DeclaredTable = document.getElementById('p3DeclaredResultsTable');
+    if (!p3DeclaredTable) return;
+    
+    const p3Section = document.getElementById('p3ReviewSection');
+    if (!p3Section) return;
+    
+    // Find the "List of P3 Applicants on Review - Declared Results" header
+    const headers = p3Section.querySelectorAll('h4');
+    let declaredHeader = null;
+    
+    headers.forEach(header => {
+        if (header.textContent.includes('Declared Results') || header.id === 'p3DeclaredResultsHeader') {
+            declaredHeader = header;
+        }
+    });
+    
+    if (!declaredHeader) return;
+    
+    // Create filter controls container
+    const filterContainer = document.createElement('div');
+    filterContainer.id = 'p3DeclaredFilterControls';
+    filterContainer.style.cssText = `
+        margin: 15px 0;
+        padding: 15px;
+        background-color: #f8f9fa;
+        border-radius: 5px;
+        border: 1px solid #dee2e6;
+    `;
+    
+    filterContainer.innerHTML = `
+        <div style="display: flex; align-items: center; gap: 15px; flex-wrap: wrap;">
+            <div style="display: flex; align-items: center; gap: 10px;">
+                <label for="p3DeclaredSortBy" style="font-weight: bold; color: #124A5C;">Sort By:</label>
+                <select id="p3DeclaredSortBy" style="padding: 8px; border: 1px solid #ddd; border-radius: 4px; background-color: white; min-width: 200px;">
+                    <option value="rating-desc">Total Assessment Rating (Highest First)</option>
+                    <option value="rating-asc">Total Assessment Rating (Lowest First)</option>
+                    <option value="conclusion-recommend">Conclusion (Strongly Recommend First)</option>
+                    <option value="name-asc">Name (A-Z)</option>
+                    <option value="name-desc">Name (Z-A)</option>
+                </select>
+            </div>
+            <div style="display: flex; align-items: center; gap: 10px;">
+                <label for="p3DeclaredFilterBy" style="font-weight: bold; color: #124A5C;">Filter By:</label>
+                <select id="p3DeclaredFilterBy" style="padding: 8px; border: 1px solid #ddd; border-radius: 4px; background-color: white; min-width: 180px;">
+                    <option value="all">All Applicants</option>
+                    <option value="status-passed">Status: PASSED</option>
+                    <option value="status-failed">Status: FAILED</option>
+                    <option value="strongly-recommend">Strongly Recommend</option>
+                    <option value="recommend">Recommend</option>
+                    <option value="recommend-reservations">Recommend with Reservations</option>
+                    <option value="do-not-recommend">Do Not Recommend</option>
+                    <option value="rating-high">High Rating (≥4.0)</option>
+                    <option value="rating-medium">Medium Rating (3.0-3.9)</option>
+                    <option value="rating-low">Low Rating (<3.0)</option>
+                </select>
+            </div>
+            <button id="p3DeclaredApplyFilters" style="padding: 10px 20px; background-color: #124A5C; color: white; border: none; border-radius: 4px; cursor: pointer; font-weight: bold;">
+                Apply
+            </button>
+            <button id="p3DeclaredClearFilters" style="padding: 10px 20px; background-color: #6c757d; color: white; border: none; border-radius: 4px; cursor: pointer;">
+                Clear
+            </button>
+        </div>
+    `;
+    
+    // Insert filter container after the declared header
+    declaredHeader.insertAdjacentElement('afterend', filterContainer);
+    
+    // Set up event listeners
+    document.getElementById('p3DeclaredApplyFilters').addEventListener('click', () => {
+        const sortBy = document.getElementById('p3DeclaredSortBy').value;
+        const filterBy = document.getElementById('p3DeclaredFilterBy').value;
+        
+        filterP3TablesByAssessment(filterBy);
+        sortP3TablesByAssessment(sortBy);
+    });
+    
+    document.getElementById('p3DeclaredClearFilters').addEventListener('click', () => {
+        document.getElementById('p3DeclaredSortBy').value = 'rating-desc';
+        document.getElementById('p3DeclaredFilterBy').value = 'all';
+        filterP3TablesByAssessment('all');
+        sortP3TablesByAssessment('rating-desc');
+    });
+}
+
+// Make functions globally available
+window.populateP3AwaitingActionTableEnhanced = populateP3AwaitingActionTableEnhanced;
+window.populateP3DeclaredResultsTableEnhanced = populateP3DeclaredResultsTableEnhanced;
+window.createP3AwaitingRowEnhanced = createP3AwaitingRowEnhanced;
+window.createP3DeclaredRowEnhanced = createP3DeclaredRowEnhanced;
+window.fetchP3AssessmentData = fetchP3AssessmentData;
+window.sortP3TablesByAssessment = sortP3TablesByAssessment;
+window.filterP3TablesByAssessment = filterP3TablesByAssessment;
+window.createP3FilterControls = createP3FilterControls;
 
 function extractApplicantIdForP3(rowData) {
     let applicantId = rowData.applicantId || rowData.userId;
@@ -4501,14 +5813,6 @@ function createP3AwaitingStatusCellFixed(rowData) {
 }
 
 
-// FIXED: Start P3 Gmail Integration Flow
-function startP3GmailIntegrationFlow() {
-  console.log("Starting P3 Gmail integration flow...");
-  
-  closeModal('finalizeModalP3');
-  finalizeP3Review();
-}
-
 
 function finalizeP3Review() {
   console.log("Starting P3 review finalization with Gmail compose integration...");
@@ -4573,246 +5877,274 @@ function finalizeP3Review() {
     alert("Error preparing P3 email composition: " + error.message);
   });
 }
-
-// FIXED: Fetch P3 Applicant Data for Emails
-async function fetchP3ApplicantDataForEmails(passedUserIds, failedUserIds) {
-  try {
-    const response = await fetch('/linemanager/applicant-tracker-jobposition/finalizeP3ReviewGmail', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({
-        passedUserIds: passedUserIds,
-        failedUserIds: failedUserIds
-      }),
-    });
-    
-    const data = await response.json();
-    
-    if (!data.success) {
-      throw new Error(data.message || 'Failed to fetch P3 applicant data');
+// Function to fetch P3 assessment data
+async function fetchP3AssessmentData(userId) {
+    try {
+        const response = await fetch(`/linemanager/get-p3-assessment/${userId}`);
+        if (response.ok) {
+            const data = await response.json();
+            if (data.success && data.assessmentData) {
+                return {
+                    totalAssessmentRating: data.assessmentData.totalAssessmentRating || 'N/A',
+                    conclusion: data.assessmentData.conclusion || 'N/A'
+                };
+            }
+        }
+    } catch (error) {
+        console.error(`Error fetching P3 assessment for userId ${userId}:`, error);
     }
     
     return {
-      passedApplicants: data.passedApplicants || [],
-      failedApplicants: data.failedApplicants || []
+        totalAssessmentRating: 'N/A',
+        conclusion: 'N/A'
     };
-    
-  } catch (error) {
-    console.error("Error fetching P3 applicant data:", error);
-    throw error;
-  }
+}
+
+
+// Fetch P3 Applicant Data for Emails
+async function fetchP3ApplicantDataForEmails(passedUserIds, failedUserIds) {
+    try {
+        const response = await fetch('/linemanager/applicant-tracker-jobposition/finalizeP3ReviewGmail', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+                passedUserIds: passedUserIds,
+                failedUserIds: failedUserIds
+            }),
+        });
+        
+        const data = await response.json();
+        
+        if (!data.success) {
+            throw new Error(data.message || 'Failed to fetch P3 applicant data');
+        }
+        
+        return {
+            passedApplicants: data.passedApplicants || [],
+            failedApplicants: data.failedApplicants || []
+        };
+        
+    } catch (error) {
+        console.error("🎯 FIXED: Error fetching P3 applicant data:", error);
+        throw error;
+    }
 }
 
 async function fetchP3EmailTemplates() {
-  try {
-    const response = await fetch('/linemanager/applicant-tracker-jobposition/getP3EmailTemplates');
-    const data = await response.json();
-    
-    if (!data.success) {
-      throw new Error(data.message || 'Failed to fetch P3 email templates');
+    try {
+        const response = await fetch('/linemanager/applicant-tracker-jobposition/getP3EmailTemplates');
+        const data = await response.json();
+        
+        if (!data.success) {
+            throw new Error(data.message || 'Failed to fetch P3 email templates');
+        }
+        
+        return data.templates;
+        
+    } catch (error) {
+        console.error("🎯 FIXED: Error fetching P3 email templates:", error);
+        return {
+            passed: {
+                subject: 'Congratulations! Job Offer - Prime Infrastructure',
+                template: 'Dear {applicantName},\n\nCongratulations! We are pleased to extend a job offer for the {jobTitle} position at {companyName}.\n\nBest regards,\n{companyName} Team'
+            },
+            failed: {
+                subject: 'Thank You for Your Interest - Interview Process Complete',
+                template: 'Dear {applicantName},\n\nThank you for participating in our interview process for the {jobTitle} position at {companyName}. We regret to inform you that we have decided to proceed with another candidate.\n\nBest regards,\n{companyName} Team'
+            }
+        };
     }
-    
-    return data.templates;
-    
-  } catch (error) {
-    console.error("Error fetching P3 email templates:", error);
-    return {
-      passed: {
-        subject: 'Congratulations! Job Offer - Prime Infrastructure',
-        template: 'Dear {applicantName},\n\nCongratulations! We are pleased to extend a job offer for the {jobTitle} position at {companyName}.\n\nBest regards,\n{companyName} Team'
-      },
-      failed: {
-        subject: 'Thank You for Your Interest - Interview Process Complete',
-        template: 'Dear {applicantName},\n\nThank you for participating in our interview process for the {jobTitle} position at {companyName}. We regret to inform you that we have decided to proceed with another candidate.\n\nBest regards,\n{companyName} Team'
-      }
-    };
-  }
 }
 
-// FIXED: Show P3 Passed Email Modal
 function showP3PassedEmailModal() {
-  console.log("Showing P3 passed applicants Gmail compose modal");
-  
-  const recipientsList = document.getElementById('p3PassedRecipientsList');
-  const recipientsCount = document.getElementById('p3PassedRecipientsCount');
-  
-  if (recipientsList && currentP3PassedApplicants.length > 0) {
-    recipientsCount.textContent = currentP3PassedApplicants.length;
+    console.log("🎯 FIXED: Showing P3 passed applicants Gmail compose modal");
     
-    recipientsList.innerHTML = currentP3PassedApplicants.map(applicant => `
-      <div class="recipient-item">
-        <div>
-          <div class="recipient-name">${applicant.name}</div>
-          <div class="recipient-email">${applicant.email}</div>
-          <div class="recipient-job" style="font-size: 12px; color: #28a745; margin-top: 4px;">${applicant.jobTitle}</div>
-        </div>
-      </div>
-    `).join('');
-  }
-  
-  document.getElementById('p3PassedEmailSubject').value = 'Congratulations! Job Offer - Prime Infrastructure';
-  document.getElementById('p3PassedEmailTemplate').value = 'Congratulations! You have passed the final interview stage.';
-  
-  document.getElementById('emailP3PassedModal').style.display = 'block';
+    const recipientsList = document.getElementById('p3PassedRecipientsList');
+    const recipientsCount = document.getElementById('p3PassedRecipientsCount');
+    
+    if (recipientsList && window.currentP3PassedApplicants.length > 0) {
+        recipientsCount.textContent = window.currentP3PassedApplicants.length;
+        
+        recipientsList.innerHTML = window.currentP3PassedApplicants.map(applicant => `
+            <div class="recipient-item">
+                <div>
+                    <div class="recipient-name">${applicant.name}</div>
+                    <div class="recipient-email">${applicant.email}</div>
+                    <div class="recipient-job" style="font-size: 12px; color: #28a745; margin-top: 4px;">${applicant.jobTitle}</div>
+                </div>
+            </div>
+        `).join('');
+    }
+    
+    // Set default template
+    document.getElementById('p3PassedEmailSubject').value = window.p3EmailTemplates?.passed?.subject || 'Congratulations! Job Offer - Prime Infrastructure';
+    document.getElementById('p3PassedEmailTemplate').value = window.p3EmailTemplates?.passed?.template || 'Congratulations! You have successfully passed the final interview stage.';
+    
+    document.getElementById('emailP3PassedModal').style.display = 'block';
 }
+
 function showP3FailedEmailModal() {
-  console.log("Showing P3 failed applicants Gmail compose modal"); 
-  
-  const recipientsList = document.getElementById('p3FailedRecipientsList');
-  const recipientsCount = document.getElementById('p3FailedRecipientsCount');
-  
-  if (recipientsList && currentP3FailedApplicants.length > 0) {
-    recipientsCount.textContent = currentP3FailedApplicants.length;
+    console.log("🎯 FIXED: Showing P3 failed applicants Gmail compose modal");
     
-    recipientsList.innerHTML = currentP3FailedApplicants.map(applicant => `
-      <div class="recipient-item">
-        <div>
-          <div class="recipient-name">${applicant.name}</div>
-          <div class="recipient-email">${applicant.email}</div>
-          <div class="recipient-job" style="font-size: 12px; color: #dc3545; margin-top: 4px;">${applicant.jobTitle}</div>
-        </div>
-      </div>
-    `).join('');
-  }
-  
-  document.getElementById('p3FailedEmailSubject').value = 'Thank You for Your Interest - Interview Process Complete';
-  document.getElementById('p3FailedEmailTemplate').value = 'Thank you for your interest in our position.';
-  
-  document.getElementById('emailP3FailedModal').style.display = 'block';
+    const recipientsList = document.getElementById('p3FailedRecipientsList');
+    const recipientsCount = document.getElementById('p3FailedRecipientsCount');
+    
+    if (recipientsList && window.currentP3FailedApplicants.length > 0) {
+        recipientsCount.textContent = window.currentP3FailedApplicants.length;
+        
+        recipientsList.innerHTML = window.currentP3FailedApplicants.map(applicant => `
+            <div class="recipient-item">
+                <div>
+                    <div class="recipient-name">${applicant.name}</div>
+                    <div class="recipient-email">${applicant.email}</div>
+                    <div class="recipient-job" style="font-size: 12px; color: #dc3545; margin-top: 4px;">${applicant.jobTitle}</div>
+                </div>
+            </div>
+        `).join('');
+    }
+    
+    // Set default template
+    document.getElementById('p3FailedEmailSubject').value = window.p3EmailTemplates?.failed?.subject || 'Thank You for Your Interest - Interview Process Complete';
+    document.getElementById('p3FailedEmailTemplate').value = window.p3EmailTemplates?.failed?.template || 'Thank you for participating in our interview process.';
+    
+    document.getElementById('emailP3FailedModal').style.display = 'block';
 }
 
 // FIXED: Open Gmail for P3 Passed
 function openGmailForP3Passed() {
-  const subject = document.getElementById('p3PassedEmailSubject').value;
-  const template = document.getElementById('p3PassedEmailTemplate').value;
-  
-  if (!subject || !template) {
-    alert("Please fill in both subject and template fields.");
-    return;
-  }
-  
-  if (!confirm(`This will open Gmail with ${currentP3PassedApplicants.length} passed P3 applicants in the "To:" field. Continue?`)) {
-    return;
-  }
-  
-  const gmailUrl = buildGmailComposeUrl(currentP3PassedApplicants, subject, template);
-  
-  console.log('Opening Gmail for P3 passed applicants:', gmailUrl);
-  
-  const gmailWindow = window.open(gmailUrl, '_blank');
-  
-  if (!gmailWindow) {
-    alert('Please allow pop-ups for this site to open Gmail compose window.');
-    return;
-  }
-  
-  closeModal('emailP3PassedModal');
-  
-  if (currentP3FailedApplicants.length > 0) {
-    setTimeout(() => {
-      showP3FailedEmailModal();
-    }, 1000);
-  } else {
-    setTimeout(() => {
-      showP3StatusUpdateModal();
-    }, 2000);
-  }
-}
-function openGmailForP3Failed() {
-  const subject = document.getElementById('p3FailedEmailSubject').value;
-  const template = document.getElementById('p3FailedEmailTemplate').value;
-  
-  if (!subject || !template) {
-    alert("Please fill in both subject and template fields.");
-    return;
-  }
-  
-  if (!confirm(`This will open Gmail with ${currentP3FailedApplicants.length} failed P3 applicants in the "To:" field. Continue?`)) {
-    return;
-  }
-  
-  const gmailUrl = buildGmailComposeUrl(currentP3FailedApplicants, subject, template);
-  
-  console.log('Opening Gmail for P3 failed applicants:', gmailUrl);
-  
-  const gmailWindow = window.open(gmailUrl, '_blank');
-  
-  if (!gmailWindow) {
-    alert('Please allow pop-ups for this site to open Gmail compose window.');
-    return;
-  }
-  
-  closeModal('emailP3FailedModal');
-  
-  setTimeout(() => {
-    showP3StatusUpdateModal();
-  }, 2000);
-}
-
-// FIXED: Show P3 Status Update Modal
-function showP3StatusUpdateModal() {
-  console.log('Showing P3 status update modal');
-  document.getElementById('p3StatusUpdateModal').style.display = 'block';
-}
-
-// FIXED: Update P3 Applicant Statuses
-function updateP3ApplicantStatuses() {
-  if (!confirm('Have you successfully sent the P3 emails via Gmail? This will update the P3 applicant statuses in the database.')) {
-    return;
-  }
-  
-  console.log('Updating P3 applicant statuses in database...');
-  console.log('P3 Passed userIds:', p3EmailsToUpdate.passed);
-  console.log('P3 Failed userIds:', p3EmailsToUpdate.failed);
-  
-  const updateButton = document.querySelector('#p3StatusUpdateModal .confirm-button');
-  const originalText = updateButton.textContent;
-  updateButton.textContent = 'Updating Database...';
-  updateButton.disabled = true;
-  
-  fetch('/linemanager/applicant-tracker-jobposition/updateP3Statuses', {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-    },
-    body: JSON.stringify({
-      passedUserIds: p3EmailsToUpdate.passed,
-      failedUserIds: p3EmailsToUpdate.failed
-    }),
-  })
-  .then(response => response.json())
-  .then(data => {
-    if (data.success) {
-      alert(`P3 applicant statuses updated successfully!\n\nUpdated:\n- ${data.passedUpdated || 0} passed applicants\n- ${data.failedUpdated || 0} failed applicants`);
-      
-      closeModal('p3StatusUpdateModal');
-      
-      currentP3PassedApplicants = [];
-      currentP3FailedApplicants = [];
-      p3EmailsToUpdate = { passed: [], failed: [] };
-      
-      setTimeout(() => {
-        const activeFilter = document.querySelector(".filter-button.active");
-        if (activeFilter) {
-          activeFilter.click();
-        } else {
-          document.getElementById("filter-all").click();
-        }
-      }, 500);
-    } else {
-      throw new Error(data.message || 'Failed to update P3 statuses');
-    }
-  })
-  .catch(error => {
-    console.error('Error updating P3 statuses:', error);
-    alert('Error updating P3 applicant statuses: ' + error.message);
+    const subject = document.getElementById('p3PassedEmailSubject').value;
+    const template = document.getElementById('p3PassedEmailTemplate').value;
     
-    updateButton.textContent = originalText;
-    updateButton.disabled = false;
-  });
+    if (!subject || !template) {
+        alert("Please fill in both subject and template fields.");
+        return;
+    }
+    
+    if (!confirm(`This will open Gmail with ${window.currentP3PassedApplicants.length} passed P3 applicants in the "To:" field. Continue?`)) {
+        return;
+    }
+    
+    const gmailUrl = buildGmailComposeUrl(window.currentP3PassedApplicants, subject, template);
+    
+    console.log('🎯 FIXED: Opening Gmail for P3 passed applicants:', gmailUrl);
+    
+    const gmailWindow = window.open(gmailUrl, '_blank');
+    
+    if (!gmailWindow) {
+        alert('Please allow pop-ups for this site to open Gmail compose window.');
+        return;
+    }
+    
+    closeModal('emailP3PassedModal');
+    
+    if (window.currentP3FailedApplicants.length > 0) {
+        setTimeout(() => {
+            showP3FailedEmailModal();
+        }, 1000);
+    } else {
+        setTimeout(() => {
+            showP3StatusUpdateModal();
+        }, 2000);
+    }
 }
+
+
+function openGmailForP3Failed() {
+    const subject = document.getElementById('p3FailedEmailSubject').value;
+    const template = document.getElementById('p3FailedEmailTemplate').value;
+    
+    if (!subject || !template) {
+        alert("Please fill in both subject and template fields.");
+        return;
+    }
+    
+    if (!confirm(`This will open Gmail with ${window.currentP3FailedApplicants.length} failed P3 applicants in the "To:" field. Continue?`)) {
+        return;
+    }
+    
+    const gmailUrl = buildGmailComposeUrl(window.currentP3FailedApplicants, subject, template);
+    
+    console.log('🎯 FIXED: Opening Gmail for P3 failed applicants:', gmailUrl);
+    
+    const gmailWindow = window.open(gmailUrl, '_blank');
+    
+    if (!gmailWindow) {
+        alert('Please allow pop-ups for this site to open Gmail compose window.');
+        return;
+    }
+    
+    closeModal('emailP3FailedModal');
+    
+    setTimeout(() => {
+        showP3StatusUpdateModal();
+    }, 2000);
+}
+
+function showP3StatusUpdateModal() {
+    console.log('🎯 FIXED: Showing P3 status update modal');
+    document.getElementById('p3StatusUpdateModal').style.display = 'block';
+}
+
+function updateP3ApplicantStatuses() {
+    if (!confirm('Have you successfully sent the P3 emails via Gmail? This will update the P3 applicant statuses in the database.')) {
+        return;
+    }
+    
+    console.log('🎯 FIXED: Updating P3 applicant statuses in database...');
+    console.log('P3 Passed userIds:', window.p3EmailsToUpdate.passed);
+    console.log('P3 Failed userIds:', window.p3EmailsToUpdate.failed);
+    
+    const updateButton = document.querySelector('#p3StatusUpdateModal .confirm-button');
+    const originalText = updateButton.textContent;
+    updateButton.textContent = 'Updating Database...';
+    updateButton.disabled = true;
+    
+    fetch('/linemanager/applicant-tracker-jobposition/updateP3Statuses', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+            passedUserIds: window.p3EmailsToUpdate.passed,
+            failedUserIds: window.p3EmailsToUpdate.failed
+        }),
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            alert(`P3 applicant statuses updated successfully!\n\nUpdated:\n- ${data.passedUpdated || 0} passed applicants\n- ${data.failedUpdated || 0} failed applicants`);
+            
+            closeModal('p3StatusUpdateModal');
+            
+            // Clear data
+            window.currentP3PassedApplicants = [];
+            window.currentP3FailedApplicants = [];
+            window.p3EmailsToUpdate = { passed: [], failed: [] };
+            
+            // Refresh view
+            setTimeout(() => {
+                const activeFilter = document.querySelector(".filter-button.active");
+                if (activeFilter) {
+                    activeFilter.click();
+                } else {
+                    document.getElementById("filter-all").click();
+                }
+            }, 500);
+        } else {
+            throw new Error(data.message || 'Failed to update P3 statuses');
+        }
+    })
+    .catch(error => {
+        console.error('🎯 FIXED: Error updating P3 statuses:', error);
+        alert('Error updating P3 applicant statuses: ' + error.message);
+        
+        updateButton.textContent = originalText;
+        updateButton.disabled = false;
+    });
+}
+
 
 // FIXED: Setup P3 Finalize Button Event Listener
 document.addEventListener('DOMContentLoaded', function() {
@@ -4829,36 +6161,159 @@ document.addEventListener('DOMContentLoaded', function() {
   });
 });
 
-// FIXED: Check if all P3 applicants are marked
+// Check if all P3 applicants are marked
 function checkAllP3ApplicantsMarked() {
-  const p3DeclaredResultsTable = document.getElementById("p3DeclaredResultsTable");
-  if (!p3DeclaredResultsTable) return true;
-  
-  const rows = p3DeclaredResultsTable.querySelectorAll('tbody tr:not(.section-header-row)');
-  if (rows.length === 0) return true;
-  
-  const relevantRows = Array.from(rows).filter(row => {
-    const statusCell = row.querySelector('td:nth-child(5)');
-    return statusCell && statusCell.textContent.includes('P3');
-  });
-  
-  if (relevantRows.length === 0) return true;
-  
-  return relevantRows.every(row => {
-    if (row.classList.contains('section-header-row') || 
-        row.querySelector('td[colspan]')) {
-      return true;
+    console.log("🎯 FIXED: Checking if all P3 applicants are marked");
+    
+    const p3DeclaredResultsTable = document.getElementById("p3DeclaredResultsTable");
+    if (!p3DeclaredResultsTable) {
+        console.log("No P3 declared results table found");
+        return true;
     }
     
-    const statusCell = row.querySelector('td:nth-child(5)');
-    if (!statusCell) return true;
+    const rows = p3DeclaredResultsTable.querySelectorAll('tbody tr:not(.section-header-row)');
+    if (rows.length === 0) {
+        console.log("No P3 rows found in declared results");
+        return true;
+    }
     
-    const statusText = statusCell.textContent;
-    return statusText.indexOf('PASSED') !== -1 || statusText.indexOf('FAILED') !== -1;
-  });
+    const relevantRows = Array.from(rows).filter(row => {
+        // Skip no-data messages
+        if (row.querySelector('td[colspan]')) return false;
+        
+        // Search for P3 status in any column
+        const cells = row.querySelectorAll('td');
+        for (let i = 0; i < cells.length; i++) {
+            if (cells[i].textContent.includes('P3')) {
+                return true;
+            }
+        }
+        return false;
+    });
+    
+    if (relevantRows.length === 0) {
+        console.log("No relevant P3 rows found");
+        return true;
+    }
+    
+    const allMarked = relevantRows.every(row => {
+        if (row.classList.contains('section-header-row') || 
+            row.querySelector('td[colspan]')) {
+            return true;
+        }
+        
+        // Search for status in any column
+        const cells = row.querySelectorAll('td');
+        let statusText = '';
+        
+        for (let i = 0; i < cells.length; i++) {
+            if (cells[i].textContent.includes('P3')) {
+                statusText = cells[i].textContent;
+                break;
+            }
+        }
+        
+        const isMarked = statusText.indexOf('PASSED') !== -1 || statusText.indexOf('FAILED') !== -1;
+        console.log(`P3 Row status: "${statusText}" - Marked: ${isMarked}`);
+        return isMarked;
+    });
+    
+    console.log(`All P3 applicants marked: ${allMarked}`);
+    return allMarked;
 }
 
 console.log('✅ P3 Gmail Integration Functions Loaded Successfully');
+
+function changeApplicantStatusP3Enhanced(userId) {
+    console.log(`Change Status P3: Starting for userId: ${userId}`);
+    
+    if (!userId || userId === 'undefined' || userId === '') {
+        console.error('Change Status P3: Invalid userId');
+        alert("Error: Cannot identify the applicant to change status");
+        return;
+    }
+
+    const row = document.querySelector(`tr[data-userid="${userId}"]`);
+    if (!row) {
+        console.error(`Change Status P3: Row not found for userId ${userId}`);
+        alert("Error: Cannot find applicant row");
+        return;
+    }
+
+    // Find the status cell by searching for "Status:" or "P3"
+    let statusCell = null;
+    const cells = row.querySelectorAll('td');
+    
+    for (let i = 0; i < cells.length; i++) {
+        const cellText = cells[i].textContent;
+        if (cellText.includes('Status:') || cellText.includes('P3')) {
+            statusCell = cells[i];
+            break;
+        }
+    }
+    
+    if (!statusCell) {
+        console.error('Change Status P3: Status cell not found');
+        return;
+    }
+
+    const currentStatus = statusCell.textContent.trim();
+    console.log(`Change Status P3: Current status for userId ${userId}: ${currentStatus}`);
+
+    let newStatus;
+    let apiEndpoint;
+
+    if (currentStatus.includes('P3')) {
+        if (currentStatus.includes('PASSED')) {
+            newStatus = 'P3 - FAILED (Pending Finalization)';
+            apiEndpoint = 'markAsP3Failed';
+        } else if (currentStatus.includes('FAILED')) {
+            newStatus = 'P3 - PASSED (Pending Finalization)';
+            apiEndpoint = 'markAsP3Passed';
+        } else {
+            newStatus = 'P3 - PASSED (Pending Finalization)';
+            apiEndpoint = 'markAsP3Passed';
+        }
+    } else {
+        console.error('Change Status P3: Unknown status format');
+        alert("Error: Cannot determine how to change this status");
+        return;
+    }
+
+    statusCell.innerHTML = `<span><strong>Status:</strong> ${newStatus}</span>`;
+
+    if (!window.pendingStatusChanges) {
+        window.pendingStatusChanges = {};
+    }
+    window.pendingStatusChanges[userId] = newStatus.includes('PASSED') ? 'PASSED' : 'FAILED';
+
+    console.log(`Change Status P3: Updated to ${newStatus} for userId ${userId}`);
+
+    fetch(`/linemanager/applicant-tracker-jobposition/${apiEndpoint}`, {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ userId: userId }),
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            console.log(`Change Status P3: Successfully updated temporary status for ${userId}`);
+        } else {
+            console.error(`Change Status P3: API error: ${data.message || 'Unknown error'}`);
+            alert("Error updating status: " + (data.message || "Unknown error"));
+            
+            statusCell.innerHTML = `<span><strong>Status:</strong> ${currentStatus}</span>`;
+        }
+    })
+    .catch(error => {
+        console.error('Change Status P3: Network error:', error);
+        alert("Failed to update applicant status.");
+        
+        statusCell.innerHTML = `<span><strong>Status:</strong> ${currentStatus}</span>`;
+    });
+}
 // ============================
 // VISIBILITY & SECTION MANAGEMENT
 // ============================

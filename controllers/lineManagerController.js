@@ -6287,8 +6287,378 @@ console.log('Final applicants list:', applicants);
             return res.status(500).json({ success: false, message: "Error finalizing P3 review: " + error.message });
         }
     },
-    
+    // Function to prepare P3 finalization with Gmail compose
+finalizeP3ReviewGmail: async function(req, res) {
+    try {
+        console.log('✅ [LineManager] Preparing P3 review finalization with Gmail compose integration');
+        
+        const { passedUserIds, failedUserIds } = req.body;
+        
+        if (!passedUserIds || !failedUserIds) {
+            return res.status(400).json({ success: false, message: "Missing user IDs" });
+        }
+        
+        console.log(`✅ [LineManager] P3 Finalization: ${passedUserIds.length} passed, ${failedUserIds.length} failed`);
+        
+        // Fetch email addresses and applicant details for passed users
+        let passedApplicants = [];
+        if (passedUserIds.length > 0) {
+            const { data: passedData, error: passedError } = await supabase
+                .from('applicantaccounts')
+                .select(`
+                    userId,
+                    firstName,
+                    lastName,
+                    jobId,
+                    useraccounts!inner(userEmail)
+                `)
+                .in('userId', passedUserIds);
+                
+            if (passedError) {
+                console.error('❌ [LineManager] Error fetching passed applicants:', passedError);
+                return res.status(500).json({ success: false, message: "Error fetching passed applicants data" });
+            }
+            
+            passedApplicants = passedData.map(applicant => ({
+                userId: applicant.userId,
+                name: `${applicant.firstName} ${applicant.lastName}`,
+                email: applicant.useraccounts.userEmail,
+                jobId: applicant.jobId
+            }));
+        }
+        
+        // Fetch email addresses and applicant details for failed users
+        let failedApplicants = [];
+        if (failedUserIds.length > 0) {
+            const { data: failedData, error: failedError } = await supabase
+                .from('applicantaccounts')
+                .select(`
+                    userId,
+                    firstName,
+                    lastName,
+                    jobId,
+                    useraccounts!inner(userEmail)
+                `)
+                .in('userId', failedUserIds);
+                
+            if (failedError) {
+                console.error('❌ [LineManager] Error fetching failed applicants:', failedError);
+                return res.status(500).json({ success: false, message: "Error fetching failed applicants data" });
+            }
+            
+            failedApplicants = failedData.map(applicant => ({
+                userId: applicant.userId,
+                name: `${applicant.firstName} ${applicant.lastName}`,
+                email: applicant.useraccounts.userEmail,
+                jobId: applicant.jobId
+            }));
+        }
+        
+        // Fetch job titles for email templates
+        const allJobIds = [...new Set([...passedApplicants.map(a => a.jobId), ...failedApplicants.map(a => a.jobId)])];
+        let jobTitles = {};
+        
+        if (allJobIds.length > 0) {
+            const { data: jobData, error: jobError } = await supabase
+                .from('jobpositions')
+                .select('jobId, jobTitle')
+                .in('jobId', allJobIds);
+                
+            if (!jobError && jobData) {
+                jobTitles = jobData.reduce((acc, job) => {
+                    acc[job.jobId] = job.jobTitle;
+                    return acc;
+                }, {});
+            }
+        }
+        
+        // Add job titles to applicant data
+        passedApplicants = passedApplicants.map(applicant => ({
+            ...applicant,
+            jobTitle: jobTitles[applicant.jobId] || 'Position'
+        }));
+        
+        failedApplicants = failedApplicants.map(applicant => ({
+            ...applicant,
+            jobTitle: jobTitles[applicant.jobId] || 'Position'
+        }));
+        
+        // Return applicant data for Gmail compose
+        return res.status(200).json({ 
+            success: true,
+            requiresGmailCompose: true,
+            passedApplicants: passedApplicants,
+            failedApplicants: failedApplicants,
+            message: "Ready for Gmail compose"
+        });
+        
+    } catch (error) {
+        console.error('❌ [LineManager] Error preparing P3 review finalization:', error);
+        return res.status(500).json({ success: false, message: "Error preparing P3 review finalization: " + error.message });
+    }
+},
 
+// Function to get P3 email templates
+getP3EmailTemplates: async function(req, res) {
+    try {
+        const templates = {
+            passed: {
+                subject: 'Congratulations! Job Offer - Prime Infrastructure',
+                template: `Dear {applicantName},
+
+Congratulations! We are delighted to inform you that you have successfully passed our final interview process for the {jobTitle} position at {companyName}.
+
+We are pleased to extend a formal job offer to you. Our HR team will be contacting you within the next 1-2 business days with detailed information regarding:
+
+• Your compensation package
+• Start date options
+• Benefits information
+• Next steps in the onboarding process
+
+We are excited about the possibility of you joining our team and look forward to your positive response.
+
+Best regards,
+The {companyName} Recruitment Team`
+            },
+            failed: {
+                subject: 'Thank You for Your Interest - Interview Process Complete',
+                template: `Dear {applicantName},
+
+Thank you for taking the time to participate in our interview process for the {jobTitle} position at {companyName}.
+
+After careful consideration of all candidates, we regret to inform you that we have decided to proceed with another candidate whose background more closely matches our current requirements.
+
+We were impressed by your qualifications and experience, and we encourage you to apply for future opportunities that may be a better fit for your skills and career goals.
+
+We wish you the best of luck in your job search and future endeavors.
+
+Best regards,
+The {companyName} Recruitment Team`
+            }
+        };
+        
+        return res.status(200).json({ success: true, templates });
+        
+    } catch (error) {
+        console.error('❌ [LineManager] Error getting P3 email templates:', error);
+        return res.status(500).json({ success: false, message: "Error getting P3 email templates: " + error.message });
+    }
+},
+// Add P3 email templates function
+getP3EmailTemplates: async function(req, res) {
+    try {
+        const { getEmailTemplateData } = require('../utils/emailService');
+        const templates = getEmailTemplateData('P3'); // Pass 'P3' phase
+        return res.status(200).json({ success: true, templates });
+        
+    } catch (error) {
+        console.error('❌ [LineManager] Error getting P3 email templates:', error);
+        return res.status(500).json({ success: false, message: "Error getting P3 email templates: " + error.message });
+    }
+},
+
+// Add P3 status update function
+updateP3Statuses: async function(req, res) {
+    try {
+        console.log('✅ [LineManager] Updating P3 statuses after Gmail emails sent');
+        
+        const { passedUserIds, failedUserIds } = req.body;
+        
+        if (!passedUserIds || !failedUserIds) {
+            return res.status(400).json({ success: false, message: "Missing user IDs" });
+        }
+        
+        console.log(`✅ [LineManager] P3 Status Update: ${passedUserIds.length} passed, ${failedUserIds.length} failed`);
+        
+        let updateResults = {
+            passed: { updated: 0, errors: [] },
+            failed: { updated: 0, errors: [] }
+        };
+        
+        // Update passed applicants
+        for (const userId of passedUserIds) {
+            try {
+                console.log(`✅ [LineManager] Updating P3 PASSED status for userId: ${userId}`);
+                
+                // Update applicant status in the database
+                const { data: updateData, error: updateError } = await supabase
+                    .from('applicantaccounts')
+                    .update({ applicantStatus: 'P3 - PASSED' })
+                    .eq('userId', userId);
+                    
+                if (updateError) {
+                    console.error(`❌ [LineManager] Error updating status for ${userId}:`, updateError);
+                    updateResults.passed.errors.push(`${userId}: ${updateError.message}`);
+                    continue;
+                }
+                
+                updateResults.passed.updated++;
+                
+                // Add chatbot message
+                const { data: chatData, error: chatError } = await supabase
+                    .from('chatbot_history')
+                    .insert([{
+                        userId,
+                        message: JSON.stringify({ text: "Congratulations! You have successfully passed the final interview stage. We will be contacting you soon with job offer details." }),
+                        sender: 'bot',
+                        timestamp: new Date().toISOString(),
+                        applicantStage: 'P3 - PASSED'
+                    }]);
+                    
+                if (chatError) {
+                    console.error(`❌ [LineManager] Error adding chat message for ${userId}:`, chatError);
+                }
+                
+            } catch (error) {
+                console.error(`❌ [LineManager] Error processing passed applicant ${userId}:`, error);
+                updateResults.passed.errors.push(`${userId}: ${error.message}`);
+            }
+        }
+        
+        // Update failed applicants
+        for (const userId of failedUserIds) {
+            try {
+                console.log(`✅ [LineManager] Updating P3 FAILED status for userId: ${userId}`);
+                
+                // Update applicant status in the database
+                const { data: updateData, error: updateError } = await supabase
+                    .from('applicantaccounts')
+                    .update({ applicantStatus: 'P3 - FAILED' })
+                    .eq('userId', userId);
+                    
+                if (updateError) {
+                    console.error(`❌ [LineManager] Error updating status for ${userId}:`, updateError);
+                    updateResults.failed.errors.push(`${userId}: ${updateError.message}`);
+                    continue;
+                }
+                
+                updateResults.failed.updated++;
+                
+                // Add chatbot message
+                const { data: chatData, error: chatError } = await supabase
+                    .from('chatbot_history')
+                    .insert([{
+                        userId,
+                        message: JSON.stringify({ text: "Thank you for participating in our interview process. After careful consideration, we regret to inform you that we will not be proceeding with your application at this time." }),
+                        sender: 'bot',
+                        timestamp: new Date().toISOString(),
+                        applicantStage: 'P3 - FAILED'
+                    }]);
+                    
+                if (chatError) {
+                    console.error(`❌ [LineManager] Error adding chat message for ${userId}:`, chatError);
+                }
+                
+            } catch (error) {
+                console.error(`❌ [LineManager] Error processing failed applicant ${userId}:`, error);
+                updateResults.failed.errors.push(`${userId}: ${error.message}`);
+            }
+        }
+        
+        // Prepare response
+        const totalUpdated = updateResults.passed.updated + updateResults.failed.updated;
+        const totalErrors = updateResults.passed.errors.length + updateResults.failed.errors.length;
+        
+        if (totalErrors > 0) {
+            console.warn(`⚠️ [LineManager] P3 status update completed with ${totalErrors} errors`);
+            return res.status(207).json({ // 207 Multi-Status for partial success
+                success: true,
+                message: `P3 statuses updated with some errors. ${totalUpdated} successful, ${totalErrors} failed.`,
+                updateResults: updateResults,
+                passedUpdated: updateResults.passed.updated,
+                failedUpdated: updateResults.failed.updated,
+                totalErrors: totalErrors
+            });
+        } else {
+            console.log(`✅ [LineManager] P3 status update completed successfully`);
+            return res.status(200).json({ 
+                success: true, 
+                message: "P3 statuses updated successfully. All applicants have been processed.",
+                updateResults: updateResults,
+                passedUpdated: updateResults.passed.updated,
+                failedUpdated: updateResults.failed.updated,
+                totalUpdated: totalUpdated
+            });
+        }
+        
+    } catch (error) {
+        console.error('❌ [LineManager] Error updating P3 statuses:', error);
+        return res.status(500).json({ 
+            success: false, 
+            message: "Error updating P3 statuses: " + error.message 
+        });
+    }
+},
+
+getP3Assessment: async function(req, res) {
+    try {
+        const { userId } = req.params;
+        
+        console.log('Fetching P3 assessment for userId:', userId);
+        
+        if (!userId) {
+            return res.status(400).json({ 
+                success: false, 
+                message: 'User ID is required' 
+            });
+        }
+        
+        // Fetch the P3 panel screening assessment data
+        const { data: assessment, error: assessmentError } = await supabase
+            .from('applicant_panelscreening_assessment')
+            .select(`
+                userId,
+                totalAssessmentRating,
+                conclusion,
+                interviewDate,
+                recommendationReason
+            `)
+            .eq('userId', userId)
+            .single();
+            
+        if (assessmentError) {
+            console.error('Error fetching P3 assessment:', assessmentError);
+            return res.status(404).json({ 
+                success: false, 
+                message: 'P3 assessment not found',
+                error: assessmentError.message 
+            });
+        }
+        
+        // Fetch applicant basic info for context
+        const { data: applicant, error: applicantError } = await supabase
+            .from('applicantaccounts')
+            .select('firstName, lastName, applicantStatus')
+            .eq('userId', userId)
+            .single();
+        
+        const responseData = {
+            success: true,
+            assessmentData: {
+                userId: userId,
+                firstName: applicant?.firstName || 'N/A',
+                lastName: applicant?.lastName || 'N/A',
+                status: applicant?.applicantStatus || 'N/A',
+                totalAssessmentRating: assessment?.totalAssessmentRating || 'N/A',
+                conclusion: assessment?.conclusion || 'N/A',
+                interviewDate: assessment?.interviewDate || 'N/A',
+                recommendationReason: assessment?.recommendationReason || 'N/A'
+            }
+        };
+        
+        console.log('Returning P3 assessment data:', responseData);
+        
+        return res.json(responseData);
+        
+    } catch (error) {
+        console.error('Error in getP3Assessment:', error);
+        return res.status(500).json({
+            success: false,
+            message: 'Error fetching P3 assessment data',
+            error: error.message
+        });
+    }
+},
     // updateP1LineManagerPassed: async function(req, res) {
     //     try {
     //         const { passedUserIds, failedUserIds } = req.body;

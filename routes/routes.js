@@ -232,6 +232,10 @@ router.get('/linemanager/view-interview-form-by-userid/:userId', lineManagerCont
 router.get('/linemanager/passp3-applicant/:applicantId', lineManagerController.passP3Applicant);
 router.get('/linemanager/rejectp3-applicant/:applicantId', lineManagerController.rejectP3Applicant);
 router.post('/reject-applicant/:applicantId', lineManagerController.rejectApplicant); // For form submission with reason
+router.post('/linemanager/applicant-tracker-jobposition/finalizeP3ReviewGmail', lineManagerController.finalizeP3ReviewGmail);
+router.get('/linemanager/applicant-tracker-jobposition/getP3EmailTemplates', lineManagerController.getP3EmailTemplates);
+router.post('/linemanager/applicant-tracker-jobposition/updateP3Statuses', lineManagerController.updateP3Statuses);
+router.get('/linemanager/get-p3-assessment/:userId', lineManagerController.getP3Assessment);
 
 // API routes for handling pass/reject actions from main applicant list
 router.post('/handle-pass-applicant', lineManagerController.handlePassApplicant);
