@@ -2198,7 +2198,7 @@ sendOnboardingChecklist: async function(req, res) {
                             text: "Congratulations! We're thrilled to inform you that you have successfully passed all phases of our screening processes. Please press the button below if you would like to accept the job offer for " + jobTitle + ".",
                             buttons: [
                                 {
-                                    text: "Accept Job Offer",
+                                    text: "View Job Offer",
                                     url: "/applicant/job-offer"
                                 }
                             ]

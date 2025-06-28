@@ -29,66 +29,42 @@ async function getLeaveTypeName(leaveTypeId) {
 function isValidQuarter(quarter) {
     return ['Q1', 'Q2', 'Q3', 'Q4'].includes(quarter);
 }
-
-// Helper function to calculate progression insights
 function calculateProgressionInsights(allFeedbackItems) {
     const insights = {
         improved: [],
         maintained: [],
         declined: [],
-        newInSecondHalf: [],
         summary: {
-            totalImproved: 0,
-            totalDeclined: 0,
-            averageImprovement: 0
+            totalItems: allFeedbackItems.length,
+            improvedCount: 0,
+            maintainedCount: 0,
+            declinedCount: 0
         }
     };
     
     allFeedbackItems.forEach(item => {
-        const q1q2Quarters = ['Q1', 'Q2'].filter(q => item.quarterRatings[q]);
-        const q3q4Quarters = ['Q3', 'Q4'].filter(q => item.quarterRatings[q]);
-        
-        if (q1q2Quarters.length > 0 && q3q4Quarters.length > 0) {
-            // Calculate average for first half and second half
-            const firstHalfAvg = q1q2Quarters.reduce((sum, q) => sum + item.quarterRatings[q], 0) / q1q2Quarters.length;
-            const secondHalfAvg = q3q4Quarters.reduce((sum, q) => sum + item.quarterRatings[q], 0) / q3q4Quarters.length;
+        const q1q2Average = item.quarterRatings.Q1 && item.quarterRatings.Q2 
+            ? (item.quarterRatings.Q1 + item.quarterRatings.Q2) / 2 
+            : null;
+        const q3q4Average = item.quarterRatings.Q3 && item.quarterRatings.Q4 
+            ? (item.quarterRatings.Q3 + item.quarterRatings.Q4) / 2 
+            : null;
             
-            const improvement = secondHalfAvg - firstHalfAvg;
+        if (q1q2Average && q3q4Average) {
+            const difference = q3q4Average - q1q2Average;
             
-            if (Math.abs(improvement) < 0.2) {
-                insights.maintained.push({
-                    ...item,
-                    firstHalfAvg,
-                    secondHalfAvg,
-                    improvement: 0
-                });
-            } else if (improvement > 0) {
-                insights.improved.push({
-                    ...item,
-                    firstHalfAvg,
-                    secondHalfAvg,
-                    improvement
-                });
-                insights.summary.totalImproved++;
+            if (difference > 0.2) {
+                insights.improved.push({ ...item, improvement: difference });
+                insights.summary.improvedCount++;
+            } else if (difference < -0.2) {
+                insights.declined.push({ ...item, decline: Math.abs(difference) });
+                insights.summary.declinedCount++;
             } else {
-                insights.declined.push({
-                    ...item,
-                    firstHalfAvg,
-                    secondHalfAvg,
-                    improvement
-                });
-                insights.summary.totalDeclined++;
+                insights.maintained.push({ ...item, stability: difference });
+                insights.summary.maintainedCount++;
             }
-        } else if (q3q4Quarters.length > 0 && q1q2Quarters.length === 0) {
-            // New skills/objectives introduced in second half
-            insights.newInSecondHalf.push(item);
         }
     });
-    
-    // Calculate average improvement
-    const totalImprovements = [...insights.improved, ...insights.declined].map(item => item.improvement);
-    insights.summary.averageImprovement = totalImprovements.length > 0 ? 
-        totalImprovements.reduce((sum, imp) => sum + imp, 0) / totalImprovements.length : 0;
     
     return insights;
 }
@@ -9822,109 +9798,360 @@ getMidYearIDPViewData: async function(req, res) {
         });
     }
 },
+getFinalYearIDP: async function(req, res) {
+    try {
+        const userId = req.params.userId;
+        console.log("Fetching Final-Year IDP for userId:", userId);
 
-    getFinalYearIDP: async function(req, res) {
-        try {
-            const userId = req.params.userId;
-            console.log("Fetching Final-Year IDP for userId:", userId);
-    
-            if (!userId) {
-                console.error("User ID is missing");
-                return res.status(400).json({ success: false, message: "User ID is required" });
-            }
-    
-            // First, get user information
-            const { data: userData, error: userError } = await supabase
-                .from("useraccounts")
-                .select(`
-                    userId,
-                    userEmail,
-                    staffaccounts (
-                        firstName,
-                        lastName,
-                        departmentId,
-                        departments (deptName),
-                        jobpositions (jobTitle)
-                    )
-                `)
-                .eq("userId", userId)
-                .single();
-    
-            if (userError) {
-                console.error("Error fetching user data:", userError);
-                return res.status(500).json({ success: false, message: "Error fetching user data" });
-            }
-    
-            // Then, get the Final-Year IDP data - without filtering by job or year
-            const { data: finalYearData, error: finalYearError } = await supabase
-                .from("finalyearidps")
-                .select("*")
-                .eq("userId", userId)
-                .single();
-    
-            if (finalYearError && finalYearError.code !== 'PGRST116') { // PGRST116 is "no rows returned"
-                console.error("Error fetching finalyear IDP:", finalYearError);
-                return res.status(500).json({ success: false, message: "Error fetching finalyear IDP data" });
-            }
-    
-            // Format the user data
-            const user = {
-                userId: userData.userId,
-                userEmail: userData.userEmail,
-                firstName: userData.staffaccounts[0]?.firstName || "",
-                lastName: userData.staffaccounts[0]?.lastName || "",
-                jobTitle: userData.staffaccounts[0]?.jobpositions?.jobTitle || "",
-                departmentName: userData.staffaccounts[0]?.departments?.deptName || ""
-                // Removed jobId from the user object
-            };
-    
-            // Determine view state - whether to show form or view-only mode
-            const viewState = {
-                viewOnlyStatus: {
-                    finalyearidp: !!finalYearData // true if finalYearData exists, false otherwise
-                },
-                finalYearData // Pass the data for view-only mode
-            };
-    
-            // If it's an API request (AJAX), return JSON
-            if (req.xhr || req.headers.accept?.includes('application/json')) {
-                return res.status(200).json({ 
-                    success: true, 
-                    user,
-                    viewState
-                });
-            }
-    
-            // Otherwise, render the finalyear IDP page
-            return res.render('staffpages/linemanager_pages/finalyear-idp', { 
+        if (!userId) {
+            console.error("User ID is missing");
+            return res.status(400).json({ success: false, message: "User ID is required" });
+        }
+
+        // First, get user information
+        const { data: userData, error: userError } = await supabase
+            .from("useraccounts")
+            .select(`
+                userId,
+                userEmail,
+                staffaccounts (
+                    firstName,
+                    lastName,
+                    jobId,
+                    departmentId,
+                    departments (deptName),
+                    jobpositions (jobTitle)
+                )
+            `)
+            .eq("userId", userId)
+            .single();
+
+        if (userError) {
+            console.error("Error fetching user data:", userError);
+            return res.status(500).json({ success: false, message: "Error fetching user data" });
+        }
+
+        // Then, get the Final-Year IDP data INCLUDING training categories and top dev areas
+        const { data: finalYearData, error: finalYearError } = await supabase
+            .from("finalyearidps")
+            .select("*")
+            .eq("userId", userId)
+            .single();
+
+        if (finalYearError && finalYearError.code !== 'PGRST116') { // PGRST116 is "no rows returned"
+            console.error("Error fetching finalyear IDP:", finalYearError);
+            return res.status(500).json({ success: false, message: "Error fetching finalyear IDP data" });
+        }
+
+        // Format the user data
+        const user = {
+            userId: userData.userId,
+            userEmail: userData.userEmail,
+            firstName: userData.staffaccounts[0]?.firstName || "",
+            lastName: userData.staffaccounts[0]?.lastName || "",
+            jobTitle: userData.staffaccounts[0]?.jobpositions?.jobTitle || "",
+            departmentName: userData.staffaccounts[0]?.departments?.deptName || ""
+        };
+
+        // ENHANCED: Include training categories and top dev areas in the finalYearData
+        if (finalYearData) {
+            console.log('Final-Year IDP data found with enhanced features:', {
+                hasTrainingCategories: !!finalYearData.trainingCategories,
+                categoriesCount: finalYearData.trainingCategories ? finalYearData.trainingCategories.length : 0,
+                hasTrainingRemarks: !!finalYearData.trainingRemarks,
+                hasTopDevAreas: !!finalYearData.topDevAreas,
+                topDevAreasCount: finalYearData.topDevAreas ? finalYearData.topDevAreas.length : 0
+            });
+        }
+
+        // Determine view state - whether to show form or view-only mode
+        const viewState = {
+            viewOnlyStatus: {
+                finalyearidp: !!finalYearData // true if finalYearData exists, false otherwise
+            },
+            finalYearData // Pass the complete data including training categories and top dev areas for view-only mode
+        };
+
+        // If it's an API request (AJAX), return JSON
+        if (req.xhr || req.headers.accept?.includes('application/json')) {
+            return res.status(200).json({ 
+                success: true, 
                 user,
                 viewState
             });
-    
-        } catch (error) {
-            console.error("Error in getFinalYearIDP:", error);
-            
-            // If it's an API request (AJAX), return JSON error
-            if (req.xhr || req.headers.accept?.includes('application/json')) {
-                return res.status(500).json({ 
-                    success: false, 
-                    message: "An error occurred while fetching the Final-Year IDP",
-                    error: error.message 
-                });
-            }
-    
-            // Otherwise, redirect with error message
-            req.flash('errors', { dbError: 'An error occurred while loading the Final-Year IDP.' });
-            return res.redirect('/linemanager/records-performance-tracker');
         }
-    },
 
-    getFinalYearFeedbackAggregates: async function(req, res) {
+        // Otherwise, render the finalyear IDP page
+        return res.render('staffpages/linemanager_pages/finalyear-idp', { 
+            user,
+            viewState
+        });
+
+    } catch (error) {
+        console.error("Error in getFinalYearIDP:", error);
+        
+        // If it's an API request (AJAX), return JSON error
+        if (req.xhr || req.headers.accept?.includes('application/json')) {
+            return res.status(500).json({ 
+                success: false, 
+                message: "An error occurred while fetching the Final-Year IDP",
+                error: error.message 
+            });
+        }
+
+        // Otherwise, redirect with error message
+        req.flash('errors', { dbError: 'An error occurred while loading the Final-Year IDP.' });
+        return res.redirect('/linemanager/records-performance-tracker');
+    }
+},
+getFinalYearIDP: async function(req, res) {
+    try {
+        const userId = req.params.userId;
+        console.log("Fetching Final-Year IDP for userId:", userId);
+
+        if (!userId) {
+            console.error("User ID is missing");
+            return res.status(400).json({ success: false, message: "User ID is required" });
+        }
+
+        // First, get user information
+        const { data: userData, error: userError } = await supabase
+            .from("useraccounts")
+            .select(`
+                userId,
+                userEmail,
+                staffaccounts (
+                    firstName,
+                    lastName,
+                    jobId,
+                    departmentId,
+                    departments (deptName),
+                    jobpositions (jobTitle)
+                )
+            `)
+            .eq("userId", userId)
+            .single();
+
+        if (userError) {
+            console.error("Error fetching user data:", userError);
+            return res.status(500).json({ success: false, message: "Error fetching user data" });
+        }
+
+        // Then, get the Final-Year IDP data INCLUDING training categories and top dev areas
+        const { data: finalYearData, error: finalYearError } = await supabase
+            .from("finalyearidps")
+            .select("*")
+            .eq("userId", userId)
+            .single();
+
+        if (finalYearError && finalYearError.code !== 'PGRST116') { // PGRST116 is "no rows returned"
+            console.error("Error fetching finalyear IDP:", finalYearError);
+            return res.status(500).json({ success: false, message: "Error fetching finalyear IDP data" });
+        }
+
+        // Format the user data
+        const user = {
+            userId: userData.userId,
+            userEmail: userData.userEmail,
+            firstName: userData.staffaccounts[0]?.firstName || "",
+            lastName: userData.staffaccounts[0]?.lastName || "",
+            jobTitle: userData.staffaccounts[0]?.jobpositions?.jobTitle || "",
+            departmentName: userData.staffaccounts[0]?.departments?.deptName || ""
+        };
+
+        // ENHANCED: Include training categories and top dev areas in the finalYearData
+        if (finalYearData) {
+            console.log('Final-Year IDP data found with enhanced features:', {
+                hasTrainingCategories: !!finalYearData.trainingCategories,
+                categoriesCount: finalYearData.trainingCategories ? finalYearData.trainingCategories.length : 0,
+                hasTrainingRemarks: !!finalYearData.trainingRemarks,
+                hasTopDevAreas: !!finalYearData.topDevAreas,
+                topDevAreasCount: finalYearData.topDevAreas ? finalYearData.topDevAreas.length : 0
+            });
+        }
+
+        // Determine view state - whether to show form or view-only mode
+        const viewState = {
+            viewOnlyStatus: {
+                finalyearidp: !!finalYearData // true if finalYearData exists, false otherwise
+            },
+            finalYearData // Pass the complete data including training categories and top dev areas for view-only mode
+        };
+
+        // If it's an API request (AJAX), return JSON
+        if (req.xhr || req.headers.accept?.includes('application/json')) {
+            return res.status(200).json({ 
+                success: true, 
+                user,
+                viewState
+            });
+        }
+
+        // Otherwise, render the finalyear IDP page
+        return res.render('staffpages/linemanager_pages/finalyear-idp', { 
+            user,
+            viewState
+        });
+
+    } catch (error) {
+        console.error("Error in getFinalYearIDP:", error);
+        
+        // If it's an API request (AJAX), return JSON error
+        if (req.xhr || req.headers.accept?.includes('application/json')) {
+            return res.status(500).json({ 
+                success: false, 
+                message: "An error occurred while fetching the Final-Year IDP",
+                error: error.message 
+            });
+        }
+
+        // Otherwise, redirect with error message
+        req.flash('errors', { dbError: 'An error occurred while loading the Final-Year IDP.' });
+        return res.redirect('/linemanager/records-performance-tracker');
+    }
+},
+
+getFinalYearIDPWithTrainings: async function(req, res) {
+    try {
+        const userId = req.params.userId;
+        
+        console.log("=== getFinalYearIDPWithTrainings DEBUG ===");
+        console.log('Fetching Final-Year IDP with training categories for userId:', userId);
+
+        if (!userId) {
+            return res.status(400).json({ success: false, message: "User ID is required" });
+        }
+
+        // Get Final-Year IDP data including trainingCategories and topDevAreas JSONB fields
+        const { data: finalyearData, error: finalyearError } = await supabase
+            .from("finalyearidps")
+            .select("*")
+            .eq("userId", userId)
+            .single();
+
+        if (finalyearError && finalyearError.code !== 'PGRST116') {
+            console.error("Error fetching Final-Year IDP:", finalyearError);
+            return res.status(500).json({ success: false, message: "Error fetching Final-Year IDP data" });
+        }
+
+        console.log("Raw finalyear data from database:", finalyearData);
+
+        let responseData = {
+            finalYearData: finalyearData,
+            trainingCategories: [],
+            trainingRemarks: null,
+            topDevAreas: [] // ENHANCED: Include top development areas
+        };
+
+        if (finalyearData) {
+            console.log("Processing finalyear data...");
+            console.log("Raw trainingCategories from DB:", finalyearData.trainingCategories);
+            console.log("Raw topDevAreas from DB:", finalyearData.topDevAreas);
+            console.log("Type of trainingCategories:", typeof finalyearData.trainingCategories);
+            console.log("Type of topDevAreas:", typeof finalyearData.topDevAreas);
+            
+            // ENHANCED: Extract training categories from JSONB field with debugging
+            if (finalyearData.trainingCategories) {
+                try {
+                    // Parse if it's a string, or use directly if already parsed
+                    let categories = finalyearData.trainingCategories;
+                    
+                    if (typeof categories === 'string') {
+                        console.log("Parsing categories from JSON string");
+                        categories = JSON.parse(categories);
+                    }
+                    
+                    if (Array.isArray(categories)) {
+                        console.log('Found Final-Year training categories in JSONB:', categories);
+                        responseData.trainingCategories = categories;
+                    } else {
+                        console.log('Final-Year training categories is not an array:', categories);
+                        responseData.trainingCategories = [];
+                    }
+                } catch (parseError) {
+                    console.error('Error parsing Final-Year training categories:', parseError);
+                    console.error('Raw value:', finalyearData.trainingCategories);
+                    responseData.trainingCategories = [];
+                }
+            } else {
+                console.log('No Final-Year training categories found in database');
+            }
+
+            // ENHANCED: Extract top development areas from JSONB field
+            if (finalyearData.topDevAreas) {
+                try {
+                    let topDevAreas = finalyearData.topDevAreas;
+                    
+                    if (typeof topDevAreas === 'string') {
+                        console.log("Parsing topDevAreas from JSON string");
+                        topDevAreas = JSON.parse(topDevAreas);
+                    }
+                    
+                    if (Array.isArray(topDevAreas)) {
+                        console.log('Found Final-Year top development areas in JSONB:', topDevAreas);
+                        responseData.topDevAreas = topDevAreas;
+                    } else {
+                        console.log('Final-Year top development areas is not an array:', topDevAreas);
+                        responseData.topDevAreas = [];
+                    }
+                } catch (parseError) {
+                    console.error('Error parsing Final-Year top development areas:', parseError);
+                    console.error('Raw value:', finalyearData.topDevAreas);
+                    responseData.topDevAreas = [];
+                }
+            } else {
+                console.log('No Final-Year top development areas found in database');
+            }
+
+            // Extract training remarks
+            if (finalyearData.trainingRemarks) {
+                console.log('Found Final-Year training remarks:', finalyearData.trainingRemarks);
+                responseData.trainingRemarks = finalyearData.trainingRemarks;
+            }
+        }
+
+        console.log('Final Final-Year response data structure:', {
+            categoriesCount: responseData.trainingCategories.length,
+            categories: responseData.trainingCategories,
+            topDevAreasCount: responseData.topDevAreas.length,
+            topDevAreas: responseData.topDevAreas,
+            hasRemarks: !!responseData.trainingRemarks
+        });
+        console.log("=== END getFinalYearIDPWithTrainings DEBUG ===");
+
+        return res.status(200).json({
+            success: true,
+            data: responseData,
+            debug: {
+                rawTrainingCategories: finalyearData?.trainingCategories,
+                rawTopDevAreas: finalyearData?.topDevAreas,
+                processedCategories: responseData.trainingCategories,
+                processedTopDevAreas: responseData.topDevAreas,
+                categoriesType: typeof finalyearData?.trainingCategories,
+                topDevAreasType: typeof finalyearData?.topDevAreas
+            }
+        });
+
+    } catch (error) {
+        console.error("=== ERROR in getFinalYearIDPWithTrainings ===");
+        console.error("Error:", error);
+        console.error("Error stack:", error.stack);
+        console.error("=== END ERROR ===");
+        
+        return res.status(500).json({ 
+            success: false, 
+            message: "An error occurred while fetching Final-Year IDP data",
+            error: error.message 
+        });
+    }
+},
+
+getFinalYearFeedbackAggregates: async function(req, res) {
     try {
         const userId = req.params.userId;
         const selectedYear = req.query.year || new Date().getFullYear();
         
-        console.log(`Fetching Final-Year feedback aggregates for userId: ${userId}, year: ${selectedYear}`);
+        console.log(`Fetching Final-Year feedback aggregates (Q3-Q4 ONLY) for userId: ${userId}, year: ${selectedYear}`);
         
         if (!userId) {
             return res.status(400).json({
@@ -9949,39 +10176,42 @@ getMidYearIDPViewData: async function(req, res) {
         
         const jobId = staffData.jobId;
         
-        // Get ALL four quarters' feedback records
-        const quarterPromises = [
-            supabase.from('feedbacks_Q1').select('feedbackq1_Id').eq('userId', userId).eq('jobId', jobId).eq('year', selectedYear).maybeSingle(),
-            supabase.from('feedbacks_Q2').select('feedbackq2_Id').eq('userId', userId).eq('jobId', jobId).eq('year', selectedYear).maybeSingle(),
-            supabase.from('feedbacks_Q3').select('feedbackq3_Id').eq('userId', userId).eq('jobId', jobId).eq('year', selectedYear).maybeSingle(),
-            supabase.from('feedbacks_Q4').select('feedbackq4_Id').eq('userId', userId).eq('jobId', jobId).eq('year', selectedYear).maybeSingle()
-        ];
-        
-        const quarterResults = await Promise.all(quarterPromises);
-        
-        // Check for errors in any quarter
-        for (let i = 0; i < quarterResults.length; i++) {
-            const { error } = quarterResults[i];
-            if (error && error.code !== 'PGRST116') {
-                console.error(`Error fetching Q${i+1} feedback:`, error);
-                return res.status(500).json({
-                    success: false,
-                    message: `Error retrieving Q${i+1} feedback records.`
-                });
-            }
+        // CRITICAL: Get ONLY Q3 and Q4 feedback records for Final-Year
+        const { data: q3Feedback, error: q3Error } = await supabase
+            .from('feedbacks_Q3')
+            .select('feedbackq3_Id')
+            .eq('userId', userId)
+            .eq('jobId', jobId)
+            .eq('year', selectedYear)
+            .maybeSingle();
+            
+        const { data: q4Feedback, error: q4Error } = await supabase
+            .from('feedbacks_Q4')
+            .select('feedbackq4_Id')
+            .eq('userId', userId)
+            .eq('jobId', jobId)
+            .eq('year', selectedYear)
+            .maybeSingle();
+            
+        if ((q3Error && q3Error.code !== 'PGRST116') || (q4Error && q4Error.code !== 'PGRST116')) {
+            console.error('Error fetching Q3-Q4 feedback records:', { q3Error, q4Error });
+            return res.status(500).json({
+                success: false,
+                message: "Error retrieving Q3-Q4 feedback records."
+            });
         }
         
         // Initialize aggregated data structures
         const objectiveAggregates = [];
         const skillAggregates = [];
         
-        // Process all four quarters' feedback data
+        // CRITICAL: Process ONLY Q3 and Q4 feedback data for Final-Year
         const quarterData = [
-            { quarter: 'Q1', feedbackId: quarterResults[0].data?.feedbackq1_Id, idField: 'feedbackq1_Id' },
-            { quarter: 'Q2', feedbackId: quarterResults[1].data?.feedbackq2_Id, idField: 'feedbackq2_Id' },
-            { quarter: 'Q3', feedbackId: quarterResults[2].data?.feedbackq3_Id, idField: 'feedbackq3_Id' },
-            { quarter: 'Q4', feedbackId: quarterResults[3].data?.feedbackq4_Id, idField: 'feedbackq4_Id' }
+            { quarter: 'Q3', feedbackId: q3Feedback?.feedbackq3_Id, idField: 'feedbackq3_Id' },
+            { quarter: 'Q4', feedbackId: q4Feedback?.feedbackq4_Id, idField: 'feedbackq4_Id' }
         ];
+        
+        console.log('Processing Final-Year quarters:', quarterData.map(q => q.quarter));
         
         // Get objectives data
         const { data: objectiveSettings, error: objSettingsError } = await supabase
@@ -10038,14 +10268,14 @@ getMidYearIDPViewData: async function(req, res) {
             });
         }
         
-        // Process each quarter's feedback
+        // Process each quarter's feedback (Q3 and Q4 only)
         for (const { quarter, feedbackId, idField } of quarterData) {
             if (!feedbackId) {
                 console.log(`No ${quarter} feedback found, skipping...`);
                 continue;
             }
             
-            console.log(`Processing ${quarter} feedback with ID: ${feedbackId}`);
+            console.log(`Processing Final-Year ${quarter} feedback with ID: ${feedbackId}`);
             
             // Process objectives for this quarter
             const { data: objectiveQuestions, error: objQuestionsError } = await supabase
@@ -10152,7 +10382,7 @@ getMidYearIDPViewData: async function(req, res) {
             }
         }
         
-        // Categorize feedback into rating groups with more refined categories for year-end
+        // ENHANCED: Categorize feedback into 5-tier rating groups for Final-Year
         const categorizedFeedback = {
             excellent: [], // 4.5-5 stars
             good: [], // 3.5-4.4 stars
@@ -10164,24 +10394,32 @@ getMidYearIDPViewData: async function(req, res) {
         // Combine objectives and skills for categorization
         const allFeedbackItems = [...objectiveAggregates, ...skillAggregates];
         
-        allFeedbackItems.forEach(item => {
+        console.log(`=== FINAL-YEAR CATEGORIZATION DEBUG ===`);
+        console.log(`Total feedback items to categorize: ${allFeedbackItems.length}`);
+        
+        allFeedbackItems.forEach((item, index) => {
+            console.log(`Item ${index}: ${item.type} - ${item.type === 'objective' ? item.objectiveDescrpt : item.jobReqSkillName} - Rating: ${item.averageRating}`);
+            
             if (item.averageRating >= 4.5) {
                 categorizedFeedback.excellent.push(item);
+                console.log(`  → Categorized as EXCELLENT (${item.averageRating})`);
             } else if (item.averageRating >= 3.5) {
                 categorizedFeedback.good.push(item);
+                console.log(`  → Categorized as GOOD (${item.averageRating})`);
             } else if (item.averageRating >= 2.5) {
                 categorizedFeedback.satisfactory.push(item);
+                console.log(`  → Categorized as SATISFACTORY (${item.averageRating})`);
             } else if (item.averageRating >= 1.5) {
                 categorizedFeedback.needsImprovement.push(item);
+                console.log(`  → Categorized as NEEDS IMPROVEMENT (${item.averageRating})`);
             } else if (item.averageRating > 0) {
                 categorizedFeedback.critical.push(item);
+                console.log(`  → Categorized as CRITICAL (${item.averageRating})`);
             }
         });
         
-        // Calculate progression insights (comparing Q1-Q2 vs Q3-Q4)
-        const progressionInsights = calculateProgressionInsights(allFeedbackItems);
-        
-        console.log('Final-Year categorized feedback summary:', {
+        console.log('=== FINAL CATEGORIZATION RESULTS ===');
+        console.log('Final-Year (Q3-Q4) categorized feedback summary:', {
             excellent: categorizedFeedback.excellent.length,
             good: categorizedFeedback.good.length,
             satisfactory: categorizedFeedback.satisfactory.length,
@@ -10190,23 +10428,46 @@ getMidYearIDPViewData: async function(req, res) {
             totalProcessed: allFeedbackItems.length
         });
         
-        return res.status(200).json({
-            success: true,
-            message: "Final-Year feedback aggregates retrieved successfully",
-            data: {
-                objectives: objectiveAggregates,
-                skills: skillAggregates,
-                categorizedFeedback: categorizedFeedback,
-                progressionInsights: progressionInsights,
-                meta: {
-                    userId: userId,
-                    jobId: jobId,
-                    year: selectedYear,
-                    quarters: ['Q1', 'Q2', 'Q3', 'Q4'],
-                    totalItems: allFeedbackItems.length,
-                    availableQuarters: quarterData.filter(q => q.feedbackId).map(q => q.quarter)
+        // CRITICAL: Ensure all arrays exist even if empty
+        Object.keys(categorizedFeedback).forEach(key => {
+            if (!Array.isArray(categorizedFeedback[key])) {
+                categorizedFeedback[key] = [];
+            }
+        });
+        
+        const responseData = {
+            objectives: objectiveAggregates,
+            skills: skillAggregates,
+            categorizedFeedback: categorizedFeedback,
+            meta: {
+                userId: userId,
+                jobId: jobId,
+                year: selectedYear,
+                quarters: ['Q3', 'Q4'], // CRITICAL: Only Q3-Q4 for Final-Year
+                totalItems: allFeedbackItems.length,
+                availableQuarters: quarterData.filter(q => q.feedbackId).map(q => q.quarter),
+                debug: {
+                    rawObjectives: objectiveAggregates.length,
+                    rawSkills: skillAggregates.length,
+                    categorizedBreakdown: {
+                        excellent: categorizedFeedback.excellent.length,
+                        good: categorizedFeedback.good.length,
+                        satisfactory: categorizedFeedback.satisfactory.length,
+                        needsImprovement: categorizedFeedback.needsImprovement.length,
+                        critical: categorizedFeedback.critical.length
+                    }
                 }
             }
+        };
+        
+        console.log('=== SENDING FINAL-YEAR RESPONSE ===');
+        console.log('Response structure:', JSON.stringify(responseData.meta.debug, null, 2));
+        console.log('=== END FINAL-YEAR RESPONSE ===');
+        
+        return res.status(200).json({
+            success: true,
+            message: "Final-Year feedback aggregates (Q3-Q4) retrieved successfully",
+            data: responseData
         });
         
     } catch (error) {
@@ -10215,67 +10476,6 @@ getMidYearIDPViewData: async function(req, res) {
             success: false,
             message: "An unexpected error occurred while fetching Final-Year feedback aggregates.",
             error: error.message
-        });
-    }
-},
-
-getFinalYearIDPWithTrainings: async function(req, res) {
-    try {
-        const userId = req.params.userId;
-        
-        if (!userId) {
-            return res.status(400).json({ success: false, message: "User ID is required" });
-        }
-
-        console.log('Fetching Final-Year IDP with training categories for userId:', userId);
-
-        // Get Final-Year IDP data including trainingCategories JSONB field
-        const { data: finalyearData, error: finalyearError } = await supabase
-            .from("finalyearidps") // Assuming you have this table
-            .select("*")
-            .eq("userId", userId)
-            .single();
-
-        if (finalyearError && finalyearError.code !== 'PGRST116') {
-            console.error("Error fetching Final-Year IDP:", finalyearError);
-            return res.status(500).json({ success: false, message: "Error fetching Final-Year IDP data" });
-        }
-
-        let responseData = {
-            finalYearData: finalyearData,
-            trainingCategories: [],
-            trainingRemarks: null
-        };
-
-        if (finalyearData) {
-            // Extract training categories from JSONB field
-            if (finalyearData.trainingCategories && Array.isArray(finalyearData.trainingCategories)) {
-                console.log('Found Final-Year training categories in JSONB:', finalyearData.trainingCategories);
-                responseData.trainingCategories = finalyearData.trainingCategories;
-            }
-
-            // Extract training remarks
-            if (finalyearData.trainingRemarks) {
-                responseData.trainingRemarks = finalyearData.trainingRemarks;
-            }
-        }
-
-        console.log('Returning Final-Year training data:', {
-            categoriesCount: responseData.trainingCategories.length,
-            hasRemarks: !!responseData.trainingRemarks
-        });
-
-        return res.status(200).json({
-            success: true,
-            data: responseData
-        });
-
-    } catch (error) {
-        console.error("Error in getFinalYearIDPWithTrainings:", error);
-        return res.status(500).json({ 
-            success: false, 
-            message: "An error occurred while fetching Final-Year IDP data",
-            error: error.message 
         });
     }
 },

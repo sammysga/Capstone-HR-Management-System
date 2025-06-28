@@ -384,6 +384,8 @@ router.get('/linemanager/records-performance-tracker/:userId/midyear-aggregates'
 router.get('/linemanager/finalyear-idp/:userId', lineManagerController.getFinalYearIDP);
 router.post('/linemanager/finalyear-idp/:userId', lineManagerController.saveFinalYearIDP);
 router.get('/linemanager/finalyear-idp-trainings/:userId', lineManagerController.getFinalYearIDPWithTrainings);
+router.get('/linemanager/midyear-feedback-aggregates/:userId', lineManagerController.getMidYearFeedbackAggregates);
+router.get('/linemanager/finalyear-feedback-aggregates/:userId', lineManagerController.getFinalYearFeedbackAggregates);
 
 router.get('/linemanager/get-feedback-data/:userId', lineManagerController.getFeedbackData);
 // In your routes file

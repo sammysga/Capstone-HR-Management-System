@@ -2751,7 +2751,6 @@
     </form>
 </section>
 
-
 <!-- Final-Year IDP Form with Improved Frontend -->
 <section id="finalYearIDPForm" class="fade-out section" style="display: none;">
     <div class="idp-progress">
@@ -2787,6 +2786,21 @@
                         <span class="tooltip-text">Identify technical skills and professional competencies that were successfully developed this year.</span>
                     </div>
                 </label>
+                
+                <!-- Q3-Q4 Feedback Insights: Excellent Performance (4.5-5 stars) -->
+                <div id="finalYearProfStrengthsInsights" class="feedback-insights-container" style="margin-bottom: 15px;">
+                    <div class="insights-header" style="margin-bottom: 15px; padding: 10px; background-color: #e8f5e8; border-radius: 6px; border-left: 4px solid #4CAF50;">
+                        <h4 style="margin: 0; color: #2e7d32; font-size: 14px;">
+                            <i class="fas fa-trophy" style="color: #4CAF50;"></i> 
+                            Final-Year 360 Feedback: Excellent Performance (Q3-Q4)
+                        </h4>
+                        <p style="margin: 5px 0 0 0; font-size: 12px; color: #555;">Skills and objectives rated 4.5-5 stars in Q3 and Q4 feedback</p>
+                    </div>
+                    <div id="strengthsCircularDisplay" class="circular-feedback-display">
+                        <!-- Circular items will be dynamically added here -->
+                    </div>
+                </div>
+                
                 <textarea id="finalProfStrengths" name="profStrengths" rows="4" placeholder="Describe technical competences achieved and strengthened during the year" onkeyup="updateFinalIDPProgress()"></textarea>
                 <div class="char-counter"><span id="finalProfStrengthsCount">0</span> characters</div>
             </div>
@@ -2799,6 +2813,49 @@
                         <span class="tooltip-text">Note specific technical or professional skills that still require attention in the coming year.</span>
                     </div>
                 </label>
+                
+                <!-- Q3-Q4 Feedback Insights: Good Performance (3.5-4.4 stars) -->
+                <div id="finalYearProfAverageInsights" class="feedback-insights-container" style="margin-bottom: 15px;">
+                    <div class="insights-header" style="margin-bottom: 15px; padding: 10px; background-color: #e3f2fd; border-radius: 6px; border-left: 4px solid #2196F3;">
+                        <h4 style="margin: 0; color: #1565c0; font-size: 14px;">
+                            <i class="fas fa-thumbs-up" style="color: #2196F3;"></i> 
+                            Final-Year 360 Feedback: Good Performance (Q3-Q4)
+                        </h4>
+                        <p style="margin: 5px 0 0 0; font-size: 12px; color: #555;">Skills and objectives rated 3.5-4.4 stars in Q3 and Q4 feedback</p>
+                    </div>
+                    <div id="averageCircularDisplay" class="circular-feedback-display">
+                        <!-- Circular items will be dynamically added here -->
+                    </div>
+                </div>
+                
+                <!-- Q3-Q4 Feedback Insights: Needs Improvement (Below 3.5 stars) -->
+                <div id="finalYearProfBelowAverageInsights" class="feedback-insights-container" style="margin-bottom: 15px;">
+                    <div class="insights-header" style="margin-bottom: 15px; padding: 10px; background-color: #fff3cd; border-radius: 6px; border-left: 4px solid #ffc107;">
+                        <h4 style="margin: 0; color: #856404; font-size: 14px;">
+                            <i class="fas fa-chart-line" style="color: #ffc107;"></i> 
+                            Final-Year 360 Feedback: Areas for Improvement (Q3-Q4)
+                        </h4>
+                        <p style="margin: 5px 0 0 0; font-size: 12px; color: #555;">Skills and objectives needing development in Q3 and Q4 feedback</p>
+                    </div>
+                    <div id="belowAverageCircularDisplay" class="circular-feedback-display">
+                        <!-- Circular items will be dynamically added here -->
+                    </div>
+                </div>
+                
+                <!-- Critical Performance Insights (Below 2.5 stars) -->
+                <div id="finalYearProfCriticalInsights" class="feedback-insights-container" style="margin-bottom: 15px;">
+                    <div class="insights-header" style="margin-bottom: 15px; padding: 10px; background-color: #f8d7da; border-radius: 6px; border-left: 4px solid #dc3545;">
+                        <h4 style="margin: 0; color: #721c24; font-size: 14px;">
+                            <i class="fas fa-exclamation-triangle" style="color: #dc3545;"></i> 
+                            Final-Year 360 Feedback: Critical Development Areas (Q3-Q4)
+                        </h4>
+                        <p style="margin: 5px 0 0 0; font-size: 12px; color: #555;">Skills and objectives requiring immediate attention</p>
+                    </div>
+                    <div id="criticalCircularDisplay" class="circular-feedback-display">
+                        <!-- Circular items will be dynamically added here -->
+                    </div>
+                </div>
+                
                 <textarea id="finalProfAreasForDevelopment" name="profAreasForDevelopment" rows="4" placeholder="Describe remaining technical gaps that still need to be addressed" onkeyup="updateFinalIDPProgress()"></textarea>
                 <div class="char-counter"><span id="finalProfAreasCount">0</span> characters</div>
             </div>
@@ -2845,6 +2902,21 @@
                         <span class="tooltip-text">Identify leadership qualities and behaviors that improved during this year.</span>
                     </div>
                 </label>
+                
+                <!-- Leadership Strengths from Q3-Q4 Feedback -->
+                <div id="finalYearLeaderStrengthsInsights" class="feedback-insights-container" style="margin-bottom: 15px;">
+                    <div class="insights-header" style="margin-bottom: 15px; padding: 10px; background-color: #e8f5e8; border-radius: 6px; border-left: 4px solid #4CAF50;">
+                        <h4 style="margin: 0; color: #2e7d32; font-size: 14px;">
+                            <i class="fas fa-crown" style="color: #4CAF50;"></i> 
+                            Leadership Skills: Exceptional Performance (Q3-Q4)
+                        </h4>
+                        <p style="margin: 5px 0 0 0; font-size: 12px; color: #555;">Leadership skills rated 4+ stars in Q3 and Q4 feedback</p>
+                    </div>
+                    <div id="leadershipStrengthsCircularDisplay" class="circular-feedback-display">
+                        <!-- Circular items will be dynamically added here -->
+                    </div>
+                </div>
+                
                 <div class="leadership-model" style="display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 10px;">
                     <!-- Leadership tags area kept empty as requested -->
                 </div>
@@ -2860,6 +2932,21 @@
                         <span class="tooltip-text">Note specific leadership behaviors or skills that still need improvement.</span>
                     </div>
                 </label>
+                
+                <!-- Leadership Development Areas from Q3-Q4 Feedback -->
+                <div id="finalYearLeaderDevelopmentInsights" class="feedback-insights-container" style="margin-bottom: 15px;">
+                    <div class="insights-header" style="margin-bottom: 15px; padding: 10px; background-color: #fff3cd; border-radius: 6px; border-left: 4px solid #ffc107;">
+                        <h4 style="margin: 0; color: #856404; font-size: 14px;">
+                            <i class="fas fa-arrow-up" style="color: #ffc107;"></i> 
+                            Leadership Skills: Development Opportunities (Q3-Q4)
+                        </h4>
+                        <p style="margin: 5px 0 0 0; font-size: 12px; color: #555;">Leadership skills with room for growth based on Q3 and Q4 feedback</p>
+                    </div>
+                    <div id="leadershipDevelopmentCircularDisplay" class="circular-feedback-display">
+                        <!-- Circular items will be dynamically added here -->
+                    </div>
+                </div>
+                
                 <textarea id="finalLeaderAreasForDevelopment" name="leaderAreasForDevelopment" rows="4" placeholder="Describe leadership gaps that need further development" onkeyup="updateFinalIDPProgress()"></textarea>
                 <div class="char-counter"><span id="finalLeaderAreasCount">0</span> characters</div>
             </div>
@@ -2921,6 +3008,98 @@
             </div>
         </fieldset>
 
+        <!-- Training Categories Section for Final-Year -->
+<fieldset class="suggested-trainings-fieldset">
+    <legend><i class="fas fa-graduation-cap"></i> SUGGESTED TRAINING CATEGORIES FOR NEXT YEAR</legend>
+    
+    <div class="form-group">
+        <div class="training-selection-container">
+            <div class="training-header" style="margin-bottom: 15px;">
+                <h4 style="margin: 0 0 8px 0; color: var(--primary-color); font-size: 16px;">
+                    <i class="fas fa-search"></i> Select and Add Training Categories
+                </h4>
+                <p style="margin: 0; color: #666; font-size: 14px; line-height: 1.4;">
+                    Choose training categories that align with your career development goals for the upcoming year.
+                </p>
+            </div>
+            
+            <!-- Category Selection (same as Mid-Year) -->
+            <div class="category-dropdown-container" style="position: relative; margin-bottom: 20px;">
+                <label for="categorySearchInput" style="display: block; font-weight: 600; color: var(--primary-color); margin-bottom: 8px; font-size: 14px;">
+                    <i class="fas fa-search"></i> Search or Add New Category:
+                </label>
+                
+                <div style="display: flex; align-items: flex-start; gap: 10px;">
+                    <div style="flex: 1; position: relative;">
+                        <input type="text" 
+                               id="categorySearchInput" 
+                               placeholder="Type to search categories or click to browse all..." 
+                               style="width: 100%; padding: 12px 15px; border: 2px solid #ddd; border-radius: var(--border-radius); background-color: white; color: var(--primary-color); font-weight: 500; transition: var(--transition); font-size: 13px; line-height: 1.3; height: auto; min-height: 45px;" 
+                               onkeyup="filterCategories()" 
+                               onkeydown="handleCategoryKeydown(event)" 
+                               onfocus="showAllCategoriesOnFocus()" 
+                               onclick="showAllCategoriesOnFocus()">
+                    </div>
+                    
+                    <button type="button" 
+                            id="addCategoryBtn" 
+                            style="background-color: var(--success-color); color: white; border: none; padding: 12px 20px; border-radius: var(--border-radius); cursor: pointer; font-weight: 500; transition: var(--transition); white-space: nowrap; min-height: 45px;" 
+                            onclick="addSelectedCategory()">
+                        <i class="fas fa-plus"></i> Add Category
+                    </button>
+                </div>
+                
+                <div id="categorySearchResults" style="position: absolute; top: 100%; left: 0; right: 0; background: white; border: 2px solid var(--secondary-color); border-radius: var(--border-radius); box-shadow: 0 8px 25px rgba(0, 0, 0, 0.15); z-index: 1000; display: none; max-height: 300px; overflow-y: auto; margin-top: 5px;">
+                    <div id="categorySearchList" style="padding: 10px;">
+                        <!-- Categories will be populated here -->
+                    </div>
+                </div>
+            </div>
+
+            <!-- Selected Categories Display -->
+            <div id="selectedCategoriesContainer" style="margin-top: 20px;">
+                <h5 style="margin: 0 0 15px 0; color: var(--primary-color); font-size: 14px;">
+                    <i class="fas fa-list-check"></i> Selected Training Categories:
+                </h5>
+                <div id="selectedCategoriesList" style="min-height: 60px; padding: 15px; background-color: rgba(255, 255, 255, 0.8); border-radius: 8px; border: 1px dashed #ddd;">
+                    <div class="no-categories-message" style="text-align: center; color: #666; font-style: italic; padding: 20px;">
+                        <i class="fas fa-info-circle"></i> No training categories selected yet. Use the search above to add categories.
+                    </div>
+                </div>
+            </div>
+
+            <!-- Training Remarks Section -->
+            <div style="margin-top: 20px;">
+                <label for="trainingRemarks" style="display: block; font-weight: 600; color: var(--primary-color); margin-bottom: 8px; font-size: 14px;">
+                    <i class="fas fa-comment"></i> Training Remarks & Development Goals:
+                </label>
+                <textarea id="trainingRemarks" 
+                          name="trainingRemarks" 
+                          style="width: 100%; min-height: 100px; padding: 12px; border: 2px solid #ddd; border-radius: var(--border-radius); background-color: white; color: var(--primary-color); font-weight: 400; transition: var(--transition); font-size: 13px; line-height: 1.4; resize: vertical;" 
+                          placeholder="Describe your training goals for next year, preferred learning methods, timeline expectations, and how these categories align with your career development plan..."></textarea>
+                <div class="char-counter" style="text-align: right; font-size: 12px; color: #666; margin-top: 5px;">
+                    <span id="trainingRemarksCount">0</span> characters
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- CRITICAL: Updated Top 5 Development Areas Section for Final-Year -->
+    <div class="training-match-info" style="margin-top: 15px; font-size: 12px; color: #666;">
+        <h5 style="margin: 5px 0; color: var(--primary-color); font-size: 13px;">
+            <i class="fas fa-target"></i> Top 5 Development Areas (Based on Q3-Q4 Feedback):
+        </h5>
+        <div id="finalYearDevelopmentAreasLegend" style="font-style: italic; color: #888; font-size: 11px;">
+            Complete Q3 and Q4 feedback to see personalized training priorities based on your year-end development areas.
+        </div>
+        
+        <!-- Top 5 Development Areas Display Container for Final-Year -->
+        <div id="finalYearTop5DevelopmentAreas" style="margin-top: 15px;">
+            <!-- This will be populated by JavaScript with Q3-Q4 data -->
+        </div>
+    </div>
+</fieldset>
+
         <div class="submit-button-container">
             <button id="submitFinalYearIDP" type="submit" class="save-btn" disabled>
                 <i class="fas fa-paper-plane"></i> Submit Final-Year IDP
@@ -2929,7 +3108,6 @@
     </form>
 </section>
 
-            <!-- JavaScript for page functionality -->
 <script>
 // ===== UPDATED DYNAMIC TRAINING FUNCTIONALITY =====
 
@@ -4188,8 +4366,9 @@ window.debugFormSubmissionData = debugFormSubmissionData;
 window.testAddCategory = testAddCategory;
 window.selectExistingCategory = selectExistingCategory;
 
+
 document.addEventListener('DOMContentLoaded', function() {
-    console.log('Setting up enhanced feedback tabs...');
+    console.log('Initializing enhanced feedback tabs and Final-Year IDP...');
     
     // Get tab elements
     const summaryTab = document.getElementById('summaryTab');
@@ -4264,13 +4443,13 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     }
     
-     // Set current quarter if not already set
+    // Set current quarter if not already set
     if (!currentQuarter) {
         currentQuarter = getCurrentQuarter();
         console.log('Auto-detected current quarter:', currentQuarter);
     }
     
-   // Wait a bit for other scripts to load
+    // Enhanced export button setup for quarterly reports
     setTimeout(function() {
         const exportBtn = document.getElementById('exportQuarterlyReportBtn');
         
@@ -4313,15 +4492,109 @@ document.addEventListener('DOMContentLoaded', function() {
             exportBtn.addEventListener('click', exportBtn._clickHandler);
             
             console.log('✅ Export button click handler attached successfully');
-            console.log('📊 Current state:', {
-                userId: currentUserId,
-                quarter: currentQuarter,
-                year: currentYear
-            });
         } else {
             console.error('❌ Export button not found with ID: exportQuarterlyReportBtn');
         }
     }, 1500); // Wait 1.5 seconds for other scripts
+
+    // Initialize performance tracker stepper system
+    console.log("Initializing enhanced performance tracker with Final-Year IDP support...");
+    
+    // Initialize data from viewState
+    initializeFromViewState();
+    
+    // Update stepper accessibility
+    updateStepperAccessibility();
+    
+    // Set up event handlers for stepper buttons
+    setupStepperEvents();
+    
+    // Initialize character counters
+    updateAllCharCounters();
+    
+    // Attach form submission listeners
+    attachFormListeners();
+    
+    // Enhanced form submission functions
+    window.submitMidYearIDPForm = submitMidYearIDPFormWithTrainingCategories;
+    window.submitFinalYearIDPForm = submitFinalYearIDPFormWithEnhancements;
+    
+    // Make enhanced functions globally available
+    window.getTop5DevelopmentAreas = getTop5DevelopmentAreas;
+    window.getFinalYearTop5DevelopmentAreas = getFinalYearTop5DevelopmentAreas;
+    window.loadFinalYearFeedbackAggregates = loadFinalYearFeedbackAggregates;
+    window.displayFinalYearFeedbackInCircularFormat = displayFinalYearFeedbackInCircularFormat;
+    window.loadFinalYearIDPDataWithCategories = loadFinalYearIDPDataWithCategories;
+    window.navigateToFinalYearIDP = navigateToFinalYearIDP;
+    window.updateAllHeadersForFinalYear = updateAllHeadersForFinalYear;
+    window.setupStepperEvents = setupStepperEvents;
+    // Initialize training categories functionality
+    initializeTrainingCategories();
+    
+    // Initialize training dropdown
+    initializeTrainingDropdown();
+    
+    // Setup feedback tabs with proper initialization
+    setTimeout(() => {
+        setupFeedbackTabs();
+        console.log('Feedback tabs setup completed after DOM loaded');
+    }, 100);
+    
+    // Enhanced feedback functionality
+    console.log('Enhanced feedback functionality with Final-Year IDP support initialized');
+    
+    // Add CSS for fade animations
+    const style = document.createElement('style');
+    style.textContent = `
+        @keyframes fadeInOut {
+            0% { opacity: 0; transform: translateY(-20px); }
+            20% { opacity: 1; transform: translateY(0); }
+            80% { opacity: 1; transform: translateY(0); }
+            100% { opacity: 0; transform: translateY(-20px); }
+        }
+        
+        .answer-card {
+            transition: transform 0.2s ease, box-shadow 0.2s ease;
+        }
+        
+        .answer-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+        }
+        
+        .filter-bar select:focus {
+            outline: none;
+            border-color: var(--secondary-color);
+            box-shadow: 0 0 0 2px rgba(5, 156, 164, 0.2);
+        }
+        
+        .filter-bar button:hover {
+            background-color: #5a6268;
+            transform: translateY(-1px);
+        }
+        
+        .tab-button:hover {
+            opacity: 0.8;
+            transform: translateY(-1px);
+        }
+        
+        .tab-button.active {
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        
+        /* Final-Year IDP specific styles */
+        .final-year-indicator {
+            background: linear-gradient(135deg, #6a11cb 0%, #2575fc 100%);
+            color: white;
+            padding: 4px 12px;
+            border-radius: 12px;
+            font-size: 0.8em;
+            font-weight: bold;
+        }
+    `;
+    document.head.appendChild(style);
+    
+    console.log("Enhanced performance tracker with Final-Year IDP support initialized successfully.");
 });
 
 function testExportNow() {
@@ -5957,12 +6230,77 @@ async function submitMidYearIDPFormWithTrainingCategories(event) {
     
     console.log("=== END ENHANCED FORM SUBMISSION ===");
 }
+function showFinalYearIDPSuccessNotification() {
+    // Remove any existing notifications
+    const existingNotifications = document.querySelectorAll('.finalyear-idp-notification');
+    existingNotifications.forEach(notification => {
+        if (document.body.contains(notification)) {
+            document.body.removeChild(notification);
+        }
+    });
+    
+    const notification = document.createElement('div');
+    notification.className = 'finalyear-idp-notification';
+    
+    notification.style.cssText = `
+        position: fixed;
+        top: 20px;
+        right: 20px;
+        background: linear-gradient(135deg, #6a11cb 0%, #2575fc 100%);
+        color: white;
+        padding: 20px 25px;
+        border-radius: 8px;
+        box-shadow: 0 6px 20px rgba(0, 0, 0, 0.15);
+        z-index: 10001;
+        font-weight: 500;
+        transform: translateX(100%);
+        transition: all 0.4s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+        max-width: 400px;
+        border: 2px solid rgba(255, 255, 255, 0.2);
+        backdrop-filter: blur(10px);
+    `;
+    
+    notification.innerHTML = `
+        <div style="display: flex; align-items: center; gap: 12px;">
+            <i class="fas fa-trophy" style="font-size: 24px; flex-shrink: 0;"></i>
+            <div style="flex: 1; line-height: 1.4;">
+                <div style="font-size: 16px; font-weight: 600; margin-bottom: 4px;">Final-Year IDP Completed!</div>
+                <div style="font-size: 14px; opacity: 0.9;">Based on Q3-Q4 feedback • Form converted to view-only</div>
+            </div>
+            <button onclick="this.parentElement.parentElement.remove()" 
+                    style="background: none; border: none; color: white; cursor: pointer; padding: 4px; border-radius: 4px; opacity: 0.8; transition: opacity 0.2s;"
+                    onmouseover="this.style.opacity='1'; this.style.backgroundColor='rgba(255,255,255,0.1)'"
+                    onmouseout="this.style.opacity='0.8'; this.style.backgroundColor='transparent'">
+                <i class="fas fa-times" style="font-size: 12px;"></i>
+            </button>
+        </div>
+    `;
+    
+    document.body.appendChild(notification);
+    
+    // Animate in
+    setTimeout(() => {
+        notification.style.transform = 'translateX(0)';
+    }, 100);
+    
+    // Auto-remove after 5 seconds
+    setTimeout(() => {
+        if (document.body.contains(notification)) {
+            notification.style.transform = 'translateX(100%)';
+            setTimeout(() => {
+                if (document.body.contains(notification)) {
+                    notification.remove();
+                }
+            }, 400);
+        }
+    }, 5000);
+}
 
 // Enhanced Final-Year IDP submission function
 async function submitFinalYearIDPFormWithEnhancements(event) {
     event.preventDefault();
     
-    console.log("=== STARTING ENHANCED FINAL-YEAR IDP SUBMISSION ===");
+    console.log("=== STARTING FINAL-YEAR IDP SUBMISSION ===");
     
     // Validate the form
     if (!validateIDPForm('final')) {
@@ -5974,12 +6312,13 @@ async function submitFinalYearIDPFormWithEnhancements(event) {
         ? getSelectedCategoriesForSubmission() 
         : [];
     
-    // Get top 5 development areas from feedback data (for Final-Year, this would be Q1-Q4)
+    // Get top 5 development areas from Final-Year feedback data (Q3-Q4)
     const top5DevelopmentAreas = getFinalYearTop5DevelopmentAreas();
     
-    console.log("=== FINAL-YEAR ENHANCED SUBMISSION DATA ===");
-    console.log("Training Categories:", trainingCategories);
-    console.log("Top 5 Development Areas:", top5DevelopmentAreas);
+    console.log("Final-Year submission data:", {
+        trainingCategories: trainingCategories,
+        top5DevelopmentAreas: top5DevelopmentAreas
+    });
     
     // Get form data
     const formData = {
@@ -5994,12 +6333,11 @@ async function submitFinalYearIDPFormWithEnhancements(event) {
         nextRoleMobility: document.getElementById("nextRoleMobility").value.trim(),
         trainingCategories: trainingCategories, // Array of strings
         trainingRemarks: document.getElementById("trainingRemarks")?.value.trim() || "",
-        topDevAreas: top5DevelopmentAreas, // ENHANCED: Add top 5 development areas
+        topDevAreas: top5DevelopmentAreas, // Top 5 development areas from Q3-Q4
         year: new Date().getFullYear()
     };
     
-    console.log("=== COMPLETE ENHANCED FINAL-YEAR FORM DATA ===");
-    console.log("Final-Year form data with top 5 development areas:", formData);
+    console.log("Complete Final-Year form data:", formData);
     
     // Disable the submit button and show loading state
     const submitButton = document.getElementById("submitFinalYearIDP");
@@ -6009,9 +6347,9 @@ async function submitFinalYearIDPFormWithEnhancements(event) {
     }
     
     try {
-        console.log("Sending enhanced Final-Year POST request to server...");
+        console.log("Sending Final-Year POST request to server...");
         
-        const response = await fetch(`/linemanager/finalyear-idp/${currentUserId}`, {
+        const response = await fetch(`/linemanager/finalyear-idp/${userId}`, {
             method: "POST",
             headers: {
                 "Content-Type": "application/json",
@@ -6030,15 +6368,16 @@ async function submitFinalYearIDPFormWithEnhancements(event) {
         console.log("Server response data:", result);
         
         if (result.success) {
-            let successMessage = "Final-Year IDP saved successfully!";
+            // FIXED: Show Final-Year specific success message
+            let successMessage = "Final-Year IDP submitted successfully!";
             if (trainingCategories.length > 0) {
-                successMessage += `\n\nSelected ${trainingCategories.length} training categor${trainingCategories.length === 1 ? 'y' : 'ies'}.`;
+                successMessage += `\n\nSelected ${trainingCategories.length} training categor${trainingCategories.length === 1 ? 'y' : 'ies'} for next year.`;
             }
             if (top5DevelopmentAreas.length > 0) {
-                successMessage += `\n\nTop ${top5DevelopmentAreas.length} development areas identified and saved.`;
+                successMessage += `\n\nTop ${top5DevelopmentAreas.length} development areas from Q3-Q4 feedback identified and saved.`;
             }
             
-            console.log("✅ ENHANCED FINAL-YEAR SUCCESS:", successMessage);
+            console.log("✅ FINAL-YEAR SUCCESS:", successMessage);
             alert(successMessage);
             
             // Update viewState to reflect the new status
@@ -6050,8 +6389,11 @@ async function submitFinalYearIDPFormWithEnhancements(event) {
                 }
             }
             
+            // Show Final-Year specific success notification
+            showFinalYearIDPSuccessNotification();
+            
             // Redirect to refresh the page
-            window.location.href = `/linemanager/records-performance-tracker/${currentUserId}`;
+            window.location.href = `/linemanager/records-performance-tracker/${userId}`;
         } else {
             console.error("❌ Server returned error:", result);
             alert("Error saving Final-Year IDP: " + (result.message || "Unknown error"));
@@ -6063,7 +6405,7 @@ async function submitFinalYearIDPFormWithEnhancements(event) {
             }
         }
     } catch (error) {
-        console.error("❌ Error submitting Enhanced Final-Year IDP:", error);
+        console.error("❌ Error submitting Final-Year IDP:", error);
         alert("An error occurred while submitting the Final-Year IDP. Please try again.\n\nError: " + error.message);
         
         // Re-enable the submit button
@@ -6073,20 +6415,20 @@ async function submitFinalYearIDPFormWithEnhancements(event) {
         }
     }
     
-    console.log("=== END ENHANCED FINAL-YEAR FORM SUBMISSION ===");
+    console.log("=== FINAL-YEAR IDP SUBMISSION COMPLETE ===");
 }
 
 // Function to get top 5 development areas for Final-Year (all 4 quarters)
 function getFinalYearTop5DevelopmentAreas() {
-    console.log("=== COLLECTING FINAL-YEAR TOP 5 DEVELOPMENT AREAS ===");
+    console.log("=== COLLECTING FINAL-YEAR TOP 5 DEVELOPMENT AREAS (Q3-Q4) ===");
     
-    // Check if we have final year feedback data (Q1-Q4)
+    // Check if we have final year feedback data (should contain Q3-Q4 data)
     if (!window.finalYearFeedbackData || !window.finalYearFeedbackData.categorizedFeedback) {
-        console.log("No final year feedback data available for development areas");
+        console.log("❌ No final year Q3-Q4 feedback data available for development areas");
         return [];
     }
     
-    // ENHANCED: Combine ALL areas from ALL categories for Final-Year
+    // Combine ALL areas from ALL categories for Final-Year (Q3-Q4 data)
     const allAreas = [
         ...window.finalYearFeedbackData.categorizedFeedback.excellent || [],
         ...window.finalYearFeedbackData.categorizedFeedback.good || [],
@@ -6095,7 +6437,7 @@ function getFinalYearTop5DevelopmentAreas() {
         ...window.finalYearFeedbackData.categorizedFeedback.critical || []
     ];
     
-    console.log("Found all final year feedback areas:", allAreas.length);
+    console.log("Found all final year Q3-Q4 feedback areas:", allAreas.length);
     console.log("Final-Year breakdown:", {
         excellent: window.finalYearFeedbackData.categorizedFeedback.excellent?.length || 0,
         good: window.finalYearFeedbackData.categorizedFeedback.good?.length || 0,
@@ -6103,6 +6445,7 @@ function getFinalYearTop5DevelopmentAreas() {
         needsImprovement: window.finalYearFeedbackData.categorizedFeedback.needsImprovement?.length || 0,
         critical: window.finalYearFeedbackData.categorizedFeedback.critical?.length || 0
     });
+    
     
     // Sort by lowest rating first (most critical areas) and take top 5
     const sortedAreas = allAreas
@@ -6131,7 +6474,7 @@ function getFinalYearTop5DevelopmentAreas() {
         return formattedArea;
     });
     
-    console.log("Final-Year Top 5 development areas formatted:", top5Areas);
+    console.log("Final-Year Q3-Q4 Top 5 development areas formatted:", top5Areas);
     console.log("=== END COLLECTING FINAL-YEAR TOP 5 DEVELOPMENT AREAS ===");
     
     return top5Areas;
@@ -6760,6 +7103,7 @@ window.initializeTrainingDropdown = initializeTrainingDropdown;
 window.navigateToMidYearIDP = navigateToMidYearIDP;
 window.refreshFeedbackDataOnYearChange = refreshFeedbackDataOnYearChange;
 window.submitMidYearIDPFormWithTraining = submitMidYearIDPFormWithTraining;
+window.resetFormToMidYearContext = resetFormToMidYearContext;
 
 // Initialize variables
 let currentStep = 0; // Track the current step
@@ -7931,7 +8275,6 @@ function filterAnswers() {
         card.style.display = showCard ? 'block' : 'none';
     });
 }
-
 function navigateToMidYearIDP() {
     const midYearIDPButton = document.getElementById("midYearIDP");
     
@@ -7941,7 +8284,7 @@ function navigateToMidYearIDP() {
         return;
     }
     
-    console.log("Navigating to Mid-Year IDP...");
+    console.log("Navigating to Mid-Year IDP with Q1-Q2 feedback...");
     
     // Hide other sections
     hideAllSections();
@@ -7957,16 +8300,19 @@ function navigateToMidYearIDP() {
     midYearIDPForm.classList.remove("fade-out");
     midYearIDPForm.classList.add("fade-in");
     
-    // Load feedback aggregates when form is shown
+    // FIXED: Ensure we reset form to Mid-Year context
+    resetFormToMidYearContext();
+    
+    // Load Mid-Year feedback aggregates (Q1-Q2) when form is shown
     loadMidYearFeedbackAggregates();
     
-    // FIXED: Check if in view-only mode and handle accordingly
+    // Check if in view-only mode and handle accordingly
     const isViewOnly = viewState && viewState.viewOnlyStatus && viewState.viewOnlyStatus.midyearidp;
     
     console.log("Mid-Year IDP mode:", isViewOnly ? "View-Only" : "Edit");
     
     if (isViewOnly) {
-        console.log("Setting up view-only mode...");
+        console.log("Setting up Mid-Year view-only mode...");
         
         // Check if we have saved data available
         if (window.savedMidYearIDPData) {
@@ -7988,7 +8334,7 @@ function navigateToMidYearIDP() {
             });
         }
     } else {
-        console.log("Setting up edit mode...");
+        console.log("Setting up Mid-Year edit mode...");
         // If in edit mode, ensure form fields are enabled
         enableMidYearIDPForm();
         
@@ -8001,6 +8347,127 @@ function navigateToMidYearIDP() {
     midYearIDPForm.scrollIntoView({ behavior: "smooth" });
     console.log("Navigated to Mid-Year IDP form.", isViewOnly ? "(View-Only Mode)" : "(Edit Mode)");
 }
+
+
+function resetFormToMidYearContext() {
+    console.log("🟢 Resetting form to Mid-Year context...");
+    
+    // Clear any Final-Year specific data
+    window.finalYearFeedbackData = null;
+    
+    // Reset form title to Mid-Year
+    const title = document.querySelector("#midYearIDPForm h2");
+    if (title) {
+        title.innerHTML = '<i class="fas fa-clipboard-check"></i> Mid-Year Individual Development Plan (IDP)';
+    }
+    
+    // Reset header description to Mid-Year
+    const headerDescription = document.querySelector("#midYearIDPForm .idp-header p");
+    if (headerDescription) {
+        headerDescription.textContent = "The Mid-Year IDP serves as a checkpoint to evaluate progress on professional goals and career development. Use this opportunity to identify strengths, areas for improvement, and establish a clear path forward.";
+    }
+    
+    // Reset submit button to Mid-Year
+    const submitButton = document.getElementById("submitFinalYearIDP") || document.getElementById("submitMidYearIDP");
+    if (submitButton) {
+        submitButton.id = "submitMidYearIDP";
+        submitButton.innerHTML = '<i class="fas fa-paper-plane"></i> Submit Mid-Year IDP';
+        
+        // Remove any existing listeners and add the correct one
+        submitButton.removeEventListener('click', submitFinalYearIDPFormWithEnhancements);
+        submitButton.removeEventListener('click', submitMidYearIDPFormWithTrainingCategories);
+        
+        submitButton.addEventListener('click', function(event) {
+            event.preventDefault();
+            submitMidYearIDPFormWithTrainingCategories(event);
+        });
+    }
+    
+    // Reset progress bar ID to Mid-Year
+    const progressBar = document.getElementById("finalYearIDPProgressBar") || document.getElementById("midYearIDPProgressBar");
+    if (progressBar) {
+        progressBar.id = "midYearIDPProgressBar";
+    }
+    
+    // Reset form headers to Mid-Year context (Q1-Q2)
+    resetFormHeadersToMidYear();
+    
+    console.log("🟢 Form reset to Mid-Year context completed");
+}
+function resetFormHeadersToMidYear() {
+    // Check if we're in Final-Year context - if so, don't reset
+    const legendContainer = document.getElementById('developmentAreasLegend') || 
+                           document.querySelector('.training-match-info');
+    
+    if (legendContainer && legendContainer.getAttribute('data-context') === 'final-year') {
+        console.log('🚫 Preventing Mid-Year header reset - Final-Year context active');
+        return;
+    }
+    
+    // Reset feedback section headers to indicate Q1-Q2 data
+    const headerMappings = [
+        { 
+            selector: '#profStrengthsInsights .insights-header h4', 
+            text: 'Mid-Year 360 Feedback Improvement Areas: Above Average Ratings',
+            icon: 'fas fa-arrow-up'
+        },
+        { 
+            selector: '#profAverageInsights .insights-header h4', 
+            text: 'Mid-Year 360 Feedback Improvement Areas: Average Ratings',
+            icon: 'fas fa-equals'
+        },
+        { 
+            selector: '#profBelowAverageInsights .insights-header h4', 
+            text: 'Mid-Year 360 Feedback Improvement Areas: Below Average Ratings',
+            icon: 'fas fa-arrow-down'
+        },
+        { 
+            selector: '#leaderStrengthsInsights .insights-header h4', 
+            text: 'Leadership Skills: Above Average Ratings',
+            icon: 'fas fa-arrow-up'
+        },
+        { 
+            selector: '#leaderDevelopmentInsights .insights-header h4', 
+            text: 'Leadership Skills: Average & Below Average Ratings',
+            icon: 'fas fa-equals'
+        }
+    ];
+    
+    headerMappings.forEach(({ selector, text, icon }) => {
+        const header = document.querySelector(selector);
+        if (header) {
+            header.innerHTML = `<i class="${icon}" style="color: #4CAF50;"></i> ${text}`;
+        }
+    });
+    
+    // Reset description text
+    const descriptions = document.querySelectorAll('#profStrengthsInsights .insights-header p, #profAverageInsights .insights-header p, #profBelowAverageInsights .insights-header p, #leaderStrengthsInsights .insights-header p, #leaderDevelopmentInsights .insights-header p');
+    descriptions.forEach(desc => {
+        desc.textContent = 'Skills and objectives rated in Q1 and Q2 feedback';
+    });
+}
+
+// Helper function for text truncation
+function truncateText(text, maxLength = 40) {
+    if (!text || text.length <= maxLength) return text;
+    return text.substring(0, maxLength - 3) + '...';
+}
+
+// ENHANCED: Initialize Final-Year context protection when DOM loads
+document.addEventListener('DOMContentLoaded', function() {
+    // Set up protection against Mid-Year overwrites
+    preventMidYearOverwrite();
+    
+    console.log('✅ Final-Year context protection initialized');
+});
+
+
+window.updateFinalYearTrainingLegendWithTop5 = updateFinalYearTrainingLegendWithTop5;
+window.updateFormForFinalYear = updateFormForFinalYear;
+window.preventMidYearOverwrite = preventMidYearOverwrite;
+window.resetFormHeadersToMidYear = resetFormHeadersToMidYear
+
+
 
 async function loadMidYearIDPDataWithCategories(userId) {
     try {
@@ -8026,11 +8493,13 @@ async function loadMidYearIDPDataWithCategories(userId) {
             window.savedMidYearIDPData = result.data.midYearData;
             window.savedTrainingCategories = result.data.trainingCategories || [];
             window.savedTrainingRemarks = result.data.trainingRemarks || '';
+            window.savedTop5DevAreas = result.data.midYearData.topDevAreas || [];
             
             console.log("Stored Mid-Year IDP data globally:", {
                 midYearData: !!window.savedMidYearIDPData,
                 categoriesCount: window.savedTrainingCategories.length,
-                hasRemarks: !!window.savedTrainingRemarks
+                hasRemarks: !!window.savedTrainingRemarks,
+                top5AreasCount: window.savedTop5DevAreas.length
             });
             
         } else {
@@ -8040,6 +8509,7 @@ async function loadMidYearIDPDataWithCategories(userId) {
         console.error("Error loading Mid-Year IDP data with categories:", error);
     }
 }
+
 
 // Enhanced view-only function for Mid-Year IDP with top 5 development areas display
 function createViewOnlyMidYearIDPWithCategories(data) {
@@ -8183,7 +8653,8 @@ function hideAllSections() {
         document.getElementById("objective-skill-progress-form"),
         document.getElementById("view-only-page"),
         document.getElementById("feedback-section"),
-        document.getElementById("midYearIDPForm")
+        document.getElementById("midYearIDPForm"),
+        document.getElementById("finalYearIDPForm") // Add this if it exists separately
     ];
     
     sectionsToHide.forEach(section => {
@@ -8193,6 +8664,9 @@ function hideAllSections() {
             section.classList.add("fade-out");
         }
     });
+    
+    // Clear any stored feedback data to prevent conflicts
+    console.log("Clearing stored feedback data to prevent conflicts");
 }
 
 // Function to add a row to feedback form
@@ -10867,57 +11341,446 @@ async function loadMidYearFeedbackAggregates() {
 
 // UPDATED: Function to refresh feedback data when year changes (simplified for current schema)
 function refreshFeedbackDataOnYearChange() {
-    // Check if Mid-Year IDP form is currently visible
     const midYearIDPForm = document.getElementById("midYearIDPForm");
-    if (midYearIDPForm && midYearIDPForm.style.display === "block") {
-        // Only reload feedback aggregates (not the IDP data since it doesn't use year filtering)
-        loadMidYearFeedbackAggregates();
-    }
-}
-
-// Function to load Final-Year feedback aggregates (similar to Mid-Year but for all 4 quarters)
-async function loadFinalYearFeedbackAggregates() {
-    console.log("Loading Final-Year feedback aggregates (Q1-Q4)...");
     
-    try {
-        let selectedYear = new Date().getFullYear();
+    if (midYearIDPForm && midYearIDPForm.style.display === "block") {
+        // Check which context we're in based on the form title
+        const title = document.querySelector("#midYearIDPForm h2");
         
-        const yearSelect = document.getElementById('yearSelect');
-        if (yearSelect && yearSelect.value) {
-            selectedYear = yearSelect.value;
-        }
-        
-        const urlParams = new URLSearchParams(window.location.search);
-        if (urlParams.has('year')) {
-            selectedYear = urlParams.get('year');
-        }
-        
-        // Fetch Final-Year feedback aggregates from server (Q1-Q4)
-        const response = await fetch(`/linemanager/finalyear-feedback-aggregates/${userId}?year=${selectedYear}`);
-        
-        if (!response.ok) {
-            throw new Error(`Server responded with status ${response.status}`);
-        }
-        
-        const result = await response.json();
-        
-        if (result.success) {
-            window.finalYearFeedbackData = result.data;
-            console.log("Final-Year feedback data loaded:", window.finalYearFeedbackData);
-            
-            // Display the feedback in circular format if needed
-            // displayFinalYearFeedbackInCircularFormat(window.finalYearFeedbackData);
-            
+        if (title && title.textContent.includes("Final-Year")) {
+            console.log("Refreshing Final-Year feedback data due to year change");
+            loadFinalYearFeedbackAggregates();
         } else {
-            console.error("Error loading Final-Year feedback aggregates:", result.message);
+            console.log("Refreshing Mid-Year feedback data due to year change");
+            loadMidYearFeedbackAggregates();
         }
-        
-    } catch (error) {
-        console.error("Error fetching Final-Year feedback aggregates:", error);
     }
 }
 
-// Function to navigate to Final-Year IDP with enhanced functionality
+function displayFinalYearFeedbackInCircularFormat(feedbackData) {
+    console.log("=== DISPLAYING FINAL-YEAR FEEDBACK IN CIRCULAR FORMAT ===");
+    
+    if (!feedbackData || !feedbackData.categorizedFeedback) {
+        console.error("❌ No Final-Year categorized feedback data available");
+        showNoFeedbackMessage("Q3-Q4");
+        return;
+    }
+    
+    const categorized = feedbackData.categorizedFeedback;
+    console.log("Final-Year categorized feedback data:", categorized);
+    
+    // CRITICAL: Update form headers to reflect Final-Year Q3-Q4 context
+    updateAllHeadersForFinalYear();
+    
+    // Display excellent and good ratings as strengths for Final-Year
+    const finalYearStrengths = [
+        ...(categorized.excellent || []),
+        ...(categorized.good || [])
+    ];
+    
+    console.log("Final-Year strengths:", finalYearStrengths);
+    
+    // PROFESSIONAL COMPETENCES (objectives + hard skills)
+    const profStrengths = finalYearStrengths.filter(item => 
+        item.type === 'objective' || (item.type === 'skill' && item.jobReqSkillType === 'Hard')
+    );
+    console.log("Professional strengths for Final-Year:", profStrengths);
+    displayCircularItems('strengthsCircularDisplay', profStrengths, 'strength');
+    
+    const profAverage = (categorized.satisfactory || []).filter(item => 
+        item.type === 'objective' || (item.type === 'skill' && item.jobReqSkillType === 'Hard')
+    );
+    console.log("Professional average for Final-Year:", profAverage);
+    displayCircularItems('averageCircularDisplay', profAverage, 'average');
+    
+    const finalYearBelowAverage = [
+        ...(categorized.needsImprovement || []),
+        ...(categorized.critical || [])
+    ];
+    
+    const profBelowAverage = finalYearBelowAverage.filter(item => 
+        item.type === 'objective' || (item.type === 'skill' && item.jobReqSkillType === 'Hard')
+    );
+    console.log("Professional below average for Final-Year:", profBelowAverage);
+    displayCircularItems('belowAverageCircularDisplay', profBelowAverage, 'below-average');
+    
+    // Display critical areas separately if container exists
+    const criticalContainer = document.getElementById('criticalCircularDisplay');
+    if (criticalContainer) {
+        const profCritical = (categorized.critical || []).filter(item => 
+            item.type === 'objective' || (item.type === 'skill' && item.jobReqSkillType === 'Hard')
+        );
+        console.log("Professional critical for Final-Year:", profCritical);
+        displayCircularItems('criticalCircularDisplay', profCritical, 'critical');
+    }
+    
+    // LEADERSHIP COMPETENCES (soft skills only)
+    const leadershipStrengths = finalYearStrengths.filter(item => 
+        item.type === 'skill' && item.jobReqSkillType === 'Soft'
+    );
+    console.log("Leadership strengths for Final-Year:", leadershipStrengths);
+    displayCircularItems('leadershipStrengthsCircularDisplay', leadershipStrengths, 'strength');
+    
+    const leadershipDevelopment = [
+        ...(categorized.satisfactory || []).filter(item => item.type === 'skill' && item.jobReqSkillType === 'Soft'),
+        ...finalYearBelowAverage.filter(item => item.type === 'skill' && item.jobReqSkillType === 'Soft')
+    ];
+    console.log("Leadership development for Final-Year:", leadershipDevelopment);
+    displayCircularItems('leadershipDevelopmentCircularDisplay', leadershipDevelopment, 'mixed');
+    
+    console.log("✅ Final-Year feedback (Q3-Q4) displayed successfully");
+    console.log("=== FINAL-YEAR FEEDBACK DISPLAY COMPLETE ===");
+}
+
+function updateAllHeadersForFinalYear() {
+    console.log("=== UPDATING ALL HEADERS FOR FINAL-YEAR Q3-Q4 CONTEXT ===");
+    
+    // Update the main form headers to reflect Q3-Q4 instead of Q1-Q2
+    const headerUpdates = [
+        {
+            selector: '#profStrengthsInsights .insights-header h4',
+            text: 'Final-Year 360 Feedback: Excellent Performance (Q3-Q4)',
+            icon: 'fas fa-trophy',
+            color: '#28a745'
+        },
+        {
+            selector: '#profAverageInsights .insights-header h4', 
+            text: 'Final-Year 360 Feedback: Good Performance (Q3-Q4)',
+            icon: 'fas fa-thumbs-up',
+            color: '#17a2b8'
+        },
+        {
+            selector: '#profBelowAverageInsights .insights-header h4',
+            text: 'Final-Year 360 Feedback: Areas for Improvement (Q3-Q4)',
+            icon: 'fas fa-chart-line',
+            color: '#ffc107'
+        },
+        {
+            selector: '#leaderStrengthsInsights .insights-header h4',
+            text: 'Leadership Skills: Exceptional Performance (Q3-Q4)',
+            icon: 'fas fa-crown',
+            color: '#28a745'
+        },
+        {
+            selector: '#leaderDevelopmentInsights .insights-header h4',
+            text: 'Leadership Skills: Development Opportunities (Q3-Q4)',
+            icon: 'fas fa-arrow-up',
+            color: '#ffc107'
+        }
+    ];
+    
+    headerUpdates.forEach(({ selector, text, icon, color }) => {
+        const header = document.querySelector(selector);
+        if (header) {
+            header.innerHTML = `<i class="${icon}" style="color: ${color};"></i> ${text}`;
+            console.log(`✅ Updated header: ${selector}`);
+        } else {
+            console.warn(`⚠️ Header not found: ${selector}`);
+        }
+    });
+    
+    // Update all description texts to reflect Q3-Q4
+    const descriptions = [
+        '#profStrengthsInsights .insights-header p',
+        '#profAverageInsights .insights-header p', 
+        '#profBelowAverageInsights .insights-header p',
+        '#leaderStrengthsInsights .insights-header p',
+        '#leaderDevelopmentInsights .insights-header p'
+    ];
+    
+    descriptions.forEach(selector => {
+        const desc = document.querySelector(selector);
+        if (desc) {
+            desc.textContent = 'Skills and objectives rated in Q3 and Q4 feedback sessions';
+            console.log(`✅ Updated description: ${selector}`);
+        }
+    });
+    
+    console.log("=== Q3-Q4 HEADER UPDATES FOR FINAL-YEAR COMPLETE ===");
+}
+
+function updateFinalYearTop5DevelopmentAreasDisplay() {
+    console.log("=== UPDATING FINAL-YEAR TOP 5 DEVELOPMENT AREAS DISPLAY ===");
+    
+    // Find the development areas legend container
+    let legendContainer = document.getElementById('developmentAreasLegend') || 
+                         document.querySelector('.training-match-info');
+    
+    if (!legendContainer) {
+        console.warn('⚠️ Development areas legend container not found');
+        return;
+    }
+    
+    if (!window.finalYearFeedbackData || !window.finalYearFeedbackData.categorizedFeedback) {
+        legendContainer.innerHTML = `
+            <h5 style="margin: 5px 0; color: var(--primary-color); font-size: 13px;">
+                <i class="fas fa-target"></i> Top 5 Development Areas (Based on Q3-Q4 Feedback):
+            </h5>
+            <div style="font-style: italic; color: #888; font-size: 11px;">
+                Complete Q3 and Q4 feedback to see personalized training priorities based on your year-end development areas.
+            </div>
+        `;
+        return;
+    }
+    
+    // Get all areas from Final-Year Q3-Q4 data
+    const allAreas = [
+        ...window.finalYearFeedbackData.categorizedFeedback.excellent || [],
+        ...window.finalYearFeedbackData.categorizedFeedback.good || [],
+        ...window.finalYearFeedbackData.categorizedFeedback.satisfactory || [],
+        ...window.finalYearFeedbackData.categorizedFeedback.needsImprovement || [],
+        ...window.finalYearFeedbackData.categorizedFeedback.critical || []
+    ];
+    
+    console.log(`Found ${allAreas.length} total Final-Year feedback areas`);
+    
+    // Sort by lowest rating and take top 5
+    const top5Areas = allAreas
+        .sort((a, b) => a.averageRating - b.averageRating)
+        .slice(0, 5);
+    
+    console.log(`Selected top 5 Final-Year development areas:`, top5Areas);
+    
+    let legendHTML = `
+        <h5 style="margin: 5px 0; color: var(--primary-color); font-size: 13px;">
+            <i class="fas fa-target"></i> Top 5 Development Areas (Based on Q3-Q4 Feedback):
+        </h5>
+    `;
+    
+    if (top5Areas.length === 0) {
+        legendHTML += `
+            <div style="font-style: italic; color: #888; font-size: 11px;">
+                No Q3-Q4 feedback data available yet. Complete Q3 and Q4 feedback to see development priorities.
+            </div>
+        `;
+    } else {
+        legendHTML += `<div style="display: flex; flex-direction: column; gap: 8px;">`;
+        
+        top5Areas.forEach((area, index) => {
+            const name = area.type === 'objective' ? area.objectiveDescrpt : area.jobReqSkillName;
+            const type = area.type === 'objective' ? 'Objective' : `${area.jobReqSkillType} Skill`;
+            const rating = area.averageRating.toFixed(1);
+            
+            // Color coding based on Final-Year rating ranges
+            let ratingColor;
+            if (area.averageRating < 1.5) {
+                ratingColor = '#dc3545'; // Critical (red)
+            } else if (area.averageRating < 2.5) {
+                ratingColor = '#fd7e14'; // Needs improvement (orange)
+            } else if (area.averageRating < 3.5) {
+                ratingColor = '#ffc107'; // Satisfactory (yellow)
+            } else if (area.averageRating < 4.5) {
+                ratingColor = '#17a2b8'; // Good (teal)
+            } else {
+                ratingColor = '#28a745'; // Excellent (green)
+            }
+            
+            legendHTML += `
+                <div style="display: flex; align-items: center; gap: 10px; padding: 6px; background-color: rgba(255, 255, 255, 0.8); border-radius: 4px; border-left: 3px solid ${ratingColor};">
+                    <span style="font-weight: bold; color: ${ratingColor}; min-width: 20px;">${index + 1}.</span>
+                    <div style="flex: 1;">
+                        <div style="font-size: 12px; font-weight: 500; color: var(--primary-color);">${truncateText(name, 40)}</div>
+                        <div style="font-size: 10px; color: #666;">${type} • Q3-Q4 Rating: ${rating}/5.0</div>
+                    </div>
+                </div>
+            `;
+        });
+        
+        legendHTML += `</div>`;
+        
+        // Show count and note about Q3-Q4 methodology
+        const totalAvailable = allAreas.length;
+        legendHTML += `
+            <div style="margin-top: 8px; font-style: italic; color: #666; font-size: 11px;">
+                💡 Showing lowest-rated ${top5Areas.length} of ${totalAvailable} areas from Q3-Q4 feedback. Trainings addressing these will be prioritized for next year.
+            </div>
+        `;
+    }
+    
+    legendContainer.innerHTML = legendHTML;
+    console.log("✅ Updated Final-Year training legend with Q3-Q4 top 5 areas");
+    console.log("=== FINAL-YEAR TOP 5 DEVELOPMENT AREAS DISPLAY COMPLETE ===");
+}
+
+function updateFormHeadersForFinalYear() {
+    // Update the feedback section headers to indicate Q3-Q4 data
+    const headers = [
+        { id: 'finalYearProfStrengthsInsights', selector: '.insights-header h4', text: 'Final-Year 360 Feedback: Excellent Performance (Q3-Q4)' },
+        { id: 'finalYearProfAverageInsights', selector: '.insights-header h4', text: 'Final-Year 360 Feedback: Good Performance (Q3-Q4)' },
+        { id: 'finalYearProfBelowAverageInsights', selector: '.insights-header h4', text: 'Final-Year 360 Feedback: Areas for Improvement (Q3-Q4)' },
+        { id: 'finalYearProfCriticalInsights', selector: '.insights-header h4', text: 'Final-Year 360 Feedback: Critical Development Areas (Q3-Q4)' },
+        { id: 'finalYearLeaderStrengthsInsights', selector: '.insights-header h4', text: 'Leadership Skills: Exceptional Performance (Q3-Q4)' },
+        { id: 'finalYearLeaderDevelopmentInsights', selector: '.insights-header h4', text: 'Leadership Skills: Development Opportunities (Q3-Q4)' }
+    ];
+    
+    headers.forEach(({ id, selector, text }) => {
+        const container = document.getElementById(id);
+        if (container) {
+            const header = container.querySelector(selector);
+            if (header) {
+                header.innerHTML = `<i class="fas fa-trophy" style="color: #4CAF50;"></i> ${text}`;
+            }
+            
+            const description = container.querySelector('.insights-header p');
+            if (description) {
+                description.textContent = 'Skills and objectives from Q3 and Q4 feedback sessions';
+            }
+        }
+    });
+}
+
+
+// Function to update feedback headers for Final-Year context
+function updateFeedbackHeadersForFinalYear() {
+    // Update the header text to reflect Q3-Q4 instead of Q1-Q2
+    const headers = [
+        { id: 'profStrengthsInsights', text: 'Final-Year 360 Feedback Improvement Areas: Above Average Ratings' },
+        { id: 'profAverageInsights', text: 'Final-Year 360 Feedback Improvement Areas: Average Ratings' },
+        { id: 'profBelowAverageInsights', text: 'Final-Year 360 Feedback Improvement Areas: Below Average Ratings' },
+        { id: 'leaderStrengthsInsights', text: 'Leadership Skills: Above Average Ratings' },
+        { id: 'leaderDevelopmentInsights', text: 'Leadership Skills: Average & Below Average Ratings' }
+    ];
+    
+    headers.forEach(({ id, text }) => {
+        const header = document.querySelector(`#${id} .insights-header h4`);
+        if (header) {
+            header.innerHTML = header.innerHTML.replace(/Mid-Year 360 Feedback/, text);
+        }
+        
+        const description = document.querySelector(`#${id} .insights-header p`);
+        if (description) {
+            description.textContent = 'Skills and objectives rated in Q3 and Q4 feedback';
+        }
+    });
+}function updateFinalYearTrainingLegendWithTop5() {
+    console.log("=== UPDATING FINAL-YEAR TOP 5 DEVELOPMENT AREAS (Q3-Q4) ===");
+    
+    // CRITICAL: Find the correct container - prioritize Final-Year specific container
+    let legendContainer = document.getElementById('finalYearDevelopmentAreasLegend') || 
+                         document.getElementById('developmentAreasLegend') ||
+                         document.querySelector('.training-match-info');
+    
+    if (!legendContainer) {
+        console.warn('⚠️ Final-Year development areas legend container not found');
+        // Create the container if it doesn't exist
+        const trainingFieldset = document.querySelector('.suggested-trainings-fieldset');
+        if (trainingFieldset) {
+            legendContainer = document.createElement('div');
+            legendContainer.id = 'finalYearDevelopmentAreasLegend';
+            legendContainer.className = 'training-match-info';
+            trainingFieldset.appendChild(legendContainer);
+            console.log('✅ Created Final-Year development areas legend container');
+        } else {
+            console.error('❌ Could not find or create Final-Year legend container');
+            return;
+        }
+    }
+    
+    // CRITICAL: Use finalYearFeedbackData instead of midYearFeedbackData
+    if (!window.finalYearFeedbackData || !window.finalYearFeedbackData.categorizedFeedback) {
+        console.log('❌ No Final-Year Q3-Q4 feedback data available');
+        legendContainer.innerHTML = `
+            <h5 style="margin: 5px 0; color: var(--primary-color); font-size: 13px;">
+                <i class="fas fa-target"></i> Top 5 Development Areas (Based on Q3-Q4 Feedback):
+            </h5>
+            <div style="font-style: italic; color: #888; font-size: 11px;">
+                Complete Q3 and Q4 feedback to see personalized training priorities based on your year-end development areas.
+            </div>
+        `;
+        return;
+    }
+    
+    // CRITICAL: Get all areas from Final-Year Q3-Q4 data ONLY
+    const allAreas = [
+        ...window.finalYearFeedbackData.categorizedFeedback.excellent || [],
+        ...window.finalYearFeedbackData.categorizedFeedback.good || [],
+        ...window.finalYearFeedbackData.categorizedFeedback.satisfactory || [],
+        ...window.finalYearFeedbackData.categorizedFeedback.needsImprovement || [],
+        ...window.finalYearFeedbackData.categorizedFeedback.critical || []
+    ];
+    
+    console.log(`Found ${allAreas.length} total Final-Year Q3-Q4 feedback areas`);
+    console.log('All areas breakdown:', {
+        excellent: window.finalYearFeedbackData.categorizedFeedback.excellent?.length || 0,
+        good: window.finalYearFeedbackData.categorizedFeedback.good?.length || 0,
+        satisfactory: window.finalYearFeedbackData.categorizedFeedback.satisfactory?.length || 0,
+        needsImprovement: window.finalYearFeedbackData.categorizedFeedback.needsImprovement?.length || 0,
+        critical: window.finalYearFeedbackData.categorizedFeedback.critical?.length || 0
+    });
+    
+    // Sort by lowest rating and take top 5
+    const top5Areas = allAreas
+        .sort((a, b) => a.averageRating - b.averageRating)
+        .slice(0, 5);
+    
+    console.log(`Selected top 5 Final-Year Q3-Q4 development areas:`, top5Areas);
+    
+    let legendHTML = `
+        <h5 style="margin: 5px 0; color: var(--primary-color); font-size: 13px;">
+            <i class="fas fa-target"></i> Top 5 Development Areas (Based on Q3-Q4 Feedback):
+        </h5>
+    `;
+    
+    if (top5Areas.length === 0) {
+        legendHTML += `
+            <div style="font-style: italic; color: #888; font-size: 11px;">
+                No Q3-Q4 feedback data available yet. Complete Q3 and Q4 feedback to see development priorities.
+            </div>
+        `;
+    } else {
+        legendHTML += `<div style="display: flex; flex-direction: column; gap: 8px;">`;
+        
+        top5Areas.forEach((area, index) => {
+            const name = area.type === 'objective' ? area.objectiveDescrpt : area.jobReqSkillName;
+            const type = area.type === 'objective' ? 'Objective' : `${area.jobReqSkillType} Skill`;
+            const rating = area.averageRating.toFixed(1);
+            
+            // Color coding based on Final-Year rating ranges (5-tier system)
+            let ratingColor;
+            if (area.averageRating >= 4.5) {
+                ratingColor = '#28a745'; // Excellent (green)
+            } else if (area.averageRating >= 3.5) {
+                ratingColor = '#17a2b8'; // Good (teal)
+            } else if (area.averageRating >= 2.5) {
+                ratingColor = '#ffc107'; // Satisfactory (yellow)
+            } else if (area.averageRating >= 1.5) {
+                ratingColor = '#fd7e14'; // Needs improvement (orange)
+            } else {
+                ratingColor = '#dc3545'; // Critical (red)
+            }
+            
+            legendHTML += `
+                <div style="display: flex; align-items: center; gap: 10px; padding: 6px; background-color: rgba(255, 255, 255, 0.8); border-radius: 4px; border-left: 3px solid ${ratingColor};">
+                    <span style="font-weight: bold; color: ${ratingColor}; min-width: 20px;">${index + 1}.</span>
+                    <div style="flex: 1;">
+                        <div style="font-size: 12px; font-weight: 500; color: var(--primary-color);">${truncateText(name, 40)}</div>
+                        <div style="font-size: 10px; color: #666;">${type} • Q3-Q4 Rating: ${rating}/5.0</div>
+                    </div>
+                </div>
+            `;
+        });
+        
+        legendHTML += `</div>`;
+        
+        // Show count and note about Q3-Q4 methodology
+        const totalAvailable = allAreas.length;
+        legendHTML += `
+            <div style="margin-top: 8px; font-style: italic; color: #666; font-size: 11px;">
+                💡 Showing lowest-rated ${top5Areas.length} of ${totalAvailable} areas from Q3-Q4 feedback. Trainings addressing these will be prioritized for next year.
+            </div>
+        `;
+    }
+    
+    // CRITICAL: Set the innerHTML and prevent overwriting
+    legendContainer.innerHTML = legendHTML;
+    
+    // CRITICAL: Mark this container as Final-Year to prevent Mid-Year from overwriting it
+    legendContainer.setAttribute('data-context', 'final-year');
+    
+    console.log("✅ Updated Final-Year training legend with Q3-Q4 top 5 areas");
+    console.log("=== FINAL-YEAR Q3-Q4 TOP 5 DEVELOPMENT AREAS UPDATE COMPLETE ===");
+}
+
 function navigateToFinalYearIDP() {
     const finalYearIDPButton = document.getElementById("finalYearIDP");
     
@@ -10927,7 +11790,8 @@ function navigateToFinalYearIDP() {
         return;
     }
     
-    console.log("Navigating to Enhanced Final-Year IDP...");
+    console.log("=== NAVIGATING TO FINAL-YEAR IDP WITH Q3-Q4 FEEDBACK ===");
+    console.log("Loading Final-Year IDP with Q3-Q4 feedback...");
     
     // Hide other sections
     hideAllSections();
@@ -10943,67 +11807,348 @@ function navigateToFinalYearIDP() {
     midYearIDPForm.classList.remove("fade-out");
     midYearIDPForm.classList.add("fade-in");
     
-    // Load Final-Year feedback aggregates when form is shown
+// CRITICAL: Set form to Final-Year context FIRST
+    updateFormForFinalYear();
+    
+    // CRITICAL: Protect against Mid-Year overwrites
+    preventMidYearOverwrite();
+    
+    // CRITICAL: Load Final-Year feedback aggregates (Q3-Q4 ONLY)
     loadFinalYearFeedbackAggregates();
     
-    // Check if in view-only mode and handle accordingly
+    // ENHANCED: Check if Final-Year IDP is completed and handle accordingly
     const isViewOnly = viewState && viewState.viewOnlyStatus && viewState.viewOnlyStatus.finalyearidp;
     
-    console.log("Final-Year IDP mode:", isViewOnly ? "View-Only" : "Edit");
+    console.log("Final-Year IDP completion status:", isViewOnly ? "Completed (View-Only)" : "Not Completed (Editable)");
     
     if (isViewOnly) {
-        console.log("Setting up Final-Year view-only mode...");
+        console.log("✅ Final-Year IDP already completed - setting up view-only mode...");
         
-        // Check if we have saved data available
-        if (viewState && viewState.finalYearData) {
-            console.log("Using viewState Final-Year IDP data");
-            createViewOnlyFinalYearIDPWithCategories(viewState.finalYearData);
-        } else {
-            console.log("Loading Final-Year IDP data from server...");
-            // Load the data from server
-            loadFinalYearIDPData(userId).then(() => {
-                if (viewState && viewState.finalYearData) {
-                    createViewOnlyFinalYearIDPWithCategories(viewState.finalYearData);
-                } else {
-                    console.error("Failed to load Final-Year IDP data");
-                    alert("Error loading Final-Year IDP data. Please refresh the page.");
-                }
-            });
-        }
+        // Hide progress bar for completed IDP
+        hideProgressBarIfCompleted();
+        
+        // Load and display existing Final-Year IDP data
+        loadFinalYearIDPDataWithCategories(userId).then(() => {
+            if (window.savedFinalYearIDPData) {
+                createViewOnlyFinalYearIDPWithCategories(window.savedFinalYearIDPData);
+            } else {
+                console.error("Failed to load Final-Year IDP data");
+                alert("Error loading Final-Year IDP data. Please refresh the page.");
+            }
+        });
     } else {
-        console.log("Setting up Final-Year edit mode...");
+        console.log("📝 Final-Year IDP not completed - setting up edit mode...");
         
-        // Update form title for Final-Year
-        const title = document.querySelector("#midYearIDPForm h2");
-        if (title) {
-            title.innerHTML = '<i class="fas fa-clipboard-check"></i> Final-Year Individual Development Plan (IDP)';
-        }
-        
-        // Update submit button for Final-Year
-        const submitButton = document.getElementById("submitMidYearIDP");
-        if (submitButton) {
-            submitButton.id = "submitFinalYearIDP";
-            submitButton.innerHTML = '<i class="fas fa-paper-plane"></i> Submit Final-Year IDP';
-        }
-        
-        // If in edit mode, ensure form fields are enabled
+        // Enable form for editing
         enableFinalYearIDPForm();
         
         // Initialize training categories functionality for new input
         if (typeof initializeTrainingCategories === 'function') {
             initializeTrainingCategories();
         }
-        
-        // Attach enhanced form listener
-        attachEnhancedFormListeners();
     }
     
     midYearIDPForm.scrollIntoView({ behavior: "smooth" });
-    console.log("Navigated to Enhanced Final-Year IDP form.", isViewOnly ? "(View-Only Mode)" : "(Edit Mode)");
+    console.log("=== FINAL-YEAR IDP NAVIGATION COMPLETE ===");
+    console.log(`Navigated to Final-Year IDP form. Status: ${isViewOnly ? "Completed (View-Only)" : "Not Completed (Editable)"}`);
 }
 
-// Update the existing navigation function to use enhanced version
-window.navigateToFinalYearIDP = navigateToFinalYearIDP;
+async function loadFinalYearFeedbackAggregates() {
+    console.log("=== LOADING FINAL-YEAR FEEDBACK AGGREGATES (Q3-Q4 ONLY) ===");
+    
+    // Show loading indicator
+    const loadingIndicator = document.getElementById('feedbackLoadingIndicator');
+    if (loadingIndicator) {
+        loadingIndicator.style.display = 'block';
+        loadingIndicator.innerHTML = '<i class="fas fa-spinner fa-spin"></i><p>Loading Q3-Q4 feedback insights...</p>';
+    }
+    
+    // Show loading placeholders with Q3-Q4 context
+    showFinalYearLoadingPlaceholders();
+    
+    try {
+        // Get the selected year
+        let selectedYear = new Date().getFullYear();
+        
+        const yearSelect = document.getElementById('yearSelect');
+        if (yearSelect && yearSelect.value) {
+            selectedYear = yearSelect.value;
+        }
+        
+        const urlParams = new URLSearchParams(window.location.search);
+        if (urlParams.has('year')) {
+            selectedYear = urlParams.get('year');
+        }
+        
+        console.log(`Fetching Final-Year Q3-Q4 feedback for year: ${selectedYear}`);
+        
+        // CRITICAL: Fetch ONLY Q3-Q4 data for Final-Year using the correct endpoint
+        const response = await fetch(`/linemanager/finalyear-feedback-aggregates/${userId}?year=${selectedYear}`);
+        
+        if (!response.ok) {
+            throw new Error(`Server responded with status ${response.status}`);
+        }
+        
+        const result = await response.json();
+        console.log("Final-Year feedback aggregates response:", result);
+        
+        if (result.success && result.data) {
+            // CRITICAL: Store globally for Final-Year IDP (separate from Mid-Year)
+            window.finalYearFeedbackData = result.data;
+            console.log("✅ Final-Year Q3-Q4 feedback data loaded:", window.finalYearFeedbackData);
+            
+            // Verify we have the right data structure
+            if (window.finalYearFeedbackData.categorizedFeedback) {
+                console.log("Final-Year categorized feedback structure:", {
+                    excellent: window.finalYearFeedbackData.categorizedFeedback.excellent?.length || 0,
+                    good: window.finalYearFeedbackData.categorizedFeedback.good?.length || 0,
+                    satisfactory: window.finalYearFeedbackData.categorizedFeedback.satisfactory?.length || 0,
+                    needsImprovement: window.finalYearFeedbackData.categorizedFeedback.needsImprovement?.length || 0,
+                    critical: window.finalYearFeedbackData.categorizedFeedback.critical?.length || 0
+                });
+            }
+            
+            // CRITICAL: Display the feedback in circular format for Final-Year
+            displayFinalYearFeedbackInCircularFormat(window.finalYearFeedbackData);
+            
+            // CRITICAL: Update the training legend with top 5 areas from Q3-Q4
+            updateFinalYearTrainingLegendWithTop5();
+            
+        } else {
+            console.error("❌ Error loading Final-Year feedback aggregates:", result.message);
+            showNoFeedbackMessage("Q3-Q4");
+        }
+        
+    } catch (error) {
+        console.error("❌ Error fetching Final-Year feedback aggregates:", error);
+        showNoFeedbackMessage("Q3-Q4");
+    } finally {
+        // Hide loading indicator
+        if (loadingIndicator) {
+            loadingIndicator.style.display = 'none';
+        }
+    }
+    
+    console.log("=== FINAL-YEAR FEEDBACK AGGREGATES LOADING COMPLETE ===");
+}
+function showFinalYearLoadingPlaceholders() {
+    const containers = [
+        'strengthsCircularDisplay',
+        'averageCircularDisplay', 
+        'belowAverageCircularDisplay',
+        'criticalCircularDisplay', // Added for Final-Year
+        'leadershipStrengthsCircularDisplay',
+        'leadershipDevelopmentCircularDisplay'
+    ];
+    
+    containers.forEach(containerId => {
+        const container = document.getElementById(containerId);
+        if (container) {
+            container.innerHTML = `
+                <div class="loading-placeholder" style="text-align: center; padding: 20px; color: #666;">
+                    <i class="fas fa-spinner fa-spin" style="margin-bottom: 10px; color: #2196F3;"></i>
+                    <div>Loading Q3-Q4 feedback data...</div>
+                </div>
+            `;
+        }
+    });
+}
+
+function updateFormForFinalYear() {
+    console.log("=== UPDATING FORM FOR FINAL-YEAR CONTEXT ===");
+    
+    // Clear any Mid-Year data to prevent conflicts
+    window.midYearFeedbackData = null;
+    
+    // Update form title for Final-Year
+    const title = document.querySelector("#midYearIDPForm h2");
+    if (title) {
+        title.innerHTML = '<i class="fas fa-clipboard-check"></i> Final-Year Individual Development Plan (IDP)';
+        console.log("✅ Updated form title to Final-Year");
+    }
+    
+    // Update header description for Final-Year
+    const headerDescription = document.querySelector("#midYearIDPForm .idp-header p");
+    if (headerDescription) {
+        headerDescription.textContent = "The Final-Year IDP evaluates overall performance and development throughout the year and establishes the foundation for the next performance cycle.";
+        console.log("✅ Updated form description to Final-Year");
+    }
+    
+    // Update submit button for Final-Year
+    let submitButton = document.getElementById("submitMidYearIDP") || document.getElementById("submitFinalYearIDP");
+    if (submitButton) {
+        submitButton.id = "submitFinalYearIDP";
+        submitButton.innerHTML = '<i class="fas fa-paper-plane"></i> Submit Final-Year IDP';
+        
+        // Remove any existing listeners and add the correct one
+        submitButton.removeEventListener('click', submitMidYearIDPFormWithTrainingCategories);
+        submitButton.addEventListener('click', function(event) {
+            event.preventDefault();
+            submitFinalYearIDPFormWithEnhancements(event);
+        });
+        console.log("✅ Updated submit button for Final-Year");
+    }
+    
+    // Update progress bar ID for Final-Year
+    let progressBar = document.getElementById("midYearIDPProgressBar") || document.getElementById("finalYearIDPProgressBar");
+    if (progressBar) {
+        progressBar.id = "finalYearIDPProgressBar";
+        console.log("✅ Updated progress bar ID for Final-Year");
+    }
+    
+    // CRITICAL: Update all feedback section headers to indicate Q3-Q4 data
+    updateAllHeadersForFinalYear();
+    
+    // CRITICAL: Update training legend header to show Q3-Q4 ONLY and protect from Mid-Year override
+    const legendContainer = document.getElementById('developmentAreasLegend') || 
+                           document.querySelector('.training-match-info');
+    if (legendContainer) {
+        // CRITICAL: Mark this container as Final-Year context to prevent overwrites
+        legendContainer.setAttribute('data-context', 'final-year');
+        
+        // Reset the legend to show Q3-Q4 context ONLY
+        legendContainer.innerHTML = `
+            <h5 style="margin: 5px 0; color: var(--primary-color); font-size: 13px;">
+                <i class="fas fa-target"></i> Top 5 Development Areas (Based on Q3-Q4 Feedback):
+            </h5>
+            <div id="finalYearTop5DevelopmentAreas" style="margin-top: 15px;">
+                <!-- This will be populated by JavaScript with Q3-Q4 data -->
+                <div style="font-style: italic; color: #888; font-size: 11px;">
+                    Complete Q3 and Q4 feedback to see personalized training priorities based on your year-end development areas.
+                </div>
+            </div>
+        `;
+    }
+    
+    console.log("=== FORM UPDATE FOR FINAL-YEAR COMPLETE ===");
+}
+
+function preventMidYearOverwrite() {
+    // Wrap the Mid-Year training legend update function to check context
+    const originalUpdateTrainingLegend = window.updateTrainingLegendWithTop5;
+    
+    if (originalUpdateTrainingLegend) {
+        window.updateTrainingLegendWithTop5 = function() {
+            // Check if we're in Final-Year context
+            const legendContainer = document.getElementById('developmentAreasLegend') || 
+                                   document.querySelector('.training-match-info');
+            
+            if (legendContainer && legendContainer.getAttribute('data-context') === 'final-year') {
+                console.log('🚫 Preventing Mid-Year legend update - Final-Year context active');
+                return; // Don't execute Mid-Year update
+            }
+            
+            // Otherwise, execute the original Mid-Year function
+            originalUpdateTrainingLegend();
+        };
+    }
+}
+
+
+function hideProgressBarIfCompleted() {
+    // Check if this is a completed IDP (view-only mode)
+    const form = document.getElementById("midYearIDPFormDetails");
+    const isViewOnly = form && form.classList.contains('view-only-mode');
+    
+    // Check if Final-Year IDP is completed
+    const isCompleted = viewState && viewState.viewOnlyStatus && 
+                       (viewState.viewOnlyStatus.finalyearidp || viewState.viewOnlyStatus.midyearidp);
+    
+    if (isViewOnly || isCompleted) {
+        // Hide the progress section
+        const progressSection = document.querySelector('.idp-progress');
+        if (progressSection) {
+            progressSection.style.display = 'none';
+            console.log('✅ Progress bar hidden for completed IDP');
+        }
+    }
+}
+
+window.hideProgressBarIfCompleted = hideProgressBarIfCompleted;
+
+// Debug function to test if Final-Year route is working
+async function debugFinalYearRoute() {
+    console.log("=== DEBUGGING FINAL-YEAR ROUTE ===");
+    
+    const year = new Date().getFullYear();
+    const testUrl = `/linemanager/finalyear-feedback-aggregates/${userId}?year=${year}`;
+    
+    console.log("Testing URL:", testUrl);
+    console.log("User ID:", userId);
+    console.log("Year:", year);
+    
+    try {
+        const response = await fetch(testUrl);
+        console.log("Response status:", response.status);
+        console.log("Response ok:", response.ok);
+        
+        if (response.ok) {
+            const data = await response.json();
+            console.log("Response data:", data);
+            
+            if (data.success && data.data) {
+                console.log("✅ Route is working! Found data:");
+                console.log("- Objectives:", data.data.objectives?.length || 0);
+                console.log("- Skills:", data.data.skills?.length || 0);
+                console.log("- Categorized feedback:", data.data.categorizedFeedback);
+            } else {
+                console.log("❌ Route returned success=false:", data.message);
+            }
+        } else {
+            console.log("❌ Route failed with status:", response.status);
+            const errorText = await response.text();
+            console.log("Error response:", errorText);
+        }
+    } catch (error) {
+        console.error("❌ Route test failed:", error);
+    }
+    
+    console.log("=== END DEBUGGING ===");
+}
+
+// Call this function to test the route
+window.debugFinalYearRoute = debugFinalYearRoute;
+
+async function loadFinalYearIDPDataWithCategories(userId) {
+    try {
+        console.log("Loading Final-Year IDP data with categories for userId:", userId);
+        
+        const response = await fetch(`/linemanager/finalyear-idp-trainings/${userId}`, {
+            method: "GET",
+            headers: {
+                "Accept": "application/json"
+            }
+        });
+        
+        if (!response.ok) {
+            throw new Error(`Server responded with status ${response.status}`);
+        }
+        
+        const result = await response.json();
+        
+        if (result.success && result.data.finalYearData) {
+            console.log("Successfully loaded Final-Year IDP data:", result.data);
+            
+            // Store globally for use when navigating to Final-Year IDP
+            window.savedFinalYearIDPData = result.data.finalYearData;
+            window.savedFinalYearTrainingCategories = result.data.trainingCategories || [];
+            window.savedFinalYearTrainingRemarks = result.data.trainingRemarks || '';
+            window.savedFinalYearTop5DevAreas = result.data.finalYearData.topDevAreas || [];
+            
+            console.log("Stored Final-Year IDP data globally:", {
+                finalYearData: !!window.savedFinalYearIDPData,
+                categoriesCount: window.savedFinalYearTrainingCategories.length,
+                hasRemarks: !!window.savedFinalYearTrainingRemarks,
+                top5AreasCount: window.savedFinalYearTop5DevAreas.length
+            });
+            
+        } else {
+            console.error("No Final-Year IDP data found or error:", result.message);
+        }
+    } catch (error) {
+        console.error("Error loading Final-Year IDP data with categories:", error);
+    }
+}
 // Debug function to test top 5 development areas collection
 function debugTop5Collection() {
     console.log("=== DEBUGGING TOP 5 COLLECTION ===");
@@ -11228,11 +12373,12 @@ function truncateText(text, maxLength = 100) {
 }
 
 // Function to show "no feedback" message
-function showNoFeedbackMessage() {
+function showNoFeedbackMessage(quarters = "Q3-Q4") {
     const containers = [
         'strengthsCircularDisplay',
         'averageCircularDisplay', 
         'belowAverageCircularDisplay',
+        'criticalCircularDisplay', // Added for Final-Year
         'leadershipStrengthsCircularDisplay',
         'leadershipDevelopmentCircularDisplay'
     ];
@@ -11241,15 +12387,14 @@ function showNoFeedbackMessage() {
         const container = document.getElementById(containerId);
         if (container) {
             container.innerHTML = `
-                <div class="no-feedback-message">
-                    <i class="fas fa-exclamation-circle" style="margin-right: 8px;"></i>
-                    No Q1/Q2 feedback data available. Complete feedback sessions to see insights here.
+                <div class="no-feedback-message" style="text-align: center; padding: 20px; color: #666; font-style: italic;">
+                    <i class="fas fa-exclamation-circle" style="margin-right: 8px; color: #ff9800;"></i>
+                    No ${quarters} feedback data available. Complete ${quarters} feedback sessions to see insights here.
                 </div>
             `;
         }
     });
 }
-
 
 // Function to load Final-Year IDP data
 function loadFinalYearIDPData(userId, year) {
@@ -11361,7 +12506,7 @@ function createViewOnlyMidYearIDP(data) {
     
     console.log("View-only Mid-Year IDP created successfully");
 }
-// Enhanced view-only function for Final-Year IDP with top 5 development areas display
+
 function createViewOnlyFinalYearIDPWithCategories(data) {
     if (!data) {
         console.error("No Final-Year IDP data available for view-only mode");
@@ -11380,6 +12525,9 @@ function createViewOnlyFinalYearIDPWithCategories(data) {
     // Set form to view-only mode
     form.classList.add('view-only-mode');
     
+    // Hide progress bar for completed IDP
+    hideProgressBarIfCompleted();
+    
     // Disable all form inputs
     const inputs = form.querySelectorAll("input, textarea");
     inputs.forEach(input => {
@@ -11397,7 +12545,7 @@ function createViewOnlyFinalYearIDPWithCategories(data) {
     }
     
     // Hide submit button
-    const submitButton = document.getElementById("submitFinalYearIDP");
+    const submitButton = document.getElementById("submitFinalYearIDP") || document.getElementById("submitMidYearIDP");
     if (submitButton) {
         submitButton.style.display = "none";
     }
@@ -11409,16 +12557,22 @@ function createViewOnlyFinalYearIDPWithCategories(data) {
     if (data.trainingCategories && Array.isArray(data.trainingCategories)) {
         console.log('Displaying Final-Year training categories from JSONB:', data.trainingCategories);
         
-        setTrainingCategoriesViewOnly(true);
+        if (typeof setTrainingCategoriesViewOnly === 'function') {
+            setTrainingCategoriesViewOnly(true);
+        }
         
-        selectedCategories = data.trainingCategories.map((categoryName, index) => ({
-            id: `category_${index}`,
-            name: categoryName,
-            category: categoryName,
-            isNew: false
-        }));
-        
-        updateSelectedCategoriesDisplay();
+        if (typeof selectedCategories !== 'undefined') {
+            selectedCategories = data.trainingCategories.map((categoryName, index) => ({
+                id: `category_${index}`,
+                name: categoryName,
+                category: categoryName,
+                isNew: false
+            }));
+            
+            if (typeof updateSelectedCategoriesDisplay === 'function') {
+                updateSelectedCategoriesDisplay();
+            }
+        }
         
         // Set training remarks if available
         if (data.trainingRemarks) {
@@ -11431,43 +12585,45 @@ function createViewOnlyFinalYearIDPWithCategories(data) {
     
     // ENHANCED: Display top 5 development areas for Final-Year if available
     const top5AreasToDisplay = data.topDevAreas || [];
-    displayTop5DevelopmentAreas(top5AreasToDisplay, 'Final-Year');
+    if (typeof displayTop5DevelopmentAreas === 'function') {
+        displayTop5DevelopmentAreas(top5AreasToDisplay, 'Final-Year');
+    }
     
-    // Show last updated info with enhanced details
-    let lastUpdatedInfo = document.querySelector("#midYearIDPForm .last-updated-info");
-    if (!lastUpdatedInfo) {
-        lastUpdatedInfo = document.createElement('div');
-        lastUpdatedInfo.className = 'last-updated-info';
-        form.appendChild(lastUpdatedInfo);
+    // Show completion status indicator
+    let completionInfo = document.querySelector("#midYearIDPForm .final-year-completion-info");
+    if (!completionInfo) {
+        completionInfo = document.createElement('div');
+        completionInfo.className = 'final-year-completion-info';
+        form.appendChild(completionInfo);
     }
     
     const lastUpdatedDate = data.lastUpdated ? new Date(data.lastUpdated).toLocaleString() : 'Unknown';
     const categoriesCount = data.trainingCategories ? data.trainingCategories.length : 0;
     const top5Count = top5AreasToDisplay.length;
     
-    lastUpdatedInfo.innerHTML = `
-        <div style="margin-top: 20px; padding: 15px; background-color: #e8f5e8; border-radius: 8px; border-left: 4px solid #4CAF50;">
-            <div style="display: flex; align-items: center; gap: 8px; color: #2e7d32;">
-                <i class="fas fa-check-circle"></i>
-                <strong>Final-Year IDP Completed</strong>
+    completionInfo.innerHTML = `
+        <div style="margin-top: 20px; padding: 15px; background: linear-gradient(135deg, #6a11cb 0%, #2575fc 100%); border-radius: 8px; color: white;">
+            <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 10px;">
+                <i class="fas fa-trophy" style="font-size: 20px;"></i>
+                <strong style="font-size: 16px;">Final-Year IDP Completed</strong>
             </div>
-            <div style="margin-top: 8px; font-size: 14px; color: #555;">
+            <div style="font-size: 14px; opacity: 0.9; margin-bottom: 8px;">
                 Last updated: ${lastUpdatedDate}
             </div>
             ${categoriesCount > 0 ? `
-                <div style="margin-top: 8px; font-size: 14px; color: #555;">
-                    Training categories selected: ${categoriesCount}
+                <div style="font-size: 14px; opacity: 0.9; margin-bottom: 4px;">
+                    <i class="fas fa-graduation-cap"></i> Training categories selected: ${categoriesCount}
                 </div>
             ` : ''}
             ${top5Count > 0 ? `
-                <div style="margin-top: 8px; font-size: 14px; color: #555;">
-                    Top development areas identified: ${top5Count}
+                <div style="font-size: 14px; opacity: 0.9;">
+                    <i class="fas fa-chart-line"></i> Development areas from Q3-Q4: ${top5Count}
                 </div>
             ` : ''}
         </div>
     `;
     
-    console.log("Enhanced view-only Final-Year IDP with training categories and top 5 dev areas created successfully");
+    console.log("Enhanced view-only Final-Year IDP with Q3-Q4 data created successfully");
 }
 
 // Function to enable Mid-Year IDP form for editing
@@ -11646,43 +12802,56 @@ function displayTop5DevelopmentAreas(top5Areas, idpType) {
 window.createViewOnlyMidYearIDPWithCategories = createViewOnlyMidYearIDPWithCategories;
 window.createViewOnlyFinalYearIDPWithCategories = createViewOnlyFinalYearIDPWithCategories;
 window.displayTop5DevelopmentAreas = displayTop5DevelopmentAreas;
-
-// Function to enable Final-Year IDP form for editing
 function enableFinalYearIDPForm() {
+    console.log("Enabling Final-Year IDP form for editing");
+    
     const form = document.getElementById("midYearIDPFormDetails");
-    if (form) {
-        // Remove view-only mode class if present
-        form.classList.remove('view-only-mode');
-        
-        // Enable all form inputs
-        const inputs = form.querySelectorAll("input, textarea");
-        inputs.forEach(input => {
-            input.disabled = false;
-            input.removeAttribute('readonly');
-        });
-        
-        // Show submit button (which should be renamed to submitFinalYearIDP)
-        const submitButton = document.getElementById("submitFinalYearIDP");
-        if (submitButton) {
-            submitButton.style.display = "inline-block";
-        }
-        
-        // Remove any last updated info
-        const lastUpdatedInfo = form.querySelector(".last-updated-info");
-        if (lastUpdatedInfo) {
-            lastUpdatedInfo.remove();
-        }
-        
-        // Update form title if needed
-        const title = document.querySelector("#midYearIDPForm h2");
-        if (title) {
-            title.innerHTML = '<i class="fas fa-clipboard-check"></i> Final-Year Individual Development Plan (IDP)';
-        }
-        
-        // Update the progress bar based on filled fields
-        updateFinalIDPProgress();
+    if (!form) {
+        console.error("Final-Year IDP form not found");
+        return;
     }
+    
+    // Remove view-only class
+    form.classList.remove('view-only-mode');
+    
+    // Enable all form inputs
+    const inputs = form.querySelectorAll("input, textarea");
+    inputs.forEach(input => {
+        input.disabled = false;
+        input.removeAttribute('readonly');
+        input.style.backgroundColor = 'white';
+        input.style.border = '1px solid #ddd';
+        input.style.cursor = 'text';
+    });
+    
+    // Show submit button
+    const submitButton = document.getElementById("submitFinalYearIDP") || document.getElementById("submitMidYearIDP");
+    if (submitButton) {
+        submitButton.id = "submitFinalYearIDP";
+        submitButton.style.display = "inline-block";
+        submitButton.disabled = false;
+        submitButton.innerHTML = '<i class="fas fa-paper-plane"></i> Submit Final-Year IDP';
+    }
+    
+    // Remove completion indicator
+    const completionInfo = form.querySelector('.final-year-completion-info');
+    if (completionInfo) {
+        completionInfo.remove();
+    }
+    
+    // Enable training categories for editing
+    if (typeof setTrainingCategoriesViewOnly === 'function') {
+        setTrainingCategoriesViewOnly(false);
+    }
+    
+    // Initialize training categories functionality for new input
+    if (typeof initializeTrainingCategories === 'function') {
+        initializeTrainingCategories();
+    }
+    
+    console.log("Final-Year IDP form enabled for editing");
 }
+
 function setIDPFormValues(data) {
     if (!data) {
         console.error("No data provided to setIDPFormValues");
@@ -12329,10 +13498,9 @@ function handleFeedbackFormSubmit(event) {
         console.error('save360Questionnaire function not found!');
         alert('Error: Save function not loaded. Please refresh the page.');
     }
-}
-
-// Enhanced function to setup stepper events
-function setupStepperEvents() {
+}function setupStepperEvents() {
+    console.log("Setting up enhanced stepper events with proper Mid-Year/Final-Year separation...");
+    
     // Objective setting button
     const objectivesButton = document.getElementById("objectivesButton");
     if (objectivesButton) {
@@ -12350,15 +13518,35 @@ function setupStepperEvents() {
         }
     }
     
-    // IDP buttons
+    // ENHANCED: Mid-Year IDP button - ensure it loads Mid-Year context ONLY
     const midYearIDPButton = document.getElementById("midYearIDP");
     if (midYearIDPButton) {
-        midYearIDPButton.addEventListener("click", navigateToMidYearIDP);
+        midYearIDPButton.addEventListener("click", function() {
+            console.log("🟢 Mid-Year IDP button clicked - loading Q1-Q2 feedback context");
+            
+            // Clear any Final-Year data to prevent conflicts
+            window.finalYearFeedbackData = null;
+            
+            // Clear the form context and reset to Mid-Year
+            resetFormToMidYearContext();
+            
+            // Navigate to Mid-Year IDP with Q1-Q2 feedback
+            navigateToMidYearIDP();
+        });
     }
     
+    // ENHANCED: Final-Year IDP button - ensure it loads Final-Year context ONLY
     const finalYearIDPButton = document.getElementById("finalYearIDP");
     if (finalYearIDPButton) {
-        finalYearIDPButton.addEventListener("click", navigateToFinalYearIDP);
+        finalYearIDPButton.addEventListener("click", function() {
+            console.log("🔵 Final-Year IDP button clicked - loading Q3-Q4 feedback context");
+            
+            // Clear any Mid-Year data to prevent conflicts
+            window.midYearFeedbackData = null;
+            
+            // Navigate to Final-Year IDP with Q3-Q4 feedback
+            navigateToFinalYearIDP();
+        });
     }
     
     // Year select - enhanced to refresh feedback data
@@ -12376,8 +13564,68 @@ function setupStepperEvents() {
         addRowBtn.addEventListener('click', addRow);
     }
     
-    console.log('Stepper events setup completed');
+    console.log('✅ Enhanced stepper events setup completed with proper Mid-Year/Final-Year separation');
 }
+function resetFormToMidYearContext() {
+    console.log("🟢 Resetting form to Mid-Year context (Q1-Q2)...");
+    
+    // Clear any Final-Year specific data
+    window.finalYearFeedbackData = null;
+    
+    // Reset form title to Mid-Year
+    const title = document.querySelector("#midYearIDPForm h2");
+    if (title) {
+        title.innerHTML = '<i class="fas fa-clipboard-check"></i> Mid-Year Individual Development Plan (IDP)';
+    }
+    
+    // Reset header description to Mid-Year
+    const headerDescription = document.querySelector("#midYearIDPForm .idp-header p");
+    if (headerDescription) {
+        headerDescription.textContent = "The Mid-Year IDP serves as a checkpoint to evaluate progress on professional goals and career development. Use this opportunity to identify strengths, areas for improvement, and establish a clear path forward.";
+    }
+    
+    // Reset submit button to Mid-Year
+    const submitButton = document.getElementById("submitFinalYearIDP") || document.getElementById("submitMidYearIDP");
+    if (submitButton) {
+        submitButton.id = "submitMidYearIDP";
+        submitButton.innerHTML = '<i class="fas fa-paper-plane"></i> Submit Mid-Year IDP';
+        
+        // Remove any existing listeners and add the correct one
+        submitButton.removeEventListener('click', submitFinalYearIDPFormWithEnhancements);
+        submitButton.removeEventListener('click', submitMidYearIDPFormWithTrainingCategories);
+        
+        submitButton.addEventListener('click', function(event) {
+            event.preventDefault();
+            submitMidYearIDPFormWithTrainingCategories(event);
+        });
+    }
+    
+    // Reset progress bar ID to Mid-Year
+    const progressBar = document.getElementById("finalYearIDPProgressBar") || document.getElementById("midYearIDPProgressBar");
+    if (progressBar) {
+        progressBar.id = "midYearIDPProgressBar";
+    }
+    
+    // Reset form headers to Mid-Year context (Q1-Q2)
+    resetFormHeadersToMidYear();
+    
+    // Reset training legend to show Q1-Q2 context
+    const legendContainer = document.getElementById('developmentAreasLegend') || 
+                           document.querySelector('.training-match-info');
+    if (legendContainer) {
+        legendContainer.innerHTML = `
+            <h5 style="margin: 5px 0; color: var(--primary-color); font-size: 13px;">
+                <i class="fas fa-target"></i> Top 5 Development Areas (Based on Q1-Q2 Feedback):
+            </h5>
+            <div style="font-style: italic; color: #888; font-size: 11px;">
+                Complete Q1 and Q2 feedback to see personalized training priorities based on your development areas.
+            </div>
+        `;
+    }
+    
+    console.log("🟢 Form reset to Mid-Year context (Q1-Q2) completed");
+}
+
 
 // Function to attach form submission listeners
 function attachFormListeners() {
