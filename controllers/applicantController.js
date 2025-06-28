@@ -844,7 +844,6 @@ restoreSessionFromChatHistory: async function(req, chatHistory, userId) {
         console.error('❌ [Restore] Error restoring session state:', error);
     }
 },
-
 handleChatbotMessage: async function (req, res) {
     try {
         console.log('✅ [Chatbot] Start processing chatbot message');
@@ -900,198 +899,195 @@ handleChatbotMessage: async function (req, res) {
         console.log(`✅ [Chatbot] UserID: ${userId}, Message: ${userMessage}, Timestamp: ${timestamp}`);
 
         // Handle status_check command first (before saving to chat history)
-// Update the status_check section in your handleChatbotMessage function
+        if (userMessage === 'status_check') {
+            console.log('📋 [Chatbot] Status check requested - NOT saving to chat history');
+            
+            // Check applicant status for reupload requests
+            const { data: applicantStatusData, error: applicantStatusError } = await supabase
+                .from('applicantaccounts')
+                .select('applicantStatus')
+                .eq('userId', userId)
+                .single();
+            
+            if (!applicantStatusError && applicantStatusData && 
+                applicantStatusData.applicantStatus.includes('Requested for Reupload')) {
+                
+                console.log('📋 [Chatbot] Found reupload request in applicant status');
+                
+                // Check for document reupload requests
+                const { data: assessmentData, error: assessmentError } = await supabase
+                    .from('applicant_initialscreening_assessment')
+                    .select('hrVerification')
+                    .eq('userId', userId)
+                    .single();
+                
+                if (!assessmentError && assessmentData && assessmentData.hrVerification) {
+                    let reuploadData;
+                    try {
+                        reuploadData = JSON.parse(assessmentData.hrVerification);
+                    } catch (e) {
+                        // Fallback for old format
+                        reuploadData = {
+                            documentsRequested: ['additional'],
+                            remarks: assessmentData.hrVerification
+                        };
+                    }
+                    
+                    console.log('📋 [Chatbot] Found reupload data:', reuploadData);
+                    
+                    const documentNames = reuploadData.documentsRequested.map(doc => {
+                        switch(doc) {
+                            case 'degree': return 'Degree Certificate';
+                            case 'certification': return 'Certification Document';
+                            case 'resume': return 'Resume';
+                            case 'additional': return 'Additional Document';
+                            default: return doc;
+                        }
+                    });
+                    
+                    const botResponse = {
+                        text: `Hello! We have reviewed your application and would like to request some document updates. Please re-upload the following documents: ${documentNames.join(', ')}. 
+                
+HR Instructions: ${reuploadData.remarks}.
+                
+Please upload each requested document using the buttons below. You need to upload ${reuploadData.documentsRequested.length} document(s).`,
+                        // 🔥 CRITICAL FIX: Create buttons for each document type
+                        buttons: reuploadData.documentsRequested.map(docType => ({
+                            text: `Upload ${documentNames[reuploadData.documentsRequested.indexOf(docType)]}`,
+                            type: 'file_upload_reupload',
+                            docType: docType
+                        })),
+                        reuploadData: reuploadData
+                    };
+                    
+                    // Set the applicant stage to expect file upload
+                    req.session.applicantStage = 'file_upload_reupload';
+                    req.session.awaitingFileUpload = 'reupload';
+                    req.session.reuploadData = reuploadData; // Store in session
+                    
+                    // Save bot response (but NOT the status_check user message)
+                    await supabase
+                        .from('chatbot_history')
+                        .insert([{
+                            userId,
+                            message: JSON.stringify(botResponse),
+                            sender: 'bot',
+                            timestamp,
+                            applicantStage: req.session.applicantStage
+                        }]);
+                    
+                    console.log('✅ [Chatbot] Reupload request with multiple buttons sent to user');
+                    return res.status(200).json({ response: botResponse });
+                }
+            }
+            
+            // If no reupload request, return null (no message to display)
+            console.log('📋 [Chatbot] No reupload request - returning empty response');
+            return res.status(200).json({ response: null });
+        }
 
-// Handle status_check command first (before saving to chat history)
-if (userMessage === 'status_check') {
-    console.log('📋 [Chatbot] Status check requested - NOT saving to chat history');
-    
-    // Check applicant status for reupload requests
-    const { data: applicantStatusData, error: applicantStatusError } = await supabase
-        .from('applicantaccounts')
-        .select('applicantStatus')
-        .eq('userId', userId)
-        .single();
-    
-    if (!applicantStatusError && applicantStatusData && 
-        applicantStatusData.applicantStatus.includes('Requested for Reupload')) {
-        
-        console.log('📋 [Chatbot] Found reupload request in applicant status');
-        
-        // Check for document reupload requests
-        const { data: assessmentData, error: assessmentError } = await supabase
-            .from('applicant_initialscreening_assessment')
-            .select('hrVerification')
-            .eq('userId', userId)
-            .single();
-        
-        if (!assessmentError && assessmentData && assessmentData.hrVerification) {
+        if (userMessage === 'check_reupload_progress') {
+            console.log('📋 [Chatbot] Reupload progress check requested');
+            
+            // Get current reupload status
+            const { data: assessmentData, error: assessmentError } = await supabase
+                .from('applicant_initialscreening_assessment')
+                .select('hrVerification, degree_url, cert_url, resume_url, addtlfile_url')
+                .eq('userId', userId)
+                .single();
+            
+            if (assessmentError || !assessmentData || !assessmentData.hrVerification) {
+                console.log('📋 [Chatbot] No active reupload request found');
+                return res.status(200).json({ response: null });
+            }
+            
             let reuploadData;
             try {
                 reuploadData = JSON.parse(assessmentData.hrVerification);
             } catch (e) {
-                // Fallback for old format
-                reuploadData = {
-                    documentsRequested: ['additional'],
-                    remarks: assessmentData.hrVerification
-                };
+                console.log('📋 [Chatbot] Invalid reupload data format');
+                return res.status(200).json({ response: null });
             }
             
-            console.log('📋 [Chatbot] Found reupload data:', reuploadData);
+            // Check which documents have been uploaded
+            const uploadedDocs = [];
+            const documentFields = {
+                'degree': assessmentData.degree_url,
+                'certification': assessmentData.cert_url,
+                'resume': assessmentData.resume_url,
+                'additional': assessmentData.addtlfile_url
+            };
             
-            const documentNames = reuploadData.documentsRequested.map(doc => {
-                switch(doc) {
-                    case 'degree': return 'Degree Certificate';
-                    case 'certification': return 'Certification Document';
-                    case 'resume': return 'Resume';
-                    case 'additional': return 'Additional Document';
-                    default: return doc;
+            reuploadData.documentsRequested.forEach(docType => {
+                if (documentFields[docType]) {
+                    uploadedDocs.push(docType);
                 }
             });
             
-            const botResponse = {
-                text: `Hello! We have reviewed your application and would like to request some document updates. Please re-upload the following documents: ${documentNames.join(', ')}. 
+            console.log('📋 [Chatbot] Requested docs:', reuploadData.documentsRequested);
+            console.log('📋 [Chatbot] Uploaded docs:', uploadedDocs);
             
-HR Instructions: ${reuploadData.remarks}
+            // Check if all documents have been uploaded
+            const allUploaded = reuploadData.documentsRequested.every(doc => uploadedDocs.includes(doc));
             
-Please upload each requested document using the buttons below. You need to upload ${reuploadData.documentsRequested.length} document(s).`,
-                // 🔥 CRITICAL FIX: Create buttons for each document type
-                buttons: reuploadData.documentsRequested.map(docType => ({
-                    text: `Upload ${documentNames[reuploadData.documentsRequested.indexOf(docType)]}`,
-                    type: 'file_upload_reupload',
-                    docType: docType
-                })),
-                reuploadData: reuploadData
-            };
-            
-            // Set the applicant stage to expect file upload
-            req.session.applicantStage = 'file_upload_reupload';
-            req.session.awaitingFileUpload = 'reupload';
-            req.session.reuploadData = reuploadData; // Store in session
-            
-            // Save bot response (but NOT the status_check user message)
-            await supabase
-                .from('chatbot_history')
-                .insert([{
-                    userId,
-                    message: JSON.stringify(botResponse),
-                    sender: 'bot',
-                    timestamp,
-                    applicantStage: req.session.applicantStage
-                }]);
-            
-            console.log('✅ [Chatbot] Reupload request with multiple buttons sent to user');
-            return res.status(200).json({ response: botResponse });
-        }
-    }
-    
-    // If no reupload request, return null (no message to display)
-    console.log('📋 [Chatbot] No reupload request - returning empty response');
-    return res.status(200).json({ response: null });
-}
-
-if (userMessage === 'check_reupload_progress') {
-    console.log('📋 [Chatbot] Reupload progress check requested');
-    
-    // Get current reupload status
-    const { data: assessmentData, error: assessmentError } = await supabase
-        .from('applicant_initialscreening_assessment')
-        .select('hrVerification, degree_url, cert_url, resume_url, addtlfile_url')
-        .eq('userId', userId)
-        .single();
-    
-    if (assessmentError || !assessmentData || !assessmentData.hrVerification) {
-        console.log('📋 [Chatbot] No active reupload request found');
-        return res.status(200).json({ response: null });
-    }
-    
-    let reuploadData;
-    try {
-        reuploadData = JSON.parse(assessmentData.hrVerification);
-    } catch (e) {
-        console.log('📋 [Chatbot] Invalid reupload data format');
-        return res.status(200).json({ response: null });
-    }
-    
-    // Check which documents have been uploaded
-    const uploadedDocs = [];
-    const documentFields = {
-        'degree': assessmentData.degree_url,
-        'certification': assessmentData.cert_url,
-        'resume': assessmentData.resume_url,
-        'additional': assessmentData.addtlfile_url
-    };
-    
-    reuploadData.documentsRequested.forEach(docType => {
-        if (documentFields[docType]) {
-            uploadedDocs.push(docType);
-        }
-    });
-    
-    console.log('📋 [Chatbot] Requested docs:', reuploadData.documentsRequested);
-    console.log('📋 [Chatbot] Uploaded docs:', uploadedDocs);
-    
-    // Check if all documents have been uploaded
-    const allUploaded = reuploadData.documentsRequested.every(doc => uploadedDocs.includes(doc));
-    
-    if (allUploaded) {
-        console.log('✅ [Chatbot] All documents uploaded - completing reupload process');
-        
-        // Update applicant status
-        await supabase
-            .from('applicantaccounts')
-            .update({ applicantStatus: "P1 - Awaiting for HR Action" })
-            .eq('userId', userId);
-        
-        // Clear HR verification
-        await supabase
-            .from('applicant_initialscreening_assessment')
-            .update({ hrVerification: null })
-            .eq('userId', userId);
-        
-        const completionMessage = {
-            text: "Thank you for uploading all requested documents. Your application has been submitted and is now awaiting review by our HR team. You will be notified once a decision has been made."
-        };
-        
-        // Save completion message
-        await supabase
-            .from('chatbot_history')
-            .insert([{
-                userId,
-                message: JSON.stringify(completionMessage),
-                sender: 'bot',
-                timestamp,
-                applicantStage: "P1 - Awaiting for HR Action"
-            }]);
-        
-        req.session.applicantStage = "P1 - Awaiting for HR Action";
-        return res.status(200).json({ response: completionMessage });
-    } else {
-        // Some documents are still missing
-        const remainingDocs = reuploadData.documentsRequested.filter(doc => !uploadedDocs.includes(doc));
-        const remainingDocNames = remainingDocs.map(doc => {
-            switch(doc) {
-                case 'degree': return 'Degree Certificate';
-                case 'certification': return 'Certification Document';
-                case 'resume': return 'Resume';
-                case 'additional': return 'Additional Document';
-                default: return doc;
+            if (allUploaded) {
+                console.log('✅ [Chatbot] All documents uploaded - completing reupload process');
+                
+                // Update applicant status
+                await supabase
+                    .from('applicantaccounts')
+                    .update({ applicantStatus: "P1 - Awaiting for HR Action" })
+                    .eq('userId', userId);
+                
+                // Clear HR verification
+                await supabase
+                    .from('applicant_initialscreening_assessment')
+                    .update({ hrVerification: null })
+                    .eq('userId', userId);
+                
+                const completionMessage = {
+                    text: "Thank you for uploading all requested documents. Your application has been submitted and is now awaiting review by our HR team. You will be notified once a decision has been made."
+                };
+                
+                // Save completion message
+                await supabase
+                    .from('chatbot_history')
+                    .insert([{
+                        userId,
+                        message: JSON.stringify(completionMessage),
+                        sender: 'bot',
+                        timestamp,
+                        applicantStage: "P1 - Awaiting for HR Action"
+                    }]);
+                
+                req.session.applicantStage = "P1 - Awaiting for HR Action";
+                return res.status(200).json({ response: completionMessage });
+            } else {
+                // Some documents are still missing
+                const remainingDocs = reuploadData.documentsRequested.filter(doc => !uploadedDocs.includes(doc));
+                const remainingDocNames = remainingDocs.map(doc => {
+                    switch(doc) {
+                        case 'degree': return 'Degree Certificate';
+                        case 'certification': return 'Certification Document';
+                        case 'resume': return 'Resume';
+                        case 'additional': return 'Additional Document';
+                        default: return doc;
+                    }
+                });
+                
+                const progressMessage = {
+                    text: `You still need to upload the following document(s): ${remainingDocNames.join(', ')}.`,
+                    buttons: remainingDocs.map(docType => ({
+                        text: `Upload ${remainingDocNames[remainingDocs.indexOf(docType)]}`,
+                        type: 'file_upload_reupload',
+                        docType: docType
+                    }))
+                };
+                
+                console.log('📋 [Chatbot] Sending progress update with remaining documents');
+                return res.status(200).json({ response: progressMessage });
             }
-        });
-        
-        const progressMessage = {
-            text: `You still need to upload the following document(s): ${remainingDocNames.join(', ')}.`,
-            buttons: remainingDocs.map(docType => ({
-                text: `Upload ${remainingDocNames[remainingDocs.indexOf(docType)]}`,
-                type: 'file_upload_reupload',
-                docType: docType
-            }))
-        };
-        
-        console.log('📋 [Chatbot] Sending progress update with remaining documents');
-        return res.status(200).json({ response: progressMessage });
-    }
-}
+        }
 
         // Handle conversation restoration after page refresh
         if (userMessage === 'continue_after_upload') {
@@ -1508,16 +1504,13 @@ if (userMessage === 'check_reupload_progress') {
             return res.status(200).json({ response: botResponse });
 
         // Process Answered Questions
-      // Process Answered Questions
-} else if (applicantStage === 'screening_questions') {
+        } else if (applicantStage === 'screening_questions') {
     const questions = req.session.screeningQuestions;
     const currentIndex = req.session.currentQuestionIndex;
 
     if (currentIndex < questions.length) {
         const currentQuestion = questions[currentIndex];
         const answerValue = userMessage.includes('yes') ? 1 : 0;
-
-        // Track the type of question being answered
         const questionType = currentQuestion.type;
 
         // Store the question and answer
@@ -1527,23 +1520,60 @@ if (userMessage === 'check_reupload_progress') {
             type: questionType
         });
 
-        // Update the database with the current scores (but don't process final scoring yet)
-        try {
-            await applicantController.saveScreeningScores(
-                userId, req.session.selectedPosition, req.session.screeningScores, req.session.resumeUrl
-            );
-        } catch (error) {
-            console.error('❌ [Chatbot] Error saving intermediate screening scores:', error);
-            // Continue anyway - we'll try again at the end
+        console.log(`📋 [Chatbot] Question ${currentIndex + 1}: ${questionType} = ${answerValue}`);
+
+        // 🔥 IMMEDIATE REJECTION for work_setup or availability = No
+        // This happens BEFORE processing any other logic
+        if ((questionType === 'work_setup' || questionType === 'availability') && answerValue === 0) {
+            console.log(`❌ [Chatbot] IMMEDIATE REJECTION: ${questionType} = No`);
+            
+            // Fill remaining questions with 0 answers
+            for (let i = currentIndex + 1; i < questions.length; i++) {
+                req.session.screeningScores.push({
+                    question: questions[i].text,
+                    answer: 0,
+                    type: questions[i].type
+                });
+            }
+
+            // Save scores and update status
+            try {
+                const saveResult = await applicantController.saveScreeningScores(
+                    userId, req.session.selectedPosition, req.session.screeningScores, req.session.resumeUrl
+                );
+
+                console.log('💾 [Chatbot] Save result for immediate rejection:', saveResult);
+            } catch (error) {
+                console.error('❌ [Chatbot] Error saving immediate rejection:', error);
+            }
+
+            // Update applicant status
+            await supabase
+                .from('applicantaccounts')
+                .update({ applicantStatus: 'P1 - FAILED' })
+                .eq('userId', userId);
+
+            // Send the EXACT rejection message
+            const rejectionMessage = {
+                text: "We regret to inform you that you have not been chosen as a candidate for this position. Thank you for your interest in applying at Prime Infrastructure, and we wish you the best in your future endeavors."
+            };
+            
+            req.session.applicantStage = 'P1 - FAILED';
+            
+            await supabase
+                .from('chatbot_history')
+                .insert([{
+                    userId,
+                    message: JSON.stringify(rejectionMessage),
+                    sender: 'bot',
+                    timestamp,
+                    applicantStage: req.session.applicantStage
+                }]);
+                
+            return res.status(200).json({ response: rejectionMessage });
         }
-        
-        // Update the appropriate counter
-        if (req.session.screeningCounters && questionType) {
-            req.session.screeningCounters[questionType] = 
-                (req.session.screeningCounters[questionType] || 0) + answerValue;
-        }
-        
-        // File upload request for degree and certification "Yes" answers
+
+        // File upload requests for degree and certification "Yes" answers
         if (questionType === 'degree' && answerValue === 1) {
             req.session.awaitingFileUpload = 'degree';
             req.session.applicantStage = 'file_upload';
@@ -1588,55 +1618,6 @@ if (userMessage === 'check_reupload_progress') {
             return res.status(200).json({ response: botResponse });
         }
 
-        // Handle work setup and availability questions - AUTOMATIC REJECTION FOR "NO"
-        if (questionType === 'work_setup' || questionType === 'availability') {
-            if (answerValue === 0) {
-                console.log(`❌ [Chatbot] Automatic rejection triggered: ${questionType} = No`);
-                
-                // Save remaining questions as "No" answers
-                for (let i = currentIndex + 1; i < questions.length; i++) {
-                    req.session.screeningScores.push({
-                        question: questions[i].text,
-                        answer: 0,
-                        type: questions[i].type
-                    });
-                }
-
-                // Save scores to the database and update status
-                try {
-                    await applicantController.saveScreeningScores(
-                        userId, req.session.selectedPosition, req.session.screeningScores, req.session.resumeUrl
-                    );
-
-                    // Update applicant status in database to P1 - FAILED
-                    await supabase
-                        .from('applicantaccounts')
-                        .update({ applicantStatus: 'P1 - FAILED' })
-                        .eq('userId', userId);
-                } catch (error) {
-                    console.error('❌ [Chatbot] Error processing rejection:', error);
-                }
-
-                const rejectionMessage = {
-                    text: "We regret to inform you that you have not met the requirements for this position. Thank you for your interest in applying at Prime Infrastructure, and we wish you the best in your future endeavors."
-                };
-                
-                req.session.applicantStage = 'P1 - FAILED';
-                
-                await supabase
-                    .from('chatbot_history')
-                    .insert([{
-                        userId,
-                        message: JSON.stringify(rejectionMessage),
-                        sender: 'bot',
-                        timestamp,
-                        applicantStage: req.session.applicantStage
-                    }]);
-                    
-                return res.status(200).json({ response: rejectionMessage });
-            }
-        }
-
         // Increment question index for all processed questions
         req.session.currentQuestionIndex++;
 
@@ -1663,56 +1644,56 @@ if (userMessage === 'check_reupload_progress') {
                 
             return res.status(200).json({ response: botResponse });
         } else {
-            // 🔥 ALL QUESTIONS COMPLETED - PROCESS FINAL SCORING
+            // ALL QUESTIONS COMPLETED - PROCESS FINAL SCORING
             console.log('✅ [Chatbot] All screening questions completed. Processing final scores...');
-            console.log('📊 [Chatbot] Final screening scores:', req.session.screeningScores);
-            console.log('🔢 [Chatbot] Screening counters:', req.session.screeningCounters);
             
             try {
-                // Try to save final scores and get result
                 const saveResult = await applicantController.saveScreeningScores(
                     userId, req.session.selectedPosition, req.session.screeningScores, req.session.resumeUrl
                 );
 
-                console.log('💾 [Chatbot] Save result:', saveResult);
+                console.log('💾 [Chatbot] Final save result:', saveResult);
 
                 if (saveResult && saveResult.success) {
-                    // Handle different result types
-                    if (saveResult.isRejected) {
-                        console.log('❌ [Chatbot] Final scoring resulted in rejection');
+                    if (saveResult.rejectionType === 'work_setup_availability') {
+                        // This should not happen here since we handle it immediately above
+                        console.log('❌ [Chatbot] Unexpected work_setup_availability rejection in final scoring');
                         
                         req.session.applicantStage = 'P1 - FAILED';
-                        
                         botResponse = {
-                            text: saveResult.message || "We regret to inform you that you have not met the minimum requirements for this position. Thank you for your interest in Prime Infrastructure.",
+                            text: "We regret to inform you that you have not been chosen as a candidate for this position. Thank you for your interest in applying at Prime Infrastructure, and we wish you the best in your future endeavors.",
+                            buttons: []
+                        };
+                    } else if (saveResult.rejectionType === 'low_score') {
+                        console.log('❌ [Chatbot] Low score rejection');
+                        
+                        req.session.applicantStage = 'P1 - FAILED';
+                        botResponse = {
+                            text: saveResult.message,
                             buttons: []
                         };
                     } else if (saveResult.passes) {
-                        console.log('✅ [Chatbot] Final scoring - applicant passed');
+                        console.log('✅ [Chatbot] Applicant passed - proceed to resume upload');
                         
                         req.session.awaitingFileUpload = 'resume';
                         req.session.applicantStage = 'resume_upload';
                         
                         botResponse = {
-                            text: saveResult.message || "Congratulations! You have passed the screening questions. Please upload your resume to complete your application.",
+                            text: saveResult.message,
                             buttons: [{ text: 'Upload Resume', type: 'file_upload' }]
                         };
                     } else {
-                        console.log('❌ [Chatbot] Final scoring - applicant failed');
+                        console.log('❌ [Chatbot] Applicant failed for unknown reason');
                         
                         req.session.applicantStage = 'P1 - FAILED';
-                        
                         botResponse = {
-                            text: saveResult.message || "We regret to inform you that you did not meet the minimum score requirements for this position. Thank you for your interest in Prime Infrastructure.",
+                            text: saveResult.message || "Unfortunately, you did not meet the requirements for this position.",
                             buttons: []
                         };
                     }
                 } else {
-                    // saveResult.success is false or saveResult is null/undefined
-                    console.error('❌ [Chatbot] saveScreeningScores returned unsuccessful result:', saveResult);
-                    
-                    // Fallback: assume they passed and proceed to resume upload
-                    console.log('🔄 [Chatbot] Falling back to resume upload due to scoring error');
+                    // Fallback in case of error
+                    console.log('🔄 [Chatbot] Fallback to resume upload due to scoring error');
                     
                     req.session.awaitingFileUpload = 'resume';
                     req.session.applicantStage = 'resume_upload';
@@ -1723,12 +1704,9 @@ if (userMessage === 'check_reupload_progress') {
                     };
                 }
             } catch (error) {
-                console.error('❌ [Chatbot] Error in saveScreeningScores:', error);
-                console.error('❌ [Chatbot] Error stack:', error.stack);
+                console.error('❌ [Chatbot] Error in final scoring:', error);
                 
-                // Fallback: proceed to resume upload
-                console.log('🔄 [Chatbot] Proceeding to resume upload due to scoring error');
-                
+                // Fallback
                 req.session.awaitingFileUpload = 'resume';
                 req.session.applicantStage = 'resume_upload';
                 
@@ -2102,7 +2080,6 @@ if (userMessage === 'check_reupload_progress') {
         res.status(500).send('Internal Server Error');
     }
 },
-
 // Function to fetch and structure all screening questions
 getInitialScreeningQuestions: async function (jobId) {
     try {
@@ -2947,168 +2924,142 @@ getJobPositionsList: async function() {
             res.status(500).json({ success: false, message: 'Internal server error', error: error.message });
         }
     },
-
-    // Update your saveScreeningScores function to handle automatic rejections
-
-saveScreeningScores: async function(userId, selectedPosition, screeningScores, resumeUrl = null) {
+    
+    saveScreeningScores: async function(userId, selectedPosition, screeningScores, resumeUrl = null) {
     try {
-        console.log('💾 [Save Scores] Saving screening scores for user:', userId);
-        console.log('💾 [Save Scores] Scores:', screeningScores);
+        console.log('💾 [Final Save] Starting scoring for user:', userId);
+        console.log('💾 [Final Save] Screening scores:', screeningScores);
         
+        // Get existing document URLs from session or database
+        const { data: existingData, error: fetchError } = await supabase
+            .from('applicant_initialscreening_assessment')
+            .select('degree_url, cert_url, resume_url')
+            .eq('userId', userId)
+            .single();
+
+        // Use session URLs if available, otherwise use existing database values
+        const degreeUrl = this.req?.session?.degreeUrl || existingData?.degree_url || null;
+        const certUrl = this.req?.session?.certificationUrl || existingData?.cert_url || null;
+        const finalResumeUrl = resumeUrl || this.req?.session?.resumeUrl || existingData?.resume_url || null;
+
+        console.log('💾 [Final Save] Document URLs:', {
+            degreeUrl,
+            certUrl,
+            finalResumeUrl
+        });
+
         // Calculate scores by category
         let degreeScore = 0, experienceScore = 0, certificationScore = 0;
         let hardSkillsScore = 0, softSkillsScore = 0;
         let workSetupScore = false, availabilityScore = false;
         
-        // Check for automatic rejection conditions
-        let automaticRejection = false;
-        let rejectionReason = '';
+        // Count questions by type for proper scoring
+        let degreeCount = 0, experienceCount = 0, certificationCount = 0;
+        let hardSkillCount = 0, softSkillCount = 0;
         
         screeningScores.forEach(score => {
             switch(score.type) {
                 case 'degree':
                     degreeScore += score.answer;
+                    degreeCount++;
                     break;
                 case 'experience':
                     experienceScore += score.answer;
+                    experienceCount++;
                     break;
                 case 'certification':
                     certificationScore += score.answer;
+                    certificationCount++;
                     break;
                 case 'hardSkill':
                     hardSkillsScore += score.answer;
+                    hardSkillCount++;
                     break;
                 case 'softSkill':
                     softSkillsScore += score.answer;
+                    softSkillCount++;
                     break;
                 case 'work_setup':
                     workSetupScore = score.answer === 1;
-                    if (score.answer === 0) {
-                        automaticRejection = true;
-                        rejectionReason = 'work_setup';
-                    }
                     break;
                 case 'availability':
                     availabilityScore = score.answer === 1;
-                    if (score.answer === 0) {
-                        automaticRejection = true;
-                        rejectionReason = 'availability';
-                    }
                     break;
             }
         });
-        
-        console.log('💾 [Save Scores] Calculated scores:', {
+
+        console.log('💾 [Final Save] Calculated scores:', {
             degreeScore, experienceScore, certificationScore,
             hardSkillsScore, softSkillsScore, workSetupScore, availabilityScore
         });
-        
-        if (automaticRejection) {
-            console.log(`❌ [Save Scores] Automatic rejection detected: ${rejectionReason}`);
-        }
 
-        // Get job details for the selected position
+        // Get job details
         const jobDetails = await applicantController.getJobDetailsbyTitle(selectedPosition);
         if (!jobDetails) {
             throw new Error('Job details not found');
         }
 
         const jobId = jobDetails.jobId;
-        console.log('💾 [Save Scores] Job ID:', jobId);
+        console.log('💾 [Final Save] Job ID:', jobId);
 
-        // Prepare the data to save/update
+        // Prepare assessment data with ALL required fields including URLs
         const assessmentData = {
-            userId: userId,
-            jobId: jobId,
-            degreeScore: degreeScore,
-            experienceScore: experienceScore,
-            certificationScore: certificationScore,
-            hardSkillsScore: hardSkillsScore,
-            softSkillsScore: softSkillsScore,
+            userId: parseInt(userId),
+            jobId: parseInt(jobId),
+            degreeScore: parseInt(degreeScore),
+            experienceScore: parseInt(experienceScore),
+            certificationScore: parseInt(certificationScore),
+            hardSkillsScore: parseInt(hardSkillsScore),
+            softSkillsScore: parseInt(softSkillsScore),
             workSetupScore: workSetupScore,
             availabilityScore: availabilityScore,
-            currentQuestionIndex: screeningScores.length,
-            resume_url: resumeUrl,
-            created_at: new Date().toISOString(),
-            // 🔥 NEW: Add rejection tracking
-            isRejected: automaticRejection,
-            rejectionReason: automaticRejection ? rejectionReason : null
+            totalScore: degreeScore + experienceScore + certificationScore + 
+                      hardSkillsScore + softSkillsScore + (workSetupScore ? 1 : 0) + (availabilityScore ? 1 : 0),
+            totalScoreCalculatedAt: new Date().toISOString().split('T')[0],
+            degree_url: degreeUrl,          // Added degree URL
+            cert_url: certUrl,              // Added certification URL
+            resume_url: finalResumeUrl,     // Added resume URL
+            created_at: new Date().toISOString()
         };
 
-        // Check if record already exists
-        const { data: existingRecord, error: checkError } = await supabase
+        console.log('💾 [Final Save] Complete assessment data:', assessmentData);
+
+        // Check if record exists
+        const { data: existingRecord } = await supabase
             .from('applicant_initialscreening_assessment')
-            .select('*')
+            .select('initialScreeningId')
             .eq('userId', userId)
+            .eq('jobId', jobId)
             .single();
 
-        let result;
+        let saveResult;
         if (existingRecord) {
             // Update existing record
-            const { data, error } = await supabase
+            saveResult = await supabase
                 .from('applicant_initialscreening_assessment')
                 .update(assessmentData)
-                .eq('userId', userId);
-            result = { data, error };
+                .eq('userId', userId)
+                .eq('jobId', jobId);
         } else {
             // Insert new record
-            const { data, error } = await supabase
+            saveResult = await supabase
                 .from('applicant_initialscreening_assessment')
                 .insert([assessmentData]);
-            result = { data, error };
         }
 
-        if (result.error) {
-            console.error('❌ [Save Scores] Error saving assessment:', result.error);
-            throw result.error;
+        if (saveResult.error) {
+            console.error('❌ [Final Save] Database error:', saveResult.error);
+            throw saveResult.error;
         }
 
-        console.log('✅ [Save Scores] Assessment saved successfully');
+        console.log('✅ [Final Save] Assessment saved with document URLs');
 
-        // 🔥 CRITICAL: Handle automatic rejections
-        if (automaticRejection) {
-            console.log('❌ [Save Scores] Processing automatic rejection');
-            
-            // Update applicant status to P1 - FAILED
-            const { error: statusError } = await supabase
-                .from('applicantaccounts')
-                .update({ applicantStatus: 'P1 - FAILED' })
-                .eq('userId', userId);
-            
-            if (statusError) {
-                console.error('❌ [Save Scores] Error updating status for rejection:', statusError);
-            } else {
-                console.log('✅ [Save Scores] Applicant status updated to P1 - FAILED for automatic rejection');
-            }
-            
-            return {
-                success: true,
-                message: "We regret to inform you that you have not met the requirements for this position. Thank you for your interest in applying at Prime Infrastructure, and we wish you the best in your future endeavors.",
-                isRejected: true,
-                rejectionReason: rejectionReason
-            };
-        }
-
-        // Calculate total score for non-rejected applications
+        // Determine pass/fail (rest of your existing logic)
         const totalQuestions = screeningScores.length;
-        const totalScore = degreeScore + experienceScore + certificationScore + hardSkillsScore + softSkillsScore + (workSetupScore ? 1 : 0) + (availabilityScore ? 1 : 0);
-        const percentage = totalQuestions > 0 ? (totalScore / totalQuestions) * 100 : 0;
+        const passingThreshold = Math.ceil(totalQuestions * 0.7);
+        const passes = assessmentData.totalScore >= passingThreshold;
 
-        console.log('💾 [Save Scores] Total score calculation:', {
-            totalScore, totalQuestions, percentage
-        });
-
-        // Determine if the applicant passes the initial screening
-        const passingThreshold = 70; // You can adjust this threshold
-        const passes = percentage >= passingThreshold;
-
-        let message;
-        if (passes) {
-            message = `Congratulations! You have completed the initial screening with a score of ${percentage.toFixed(1)}%. Please proceed to upload your resume.`;
-        } else {
-            message = `Thank you for completing the screening. Unfortunately, you did not meet the minimum requirements for this position. Your score was ${percentage.toFixed(1)}%.`;
-            
-            // Update status to P1 - FAILED for low scores
+        if (!passes) {
             await supabase
                 .from('applicantaccounts')
                 .update({ applicantStatus: 'P1 - FAILED' })
@@ -3117,23 +3068,25 @@ saveScreeningScores: async function(userId, selectedPosition, screeningScores, r
 
         return {
             success: true,
-            message: message,
-            score: percentage,
+            score: assessmentData.totalScore,
+            totalQuestions: totalQuestions,
             passes: passes,
-            isRejected: !passes,
-            rejectionReason: !passes ? 'low_score' : null
+            message: passes ? 
+                'Congratulations! You have successfully completed the initial screening process. To proceed with your application, please upload your resume for us to review.' : 
+                'Thank you for completing the screening. Unfortunately...'
         };
 
     } catch (error) {
-        console.error('❌ [Save Scores] Error in saveScreeningScores:', error);
-        return {
-            success: false,
-            message: "There was an error processing your screening results. Please try again later.",
-            error: error.message
+        console.error('❌ [Final Save] Error:', error);
+        return { 
+            success: false, 
+            error: error.message,
+            message: "An error occurred while processing your screening results."
         };
     }
 },
-    handleFileUpload: async function(req, res) {
+
+handleFileUpload: async function(req, res) {
     console.log('📂 [Upload] Initiating file upload process...');
 
     try {
@@ -3168,24 +3121,17 @@ saveScreeningScores: async function(userId, selectedPosition, screeningScores, r
             return res.status(400).json({ response: { text: 'File size exceeds the 5 MB limit.' } });
         }
 
-        // Check what type of file upload this is
-        const awaitingFileUpload = req.session.awaitingFileUpload;
-        console.log('📂 [Upload] Upload type:', awaitingFileUpload);
-
-        // Generate unique file name
+        // Generate unique file name and upload to Supabase
         const uniqueName = `${Date.now()}-${file.name}`;
         const filePath = path.join(__dirname, '../uploads', uniqueName);
 
-        // Ensure uploads directory exists
         if (!fs.existsSync(path.join(__dirname, '../uploads'))) {
             fs.mkdirSync(path.join(__dirname, '../uploads'), { recursive: true });
         }
 
-        // Save file locally first
         await file.mv(filePath);
         console.log('📂 [Upload] File successfully saved locally. Uploading to Supabase...');
 
-        // Upload to Supabase
         const { error: uploadError } = await supabase.storage
             .from('uploads')
             .upload(uniqueName, fs.readFileSync(filePath), {
@@ -3194,7 +3140,6 @@ saveScreeningScores: async function(userId, selectedPosition, screeningScores, r
                 upsert: false,
             });
 
-        // Clean up local file
         fs.unlinkSync(filePath);
         console.log('📂 [Upload] Local file deleted after upload to Supabase.');
 
@@ -3206,7 +3151,7 @@ saveScreeningScores: async function(userId, selectedPosition, screeningScores, r
         const fileUrl = `https://amzzxgaqoygdgkienkwf.supabase.co/storage/v1/object/public/uploads/${uniqueName}`;
         console.log(`✅ [Upload] File uploaded successfully: ${fileUrl}`);
 
-        // Insert file metadata into database
+        // Insert file metadata into user_files table
         const { error: insertError } = await supabase
             .from('user_files')
             .insert([{
@@ -3224,64 +3169,85 @@ saveScreeningScores: async function(userId, selectedPosition, screeningScores, r
 
         console.log('✅ [Upload] File metadata successfully inserted into database.');
 
+        const awaitingFileUpload = req.session.awaitingFileUpload;
         let updateField = {};
         let successMessage = '';
-        
-        // Handle different upload types
+
         if (awaitingFileUpload === 'degree') {
             updateField = { degree_url: fileUrl };
             successMessage = '✅ Degree uploaded successfully. Let\'s continue.';
             req.session.degreeUrl = fileUrl;
-            console.log('📂 [Upload] Updating degree_url field');
         } else if (awaitingFileUpload === 'certification') {
             updateField = { cert_url: fileUrl };
             successMessage = '✅ Certification uploaded successfully. Let\'s continue.';
             req.session.certificationUrl = fileUrl;
-            console.log('📂 [Upload] Updating cert_url field');
         } else if (awaitingFileUpload === 'resume') {
             updateField = { resume_url: fileUrl };
             successMessage = '✅ Resume uploaded successfully. Thank you for answering, this marks the end of the initial screening process. We have forwarded your resume to the HR department, and we will notify you once a decision has been made.';
             req.session.resumeUrl = fileUrl;
-            console.log('📂 [Upload] Updating resume_url field');
         } else {
             updateField = { addtlfile_url: fileUrl };
             successMessage = '✅ Document uploaded successfully.';
-            console.log('📂 [Upload] Updating addtlfile_url field');
         }
-        
-        // Update the file URL in the assessment table
-        const { error: updateError } = await supabase
+
+        // Get existing assessment data to ensure we update the same row
+        const { data: existingAssessment, error: fetchError } = await supabase
             .from('applicant_initialscreening_assessment')
-            .update(updateField)
-            .eq('userId', userId);
-        
-        if (updateError) {
-            console.error('❌ [Upload] Error updating document:', updateError);
-            return res.status(400).json({ response: { text: 'Error updating document in database' } });
+            .select('*')
+            .eq('userId', userId)
+            .single();
+
+        if (fetchError && !existingAssessment) {
+            console.log('ℹ️ [Upload] No existing assessment record found - creating new one');
+            
+            // Get job details if available
+            const jobId = req.session.selectedPosition ? 
+                (await applicantController.getJobDetailsbyTitle(req.session.selectedPosition))?.jobId : null;
+
+            // Create new assessment record with all current data
+            const newAssessment = {
+                userId: userId,
+                jobId: jobId,
+                ...updateField,
+                created_at: new Date().toISOString()
+            };
+
+            const { error: insertError } = await supabase
+                .from('applicant_initialscreening_assessment')
+                .insert([newAssessment]);
+
+            if (insertError) {
+                console.error('❌ [Upload] Error creating new assessment:', insertError);
+                return res.status(500).json({ response: { text: 'Error creating assessment record.' } });
+            }
+        } else {
+            // Update existing record with the new file URL
+            const { error: updateError } = await supabase
+                .from('applicant_initialscreening_assessment')
+                .update(updateField)
+                .eq('userId', userId);
+
+            if (updateError) {
+                console.error('❌ [Upload] Error updating assessment:', updateError);
+                return res.status(500).json({ response: { text: 'Error updating assessment record.' } });
+            }
         }
-        
-        console.log('✅ [Upload] Database updated successfully');
+
+        console.log('✅ [Upload] Assessment record updated successfully');
         
         // Reset file upload flag
         delete req.session.awaitingFileUpload;
         
+        // Handle continuation logic
         let nextMessage = null;
         
-        // 🔥 CRITICAL FIX: Handle continuation for degree/certification uploads
         if (awaitingFileUpload === 'degree' || awaitingFileUpload === 'certification') {
             console.log('🔄 [Upload] Continuing with next screening question...');
-            
-            // Change stage back to screening_questions
             req.session.applicantStage = 'screening_questions';
-            
-            // Increment question index
             req.session.currentQuestionIndex++;
-            console.log(`➡️ [Upload] Next Question Index: ${req.session.currentQuestionIndex}`);
             
-            // Check if there are more questions
             if (req.session.screeningQuestions && 
                 req.session.currentQuestionIndex < req.session.screeningQuestions.length) {
-                
                 const nextQuestion = req.session.screeningQuestions[req.session.currentQuestionIndex];
                 nextMessage = {
                     text: nextQuestion.text,
@@ -3290,22 +3256,15 @@ saveScreeningScores: async function(userId, selectedPosition, screeningScores, r
                         { text: 'No', value: 0 }
                     ]
                 };
-                
-                console.log('✅ [Upload] Next question prepared:', nextQuestion.text);
             } else {
-                // All questions completed, proceed to resume upload
                 nextMessage = {
                     text: "All screening questions have been completed. Please upload your resume.",
                     buttons: [{ text: 'Upload Resume', type: 'file_upload' }]
                 };
-                
                 req.session.applicantStage = 'resume_upload';
                 req.session.awaitingFileUpload = 'resume';
-                
-                console.log('✅ [Upload] All questions completed, requesting resume upload');
             }
         } else if (awaitingFileUpload === 'resume') {
-            // Update applicant status for resume upload
             const { error: statusUpdateError } = await supabase
                 .from('applicantaccounts')
                 .update({ applicantStatus: 'P1 - Awaiting for HR Action' })
@@ -3315,11 +3274,10 @@ saveScreeningScores: async function(userId, selectedPosition, screeningScores, r
                 console.error('❌ [Upload] Error updating applicant status:', statusUpdateError);
             } else {
                 req.session.applicantStage = 'P1 - Awaiting for HR Action';
-                console.log('✅ [Upload] Applicant status updated to P1 - Awaiting for HR Action');
             }
         }
         
-        // Save the success message to chat history
+        // Save messages to chat history
         const timestamp = new Date().toISOString();
         await supabase
             .from('chatbot_history')
@@ -3330,8 +3288,7 @@ saveScreeningScores: async function(userId, selectedPosition, screeningScores, r
                 timestamp,
                 applicantStage: req.session.applicantStage
             }]);
-        
-        // Save the next message to chat history if it exists
+
         if (nextMessage) {
             await supabase
                 .from('chatbot_history')
@@ -3339,14 +3296,11 @@ saveScreeningScores: async function(userId, selectedPosition, screeningScores, r
                     userId,
                     message: JSON.stringify(nextMessage),
                     sender: 'bot',
-                    timestamp: new Date(Date.now() + 1000).toISOString(), // 1 second delay
+                    timestamp: new Date(Date.now() + 1000).toISOString(),
                     applicantStage: req.session.applicantStage
                 }]);
         }
-        
-        console.log('✅ [Upload] Process completed successfully');
-        
-        // Return response with nextMessage if available
+
         const response = {
             text: successMessage,
             applicantStage: req.session.applicantStage

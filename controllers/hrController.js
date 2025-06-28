@@ -1706,14 +1706,27 @@ res.render('staffpages/hr_pages/hrapplicanttracking-jobposition', { applicants }
         } catch (error) {
             res.json({ success: false, message: error.message });
         }
-    },
-requestDocumentReupload: async function(req, res) {
+    },requestDocumentReupload: async function(req, res) {
     const { userId, documentsToReupload, remarks, hrComments } = req.body;
     
     try {
         console.log('📂 [Reupload Request] Processing document reupload request for userId:', userId);
         console.log('📂 [Reupload Request] Documents to reupload:', documentsToReupload);
         console.log('📂 [Reupload Request] HR Remarks:', remarks);
+        
+        // 🔥 FIX: Check if user exists first
+        const { data: userCheck, error: userCheckError } = await supabase
+            .from('applicantaccounts')
+            .select('userId')
+            .eq('userId', userId)
+            .single();
+            
+        if (userCheckError || !userCheck) {
+            console.error('❌ [Reupload Request] User not found:', userCheckError);
+            return res.json({ success: false, message: `User not found: ${userId}` });
+        }
+        
+        console.log('✅ [Reupload Request] User found:', userCheck.userId);
         
         // 🔥 FIX: Ensure document types are standardized
         const normalizedDocuments = documentsToReupload.map(doc => {
@@ -1748,16 +1761,55 @@ requestDocumentReupload: async function(req, res) {
             requestedAt: new Date().toISOString()
         };
         
-        // Update applicant_initialscreening_assessment with HR verification remarks
-        const { error: assessmentError } = await supabase
-            .from('applicant_initialscreening_assessment')
-            .update({ 
-                hrVerification: JSON.stringify(reuploadData),
-                isHRChosen: null
-            })
-            .eq('userId', userId);
+        console.log('📂 [Reupload Request] Reupload data to save:', JSON.stringify(reuploadData, null, 2));
         
-        if (assessmentError) throw assessmentError;
+        // 🔥 FIX: Check if assessment record exists first
+        const { data: existingAssessment, error: checkError } = await supabase
+            .from('applicant_initialscreening_assessment')
+            .select('userId')
+            .eq('userId', userId)
+            .single();
+        
+        if (checkError && checkError.code === 'PGRST116') {
+            // No record exists, create one
+            console.log('📂 [Reupload Request] No assessment record found, creating one...');
+            
+            const { error: insertError } = await supabase
+                .from('applicant_initialscreening_assessment')
+                .insert({
+                    userId: userId,
+                    hrVerification: JSON.stringify(reuploadData),
+                    isHRChosen: null
+                });
+            
+            if (insertError) {
+                console.error('❌ [Reupload Request] Error creating assessment record:', insertError);
+                throw insertError;
+            }
+            
+            console.log('✅ [Reupload Request] Assessment record created successfully');
+        } else if (checkError) {
+            console.error('❌ [Reupload Request] Error checking assessment record:', checkError);
+            throw checkError;
+        } else {
+            // Record exists, update it
+            console.log('📂 [Reupload Request] Assessment record exists, updating...');
+            
+            const { error: assessmentError } = await supabase
+                .from('applicant_initialscreening_assessment')
+                .update({ 
+                    hrVerification: JSON.stringify(reuploadData),
+                    isHRChosen: null
+                })
+                .eq('userId', userId);
+            
+            if (assessmentError) {
+                console.error('❌ [Reupload Request] Error updating assessment record:', assessmentError);
+                throw assessmentError;
+            }
+            
+            console.log('✅ [Reupload Request] Assessment record updated successfully');
+        }
         
         // Update applicant status to indicate reupload is requested
         const { error: statusError } = await supabase
@@ -1767,7 +1819,12 @@ requestDocumentReupload: async function(req, res) {
             })
             .eq('userId', userId);
         
-        if (statusError) throw statusError;
+        if (statusError) {
+            console.error('❌ [Reupload Request] Error updating applicant status:', statusError);
+            throw statusError;
+        }
+        
+        console.log('✅ [Reupload Request] Applicant status updated successfully');
         
         // Create display names for documents
         const documentNames = normalizedDocuments.map(doc => {
@@ -1806,9 +1863,25 @@ Please upload each requested document using the buttons below. You need to uploa
                 applicantStage: "P1 - Awaiting for HR Action; Requested for Reupload"
             }]);
         
-        if (chatError) throw chatError;
+        if (chatError) {
+            console.error('❌ [Reupload Request] Error saving chatbot message:', chatError);
+            throw chatError;
+        }
         
         console.log('✅ [Reupload Request] Chatbot message with normalized document types saved successfully');
+        
+        // 🔥 FINAL VERIFICATION: Check what was actually saved
+        const { data: verifyData, error: verifyError } = await supabase
+            .from('applicant_initialscreening_assessment')
+            .select('hrVerification')
+            .eq('userId', userId)
+            .single();
+            
+        if (verifyError) {
+            console.error('❌ [Reupload Request] Error verifying saved data:', verifyError);
+        } else {
+            console.log('✅ [Reupload Request] Verification - Saved hrVerification:', verifyData.hrVerification);
+        }
         
         res.json({ 
             success: true, 
@@ -1820,7 +1893,6 @@ Please upload each requested document using the buttons below. You need to uploa
         res.json({ success: false, message: error.message });
     }
 },
-
 
 // 3. Controller function to get additional document info
 getAdditionalDocument: async function(req, res) {
