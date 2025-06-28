@@ -843,7 +843,9 @@ restoreSessionFromChatHistory: async function(req, chatHistory, userId) {
     } catch (error) {
         console.error('❌ [Restore] Error restoring session state:', error);
     }
-},handleChatbotMessage: async function (req, res) {
+},
+
+handleChatbotMessage: async function (req, res) {
     try {
         console.log('✅ [Chatbot] Start processing chatbot message');
         const today = new Date().toISOString().split('T')[0]; // Get today's date in "YYYY-MM-DD" format
@@ -1506,235 +1508,251 @@ if (userMessage === 'check_reupload_progress') {
             return res.status(200).json({ response: botResponse });
 
         // Process Answered Questions
-        } else if (applicantStage === 'screening_questions') {
-            const questions = req.session.screeningQuestions;
-            const currentIndex = req.session.currentQuestionIndex;
-        
-            if (currentIndex < questions.length) {
-                const currentQuestion = questions[currentIndex];
-                const answerValue = userMessage.includes('yes') ? 1 : 0;
-        
-                // Track the type of question being answered
-                const questionType = currentQuestion.type;
-        
-                // Store the question and answer
-                req.session.screeningScores.push({
-                    question: currentQuestion.text,
-                    answer: answerValue,
-                    type: questionType
-                });
-        
-                // Update the database with the current scores
-                await applicantController.saveScreeningScores(
-                    userId, req.session.selectedPosition, req.session.screeningScores, req.session.resumeUrl
-                );
-                
-                // Update the appropriate counter
-                if (req.session.screeningCounters && questionType) {
-                    req.session.screeningCounters[questionType] = 
-                        (req.session.screeningCounters[questionType] || 0) + answerValue;
-                }
-                
-                // File upload request for degree and certification "Yes" answers
-                if (questionType === 'degree' && answerValue === 1) {
-                    req.session.awaitingFileUpload = 'degree';
-                    req.session.applicantStage = 'file_upload'; // Change stage to file_upload
-                    
-                    botResponse = {
-                        text: "Please upload your degree certificate.",
-                        buttons: [{ text: 'Upload Degree File', type: 'file_upload' }]
-                    };
-                    
-                    // Save request to chat history
-                    await supabase
-                        .from('chatbot_history')
-                        .insert([{
-                            userId,
-                            message: JSON.stringify(botResponse),
-                            sender: 'bot',
-                            timestamp,
-                            applicantStage: req.session.applicantStage
-                        }]);
-                    
-                    // Don't increment question index here - it will be incremented after file upload
-                    return res.status(200).json({ response: botResponse });
-                }
-        
-                if (questionType === 'certification' && answerValue === 1) {
-                    req.session.awaitingFileUpload = 'certification';
-                    req.session.applicantStage = 'file_upload'; // Change stage to file_upload
-                    
-                    botResponse = {
-                        text: "Please upload your certification document.",
-                        buttons: [{ text: 'Upload Certification File', type: 'file_upload' }]
-                    };
-                    
-                    // Save request to chat history
-                    await supabase
-                        .from('chatbot_history')
-                        .insert([{
-                            userId,
-                            message: JSON.stringify(botResponse),
-                            sender: 'bot',
-                            timestamp,
-                            applicantStage: req.session.applicantStage
-                        }]);
-                    
-                    // Don't increment question index here - it will be incremented after file upload
-                    return res.status(200).json({ response: botResponse });
-                }
-        
-                // Automatic rejection for work setup or availability
-                // Replace the automatic rejection section in your screening_questions handler
+      // Process Answered Questions
+} else if (applicantStage === 'screening_questions') {
+    const questions = req.session.screeningQuestions;
+    const currentIndex = req.session.currentQuestionIndex;
 
-// Automatic rejection for work setup or availability
-if ((questionType === 'work_setup' || questionType === 'availability') && answerValue === 0) {
-    console.log(`❌ [Chatbot] Automatic rejection triggered: ${questionType} = No`);
-    
-    // Save remaining questions as "No" answers
-    for (let i = currentIndex + 1; i < questions.length; i++) {
+    if (currentIndex < questions.length) {
+        const currentQuestion = questions[currentIndex];
+        const answerValue = userMessage.includes('yes') ? 1 : 0;
+
+        // Track the type of question being answered
+        const questionType = currentQuestion.type;
+
+        // Store the question and answer
         req.session.screeningScores.push({
-            question: questions[i].text,
-            answer: 0,
-            type: questions[i].type
+            question: currentQuestion.text,
+            answer: answerValue,
+            type: questionType
         });
-    }
 
-    // Save scores to the database
-    const saveResult = await applicantController.saveScreeningScores(
-        userId, req.session.selectedPosition, req.session.screeningScores, req.session.resumeUrl
-    );
-
-    // 🔥 CRITICAL FIX: Update applicant status in database to P1 - FAILED
-    console.log('❌ [Chatbot] Updating applicant status to P1 - FAILED due to work setup/availability rejection');
-    
-    const { data: updateStatusData, error: updateStatusError } = await supabase
-        .from('applicantaccounts')
-        .update({ applicantStatus: 'P1 - FAILED' })
-        .eq('userId', userId);
-    
-    if (updateStatusError) {
-        console.error('❌ [Chatbot] Error updating applicant status to P1 - FAILED:', updateStatusError);
-        // Continue with rejection message even if status update fails
-    } else {
-        console.log('✅ [Chatbot] Applicant status successfully updated to P1 - FAILED');
-    }
-
-    // Rejection message
-    const rejectionMessage = {
-        text: "We regret to inform you that you have not met the requirements for this position. Thank you for your interest in applying at Prime Infrastructure, and we wish you the best in your future endeavors."
-    };
-    
-    // Update session applicant stage
-    req.session.applicantStage = 'P1 - FAILED';
-    
-    // Save rejection to chat history
-    await supabase
-        .from('chatbot_history')
-        .insert([{
-            userId,
-            message: JSON.stringify(rejectionMessage),
-            sender: 'bot',
-            timestamp,
-            applicantStage: req.session.applicantStage
-        }]);
-        
-    return res.status(200).json({ response: rejectionMessage });
-
-                } else {
-                    // For questions that don't require file upload, move to the next question
-                    req.session.currentQuestionIndex++;
-        
-                    // Check if we've reached the end of questions
-                    if (req.session.currentQuestionIndex < questions.length) {
-                        const nextQuestion = questions[req.session.currentQuestionIndex];
-                        botResponse = {
-                            text: nextQuestion.text,
-                            buttons: [
-                                { text: 'Yes', value: 1 },
-                                { text: 'No', value: 0 }
-                            ]
-                        };
-                        
-                        // Save next question to chat history
-                        await supabase
-                            .from('chatbot_history')
-                            .insert([{
-                                userId,
-                                message: JSON.stringify(botResponse),
-                                sender: 'bot',
-                                timestamp,
-                                applicantStage: req.session.applicantStage
-                            }]);
-                            
-                        return res.status(200).json({ response: botResponse });
-                    } else {
-                        // If all questions are answered, proceed to final step
-                       const saveResult = await applicantController.saveScreeningScores(
-        userId, req.session.selectedPosition, req.session.screeningScores, req.session.resumeUrl
-    );
-
-    if (saveResult.success) {
-        // 🔥 CRITICAL FIX: Handle different result types
-        if (saveResult.isRejected) {
-            console.log('❌ [Chatbot] Final scoring resulted in rejection');
-            
-            // Update session stage for rejected applications
-            req.session.applicantStage = 'P1 - FAILED';
-            
-            botResponse = {
-                text: saveResult.message,
-                buttons: [] // No buttons for rejected applications
-            };
-        } else if (saveResult.passes) {
-            console.log('✅ [Chatbot] Final scoring - applicant passed');
-            
-            // Applicant passed, proceed to resume upload
-            req.session.awaitingFileUpload = 'resume';
-            req.session.applicantStage = 'resume_upload';
-            
-            botResponse = {
-                text: saveResult.message,
-                buttons: [{ text: 'Upload Resume', type: 'file_upload' }]
-            };
-        } else {
-            console.log('❌ [Chatbot] Final scoring - applicant failed');
-            
-            // Applicant failed due to low score
-            req.session.applicantStage = 'P1 - FAILED';
-            
-            botResponse = {
-                text: saveResult.message,
-                buttons: [] // No buttons for failed applications
-            };
+        // Update the database with the current scores (but don't process final scoring yet)
+        try {
+            await applicantController.saveScreeningScores(
+                userId, req.session.selectedPosition, req.session.screeningScores, req.session.resumeUrl
+            );
+        } catch (error) {
+            console.error('❌ [Chatbot] Error saving intermediate screening scores:', error);
+            // Continue anyway - we'll try again at the end
         }
-    } else {
-        // Error in processing
-        console.error('❌ [Chatbot] Error in saveScreeningScores:', saveResult.error);
         
-        botResponse = { 
-            text: "There was an error processing your application. Please try again later." 
-        };
+        // Update the appropriate counter
+        if (req.session.screeningCounters && questionType) {
+            req.session.screeningCounters[questionType] = 
+                (req.session.screeningCounters[questionType] || 0) + answerValue;
+        }
         
-        // Don't change the applicant stage if there was an error
-    }
+        // File upload request for degree and certification "Yes" answers
+        if (questionType === 'degree' && answerValue === 1) {
+            req.session.awaitingFileUpload = 'degree';
+            req.session.applicantStage = 'file_upload';
+            
+            botResponse = {
+                text: "Please upload your degree certificate.",
+                buttons: [{ text: 'Upload Degree File', type: 'file_upload' }]
+            };
+            
+            await supabase
+                .from('chatbot_history')
+                .insert([{
+                    userId,
+                    message: JSON.stringify(botResponse),
+                    sender: 'bot',
+                    timestamp,
+                    applicantStage: req.session.applicantStage
+                }]);
+            
+            return res.status(200).json({ response: botResponse });
+        }
 
-    // Save final message to chat history
-    await supabase
-        .from('chatbot_history')
-        .insert([{
-            userId,
-            message: JSON.stringify(botResponse),
-            sender: 'bot',
-            timestamp,
-            applicantStage: req.session.applicantStage
-        }]);
-        
-    return res.status(200).json({ response: botResponse });
-                    }
+        if (questionType === 'certification' && answerValue === 1) {
+            req.session.awaitingFileUpload = 'certification';
+            req.session.applicantStage = 'file_upload';
+            
+            botResponse = {
+                text: "Please upload your certification document.",
+                buttons: [{ text: 'Upload Certification File', type: 'file_upload' }]
+            };
+            
+            await supabase
+                .from('chatbot_history')
+                .insert([{
+                    userId,
+                    message: JSON.stringify(botResponse),
+                    sender: 'bot',
+                    timestamp,
+                    applicantStage: req.session.applicantStage
+                }]);
+            
+            return res.status(200).json({ response: botResponse });
+        }
+
+        // Handle work setup and availability questions - AUTOMATIC REJECTION FOR "NO"
+        if (questionType === 'work_setup' || questionType === 'availability') {
+            if (answerValue === 0) {
+                console.log(`❌ [Chatbot] Automatic rejection triggered: ${questionType} = No`);
+                
+                // Save remaining questions as "No" answers
+                for (let i = currentIndex + 1; i < questions.length; i++) {
+                    req.session.screeningScores.push({
+                        question: questions[i].text,
+                        answer: 0,
+                        type: questions[i].type
+                    });
                 }
+
+                // Save scores to the database and update status
+                try {
+                    await applicantController.saveScreeningScores(
+                        userId, req.session.selectedPosition, req.session.screeningScores, req.session.resumeUrl
+                    );
+
+                    // Update applicant status in database to P1 - FAILED
+                    await supabase
+                        .from('applicantaccounts')
+                        .update({ applicantStatus: 'P1 - FAILED' })
+                        .eq('userId', userId);
+                } catch (error) {
+                    console.error('❌ [Chatbot] Error processing rejection:', error);
+                }
+
+                const rejectionMessage = {
+                    text: "We regret to inform you that you have not met the requirements for this position. Thank you for your interest in applying at Prime Infrastructure, and we wish you the best in your future endeavors."
+                };
+                
+                req.session.applicantStage = 'P1 - FAILED';
+                
+                await supabase
+                    .from('chatbot_history')
+                    .insert([{
+                        userId,
+                        message: JSON.stringify(rejectionMessage),
+                        sender: 'bot',
+                        timestamp,
+                        applicantStage: req.session.applicantStage
+                    }]);
+                    
+                return res.status(200).json({ response: rejectionMessage });
             }
         }
+
+        // Increment question index for all processed questions
+        req.session.currentQuestionIndex++;
+
+        // Check if we've reached the end of questions
+        if (req.session.currentQuestionIndex < questions.length) {
+            const nextQuestion = questions[req.session.currentQuestionIndex];
+            botResponse = {
+                text: nextQuestion.text,
+                buttons: [
+                    { text: 'Yes', value: 1 },
+                    { text: 'No', value: 0 }
+                ]
+            };
+            
+            await supabase
+                .from('chatbot_history')
+                .insert([{
+                    userId,
+                    message: JSON.stringify(botResponse),
+                    sender: 'bot',
+                    timestamp,
+                    applicantStage: req.session.applicantStage
+                }]);
+                
+            return res.status(200).json({ response: botResponse });
+        } else {
+            // 🔥 ALL QUESTIONS COMPLETED - PROCESS FINAL SCORING
+            console.log('✅ [Chatbot] All screening questions completed. Processing final scores...');
+            console.log('📊 [Chatbot] Final screening scores:', req.session.screeningScores);
+            console.log('🔢 [Chatbot] Screening counters:', req.session.screeningCounters);
+            
+            try {
+                // Try to save final scores and get result
+                const saveResult = await applicantController.saveScreeningScores(
+                    userId, req.session.selectedPosition, req.session.screeningScores, req.session.resumeUrl
+                );
+
+                console.log('💾 [Chatbot] Save result:', saveResult);
+
+                if (saveResult && saveResult.success) {
+                    // Handle different result types
+                    if (saveResult.isRejected) {
+                        console.log('❌ [Chatbot] Final scoring resulted in rejection');
+                        
+                        req.session.applicantStage = 'P1 - FAILED';
+                        
+                        botResponse = {
+                            text: saveResult.message || "We regret to inform you that you have not met the minimum requirements for this position. Thank you for your interest in Prime Infrastructure.",
+                            buttons: []
+                        };
+                    } else if (saveResult.passes) {
+                        console.log('✅ [Chatbot] Final scoring - applicant passed');
+                        
+                        req.session.awaitingFileUpload = 'resume';
+                        req.session.applicantStage = 'resume_upload';
+                        
+                        botResponse = {
+                            text: saveResult.message || "Congratulations! You have passed the screening questions. Please upload your resume to complete your application.",
+                            buttons: [{ text: 'Upload Resume', type: 'file_upload' }]
+                        };
+                    } else {
+                        console.log('❌ [Chatbot] Final scoring - applicant failed');
+                        
+                        req.session.applicantStage = 'P1 - FAILED';
+                        
+                        botResponse = {
+                            text: saveResult.message || "We regret to inform you that you did not meet the minimum score requirements for this position. Thank you for your interest in Prime Infrastructure.",
+                            buttons: []
+                        };
+                    }
+                } else {
+                    // saveResult.success is false or saveResult is null/undefined
+                    console.error('❌ [Chatbot] saveScreeningScores returned unsuccessful result:', saveResult);
+                    
+                    // Fallback: assume they passed and proceed to resume upload
+                    console.log('🔄 [Chatbot] Falling back to resume upload due to scoring error');
+                    
+                    req.session.awaitingFileUpload = 'resume';
+                    req.session.applicantStage = 'resume_upload';
+                    
+                    botResponse = {
+                        text: "Thank you for completing the screening questions. Please upload your resume to continue with your application.",
+                        buttons: [{ text: 'Upload Resume', type: 'file_upload' }]
+                    };
+                }
+            } catch (error) {
+                console.error('❌ [Chatbot] Error in saveScreeningScores:', error);
+                console.error('❌ [Chatbot] Error stack:', error.stack);
+                
+                // Fallback: proceed to resume upload
+                console.log('🔄 [Chatbot] Proceeding to resume upload due to scoring error');
+                
+                req.session.awaitingFileUpload = 'resume';
+                req.session.applicantStage = 'resume_upload';
+                
+                botResponse = {
+                    text: "Thank you for completing the screening questions. Please upload your resume to continue with your application.",
+                    buttons: [{ text: 'Upload Resume', type: 'file_upload' }]
+                };
+            }
+
+            // Save final message to chat history
+            await supabase
+                .from('chatbot_history')
+                .insert([{
+                    userId,
+                    message: JSON.stringify(botResponse),
+                    sender: 'bot',
+                    timestamp,
+                    applicantStage: req.session.applicantStage
+                }]);
+                
+            return res.status(200).json({ response: botResponse });
+        }
+    }
+}
         else if (applicantStage === 'file_upload') {
             if (req.session.awaitingFileUpload) {
                 const fileType = req.session.awaitingFileUpload;
