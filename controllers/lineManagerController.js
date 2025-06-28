@@ -10479,7 +10479,28 @@ getFinalYearFeedbackAggregates: async function(req, res) {
         });
     }
 },
-
+// Add this to your controller for debugging
+debugFinalYearAggregates: async function(req, res) {
+    try {
+        const userId = req.params.userId;
+        const year = req.query.year || new Date().getFullYear();
+        
+        // Get the actual aggregates
+        const aggregatesResponse = await this.getFinalYearFeedbackAggregates(req, res);
+        
+        return res.status(200).json({
+            success: true,
+            message: "Final-Year aggregates debug complete",
+            data: aggregatesResponse
+        });
+    } catch (error) {
+        console.error('Debug error:', error);
+        return res.status(500).json({
+            success: false,
+            error: error.message
+        });
+    }
+},
     
     // getUserProgressView: async function(req, res) {
     //     const user = req.user;

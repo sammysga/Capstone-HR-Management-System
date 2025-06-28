@@ -386,6 +386,7 @@ router.post('/linemanager/finalyear-idp/:userId', lineManagerController.saveFina
 router.get('/linemanager/finalyear-idp-trainings/:userId', lineManagerController.getFinalYearIDPWithTrainings);
 router.get('/linemanager/midyear-feedback-aggregates/:userId', lineManagerController.getMidYearFeedbackAggregates);
 router.get('/linemanager/finalyear-feedback-aggregates/:userId', lineManagerController.getFinalYearFeedbackAggregates);
+router.get('/linemanager/debug-finalyear-aggregates/:userId', lineManagerController.debugFinalYearAggregates);
 
 router.get('/linemanager/get-feedback-data/:userId', lineManagerController.getFeedbackData);
 // In your routes file
@@ -462,7 +463,9 @@ router.get('/employee/user-job-info', employeeController.getUserJobInfo);
 
 // Training request creation
 router.post('/employee/create-new-training-request', employeeController.createNewTrainingRequest);
-
+// Training time estimation and scheduling
+// router.get('/employee/training/time-estimation', employeeController.getTrainingTimeEstimation);
+// router.post('/employee/training/calculate-schedule', employeeController.calculateTrainingSchedule);
 // REMOVED: Old training dropdown - not needed with new structure
 // router.get('/employee/trainings/dropdown', employeeController.getTrainingDropdown);
 // router.get('/employee/trainings/:trainingId/details', employeeController.getTrainingDetails);

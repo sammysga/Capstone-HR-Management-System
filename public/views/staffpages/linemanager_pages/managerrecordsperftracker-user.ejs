@@ -5890,19 +5890,21 @@ function getSelectedTrainingName() {
     }
     return '';
 }
+
 function validateIDPForm(formType) {
-    const prefix = formType === 'final' ? 'final' : '';
+    console.log(`Validating IDP form for type: ${formType}`);
     
+    // Use standard field names for both Mid-Year and Final-Year
     const requiredFields = [
-        `${prefix}ProfStrengths`, 
-        `${prefix}ProfAreasForDevelopment`, 
-        `${prefix}ProfActionsToTake`, 
-        `${prefix}LeaderStrengths`, 
-        `${prefix}LeaderAreasForDevelopment`, 
-        `${prefix}LeaderActionsToTake`, 
-        `${prefix}NextRoleShortTerm`, 
-        `${prefix}NextRoleLongTerm`, 
-        `${prefix}NextRoleMobility`
+        "profStrengths", 
+        "profAreasForDevelopment", 
+        "profActionsToTake", 
+        "leaderStrengths", 
+        "leaderAreasForDevelopment", 
+        "leaderActionsToTake", 
+        "nextRoleShortTerm", 
+        "nextRoleLongTerm", 
+        "nextRoleMobility"
     ];
     
     let isValid = true;
@@ -5910,14 +5912,7 @@ function validateIDPForm(formType) {
     let invalidFields = [];
     
     requiredFields.forEach(fieldId => {
-        // Handle both naming conventions (with and without prefix)
-        let field = document.getElementById(fieldId);
-        
-        // If not found with prefix, try without prefix (using standard field names)
-        if (!field && prefix) {
-            const standardFieldId = fieldId.replace(prefix, '');
-            field = document.getElementById(standardFieldId.charAt(0).toLowerCase() + standardFieldId.slice(1));
-        }
+        const field = document.getElementById(fieldId);
         
         if (field) {
             const fieldValue = field.value ? field.value.trim() : '';
@@ -5949,7 +5944,8 @@ function validateIDPForm(formType) {
             return label ? label.textContent.replace('*', '').trim() : field.id;
         });
         
-        alert(`Please fill all required fields:\n\n${fieldNames.join('\n')}`);
+        const formTypeText = formType === 'final' ? 'Final-Year' : 'Mid-Year';
+        alert(`Please fill all required fields for ${formTypeText} IDP:\n\n${fieldNames.join('\n')}`);
         
         // Scroll to the first invalid field
         if (firstInvalidField) {
@@ -5968,8 +5964,10 @@ function validateIDPForm(formType) {
         }
     }
     
+    console.log(`${formType} IDP validation result:`, isValid);
     return isValid;
 }
+
 // ADD: CSS for shake animation
 const shakeStyle = document.createElement('style');
 shakeStyle.textContent = `
@@ -6296,16 +6294,22 @@ function showFinalYearIDPSuccessNotification() {
     }, 5000);
 }
 
-// Enhanced Final-Year IDP submission function
 async function submitFinalYearIDPFormWithEnhancements(event) {
     event.preventDefault();
+    event.stopPropagation();
     
-    console.log("=== STARTING FINAL-YEAR IDP SUBMISSION ===");
+    console.log("=== STARTING FINAL-YEAR IDP SUBMISSION DEBUG ===");
+    console.log("Submit function called successfully");
+    console.log("Event:", event);
+    console.log("Form validation starting...");
     
     // Validate the form
     if (!validateIDPForm('final')) {
+        console.log("❌ Final-Year form validation failed");
         return;
     }
+    
+    console.log("✅ Final-Year form validation passed");
     
     // Get selected training categories if available
     const trainingCategories = typeof getSelectedCategoriesForSubmission === 'function' 
@@ -6319,6 +6323,7 @@ async function submitFinalYearIDPFormWithEnhancements(event) {
         trainingCategories: trainingCategories,
         top5DevelopmentAreas: top5DevelopmentAreas
     });
+    
     
     // Get form data
     const formData = {
@@ -8275,10 +8280,10 @@ function filterAnswers() {
         card.style.display = showCard ? 'block' : 'none';
     });
 }
+
 function navigateToMidYearIDP() {
     const midYearIDPButton = document.getElementById("midYearIDP");
     
-    // Check if the button is accessible
     if (!midYearIDPButton || !midYearIDPButton.classList.contains('accessible')) {
         alert("You must complete the previous steps first.");
         return;
@@ -8286,10 +8291,8 @@ function navigateToMidYearIDP() {
     
     console.log("Navigating to Mid-Year IDP with Q1-Q2 feedback...");
     
-    // Hide other sections
     hideAllSections();
     
-    // Show the Mid-Year IDP form
     const midYearIDPForm = document.getElementById("midYearIDPForm");
     if (!midYearIDPForm) {
         console.error("Mid-Year IDP form not found.");
@@ -8303,97 +8306,35 @@ function navigateToMidYearIDP() {
     // FIXED: Ensure we reset form to Mid-Year context
     resetFormToMidYearContext();
     
-    // Load Mid-Year feedback aggregates (Q1-Q2) when form is shown
+    // Load Mid-Year feedback aggregates (Q1-Q2)
     loadMidYearFeedbackAggregates();
     
-    // Check if in view-only mode and handle accordingly
+    // Handle view-only mode
     const isViewOnly = viewState && viewState.viewOnlyStatus && viewState.viewOnlyStatus.midyearidp;
     
-    console.log("Mid-Year IDP mode:", isViewOnly ? "View-Only" : "Edit");
-    
     if (isViewOnly) {
-        console.log("Setting up Mid-Year view-only mode...");
-        
-        // Check if we have saved data available
         if (window.savedMidYearIDPData) {
-            console.log("Using globally stored Mid-Year IDP data");
             createViewOnlyMidYearIDPWithCategories(window.savedMidYearIDPData);
         } else if (viewState && viewState.midYearData) {
-            console.log("Using viewState Mid-Year IDP data");
             createViewOnlyMidYearIDPWithCategories(viewState.midYearData);
         } else {
-            console.log("Loading Mid-Year IDP data from server...");
-            // Load the data from server
             loadMidYearIDPDataWithCategories(userId).then(() => {
                 if (window.savedMidYearIDPData) {
                     createViewOnlyMidYearIDPWithCategories(window.savedMidYearIDPData);
-                } else {
-                    console.error("Failed to load Mid-Year IDP data");
-                    alert("Error loading Mid-Year IDP data. Please refresh the page.");
                 }
             });
         }
     } else {
-        console.log("Setting up Mid-Year edit mode...");
-        // If in edit mode, ensure form fields are enabled
         enableMidYearIDPForm();
-        
-        // Initialize training categories functionality for new input
         if (typeof initializeTrainingCategories === 'function') {
             initializeTrainingCategories();
         }
     }
     
     midYearIDPForm.scrollIntoView({ behavior: "smooth" });
-    console.log("Navigated to Mid-Year IDP form.", isViewOnly ? "(View-Only Mode)" : "(Edit Mode)");
+    console.log("Navigated to Mid-Year IDP form.");
 }
 
-
-function resetFormToMidYearContext() {
-    console.log("🟢 Resetting form to Mid-Year context...");
-    
-    // Clear any Final-Year specific data
-    window.finalYearFeedbackData = null;
-    
-    // Reset form title to Mid-Year
-    const title = document.querySelector("#midYearIDPForm h2");
-    if (title) {
-        title.innerHTML = '<i class="fas fa-clipboard-check"></i> Mid-Year Individual Development Plan (IDP)';
-    }
-    
-    // Reset header description to Mid-Year
-    const headerDescription = document.querySelector("#midYearIDPForm .idp-header p");
-    if (headerDescription) {
-        headerDescription.textContent = "The Mid-Year IDP serves as a checkpoint to evaluate progress on professional goals and career development. Use this opportunity to identify strengths, areas for improvement, and establish a clear path forward.";
-    }
-    
-    // Reset submit button to Mid-Year
-    const submitButton = document.getElementById("submitFinalYearIDP") || document.getElementById("submitMidYearIDP");
-    if (submitButton) {
-        submitButton.id = "submitMidYearIDP";
-        submitButton.innerHTML = '<i class="fas fa-paper-plane"></i> Submit Mid-Year IDP';
-        
-        // Remove any existing listeners and add the correct one
-        submitButton.removeEventListener('click', submitFinalYearIDPFormWithEnhancements);
-        submitButton.removeEventListener('click', submitMidYearIDPFormWithTrainingCategories);
-        
-        submitButton.addEventListener('click', function(event) {
-            event.preventDefault();
-            submitMidYearIDPFormWithTrainingCategories(event);
-        });
-    }
-    
-    // Reset progress bar ID to Mid-Year
-    const progressBar = document.getElementById("finalYearIDPProgressBar") || document.getElementById("midYearIDPProgressBar");
-    if (progressBar) {
-        progressBar.id = "midYearIDPProgressBar";
-    }
-    
-    // Reset form headers to Mid-Year context (Q1-Q2)
-    resetFormHeadersToMidYear();
-    
-    console.log("🟢 Form reset to Mid-Year context completed");
-}
 function resetFormHeadersToMidYear() {
     // Check if we're in Final-Year context - if so, don't reset
     const legendContainer = document.getElementById('developmentAreasLegend') || 
@@ -11016,10 +10957,37 @@ document.addEventListener("DOMContentLoaded", function() {
     window.getFinalYearTop5DevelopmentAreas = getFinalYearTop5DevelopmentAreas;
     window.submitMidYearIDPFormWithTrainingCategories = submitMidYearIDPFormWithTrainingCategories;
     window.submitFinalYearIDPFormWithEnhancements = submitFinalYearIDPFormWithEnhancements;
+    window.updateFinalIDPProgress = updateFinalIDPProgress;
+
     
     console.log("Enhanced IDP functions with top 5 development areas loaded successfully");
 });
+function debugFinalYearSubmit() {
+    console.log("=== DEBUGGING FINAL-YEAR SUBMIT ===");
+    
+    const submitButton = document.getElementById('submitFinalYearIDP');
+    console.log("Submit button found:", !!submitButton);
+    
+    if (submitButton) {
+        console.log("Button disabled:", submitButton.disabled);
+        console.log("Button style:", submitButton.style.backgroundColor);
+        console.log("Button innerHTML:", submitButton.innerHTML);
+        
+        // Test click
+        submitButton.click();
+    }
+    
+    const form = document.getElementById('midYearIDPFormDetails');
+    console.log("Form found:", !!form);
+    
+    const formTitle = document.querySelector("#midYearIDPForm h2");
+    console.log("Form title:", formTitle ? formTitle.textContent : "Not found");
+    
+    console.log("=== END DEBUG ===");
+}
 
+// Make it globally available for testing
+window.debugFinalYearSubmit = debugFinalYearSubmit;
 
 window.submitMidYearIDPFormWithTrainingCategories = submitMidYearIDPFormWithTrainingCategories;
 window.initializeTrainingDropdown = initializeTrainingDropdown;
@@ -11652,26 +11620,21 @@ function updateFeedbackHeadersForFinalYear() {
             description.textContent = 'Skills and objectives rated in Q3 and Q4 feedback';
         }
     });
-}function updateFinalYearTrainingLegendWithTop5() {
+}
+function updateFinalYearTrainingLegendWithTop5() {
     console.log("=== UPDATING FINAL-YEAR TOP 5 DEVELOPMENT AREAS (Q3-Q4) ===");
     
-    // CRITICAL: Find the correct container - prioritize Final-Year specific container
-    let legendContainer = document.getElementById('finalYearDevelopmentAreasLegend') || 
-                         document.getElementById('developmentAreasLegend') ||
-                         document.querySelector('.training-match-info');
+    // CRITICAL: Use ONLY the Final-Year specific container
+    let legendContainer = document.getElementById('finalYearDevelopmentAreasLegend');
     
     if (!legendContainer) {
-        console.warn('⚠️ Final-Year development areas legend container not found');
-        // Create the container if it doesn't exist
-        const trainingFieldset = document.querySelector('.suggested-trainings-fieldset');
-        if (trainingFieldset) {
-            legendContainer = document.createElement('div');
-            legendContainer.id = 'finalYearDevelopmentAreasLegend';
-            legendContainer.className = 'training-match-info';
-            trainingFieldset.appendChild(legendContainer);
-            console.log('✅ Created Final-Year development areas legend container');
-        } else {
-            console.error('❌ Could not find or create Final-Year legend container');
+        console.warn('⚠️ Final-Year specific development areas legend container not found');
+        // Try to create it
+        handleFinalYearLegendContainer();
+        legendContainer = document.getElementById('finalYearDevelopmentAreasLegend');
+        
+        if (!legendContainer) {
+            console.error('❌ Could not create Final-Year legend container');
             return;
         }
     }
@@ -11690,7 +11653,7 @@ function updateFeedbackHeadersForFinalYear() {
         return;
     }
     
-    // CRITICAL: Get all areas from Final-Year Q3-Q4 data ONLY
+    // Get all areas from Final-Year Q3-Q4 data ONLY
     const allAreas = [
         ...window.finalYearFeedbackData.categorizedFeedback.excellent || [],
         ...window.finalYearFeedbackData.categorizedFeedback.good || [],
@@ -11700,13 +11663,6 @@ function updateFeedbackHeadersForFinalYear() {
     ];
     
     console.log(`Found ${allAreas.length} total Final-Year Q3-Q4 feedback areas`);
-    console.log('All areas breakdown:', {
-        excellent: window.finalYearFeedbackData.categorizedFeedback.excellent?.length || 0,
-        good: window.finalYearFeedbackData.categorizedFeedback.good?.length || 0,
-        satisfactory: window.finalYearFeedbackData.categorizedFeedback.satisfactory?.length || 0,
-        needsImprovement: window.finalYearFeedbackData.categorizedFeedback.needsImprovement?.length || 0,
-        critical: window.finalYearFeedbackData.categorizedFeedback.critical?.length || 0
-    });
     
     // Sort by lowest rating and take top 5
     const top5Areas = allAreas
@@ -11735,7 +11691,7 @@ function updateFeedbackHeadersForFinalYear() {
             const type = area.type === 'objective' ? 'Objective' : `${area.jobReqSkillType} Skill`;
             const rating = area.averageRating.toFixed(1);
             
-            // Color coding based on Final-Year rating ranges (5-tier system)
+            // Color coding based on Final-Year rating ranges
             let ratingColor;
             if (area.averageRating >= 4.5) {
                 ratingColor = '#28a745'; // Excellent (green)
@@ -11762,7 +11718,6 @@ function updateFeedbackHeadersForFinalYear() {
         
         legendHTML += `</div>`;
         
-        // Show count and note about Q3-Q4 methodology
         const totalAvailable = allAreas.length;
         legendHTML += `
             <div style="margin-top: 8px; font-style: italic; color: #666; font-size: 11px;">
@@ -11771,11 +11726,8 @@ function updateFeedbackHeadersForFinalYear() {
         `;
     }
     
-    // CRITICAL: Set the innerHTML and prevent overwriting
+    // Set the innerHTML
     legendContainer.innerHTML = legendHTML;
-    
-    // CRITICAL: Mark this container as Final-Year to prevent Mid-Year from overwriting it
-    legendContainer.setAttribute('data-context', 'final-year');
     
     console.log("✅ Updated Final-Year training legend with Q3-Q4 top 5 areas");
     console.log("=== FINAL-YEAR Q3-Q4 TOP 5 DEVELOPMENT AREAS UPDATE COMPLETE ===");
@@ -11807,14 +11759,16 @@ function navigateToFinalYearIDP() {
     midYearIDPForm.classList.remove("fade-out");
     midYearIDPForm.classList.add("fade-in");
     
-// CRITICAL: Set form to Final-Year context FIRST
+    // CRITICAL: Set form to Final-Year context FIRST
     updateFormForFinalYear();
     
     // CRITICAL: Protect against Mid-Year overwrites
     preventMidYearOverwrite();
     
-    // CRITICAL: Load Final-Year feedback aggregates (Q3-Q4 ONLY)
-    loadFinalYearFeedbackAggregates();
+    // CRITICAL: Load Final-Year feedback aggregates (Q3-Q4 ONLY) - Wait for form update
+    setTimeout(() => {
+        loadFinalYearFeedbackAggregates();
+    }, 100);
     
     // ENHANCED: Check if Final-Year IDP is completed and handle accordingly
     const isViewOnly = viewState && viewState.viewOnlyStatus && viewState.viewOnlyStatus.finalyearidp;
@@ -11974,19 +11928,26 @@ function updateFormForFinalYear() {
         console.log("✅ Updated form description to Final-Year");
     }
     
-    // Update submit button for Final-Year
+    // FIXED: Update submit button for Final-Year with proper event handling
     let submitButton = document.getElementById("submitMidYearIDP") || document.getElementById("submitFinalYearIDP");
     if (submitButton) {
         submitButton.id = "submitFinalYearIDP";
         submitButton.innerHTML = '<i class="fas fa-paper-plane"></i> Submit Final-Year IDP';
         
-        // Remove any existing listeners and add the correct one
-        submitButton.removeEventListener('click', submitMidYearIDPFormWithTrainingCategories);
+        // Remove ALL existing listeners
+        const newButton = submitButton.cloneNode(true);
+        submitButton.parentNode.replaceChild(newButton, submitButton);
+        submitButton = newButton;
+        
+        // Add the correct Final-Year listener
         submitButton.addEventListener('click', function(event) {
             event.preventDefault();
+            event.stopPropagation();
+            console.log("🔵 Final-Year IDP submit button clicked!");
             submitFinalYearIDPFormWithEnhancements(event);
         });
-        console.log("✅ Updated submit button for Final-Year");
+        
+        console.log("✅ Updated submit button for Final-Year with new event listener");
     }
     
     // Update progress bar ID for Final-Year
@@ -11999,28 +11960,80 @@ function updateFormForFinalYear() {
     // CRITICAL: Update all feedback section headers to indicate Q3-Q4 data
     updateAllHeadersForFinalYear();
     
-    // CRITICAL: Update training legend header to show Q3-Q4 ONLY and protect from Mid-Year override
-    const legendContainer = document.getElementById('developmentAreasLegend') || 
-                           document.querySelector('.training-match-info');
-    if (legendContainer) {
-        // CRITICAL: Mark this container as Final-Year context to prevent overwrites
-        legendContainer.setAttribute('data-context', 'final-year');
-        
-        // Reset the legend to show Q3-Q4 context ONLY
-        legendContainer.innerHTML = `
-            <h5 style="margin: 5px 0; color: var(--primary-color); font-size: 13px;">
-                <i class="fas fa-target"></i> Top 5 Development Areas (Based on Q3-Q4 Feedback):
-            </h5>
-            <div id="finalYearTop5DevelopmentAreas" style="margin-top: 15px;">
-                <!-- This will be populated by JavaScript with Q3-Q4 data -->
-                <div style="font-style: italic; color: #888; font-size: 11px;">
-                    Complete Q3 and Q4 feedback to see personalized training priorities based on your year-end development areas.
-                </div>
-            </div>
-        `;
-    }
+    // CRITICAL FIX: Handle legend container properly
+    handleFinalYearLegendContainer();
     
     console.log("=== FORM UPDATE FOR FINAL-YEAR COMPLETE ===");
+}
+
+function handleFinalYearLegendContainer() {
+    console.log("=== HANDLING FINAL-YEAR LEGEND CONTAINER ===");
+    
+    // Find all possible legend containers
+    const existingContainers = [
+        document.getElementById('developmentAreasLegend'),
+        document.getElementById('finalYearDevelopmentAreasLegend'),
+        ...document.querySelectorAll('.training-match-info')
+    ].filter(Boolean);
+    
+    console.log("Found existing containers:", existingContainers.length);
+    
+    // Remove any Mid-Year specific containers
+    existingContainers.forEach((container, index) => {
+        const isGeneric = container.id === 'developmentAreasLegend' || 
+                         (container.className.includes('training-match-info') && !container.id);
+        
+        if (isGeneric) {
+            console.log(`Updating container ${index} for Final-Year use`);
+            container.id = 'finalYearDevelopmentAreasLegend';
+            container.setAttribute('data-context', 'final-year');
+            container.innerHTML = `
+                <h5 style="margin: 5px 0; color: var(--primary-color); font-size: 13px;">
+                    <i class="fas fa-target"></i> Top 5 Development Areas (Based on Q3-Q4 Feedback):
+                </h5>
+                <div id="finalYearTop5DevelopmentAreas" style="margin-top: 15px;">
+                    <div style="font-style: italic; color: #888; font-size: 11px;">
+                        Loading Q3-Q4 feedback data for development priorities...
+                    </div>
+                </div>
+            `;
+        } else if (container.id !== 'finalYearDevelopmentAreasLegend') {
+            // Remove duplicate containers
+            console.log(`Removing duplicate container ${index}`);
+            container.remove();
+        }
+    });
+    
+    // Ensure we have exactly one Final-Year container
+    let finalYearContainer = document.getElementById('finalYearDevelopmentAreasLegend');
+    
+    if (!finalYearContainer) {
+        console.log("Creating new Final-Year legend container");
+        const trainingFieldset = document.querySelector('.suggested-trainings-fieldset');
+        if (trainingFieldset) {
+            finalYearContainer = document.createElement('div');
+            finalYearContainer.id = 'finalYearDevelopmentAreasLegend';
+            finalYearContainer.className = 'training-match-info';
+            finalYearContainer.setAttribute('data-context', 'final-year');
+            finalYearContainer.style.cssText = 'margin-top: 15px; font-size: 12px; color: #666;';
+            
+            finalYearContainer.innerHTML = `
+                <h5 style="margin: 5px 0; color: var(--primary-color); font-size: 13px;">
+                    <i class="fas fa-target"></i> Top 5 Development Areas (Based on Q3-Q4 Feedback):
+                </h5>
+                <div id="finalYearTop5DevelopmentAreas" style="margin-top: 15px;">
+                    <div style="font-style: italic; color: #888; font-size: 11px;">
+                        Loading Q3-Q4 feedback data for development priorities...
+                    </div>
+                </div>
+            `;
+            
+            trainingFieldset.appendChild(finalYearContainer);
+            console.log("✅ Created new Final-Year legend container");
+        }
+    }
+    
+    console.log("=== FINAL-YEAR LEGEND CONTAINER HANDLING COMPLETE ===");
 }
 
 function preventMidYearOverwrite() {
@@ -12030,20 +12043,40 @@ function preventMidYearOverwrite() {
     if (originalUpdateTrainingLegend) {
         window.updateTrainingLegendWithTop5 = function() {
             // Check if we're in Final-Year context
-            const legendContainer = document.getElementById('developmentAreasLegend') || 
-                                   document.querySelector('.training-match-info');
+            const finalYearContainer = document.getElementById('finalYearDevelopmentAreasLegend');
+            const formTitle = document.querySelector("#midYearIDPForm h2");
+            const isFinalYearContext = (formTitle && formTitle.textContent.includes("Final-Year")) || 
+                                     !!finalYearContainer;
             
-            if (legendContainer && legendContainer.getAttribute('data-context') === 'final-year') {
+            if (isFinalYearContext) {
                 console.log('🚫 Preventing Mid-Year legend update - Final-Year context active');
                 return; // Don't execute Mid-Year update
             }
             
-            // Otherwise, execute the original Mid-Year function
+            // Make sure we have a Mid-Year container
+            const midYearContainer = document.getElementById('developmentAreasLegend');
+            if (!midYearContainer) {
+                handleMidYearLegendContainer();
+            }
+            
+            // Execute the original Mid-Year function
             originalUpdateTrainingLegend();
         };
     }
+    
+    // Also prevent header resets during Final-Year
+    const originalResetHeaders = window.resetFormHeadersToMidYear;
+    if (originalResetHeaders) {
+        window.resetFormHeadersToMidYear = function() {
+            const formTitle = document.querySelector("#midYearIDPForm h2");
+            if (formTitle && formTitle.textContent.includes("Final-Year")) {
+                console.log('🚫 Preventing Mid-Year header reset - Final-Year context active');
+                return;
+            }
+            originalResetHeaders();
+        };
+    }
 }
-
 
 function hideProgressBarIfCompleted() {
     // Check if this is a completed IDP (view-only mode)
@@ -12602,26 +12635,29 @@ function createViewOnlyFinalYearIDPWithCategories(data) {
     const top5Count = top5AreasToDisplay.length;
     
     completionInfo.innerHTML = `
-        <div style="margin-top: 20px; padding: 15px; background: linear-gradient(135deg, #6a11cb 0%, #2575fc 100%); border-radius: 8px; color: white;">
-            <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 10px;">
-                <i class="fas fa-trophy" style="font-size: 20px;"></i>
-                <strong style="font-size: 16px;">Final-Year IDP Completed</strong>
+
+            <div style="margin-top: 20px; padding: 15px; background-color: #e8f5e8; border-radius: 8px; border-left: 4px solid #4CAF50;">
+            <div style="display: flex; align-items: center; gap: 8px; color: #2e7d32;">
+                <i class="fas fa-check-circle"></i>
+                <strong>Final-Year IDP Completed</strong>
             </div>
-            <div style="font-size: 14px; opacity: 0.9; margin-bottom: 8px;">
+            <div style="margin-top: 8px; font-size: 14px; color: #555;">
                 Last updated: ${lastUpdatedDate}
             </div>
             ${categoriesCount > 0 ? `
-                <div style="font-size: 14px; opacity: 0.9; margin-bottom: 4px;">
-                    <i class="fas fa-graduation-cap"></i> Training categories selected: ${categoriesCount}
+                <div style="margin-top: 8px; font-size: 14px; color: #555;">
+                    Training categories selected: ${categoriesCount}
                 </div>
             ` : ''}
             ${top5Count > 0 ? `
-                <div style="font-size: 14px; opacity: 0.9;">
-                    <i class="fas fa-chart-line"></i> Development areas from Q3-Q4: ${top5Count}
+                <div style="margin-top: 8px; font-size: 14px; color: #555;">
+                    Top development areas identified: ${top5Count}
                 </div>
             ` : ''}
         </div>
     `;
+
+    
     
     console.log("Enhanced view-only Final-Year IDP with Q3-Q4 data created successfully");
 }
@@ -12673,129 +12709,7 @@ function enableMidYearIDPForm() {
 // Function to display top 5 development areas in a dedicated section
 function displayTop5DevelopmentAreas(top5Areas, idpType) {
     console.log(`Displaying top 5 development areas for ${idpType} IDP:`, top5Areas);
-    
-    if (!Array.isArray(top5Areas) || top5Areas.length === 0) {
-        console.log(`No top 5 development areas to display for ${idpType} IDP`);
-        return;
-    }
-    
-    // Find a suitable container or create one
-    const form = document.getElementById("midYearIDPFormDetails");
-    if (!form) return;
-    
-    // Remove existing top 5 display if any
-    const existingDisplay = form.querySelector('.top5-dev-areas-display');
-    if (existingDisplay) {
-        existingDisplay.remove();
-    }
-    
-    // Create the top 5 development areas display
-    const top5Display = document.createElement('div');
-    top5Display.className = 'top5-dev-areas-display';
-    top5Display.style.cssText = `
-        margin-top: 20px;
-        padding: 20px;
-        background-color: #fff3cd;
-        border-radius: 8px;
-        border-left: 4px solid #ffc107;
-    `;
-    
-    let displayHTML = `
-        <div style="display: flex; align-items: center; gap: 8px; color: #856404; margin-bottom: 15px;">
-            <i class="fas fa-chart-line"></i>
-            <strong style="font-size: 16px;">Top 5 Development Areas (${idpType})</strong>
-        </div>
-        <div style="font-size: 14px; color: #666; margin-bottom: 15px;">
-            These areas were identified based on Q1${idpType === 'Final-Year' ? '-Q4' : '-Q2'} feedback and saved automatically.
-        </div>
-    `;
-    
-    // Display each development area
-    top5Areas.forEach((area, index) => {
-        const ratingColor = area.averageRating < 2 ? '#dc3545' : 
-                           area.averageRating < 3 ? '#fd7e14' : 
-                           area.averageRating < 4 ? '#ffc107' : '#28a745';
-        
-        const typeIcon = area.type === 'objective' ? 'fas fa-bullseye' : 'fas fa-cogs';
-        const typeLabel = area.type === 'objective' ? 'Objective' : `${area.skillType || ''} Skill`;
-        
-        displayHTML += `
-            <div style="
-                display: flex; 
-                align-items: center; 
-                justify-content: space-between;
-                padding: 12px;
-                background-color: white;
-                border-radius: 6px;
-                margin-bottom: 10px;
-                border-left: 3px solid ${ratingColor};
-                box-shadow: 0 1px 3px rgba(0,0,0,0.1);
-            ">
-                <div style="flex: 1;">
-                    <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 4px;">
-                        <span style="
-                            background-color: ${ratingColor};
-                            color: white;
-                            padding: 2px 6px;
-                            border-radius: 12px;
-                            font-size: 11px;
-                            font-weight: bold;
-                            min-width: 20px;
-                            text-align: center;
-                        ">${area.rank}</span>
-                        <i class="${typeIcon}" style="color: var(--primary-color);"></i>
-                        <span style="font-weight: 500; color: var(--primary-color);">${area.name}</span>
-                        <span style="
-                            background-color: #f8f9fa;
-                            color: #6c757d;
-                            padding: 2px 6px;
-                            border-radius: 10px;
-                            font-size: 10px;
-                        ">${typeLabel}</span>
-                    </div>
-                    ${area.kpi ? `
-                        <div style="font-size: 11px; color: #666; margin-left: 32px;">
-                            KPI: ${area.kpi}
-                        </div>
-                    ` : ''}
-                </div>
-                <div style="text-align: right; margin-left: 15px;">
-                    <div style="font-weight: bold; color: ${ratingColor}; font-size: 14px;">
-                        ${area.averageRating.toFixed(1)}/5.0
-                    </div>
-                    <div style="font-size: 10px; color: #666;">
-                        Avg Rating
-                    </div>
-                </div>
-            </div>
-        `;
-    });
-    
-    // Add note about quarter ratings if available
-    const hasQuarterRatings = top5Areas.some(area => 
-        area.quarterRatings && Object.keys(area.quarterRatings).length > 0
-    );
-    
-    if (hasQuarterRatings) {
-        displayHTML += `
-            <div style="margin-top: 15px; padding: 10px; background-color: rgba(255,255,255,0.7); border-radius: 4px; font-size: 12px; color: #666;">
-                <i class="fas fa-info-circle"></i> 
-                <strong>Note:</strong> Ratings are averaged across all quarters with available feedback.
-            </div>
-        `;
-    }
-    
-    top5Display.innerHTML = displayHTML;
-    
-    // Insert before the last updated info or at the end of the form
-    const lastUpdatedInfo = form.querySelector('.last-updated-info');
-    if (lastUpdatedInfo) {
-        form.insertBefore(top5Display, lastUpdatedInfo);
-    } else {
-        form.appendChild(top5Display);
-    }
-    
-    console.log(`Successfully displayed ${top5Areas.length} development areas for ${idpType} IDP`);
+   
 }
 
 // Make enhanced functions globally available
@@ -12969,24 +12883,11 @@ function updateIDPProgress() {
     
     console.log(`IDP Progress: ${filledFields}/${totalFields} fields completed (${progressPercentage.toFixed(1)}%)`);
 }
-
-
-// Function to update Final-Year IDP progress
 function updateFinalIDPProgress() {
-    const fields = [
-        "finalProfStrengths", 
-        "finalProfAreasForDevelopment", 
-        "finalProfActionsToTake", 
-        "finalLeaderStrengths", 
-        "finalLeaderAreasForDevelopment", 
-        "finalLeaderActionsToTake", 
-        "finalNextRoleShortTerm", 
-        "finalNextRoleLongTerm", 
-        "finalNextRoleMobility"
-    ];
+    console.log("Updating Final-Year IDP progress...");
     
-    // Try with standard field names as backup
-    const standardFields = [
+    // Use standard field names since Final-Year reuses Mid-Year form
+    const fields = [
         "profStrengths", 
         "profAreasForDevelopment", 
         "profActionsToTake", 
@@ -13002,42 +12903,33 @@ function updateFinalIDPProgress() {
     const totalFields = fields.length;
     
     // Check each field
-    for (let i = 0; i < totalFields; i++) {
-        // Try with 'final' prefix first
-        let field = document.getElementById(fields[i]);
+    fields.forEach(fieldId => {
+        const field = document.getElementById(fieldId);
         
-        // If not found, try with standard field name
-        if (!field) {
-            field = document.getElementById(standardFields[i]);
-        }
-        
-        if (field && field.value.trim().length > 0) {
+        if (field && field.value && field.value.trim().length > 0) {
             filledFields++;
             
             // Update character counter
-            const counterId = fields[i] + 'Count';
-            let counterElement = document.getElementById(counterId);
-            
-            // If counter not found with 'final' prefix, try standard name
-            if (!counterElement) {
-                counterElement = document.getElementById(standardFields[i] + 'Count');
-            }
+            const counterId = fieldId + 'Count';
+            const counterElement = document.getElementById(counterId);
             
             if (counterElement) {
                 counterElement.textContent = field.value.length;
             }
         }
-    }
+    });
     
     // Calculate progress percentage
     const progressPercentage = (filledFields / totalFields) * 100;
+    
+    console.log(`Final-Year IDP Progress: ${filledFields}/${totalFields} fields completed (${progressPercentage.toFixed(1)}%)`);
     
     // Update progress bar
     const progressBar = document.getElementById('finalYearIDPProgressBar');
     if (progressBar) {
         progressBar.style.width = progressPercentage + '%';
     } else {
-        // If final year progress bar doesn't exist, use mid-year one
+        // Fallback to mid-year progress bar
         const midYearProgressBar = document.getElementById('midYearIDPProgressBar');
         if (midYearProgressBar) {
             midYearProgressBar.style.width = progressPercentage + '%';
@@ -13049,10 +12941,16 @@ function updateFinalIDPProgress() {
     if (submitButton) {
         if (progressPercentage === 100) {
             submitButton.disabled = false;
+            submitButton.style.backgroundColor = 'var(--primary-color)';
+            submitButton.style.cursor = 'pointer';
         } else {
             submitButton.disabled = true;
+            submitButton.style.backgroundColor = '#ccc';
+            submitButton.style.cursor = 'not-allowed';
         }
     }
+    
+    console.log(`Final-Year submit button ${progressPercentage === 100 ? 'enabled' : 'disabled'}`);
 }
 
 // Helper function to get userId from URL
@@ -13566,6 +13464,7 @@ function handleFeedbackFormSubmit(event) {
     
     console.log('✅ Enhanced stepper events setup completed with proper Mid-Year/Final-Year separation');
 }
+
 function resetFormToMidYearContext() {
     console.log("🟢 Resetting form to Mid-Year context (Q1-Q2)...");
     
@@ -13606,14 +13505,47 @@ function resetFormToMidYearContext() {
         progressBar.id = "midYearIDPProgressBar";
     }
     
+    // CRITICAL: Reset legend container to Mid-Year
+    handleMidYearLegendContainer();
+    
     // Reset form headers to Mid-Year context (Q1-Q2)
     resetFormHeadersToMidYear();
     
-    // Reset training legend to show Q1-Q2 context
-    const legendContainer = document.getElementById('developmentAreasLegend') || 
-                           document.querySelector('.training-match-info');
-    if (legendContainer) {
-        legendContainer.innerHTML = `
+    console.log("🟢 Form reset to Mid-Year context (Q1-Q2) completed");
+}
+
+function handleMidYearLegendContainer() {
+    console.log("=== HANDLING MID-YEAR LEGEND CONTAINER ===");
+    
+    // Remove Final-Year specific containers
+    const finalYearContainer = document.getElementById('finalYearDevelopmentAreasLegend');
+    if (finalYearContainer) {
+        console.log("Removing Final-Year container");
+        finalYearContainer.remove();
+    }
+    
+    // Find or create Mid-Year container
+    let midYearContainer = document.getElementById('developmentAreasLegend');
+    
+    if (!midYearContainer) {
+        const trainingFieldset = document.querySelector('.suggested-trainings-fieldset');
+        if (trainingFieldset) {
+            midYearContainer = document.createElement('div');
+            midYearContainer.id = 'developmentAreasLegend';
+            midYearContainer.className = 'training-match-info';
+            midYearContainer.setAttribute('data-context', 'mid-year');
+            midYearContainer.style.cssText = 'margin-top: 15px; font-size: 12px; color: #666;';
+            
+            trainingFieldset.appendChild(midYearContainer);
+            console.log("✅ Created new Mid-Year legend container");
+        }
+    }
+    
+    // Reset to Mid-Year content
+    if (midYearContainer) {
+        midYearContainer.id = 'developmentAreasLegend';
+        midYearContainer.setAttribute('data-context', 'mid-year');
+        midYearContainer.innerHTML = `
             <h5 style="margin: 5px 0; color: var(--primary-color); font-size: 13px;">
                 <i class="fas fa-target"></i> Top 5 Development Areas (Based on Q1-Q2 Feedback):
             </h5>
@@ -13621,15 +13553,14 @@ function resetFormToMidYearContext() {
                 Complete Q1 and Q2 feedback to see personalized training priorities based on your development areas.
             </div>
         `;
+        console.log("✅ Reset Mid-Year legend container content");
     }
     
-    console.log("🟢 Form reset to Mid-Year context (Q1-Q2) completed");
+    console.log("=== MID-YEAR LEGEND CONTAINER HANDLING COMPLETE ===");
 }
 
-
-// Function to attach form submission listeners
 function attachFormListeners() {
-    // Objective settings form - REPLACE THE EXISTING CODE WITH THIS
+    // Objective settings form
     const objectiveSettingsForm = document.getElementById('objectiveSettingsForm');
     if (objectiveSettingsForm) {
         objectiveSettingsForm.addEventListener('submit', function(event) {
@@ -13638,7 +13569,6 @@ function attachFormListeners() {
         });
     }
     
-    // Keep all your other existing form listeners here
     // Feedback form
     const feedbackForm = document.getElementById('feedbackForm');
     if (feedbackForm) {
@@ -13648,25 +13578,42 @@ function attachFormListeners() {
         });
     }
     
-    // Mid-Year IDP form
-    const midYearIDPForm = document.getElementById('midYearIDPFormDetails');
-    if (midYearIDPForm) {
-        midYearIDPForm.addEventListener('submit', function(event) {
+    // FIXED: IDP form with proper Final-Year detection
+    const idpForm = document.getElementById('midYearIDPFormDetails');
+    if (idpForm) {
+        // Remove any existing listeners
+        const newForm = idpForm.cloneNode(true);
+        idpForm.parentNode.replaceChild(newForm, idpForm);
+        
+        // Add new listener that checks context
+        newForm.addEventListener('submit', function(event) {
             event.preventDefault();
+            event.stopPropagation();
+            
+            console.log("📝 IDP Form submitted - checking context...");
             
             // Check if this is Mid-Year or Final-Year IDP
             const formTitle = document.querySelector("#midYearIDPForm h2");
-            if (formTitle && formTitle.textContent.includes("Final-Year")) {
-                submitFinalYearIDPForm(event);
+            const submitButton = document.getElementById('submitFinalYearIDP');
+            const isFinalYear = (formTitle && formTitle.textContent.includes("Final-Year")) || !!submitButton;
+            
+            console.log("Form context detected:", isFinalYear ? "Final-Year" : "Mid-Year");
+            
+            if (isFinalYear) {
+                console.log("🔵 Calling Final-Year submission function");
+                submitFinalYearIDPFormWithEnhancements(event);
             } else {
-                submitMidYearIDPForm(event);
+                console.log("🟢 Calling Mid-Year submission function");
+                submitMidYearIDPFormWithTrainingCategories(event);
             }
         });
+        
+        console.log("✅ IDP form listener attached with context detection");
     }
     
     // Text area input handlers for character counting and progress tracking
-    const midYearTextareas = document.querySelectorAll('#midYearIDPForm textarea');
-    midYearTextareas.forEach(textarea => {
+    const textareas = document.querySelectorAll('#midYearIDPForm textarea');
+    textareas.forEach(textarea => {
         textarea.addEventListener('input', function() {
             const counterId = textarea.id + 'Count';
             const counterElement = document.getElementById(counterId);
@@ -13684,6 +13631,7 @@ function attachFormListeners() {
         });
     });
 }
+
 async function saveObjectives(event) {
     event.preventDefault();
     
