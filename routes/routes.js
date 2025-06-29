@@ -502,6 +502,8 @@ router.post('/hr/approve-training-request', hrController.approveTrainingRequest)
 router.get('/hr/budget-overview', hrController.getBudgetOverview);
 router.post('/hr/update-budget', hrController.updateBudget);
 router.get('/hr/training-approval-history', hrController.getTrainingApprovalHistory);
+router.get('/hr/training-analytics', hrController.getTrainingAnalytics);
+router.get('/hr/training-efficiency', hrController.getTrainingEfficiency);
 
 // commenting this out for now
 // router.get('/hr/employees', hrController.getEmployees);

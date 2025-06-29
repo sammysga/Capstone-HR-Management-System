@@ -284,6 +284,478 @@ async function processAttendanceData(attendanceData, leaveData, allEmployees, re
     };
 }
 
+// Helper function: Calculate date range based on time period
+function calculateDateRange(timePeriod) {
+    const now = new Date();
+    let startDate, endDate = now;
+    
+    switch (timePeriod) {
+        case 'thisYear':
+            startDate = new Date(now.getFullYear(), 0, 1);
+            break;
+        case 'lastYear':
+            startDate = new Date(now.getFullYear() - 1, 0, 1);
+            endDate = new Date(now.getFullYear() - 1, 11, 31);
+            break;
+        case 'last6Months':
+            startDate = new Date(now.getTime() - (6 * 30 * 24 * 60 * 60 * 1000));
+            break;
+        case 'last3Months':
+            startDate = new Date(now.getTime() - (3 * 30 * 24 * 60 * 60 * 1000));
+            break;
+        default:
+            startDate = new Date(now.getFullYear(), 0, 1);
+    }
+    
+    return { startDate, endDate };
+}
+
+// Helper function: Get training needs vs completion data
+async function getTrainingNeedsVsCompletion(dateRange, departmentFilter, categoryFilter) {
+    try {
+        console.log('📊 Fetching training needs vs completion data...');
+        
+        // This is a simplified version - you'll need to adapt based on how you store training requirements
+        // For now, we'll use training categories from completed trainings as a proxy
+        
+        let query = supabase
+            .from('training_records')
+            .select(`
+                trainingRecordId,
+                status,
+                isApproved,
+                dateRequested,
+                training_records_categories!inner (
+                    training_categories!inner (
+                        category
+                    )
+                ),
+                useraccounts!inner (
+                    staffaccounts!inner (
+                        departments!inner (
+                            deptName
+                        )
+                    )
+                )
+            `)
+            .gte('dateRequested', dateRange.startDate.toISOString().split('T')[0])
+            .lte('dateRequested', dateRange.endDate.toISOString().split('T')[0]);
+        
+        const { data: trainingRecords, error } = await query;
+        
+        if (error) {
+            console.error('Error fetching training records:', error);
+            return [];
+        }
+        
+        // Group by category and calculate completion rates
+        const categoryStats = {};
+        
+        trainingRecords.forEach(record => {
+            const category = record.training_records_categories?.[0]?.training_categories?.category || 'Other';
+            const department = record.useraccounts?.staffaccounts?.[0]?.departments?.deptName || 'Unknown';
+            
+            // Apply filters
+            if (departmentFilter && department !== departmentFilter) return;
+            if (categoryFilter && category !== categoryFilter) return;
+            
+            if (!categoryStats[category]) {
+                categoryStats[category] = {
+                    category,
+                    required: 0,
+                    completed: 0
+                };
+            }
+            
+            categoryStats[category].required++;
+            
+            // Count as completed if approved and status indicates completion
+            if (record.isApproved && (record.status === 'Completed' || record.status === 'In Progress')) {
+                categoryStats[category].completed++;
+            }
+        });
+        
+        return Object.values(categoryStats);
+        
+    } catch (error) {
+        console.error('Error in getTrainingNeedsVsCompletion:', error);
+        return [];
+    }
+}
+
+// Helper function: Get performance improvement data  
+async function getPerformanceImprovementData(dateRange, departmentFilter) {
+    try {
+        console.log('📊 Fetching performance improvement data...');
+        
+        // This is a simplified version - you'd need to connect to actual performance evaluation data
+        // For now, we'll create sample data based on training completion patterns
+        
+        const { data: trainingRecords, error } = await supabase
+            .from('training_records')
+            .select(`
+                trainingRecordId,
+                dateRequested,
+                status,
+                isApproved,
+                useraccounts!inner (
+                    staffaccounts!inner (
+                        departments!inner (
+                            deptName
+                        )
+                    )
+                )
+            `)
+            .eq('isApproved', true)
+            .gte('dateRequested', dateRange.startDate.toISOString().split('T')[0])
+            .lte('dateRequested', dateRange.endDate.toISOString().split('T')[0]);
+            
+        if (error) {
+            console.error('Error fetching training records:', error);
+            return [];
+        }
+        
+        // Group by month and calculate average improvement
+        const monthlyStats = {};
+        
+        trainingRecords.forEach(record => {
+            const department = record.useraccounts?.staffaccounts?.[0]?.departments?.deptName;
+            
+            if (departmentFilter && department !== departmentFilter) return;
+            
+            const month = new Date(record.dateRequested).toLocaleDateString('en-US', { 
+                year: 'numeric', 
+                month: 'short' 
+            });
+            
+            if (!monthlyStats[month]) {
+                monthlyStats[month] = {
+                    month,
+                    trainingCount: 0,
+                    avgImprovement: 0
+                };
+            }
+            
+            monthlyStats[month].trainingCount++;
+            // Simulate performance improvement based on training completion
+            // In real implementation, you'd join with performance evaluation data
+            monthlyStats[month].avgImprovement = Math.min(25, monthlyStats[month].trainingCount * 2.5);
+        });
+        
+        return Object.values(monthlyStats).sort((a, b) => new Date(a.month) - new Date(b.month));
+        
+    } catch (error) {
+        console.error('Error in getPerformanceImprovementData:', error);
+        return [];
+    }
+}
+
+// Helper function: Get training effectiveness data
+async function getTrainingEffectivenessData(dateRange, categoryFilter) {
+    try {
+        console.log('📊 Fetching training effectiveness data...');
+        
+        const { data: trainingRecords, error } = await supabase
+            .from('training_records')
+            .select(`
+                trainingRecordId,
+                status,
+                isApproved,
+                training_records_categories!inner (
+                    training_categories!inner (
+                        category
+                    )
+                )
+            `)
+            .eq('isApproved', true)
+            .gte('dateRequested', dateRange.startDate.toISOString().split('T')[0])
+            .lte('dateRequested', dateRange.endDate.toISOString().split('T')[0]);
+            
+        if (error) {
+            console.error('Error fetching training records:', error);
+            return [];
+        }
+        
+        // Group by category and calculate success rates
+        const categoryEffectiveness = {};
+        
+        trainingRecords.forEach(record => {
+            const category = record.training_records_categories?.[0]?.training_categories?.category || 'Other';
+            
+            if (categoryFilter && category !== categoryFilter) return;
+            
+            if (!categoryEffectiveness[category]) {
+                categoryEffectiveness[category] = {
+                    category,
+                    totalTrainings: 0,
+                    successfulTrainings: 0,
+                    successRate: 0
+                };
+            }
+            
+            categoryEffectiveness[category].totalTrainings++;
+            
+            // Consider it successful if completed
+            if (record.status === 'Completed') {
+                categoryEffectiveness[category].successfulTrainings++;
+            }
+        });
+        
+        // Calculate success rates
+        Object.values(categoryEffectiveness).forEach(cat => {
+            cat.successRate = cat.totalTrainings > 0 ? 
+                Math.round((cat.successfulTrainings / cat.totalTrainings) * 100) : 0;
+        });
+        
+        return Object.values(categoryEffectiveness);
+        
+    } catch (error) {
+        console.error('Error in getTrainingEffectivenessData:', error);
+        return [];
+    }
+}
+
+// Helper function: Get category distribution data
+async function getCategoryDistributionData(dateRange, departmentFilter) {
+    try {
+        console.log('📊 Fetching category distribution data...');
+        
+        let query = supabase
+            .from('training_records')
+            .select(`
+                trainingRecordId,
+                training_records_categories!inner (
+                    training_categories!inner (
+                        category
+                    )
+                ),
+                useraccounts!inner (
+                    staffaccounts!inner (
+                        departments!inner (
+                            deptName
+                        )
+                    )
+                )
+            `)
+            .eq('isApproved', true)
+            .gte('dateRequested', dateRange.startDate.toISOString().split('T')[0])
+            .lte('dateRequested', dateRange.endDate.toISOString().split('T')[0]);
+            
+        const { data: trainingRecords, error } = await query;
+        
+        if (error) {
+            console.error('Error fetching training records:', error);
+            return [];
+        }
+        
+        // Count by category
+        const categoryCount = {};
+        
+        trainingRecords.forEach(record => {
+            const category = record.training_records_categories?.[0]?.training_categories?.category || 'Other';
+            const department = record.useraccounts?.staffaccounts?.[0]?.departments?.deptName;
+            
+            if (departmentFilter && department !== departmentFilter) return;
+            
+            categoryCount[category] = (categoryCount[category] || 0) + 1;
+        });
+        
+        return Object.entries(categoryCount).map(([category, count]) => ({
+            category,
+            count
+        })).sort((a, b) => b.count - a.count);
+        
+    } catch (error) {
+        console.error('Error in getCategoryDistributionData:', error);
+        return [];
+    }
+}
+
+// Helper function: Get department gap analysis
+async function getDepartmentGapAnalysis(dateRange) {
+    try {
+        console.log('📊 Fetching department gap analysis...');
+        
+        // Get all departments
+        const { data: departments, error: deptError } = await supabase
+            .from('departments')
+            .select('departmentId, deptName');
+            
+        if (deptError) {
+            console.error('Error fetching departments:', deptError);
+            return [];
+        }
+        
+        // For each department, calculate training gaps
+        const departmentGaps = await Promise.all(departments.map(async (dept) => {
+            const { data: trainingRecords, error } = await supabase
+                .from('training_records')
+                .select(`
+                    trainingRecordId,
+                    status,
+                    isApproved,
+                    useraccounts!inner (
+                        staffaccounts!inner (
+                            departmentId
+                        )
+                    )
+                `)
+                .eq('useraccounts.staffaccounts.departmentId', dept.departmentId)
+                .gte('dateRequested', dateRange.startDate.toISOString().split('T')[0])
+                .lte('dateRequested', dateRange.endDate.toISOString().split('T')[0]);
+                
+            if (error) {
+                console.error(`Error fetching training records for dept ${dept.departmentId}:`, error);
+                return {
+                    departmentId: dept.departmentId,
+                    departmentName: dept.deptName,
+                    required: 0,
+                    completed: 0
+                };
+            }
+            
+            const required = trainingRecords.length;
+            const completed = trainingRecords.filter(record => 
+                record.isApproved && record.status === 'Completed'
+            ).length;
+            
+            return {
+                departmentId: dept.departmentId,
+                departmentName: dept.deptName,
+                required,
+                completed
+            };
+        }));
+        
+        return departmentGaps.filter(dept => dept.required > 0);
+        
+    } catch (error) {
+        console.error('Error in getDepartmentGapAnalysis:', error);
+        return [];
+    }
+}
+
+// Helper function: Get budget recommendations
+async function getBudgetRecommendationsData() {
+    try {
+        console.log('📊 Generating budget recommendations...');
+        
+        // Get department gap analysis to base recommendations on
+        const departmentGaps = await getDepartmentGapAnalysis({ 
+            startDate: new Date(new Date().getFullYear(), 0, 1), 
+            endDate: new Date() 
+        });
+        
+        const recommendations = departmentGaps.map(dept => {
+            const gap = dept.required - dept.completed;
+            const completionRate = dept.required > 0 ? (dept.completed / dept.required) * 100 : 100;
+            
+            let type, recommendedAmount, reason, expectedImpact;
+            
+            if (completionRate < 50 && gap > 10) {
+                type = 'increase';
+                recommendedAmount = gap * 15000; // Estimate ₱15k per training
+                reason = `Low completion rate (${Math.round(completionRate)}%) with ${gap} training gap. Significant investment needed.`;
+                expectedImpact = `Potential to improve completion rate to 80%+ and close training gaps.`;
+            } else if (completionRate < 75 && gap > 5) {
+                type = 'increase';
+                recommendedAmount = gap * 12000;
+                reason = `Moderate completion rate (${Math.round(completionRate)}%) with ${gap} training gap. Budget increase recommended.`;
+                expectedImpact = `Expected completion rate improvement to 85%+.`;
+            } else if (completionRate > 90 && gap < 2) {
+                type = 'decrease';
+                recommendedAmount = dept.required * 8000; // Reduced amount
+                reason = `High completion rate (${Math.round(completionRate)}%) with minimal gaps. Budget can be optimized.`;
+                expectedImpact = `Maintain high performance while optimizing costs. Savings can be reallocated.`;
+            } else {
+                type = 'maintain';
+                recommendedAmount = dept.required * 10000; // Average amount
+                reason = `Balanced completion rate (${Math.round(completionRate)}%). Current budget allocation is appropriate.`;
+                expectedImpact = `Maintain current performance levels with steady investment.`;
+            }
+            
+            return {
+                department: dept.departmentName,
+                type,
+                recommendedAmount,
+                reason,
+                expectedImpact
+            };
+        });
+        
+        // Sort by recommended amount (highest first)
+        return recommendations.sort((a, b) => b.recommendedAmount - a.recommendedAmount);
+        
+    } catch (error) {
+        console.error('Error in getBudgetRecommendationsData:', error);
+        return [];
+    }
+}
+
+// Helper function: Get unique departments
+async function getUniqueDepartments() {
+    try {
+        const { data: departments, error } = await supabase
+            .from('departments')
+            .select('deptName')
+            .order('deptName');
+            
+        if (error) {
+            console.error('Error fetching departments:', error);
+            return [];
+        }
+        
+        return departments.map(dept => dept.deptName);
+        
+    } catch (error) {
+        console.error('Error in getUniqueDepartments:', error);
+        return [];
+    }
+}
+
+// Helper function: Get unique categories
+async function getUniqueCategories() {
+    try {
+        const { data: categories, error } = await supabase
+            .from('training_categories')
+            .select('category')
+            .order('category');
+            
+        if (error) {
+            console.error('Error fetching categories:', error);
+            return [];
+        }
+        
+        return categories.map(cat => cat.category);
+        
+    } catch (error) {
+        console.error('Error in getUniqueCategories:', error);
+        return [];
+    }
+}
+
+// Helper function: Calculate summary metrics
+function calculateSummaryMetrics(needsData, performanceData, effectivenessData, categoryData) {
+    const totalRequired = needsData.reduce((sum, item) => sum + item.required, 0);
+    const totalCompleted = needsData.reduce((sum, item) => sum + item.completed, 0);
+    const completionRate = totalRequired > 0 ? Math.round((totalCompleted / totalRequired) * 100) : 0;
+    
+    const avgPerformanceImprovement = performanceData.length > 0 ? 
+        Math.round(performanceData.reduce((sum, item) => sum + item.avgImprovement, 0) / performanceData.length) : 0;
+        
+    const avgEffectiveness = effectivenessData.length > 0 ?
+        Math.round(effectivenessData.reduce((sum, item) => sum + item.successRate, 0) / effectivenessData.length) : 0;
+        
+    const totalCompletedTrainings = categoryData.reduce((sum, item) => sum + item.count, 0);
+    
+    return {
+        completionRate,
+        avgPerformanceImprovement,
+        avgEffectiveness,
+        totalCompletedTrainings
+    };
+}
+
 const hrController = {
     getHRDashboard: async function(req, res) {
         if (!req.session.user) {
@@ -1240,6 +1712,188 @@ const hrController = {
             res.status(500).json({
                 success: false,
                 message: 'Failed to fetch approval history'
+            });
+        }
+    },
+
+    getTrainingAnalytics: async function (req, res) {
+        try {
+            console.log('📊 Loading training analytics data...');
+            
+            // Get query parameters for filtering (optional)
+            const { 
+                department, 
+                category, 
+                timePeriod = 'thisYear' 
+            } = req.query;
+            
+            // Calculate date range based on time period
+            const dateRange = calculateDateRange(timePeriod);
+            
+            // Fetch all required data in parallel
+            const [
+                trainingNeedsData,
+                performanceData,
+                effectivenessData,
+                categoryData,
+                departmentData,
+                budgetData
+            ] = await Promise.all([
+                getTrainingNeedsVsCompletion(dateRange, department, category),
+                getPerformanceImprovementData(dateRange, department),
+                getTrainingEffectivenessData(dateRange, category),
+                getCategoryDistributionData(dateRange, department),
+                getDepartmentGapAnalysis(dateRange),
+                getBudgetRecommendationsData()
+            ]);
+            
+            // Calculate summary metrics
+            const summary = calculateSummaryMetrics(
+                trainingNeedsData,
+                performanceData,
+                effectivenessData,
+                categoryData
+            );
+            
+            // Get filter options
+            const departments = await getUniqueDepartments();
+            const categories = await getUniqueCategories();
+            
+            const analyticsData = {
+                summary,
+                needsVsCompletion: trainingNeedsData,
+                performanceTrend: performanceData,
+                effectiveness: effectivenessData,
+                categoryDistribution: categoryData,
+                departmentGaps: departmentData,
+                budgetRecommendations: budgetData,
+                departments,
+                categories
+            };
+            
+            console.log(`✅ Analytics data prepared for ${trainingNeedsData.length} categories`);
+            
+            res.json({
+                success: true,
+                data: analyticsData
+            });
+            
+        } catch (error) {
+            console.error('❌ Error loading training analytics:', error);
+            res.status(500).json({
+                success: false,
+                message: 'Failed to load training analytics',
+                error: error.message
+            });
+        }
+    },
+    
+    getTrainingEfficiency: async function (req, res) {
+        try {
+            console.log('📊 Loading training efficiency data...');
+            
+            const { timePeriod = 'thisYear' } = req.query;
+            const dateRange = calculateDateRange(timePeriod);
+            
+            // Get efficiency data by department
+            const { data: trainingRecords, error } = await supabase
+                .from('training_records')
+                .select(`
+                    trainingRecordId,
+                    cost,
+                    status,
+                    isApproved,
+                    dateRequested,
+                    useraccounts!inner (
+                        staffaccounts!inner (
+                            departments!inner (
+                                departmentId,
+                                deptName
+                            )
+                        )
+                    )
+                `)
+                .eq('isApproved', true)
+                .gte('dateRequested', dateRange.startDate.toISOString().split('T')[0])
+                .lte('dateRequested', dateRange.endDate.toISOString().split('T')[0]);
+
+            if (error) throw error;
+
+            // Calculate efficiency by department
+            const deptEfficiency = {};
+            
+            trainingRecords.forEach(record => {
+                const deptId = record.useraccounts?.staffaccounts?.[0]?.departments?.departmentId;
+                const deptName = record.useraccounts?.staffaccounts?.[0]?.departments?.deptName;
+                const cost = record.cost || 0;
+                
+                if (!deptEfficiency[deptId]) {
+                    deptEfficiency[deptId] = {
+                        departmentId: deptId,
+                        departmentName: deptName,
+                        totalCost: 0,
+                        totalTrainings: 0,
+                        completedTrainings: 0,
+                        avgCostPerTraining: 0,
+                        efficiencyScore: 0
+                    };
+                }
+                
+                deptEfficiency[deptId].totalCost += cost;
+                deptEfficiency[deptId].totalTrainings++;
+                
+                if (record.status === 'Completed') {
+                    deptEfficiency[deptId].completedTrainings++;
+                }
+            });
+
+            // Calculate efficiency scores
+            const efficiencyData = Object.values(deptEfficiency).map(dept => {
+                dept.avgCostPerTraining = dept.totalTrainings > 0 ? 
+                    Math.round(dept.totalCost / dept.totalTrainings) : 0;
+                
+                const completionRate = dept.totalTrainings > 0 ? 
+                    (dept.completedTrainings / dept.totalTrainings) * 100 : 0;
+                
+                // Efficiency score: Higher completion rate + Lower cost = Higher efficiency
+                dept.efficiencyScore = dept.avgCostPerTraining > 0 ? 
+                    parseFloat((completionRate / (dept.avgCostPerTraining / 1000)).toFixed(1)) : 0;
+                
+                return dept;
+            });
+
+            // Calculate summary stats
+            const bestEfficiency = Math.max(...efficiencyData.map(d => d.efficiencyScore));
+            const avgEfficiency = efficiencyData.length > 0 ? 
+                parseFloat((efficiencyData.reduce((sum, d) => sum + d.efficiencyScore, 0) / efficiencyData.length).toFixed(1)) : 0;
+            const lowestEfficiency = Math.min(...efficiencyData.map(d => d.efficiencyScore));
+            const avgCostPerTraining = efficiencyData.length > 0 ?
+                Math.round(efficiencyData.reduce((sum, d) => sum + d.avgCostPerTraining, 0) / efficiencyData.length) : 0;
+
+            const bestDept = efficiencyData.find(d => d.efficiencyScore === bestEfficiency)?.departmentName || '-';
+            const lowestDept = efficiencyData.find(d => d.efficiencyScore === lowestEfficiency)?.departmentName || '-';
+
+            res.json({
+                success: true,
+                data: {
+                    summary: {
+                        bestEfficiencyScore: bestEfficiency,
+                        avgEfficiencyScore: avgEfficiency,
+                        lowestEfficiencyScore: lowestEfficiency,
+                        avgCostPerTraining,
+                        bestEfficiencyDept: bestDept,
+                        lowestEfficiencyDept: lowestDept
+                    },
+                    departmentEfficiency: efficiencyData.sort((a, b) => b.efficiencyScore - a.efficiencyScore)
+                }
+            });
+            
+        } catch (error) {
+            console.error('❌ Error loading efficiency data:', error);
+            res.status(500).json({
+                success: false,
+                message: 'Failed to load efficiency data',
+                error: error.message
             });
         }
     },
