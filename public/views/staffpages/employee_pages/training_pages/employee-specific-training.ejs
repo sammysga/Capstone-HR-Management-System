@@ -777,7 +777,7 @@
 
         <!-- Certificates Section -->
         <div class="certificates-section">
-            <h2 class="certificates-title">Training Certificates</h2>
+            <h2 class="certificates-title" id="certificatesTitle">Training Certificates</h2>
             <div class="completion-requirement" id="completionRequirement" style="display: none;">
                 <i class="fas fa-exclamation-triangle"></i>
                 <span>Complete all activities before uploading certificates</span>
@@ -1127,7 +1127,7 @@ async function handleFileSelect(trainingCertId, file) {
     }
 }
 
-       function displayTrainingData() {
+      function displayTrainingData() {
     if (!trainingData) {
         console.error('❌ No training data available to display');
         return;
@@ -1141,12 +1141,20 @@ async function handleFileSelect(trainingCertId, file) {
     const startDateEl = document.getElementById('startDate');
     const endDateEl = document.getElementById('endDate');
     const totalDurationEl = document.getElementById('totalDuration');
+    
+    // Update certificates section title with training name
+    const certificatesTitleEl = document.getElementById('certificatesTitle');
 
     if (trainingNameEl) trainingNameEl.textContent = trainingData.trainingName || 'Unknown Training';
     if (trainingModeEl) trainingModeEl.textContent = trainingData.isOnlineArrangement ? 'Online' : 'Onsite';
     if (startDateEl) startDateEl.textContent = formatDate(trainingData.setStartDate) || 'Not set';
     if (endDateEl) endDateEl.textContent = formatDate(trainingData.setEndDate) || 'Not set';
     if (totalDurationEl) totalDurationEl.textContent = `${trainingData.totalDuration || 0} hours`;
+    
+    // Update certificates title to use training name + "Certificates"
+    if (certificatesTitleEl) {
+        certificatesTitleEl.textContent = `${trainingData.trainingName} Certificates`;
+    }
 
     // Display objectives and skills (show sections now)
     displayObjectives();
