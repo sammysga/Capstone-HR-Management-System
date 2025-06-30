@@ -2638,8 +2638,23 @@ getViewPerformanceTimeline: async function(req, res) {
             // 4. Fetch mid-year IDP data
             const { data: midYearData, error: midYearError } = await supabase
                 .from("midyearidps")
-                .select("*")
+                .select(`
+                    midyearidpId,
+                    created_at,
+                    userId,
+                    profStrengths,
+                    profAreasForDevelopment,
+                    profActionsToTake,
+                    leaderStrengths,
+                    leaderAreasForDevelopment,
+                    leaderActionsToTake,
+                    nextRoleShortTerm,
+                    nextRoleLongTerm,
+                    nextRoleMobility,
+                    year
+                `)
                 .eq("userId", userId)
+                .eq("year", currentYear)
                 .order('created_at', { ascending: false })
                 .limit(1);
             
@@ -2647,11 +2662,29 @@ getViewPerformanceTimeline: async function(req, res) {
                 console.error("Error fetching mid-year IDP:", midYearError);
             }
             
-            // 5. Fetch final-year IDP data
+            // 5. Fetch final-year IDP data (Enhanced with all fields)
             const { data: finalYearData, error: finalYearError } = await supabase
                 .from("finalyearidps")
-                .select("*")
+                .select(`
+                    finalyearidpId,
+                    created_at,
+                    userId,
+                    profStrengths,
+                    profAreasForDevelopment,
+                    profActionsToTake,
+                    leaderStrengths,
+                    leaderAreasForDevelopment,
+                    leaderActionsToTake,
+                    nextRoleShortTerm,
+                    nextRoleLongTerm,
+                    nextRoleMobility,
+                    trainingRemarks,
+                    trainingCategories,
+                    year,
+                    topDevAreas
+                `)
                 .eq("userId", userId)
+                .eq("year", currentYear)
                 .order('created_at', { ascending: false })
                 .limit(1);
             
@@ -2733,8 +2766,17 @@ getViewPerformanceTimeline: async function(req, res) {
             const midYearIDP = midYearData && midYearData.length > 0 ? midYearData[0] : null;
             const finalYearIDP = finalYearData && finalYearData.length > 0 ? finalYearData[0] : null;
             
-            // Debug logging (remove in production)
-            console.log("Debug - Quarterly Data Structure:");
+            // Enhanced debug logging
+            console.log("Debug - Performance Timeline Data:");
+            console.log("Current Year:", currentYear);
+            console.log("Objectives found:", objectives.length);
+            console.log("Hard Skills found:", hardSkills.length);
+            console.log("Soft Skills found:", softSkills.length);
+            console.log("Mid-Year IDP:", midYearIDP ? "Found" : "Not found");
+            console.log("Final-Year IDP:", finalYearIDP ? "Found" : "Not found");
+            
+            // Debug quarterly data
+            console.log("Quarterly Data Structure:");
             console.log("Q1 Data:", quarterlyData.q1 ? "Found" : "Not found");
             console.log("Q2 Data:", quarterlyData.q2 ? "Found" : "Not found");
             console.log("Q3 Data:", quarterlyData.q3 ? "Found" : "Not found");
@@ -2746,6 +2788,15 @@ getViewPerformanceTimeline: async function(req, res) {
                 console.log("Q1 Answers Count:", quarterlyData.q1.feedbacks_answers.length);
             }
             
+            if (finalYearIDP) {
+                console.log("Final Year IDP Details:", {
+                    id: finalYearIDP.finalyearidpId,
+                    year: finalYearIDP.year,
+                    created: finalYearIDP.created_at,
+                    hasTrainingData: !!(finalYearIDP.trainingRemarks || finalYearIDP.trainingCategories || finalYearIDP.topDevAreas)
+                });
+            }
+            
             // Render the page with all data
             res.render('staffpages/employee_pages/employee-viewtimeline', {
                 objectives,
@@ -2753,6 +2804,7 @@ getViewPerformanceTimeline: async function(req, res) {
                 softSkills,
                 steps,
                 currentStep,
+                currentYear,
                 midYearIDP,
                 finalYearIDP,
                 quarterlyData
