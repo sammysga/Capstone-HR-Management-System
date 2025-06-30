@@ -880,98 +880,64 @@
                             <% } %>
                         </div>
 
-                        <!-- Enhanced Final Year IDP Section -->
-<div class="content-section <%= currentStep === 6 ? 'active' : '' %>" id="yearEndReview">
-    <h3>Final-Year Individual Development Plan</h3>
-    <% if (finalYearIDP) { %>
-        <div class="feedback-header">
-            <p><strong>Status:</strong> <span class="badge badge-success">Completed</span></p>
-            <p><strong>Year:</strong> <%= finalYearIDP.year || currentYear %></p>
-            <% if (finalYearIDP.created_at) { %>
-                <p><strong>Completed Date:</strong> <%= new Date(finalYearIDP.created_at).toLocaleDateString() %></p>
-            <% } %>
-        </div>
-        
-        <div class="idp-container">
-            <!-- Professional Development Section -->
-            <div class="idp-section">
-                <h4><i class="fa fa-user-tie"></i> Professional Development</h4>
-                <div class="idp-item">
-                    <h5>Strengths</h5>
-                    <p><%= finalYearIDP.profStrengths || 'Not specified' %></p>
-                </div>
-                <div class="idp-item">
-                    <h5>Areas for Development</h5>
-                    <p><%= finalYearIDP.profAreasForDevelopment || 'Not specified' %></p>
-                </div>
-                <div class="idp-item">
-                    <h5>Actions to Take</h5>
-                    <p><%= finalYearIDP.profActionsToTake || 'Not specified' %></p>
-                </div>
-            </div>
-            
-            <!-- Leadership Development Section -->
-            <div class="idp-section">
-                <h4><i class="fa fa-users"></i> Leadership Development</h4>
-                <div class="idp-item">
-                    <h5>Strengths</h5>
-                    <p><%= finalYearIDP.leaderStrengths || 'Not specified' %></p>
-                </div>
-                <div class="idp-item">
-                    <h5>Areas for Development</h5>
-                    <p><%= finalYearIDP.leaderAreasForDevelopment || 'Not specified' %></p>
-                </div>
-                <div class="idp-item">
-                    <h5>Actions to Take</h5>
-                    <p><%= finalYearIDP.leaderActionsToTake || 'Not specified' %></p>
-                </div>
-            </div>
-            
-            <!-- Career Planning Section -->
-            <div class="idp-section">
-                <h4><i class="fa fa-road"></i> Career Planning</h4>
-                <div class="idp-item">
-                    <h5>Short-Term Role Aspirations</h5>
-                    <p><%= finalYearIDP.nextRoleShortTerm || 'Not specified' %></p>
-                </div>
-                <div class="idp-item">
-                    <h5>Long-Term Role Aspirations</h5>
-                    <p><%= finalYearIDP.nextRoleLongTerm || 'Not specified' %></p>
-                </div>
-                <div class="idp-item">
-                    <h5>Mobility Preferences</h5>
-                    <p><%= finalYearIDP.nextRoleMobility || 'Not specified' %></p>
-                </div>
-            </div>
-            
-            <!-- Training and Development Section -->
-            <div class="idp-section">
-                <h4><i class="fa fa-graduation-cap"></i> Training & Development</h4>
-                <% if (finalYearIDP.trainingCategories) { %>
-                    <div class="idp-item">
-                        <h5>Training Categories</h5>
-                        <p><%= finalYearIDP.trainingCategories %></p>
-                    </div>
-                <% } %>
-                <% if (finalYearIDP.trainingRemarks) { %>
-                    <div class="idp-item">
-                        <h5>Training Remarks</h5>
-                        <p><%= finalYearIDP.trainingRemarks %></p>
-                    </div>
-                <% } %>
-                <% if (finalYearIDP.topDevAreas) { %>
-                    <div class="idp-item">
-                        <h5>Top Development Areas</h5>
-                        <p><%= finalYearIDP.topDevAreas %></p>
-                    </div>
-                <% } %>
-            </div>
-        </div>
-    <% } else { %>
-        <p>The Year-End IDP offers a complete assessment of your annual performance, highlighting achievements, areas for growth, and setting the stage for the next year's objectives. This session may include discussions about career progression, compensation adjustments, and long-term development opportunities.</p>
-        <p><strong>Status:</strong> <span class="badge badge-warning">Pending</span> - Your Final-Year IDP has not yet been completed.</p>
-    <% } %>
-</div>
+                        <div class="content-section <%= currentStep === 6 ? 'active' : '' %>" id="yearEndReview">
+                            <h3>Final-Year Individual Development Plan</h3>
+                            <% if (finalYearIDP) { %>
+                                <div class="idp-container">
+                                    <p><strong>Status:</strong> <span class="badge badge-success">Completed</span></p>
+                                    <div class="idp-section">
+                                        <h4><i class="fa fa-user-tie"></i> Professional Development</h4>
+                                        <div class="idp-item">
+                                            <h5>Strengths</h5>
+                                            <p><%= finalYearIDP.profStrengths %></p>
+                                        </div>
+                                        <div class="idp-item">
+                                            <h5>Areas for Development</h5>
+                                            <p><%= finalYearIDP.profAreasForDevelopment %></p>
+                                        </div>
+                                        <div class="idp-item">
+                                            <h5>Actions to Take</h5>
+                                            <p><%= finalYearIDP.profActionsToTake %></p>
+                                        </div>
+                                    </div>
+                                    
+                                    <div class="idp-section">
+                                        <h4><i class="fa fa-users"></i> Leadership Development</h4>
+                                        <div class="idp-item">
+                                            <h5>Strengths</h5>
+                                            <p><%= finalYearIDP.leaderStrengths %></p>
+                                        </div>
+                                        <div class="idp-item">
+                                            <h5>Areas for Development</h5>
+                                            <p><%= finalYearIDP.leaderAreasForDevelopment %></p>
+                                        </div>
+                                        <div class="idp-item">
+                                            <h5>Actions to Take</h5>
+                                            <p><%= finalYearIDP.leaderActionsToTake %></p>
+                                        </div>
+                                    </div>
+                                    
+                                    <div class="idp-section">
+                                        <h4><i class="fa fa-road"></i> Career Planning</h4>
+                                        <div class="idp-item">
+                                            <h5>Short-Term Role Aspirations</h5>
+                                            <p><%= finalYearIDP.nextRoleShortTerm %></p>
+                                        </div>
+                                        <div class="idp-item">
+                                            <h5>Long-Term Role Aspirations</h5>
+                                            <p><%= finalYearIDP.nextRoleLongTerm %></p>
+                                        </div>
+                                        <div class="idp-item">
+                                            <h5>Mobility Preferences</h5>
+                                            <p><%= finalYearIDP.nextRoleMobility %></p>
+                                        </div>
+                                    </div>
+                                </div>
+                            <% } else { %>
+                                <p>The Year-End IDP offers a complete assessment of your annual performance, highlighting achievements, areas for growth, and setting the stage for the next year's objectives. This session may include discussions about career progression, compensation adjustments, and long-term development opportunities.</p>
+                                <p><strong>Status:</strong> <span class="badge badge-warning">Pending</span> - Your Final-Year IDP has not yet been completed.</p>
+                            <% } %>
+                        </div>
                     </div>
                 </div>
             </div>
