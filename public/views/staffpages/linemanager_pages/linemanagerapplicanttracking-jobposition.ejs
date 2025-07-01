@@ -3131,7 +3131,6 @@ function forceModalUpdate(sentCount, errorCount, errors, type, phase) {
     
     console.log(`✅ FORCE UPDATE: Modal update completed`);
 }
-
 function createCompletionModalFromScratch(sentCount, errorCount, type, phase) {
     console.log(`🔧 SCRATCH MODAL: Creating completion modal from scratch for ${phase} ${type}`);
     
@@ -3201,7 +3200,6 @@ function createCompletionModalFromScratch(sentCount, errorCount, type, phase) {
     document.body.appendChild(completionModal);
     console.log(`✅ SCRATCH MODAL: Completion modal created and displayed for ${phase} ${type}`);
 }
-
 
 // Show email sending progress modal
 function showEmailSendingProgress(type, totalCount, phase = 'P1') {
@@ -3589,7 +3587,6 @@ window.proceedWithP3NextStep = proceedWithP3NextStep;
 window.createCompletionModalFromScratch = createCompletionModalFromScratch;
 window.showEmailSendingCompletion = showEmailSendingCompletion;
 
-
 function showEmailSendingCompletionP3(sentCount, errorCount, errors, type) {
     console.log(`📧 FIXED P3: Email sending completion - ${type} - Sent: ${sentCount}, Errors: ${errorCount}`);
     
@@ -3691,6 +3688,7 @@ function showEmailSendingCompletionP3(sentCount, errorCount, errors, type) {
         createCompletionModalFromScratch(sentCount, errorCount, type, 'P3');
     }
 }
+
 // 9. FIXED: Proceed with P3 Next Step
 function proceedWithP3NextStep(completedType) {
     console.log(`📧 FIXED P3: Proceeding with next step after ${completedType} emails`);
@@ -3812,6 +3810,7 @@ function showP3DatabaseUpdateConfirmationModal() {
     document.body.appendChild(updateModal);
     console.log('📧 FIXED P3: P3 database update confirmation modal displayed');
 }
+
 
 // Finish email process and proceed to database update
 function finishEmailProcess(phase = 'P1') {
@@ -5175,7 +5174,7 @@ function showDatabaseUpdateConfirmationModal() {
     updateModal.style.display = 'block';
     updateModal.id = 'databaseUpdateConfirmationModal';
     
-    const phase = emailSendingState.phase;
+    const phase = emailSendingState.phase || 'P1';
     const passedResults = emailSendingState.passedResults || { sent: 0, failed: 0 };
     const failedResults = emailSendingState.failedResults || { sent: 0, failed: 0 };
     const totalSent = passedResults.sent + failedResults.sent;
@@ -5240,7 +5239,7 @@ function showDatabaseUpdateConfirmationModal() {
                 <button class="back-button" onclick="closeModal('databaseUpdateConfirmationModal')">
                     <i class="fas fa-times" style="margin-right: 5px;"></i>Cancel
                 </button>
-                <button class="confirm-button" onclick="executeDatabase()" 
+                <button class="confirm-button" onclick="executeDatabaseUpdate()" 
                         style="background: linear-gradient(135deg, #28a745, #20c997); font-size: 16px; padding: 12px 25px;">
                     <i class="fas fa-database" style="margin-right: 8px;"></i>
                     Update ${phase} Database
@@ -5338,7 +5337,6 @@ function executeP1DatabaseUpdate() {
 // ============================
 // FIXED: Execute Database Update
 // ============================
-
 function executeDatabaseUpdate() {
     console.log('📧 FIXED: Executing database update...');
     
@@ -5377,7 +5375,7 @@ function executeDatabaseUpdate() {
             const passedResults = emailSendingState.passedResults || { sent: 0 };
             const failedResults = emailSendingState.failedResults || { sent: 0 };
             
-            alert(`${emailSendingState.phase} Process Complete!\n\nDatabase Updates:\n- ${data.passedUpdated || 0} passed applicants\n- ${data.failedUpdated || 0} failed applicants\n\nEmails Sent:\n- ${passedResults.sent} congratulations emails\n- ${failedResults.sent} notification emails\n\nAll ${emailSendingState.phase} applicants have been processed successfully!`);
+            alert(`${emailSendingState.phase || 'P1'} Process Complete!\n\nDatabase Updates:\n- ${data.passedUpdated || 0} passed applicants\n- ${data.failedUpdated || 0} failed applicants\n\nEmails Sent:\n- ${passedResults.sent} congratulations emails\n- ${failedResults.sent} notification emails\n\nAll ${emailSendingState.phase || 'P1'} applicants have been processed successfully!`);
             
             // Reset state
             emailSendingState = {
@@ -5394,18 +5392,22 @@ function executeDatabaseUpdate() {
                 window.currentP3PassedApplicants = [];
                 window.currentP3FailedApplicants = [];
                 window.p3EmailsToUpdate = { passed: [], failed: [] };
-                window.p3EmailBatchResults = {
-                    passed: { sent: 0, failed: 0, errors: [] },
-                    failed: { sent: 0, failed: 0, errors: [] }
-                };
+                if (window.p3EmailBatchResults) {
+                    window.p3EmailBatchResults = {
+                        passed: { sent: 0, failed: 0, errors: [] },
+                        failed: { sent: 0, failed: 0, errors: [] }
+                    };
+                }
             } else {
                 window.currentPassedApplicants = [];
                 window.currentFailedApplicants = [];
                 window.emailsToUpdate = { passed: [], failed: [] };
-                window.emailBatchResults = {
-                    passed: { sent: 0, failed: 0, errors: [] },
-                    failed: { sent: 0, failed: 0, errors: [] }
-                };
+                if (window.emailBatchResults) {
+                    window.emailBatchResults = {
+                        passed: { sent: 0, failed: 0, errors: [] },
+                        failed: { sent: 0, failed: 0, errors: [] }
+                    };
+                }
             }
             
             // Reset global flag
