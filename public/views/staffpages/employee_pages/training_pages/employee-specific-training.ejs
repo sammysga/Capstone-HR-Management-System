@@ -1518,6 +1518,21 @@ function isWithinTrainingPeriod() {
 
     const oldStatus = activity.status;
     
+    // NEW: Time validation for completion
+    if (newStatus === 'Completed' && oldStatus === 'In Progress') {
+        const timeValidation = validateActivityTimeRequirement(activity);
+        if (!timeValidation.isValid) {
+            showError(timeValidation.message);
+            
+            // Revert the select dropdown to original value
+            const selectElement = document.querySelector(`tr[data-activity-id="${activityId}"] .status-select`);
+            if (selectElement) {
+                selectElement.value = oldStatus;
+            }
+            return;
+        }
+    }
+    
     // Show loading state
     const fieldElement = document.querySelector(`[data-activity-id="${activityId}"][data-field="status"]`);
     if (fieldElement) {
@@ -1620,6 +1635,68 @@ function isWithinTrainingPeriod() {
         showError('Failed to save status change: ' + error.message);
     }
 }
+
+// NEW: Function to validate if activity has met the time requirement
+function validateActivityTimeRequirement(activity) {
+    console.log('⏱️ Validating time requirement for activity:', activity.activityName);
+    
+    // Check if activity has estimated duration
+    const estimatedMinutes = parseInt(activity.estActivityDuration) || 0;
+    if (estimatedMinutes <= 0) {
+        console.log('⏱️ No time requirement - validation passed');
+        return { 
+            isValid: true, 
+            message: 'No time requirement specified' 
+        };
+    }
+    
+    // Check if activity has start time
+    if (!activity.timestampzStarted) {
+        console.log('⏱️ No start time recorded - validation failed');
+        return { 
+            isValid: false, 
+            message: 'Activity must be started before it can be completed' 
+        };
+    }
+    
+    // Calculate elapsed time
+    const startTime = new Date(activity.timestampzStarted);
+    const currentTime = new Date();
+    const elapsedMinutes = Math.floor((currentTime - startTime) / (1000 * 60));
+    
+    console.log('⏱️ Time validation:', {
+        estimatedMinutes,
+        elapsedMinutes,
+        startTime: startTime.toISOString(),
+        currentTime: currentTime.toISOString()
+    });
+    
+    // Check if enough time has elapsed
+    if (elapsedMinutes < estimatedMinutes) {
+        const remainingMinutes = estimatedMinutes - elapsedMinutes;
+        const remainingHours = Math.floor(remainingMinutes / 60);
+        const remainingMins = remainingMinutes % 60;
+        
+        let timeMessage = '';
+        if (remainingHours > 0) {
+            timeMessage = `${remainingHours} hour${remainingHours > 1 ? 's' : ''} and ${remainingMins} minute${remainingMins !== 1 ? 's' : ''}`;
+        } else {
+            timeMessage = `${remainingMins} minute${remainingMins !== 1 ? 's' : ''}`;
+        }
+        
+        return { 
+            isValid: false, 
+            message: `You need to spend at least ${estimatedMinutes} minutes on this activity. You have ${timeMessage} remaining before you can mark it as completed.` 
+        };
+    }
+    
+    console.log('⏱️ Time requirement met - validation passed');
+    return { 
+        isValid: true, 
+        message: 'Time requirement met' 
+    };
+}
+
        function updateTimestampDisplays(activityId, activity) {
     const row = document.querySelector(`tr[data-activity-id="${activityId}"]`);
     if (!row) return;
@@ -2025,18 +2102,40 @@ function checkActivitiesCompletion(activities) {
 
     activities.forEach((activity, index) => {
         const status = activity.status ? activity.status.trim() : '';
-        const activityName = activity.activityName || activity.training_activities?.activityName || `Activity ${index + 1}`;
+        const activityName = activity.activityName || `Activity ${index + 1}`;
         
         console.log(`📊 [Activity Check] Activity "${activityName}": status = "${status}" (type: ${typeof status})`);
         
+        // Enhanced completion check with time validation
         if (status !== 'Completed') {
+            let reason = status || 'Not started';
+            
+            // If activity is in progress, check if it can be completed (time requirement)
+            if (status === 'In Progress') {
+                const timeValidation = validateActivityTimeRequirement(activity);
+                if (!timeValidation.isValid) {
+                    reason = 'Time requirement not met';
+                }
+            }
+            
             incompleteActivities.push({
-                activityId: activity.activityId,
                 activityName: activityName,
-                currentStatus: status || 'Unknown'
+                currentStatus: status || 'Unknown',
+                reason: reason
             });
         } else {
-            completedCount++;
+            // Double-check completed activities have met time requirements
+            const timeValidation = validateActivityTimeRequirement(activity);
+            if (!timeValidation.isValid) {
+                console.warn(`⚠️ Completed activity "${activityName}" did not meet time requirement`);
+                incompleteActivities.push({
+                    activityName: activityName,
+                    currentStatus: 'Completed (Invalid)',
+                    reason: 'Time requirement not properly validated'
+                });
+            } else {
+                completedCount++;
+            }
         }
     });
 
@@ -2047,12 +2146,89 @@ function checkActivitiesCompletion(activities) {
         total: activities.length,
         incomplete: incompleteActivities.length,
         completedCount: completedCount,
-        reason: allCompleted ? 'All activities completed' : `${incompleteActivities.length} activities not completed`,
+        reason: allCompleted ? 'All activities completed with time requirements met' : `${incompleteActivities.length} activities not completed or time requirements not met`,
         incompleteList: incompleteActivities
     };
 
     console.log('📊 [Activity Check] Final result:', result);
     return result;
+}
+
+// NEW: Helper function to format time remaining display
+function formatTimeRemaining(minutes) {
+    if (minutes <= 0) return '0 minutes';
+    
+    const hours = Math.floor(minutes / 60);
+    const mins = minutes % 60;
+    
+    if (hours > 0) {
+        return `${hours}h ${mins}m`;
+    }
+    return `${mins}m`;
+}
+
+// NEW: Function to show time progress in the UI (optional enhancement)
+function updateTimeProgressDisplay(activityId) {
+    const activity = trainingData.activities.find(a => a.activityId === activityId);
+    if (!activity || activity.status !== 'In Progress' || !activity.timestampzStarted) {
+        return;
+    }
+    
+    const estimatedMinutes = parseInt(activity.estActivityDuration) || 0;
+    if (estimatedMinutes <= 0) return;
+    
+    const startTime = new Date(activity.timestampzStarted);
+    const currentTime = new Date();
+    const elapsedMinutes = Math.floor((currentTime - startTime) / (1000 * 60));
+    const progress = Math.min((elapsedMinutes / estimatedMinutes) * 100, 100);
+    
+    // Find the row and add/update progress indicator
+    const row = document.querySelector(`tr[data-activity-id="${activityId}"]`);
+    if (row) {
+        let progressElement = row.querySelector('.time-progress');
+        if (!progressElement) {
+            progressElement = document.createElement('div');
+            progressElement.className = 'time-progress';
+            progressElement.style.cssText = `
+                font-size: 11px;
+                color: #64748b;
+                margin-top: 2px;
+                display: flex;
+                align-items: center;
+                gap: 5px;
+            `;
+            
+            const statusCell = row.querySelector('.editable-field');
+            if (statusCell) {
+                statusCell.appendChild(progressElement);
+            }
+        }
+        
+        const remainingMinutes = Math.max(0, estimatedMinutes - elapsedMinutes);
+        const isComplete = remainingMinutes === 0;
+        
+        progressElement.innerHTML = `
+            <div style="width: 60px; height: 4px; background: #e5e7eb; border-radius: 2px; overflow: hidden;">
+                <div style="width: ${progress}%; height: 100%; background: ${isComplete ? '#10b981' : '#3b82f6'}; transition: width 0.3s ease;"></div>
+            </div>
+            <span style="color: ${isComplete ? '#10b981' : '#64748b'};">
+                ${isComplete ? '✓ Ready' : formatTimeRemaining(remainingMinutes)}
+            </span>
+        `;
+    }
+}
+
+// NEW: Start a timer to update progress displays for in-progress activities
+function startTimeProgressUpdates() {
+    setInterval(() => {
+        if (trainingData && trainingData.activities) {
+            trainingData.activities.forEach(activity => {
+                if (activity.status === 'In Progress') {
+                    updateTimeProgressDisplay(activity.activityId);
+                }
+            });
+        }
+    }, 60000); // Update every minute
 }
 
 // 4. Database validation query
