@@ -253,11 +253,11 @@
             <div class="card">
                 <h3 class="section-title">Interview Details</h3>
                 
-                <div class="form-group">
-                    <label class="info-label" for="interviewDate">Interview Date</label>
-                    <input type="date" id="interviewDate" name="interviewDate" class="form-control" required style="width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 4px;">
-                    <div class="error-text">Please select the interview date</div>
-                </div>
+<div class="form-group">
+    <label class="info-label" for="interviewDate">Interview Date</label>
+    <input type="date" id="interviewDate" name="interviewDate" class="form-control" required style="width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 4px;">
+    <div class="error-text">Please select the interview date</div>
+</div>
                 
                 <div class="form-group">
                     <label class="info-label" for="interviewType">Interview Type</label>
@@ -564,7 +564,8 @@
     const totalRatingDisplay = document.getElementById('total-rating');
     
     // Set today as max date for interview date
-    document.getElementById('interviewDate').max = new Date().toISOString().split('T')[0];
+     const today = new Date().toISOString().split('T')[0];
+    document.getElementById('interviewDate').setAttribute('min', today);
     
     // Update total rating
     function updateTotalRating() {

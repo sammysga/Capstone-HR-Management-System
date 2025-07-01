@@ -1091,7 +1091,7 @@ table.tracking-table tbody:empty::after {
         <!-- Job Offer Button -->
         <button 
             class="btn-job-offer" 
-            onclick="openSendJobOfferModalFixed('<%= applicant.applicantId %>', '<%= applicant.lastName %>, <%= applicant.firstName %>', '<%= applicant.userEmail %>', '<%= applicant.jobTitle %>', '<%= applicant.deptName %>')">
+            onclick="openSendJobOfferModal('<%= applicant.applicantId %>', '<%= applicant.lastName %>, <%= applicant.firstName %>', '<%= applicant.userEmail %>', '<%= applicant.jobTitle %>', '<%= applicant.deptName %>')">
             Send Job Offer
         </button>
     <% } %>
@@ -5687,7 +5687,7 @@ console.log('✅ FIXED: Complete P1/P3 finalization system loaded successfully')
 // Make functions globally available
 window.enhanceApplicantTableFixed = enhanceApplicantTableFixed;
 window.enhanceApplicantTable = enhanceApplicantTable;
-window.openSendJobOfferModalFixed = openSendJobOfferModalFixed;
+window.openSendJobOfferModal = openSendJobOfferModal;
 window.fetchUserEmailFromBackend = fetchUserEmailFromBackend;
 
 
@@ -13332,7 +13332,7 @@ function enhanceApplicantTable() {
                 offerButton.onclick = function() {
                     console.log(`🎯 Job Offer button clicked - CORRECT userId: ${userId}`);
                     console.log('Data being passed:', { userId, name, email, position, department });
-                    openSendJobOfferModalFixed(userId, name, email, position, department);
+                    openSendJobOfferModal(userId, name, email, position, department);
                 };
                 
                 buttonContainer.appendChild(offerButton);
@@ -13437,80 +13437,73 @@ console.log('✅ Updated Applicant Tracker JavaScript loaded successfully');
 // ============================
 // JOB OFFER FUNCTIONS
 // ============================
-function openSendJobOfferModalFixed(userId, name, email, position, department) {
-    console.log('🎯 ENHANCED: Opening job offer modal with CORRECT data:', { 
-        userId, name, email, position, department 
-    });
+
+// function openSendJobOfferModalFixed(userId, name, email, position, department) {
+//     console.log('🎯 Opening job offer modal with data:', { 
+//         userId, name, email, position, department 
+//     });
     
-    // Store CORRECT userId in modal
-    const modal = document.getElementById('sendJobOfferModal');
-    modal.setAttribute('data-user-id', userId);
+//     // Validation
+//     if (!userId) {
+//         console.error('❌ No userId provided to modal');
+//         alert('Error: No user ID provided');
+//         return;
+//     }
     
-    // If email is still empty, try to fetch it
-    if (!email && userId) {
-        console.log('Email is empty, attempting to fetch from backend...');
-        fetchUserEmailFromBackend(userId).then(fetchedEmail => {
-            if (fetchedEmail) {
-                email = fetchedEmail;
-                const emailElement = document.getElementById('applicant-email-job-offer');
-                if (emailElement) {
-                    emailElement.textContent = email;
-                }
-                console.log('✅ Updated email from backend:', email);
-            }
-        });
-    }
+//     // Get modal
+//     const modal = document.getElementById('sendJobOfferModal');
+//     if (!modal) {
+//         console.error('❌ Modal not found');
+//         alert('Error: Modal not found');
+//         return;
+//     }
     
-    // Populate modal fields
-    const nameElement = document.getElementById('applicant-name-job-offer');
-    const emailElement = document.getElementById('applicant-email-job-offer');
-    const positionElement = document.getElementById('applicant-position-job-offer');
-    const departmentElement = document.getElementById('applicant-department-job-offer');
+//     // Store userId in modal
+//     modal.setAttribute('data-user-id', userId);
+//     console.log('✅ Stored userId in modal:', userId);
     
-    if (nameElement) nameElement.textContent = name || 'Name not available';
-    if (emailElement) emailElement.textContent = email || 'Email not available';
-    if (positionElement) positionElement.textContent = position || 'Position not available';
-    if (departmentElement) departmentElement.textContent = department || 'Department not available';
+//     // Populate modal fields
+//     const elements = {
+//         name: document.getElementById('applicant-name-job-offer'),
+//         email: document.getElementById('applicant-email-job-offer'),
+//         position: document.getElementById('applicant-position-job-offer'),
+//         department: document.getElementById('applicant-department-job-offer'),
+//         startDate: document.getElementById('startDate'),
+//         notes: document.getElementById('offerNotes')
+//     };
     
-    // Set default start date
-    const startDateElement = document.getElementById('startDate');
-    if (startDateElement) {
-        const twoWeeksFromNow = new Date();
-        twoWeeksFromNow.setDate(twoWeeksFromNow.getDate() + 14);
-        startDateElement.valueAsDate = twoWeeksFromNow;
-    }
+//     // Check if elements exist
+//     Object.keys(elements).forEach(key => {
+//         if (!elements[key]) {
+//             console.warn(`⚠️ Element not found: ${key}`);
+//         }
+//     });
     
-    // Clear notes
-    const notesElement = document.getElementById('offerNotes');
-    if (notesElement) {
-        notesElement.value = '';
-    }
+//     // Populate fields
+//     if (elements.name) elements.name.textContent = name || 'Name not available';
+//     if (elements.email) elements.email.textContent = email || 'Email not available';
+//     if (elements.position) elements.position.textContent = position || 'Position not available';
+//     if (elements.department) elements.department.textContent = department || 'Department not available';
     
-    // Show modal
-    modal.style.display = 'block';
+//     // Set default start date (2 weeks from now)
+//     if (elements.startDate) {
+//         const twoWeeksFromNow = new Date();
+//         twoWeeksFromNow.setDate(twoWeeksFromNow.getDate() + 14);
+//         elements.startDate.valueAsDate = twoWeeksFromNow;
+//         console.log('✅ Set default start date:', elements.startDate.value);
+//     }
     
-    console.log('✅ Modal opened with CORRECT userId:', userId);
-}
-// FIXED: Function to fetch email from backend if not found in frontend
-async function fetchUserEmailFromBackend(userId) {
-    try {
-        console.log(`Fetching email from backend for userId: ${userId}`);
-        
-        const response = await fetch(`/linemanager/get-user-email/${userId}`);
-        const data = await response.json();
-        
-        if (data.success && data.email) {
-            console.log(`✅ Fetched email from backend: ${data.email}`);
-            return data.email;
-        } else {
-            console.log('❌ Could not fetch email from backend:', data.message);
-            return null;
-        }
-    } catch (error) {
-        console.error('❌ Error fetching email from backend:', error);
-        return null;
-    }
-}
+//     // Clear notes
+//     if (elements.notes) {
+//         elements.notes.value = '';
+//     }
+    
+//     // Show modal
+//     modal.style.display = 'block';
+//     console.log('✅ Modal opened successfully');
+// }
+
+
 function loadApplicantsDataEnhanced() {
     try {
         const dataScript = document.getElementById('applicants-data');
@@ -13547,12 +13540,22 @@ function loadApplicantsDataEnhanced() {
     return false;
 }
 
+
 function sendJobOffer() {
-    const modal = document.getElementById('sendJobOfferModal');
-    const userId = modal.getAttribute('data-user-id'); // CHANGED: Get userId instead of applicantId
+    console.log('🎯 Starting HR notification process');
     
-    console.log('FRONTEND DEBUG - Job Offer Send:');
-    console.log('User ID:', userId);
+    const modal = document.getElementById('sendJobOfferModal');
+    if (!modal) {
+        console.error('❌ Modal not found');
+        alert('Error: Modal not found');
+        return;
+    }
+    
+    // Get applicantId from modal (change this to match how you store it)
+    const applicantId = modal.getAttribute('data-applicant-id');
+    
+    console.log('FRONTEND DEBUG - HR Notification:');
+    console.log('Applicant ID from modal:', applicantId, 'Type:', typeof applicantId);
     
     const startDate = document.getElementById('startDate').value;
     const additionalNotes = document.getElementById('offerNotes').value;
@@ -13560,71 +13563,167 @@ function sendJobOffer() {
     console.log('Start Date:', startDate);
     console.log('Additional Notes:', additionalNotes);
     
+    // Validation
     if (!startDate) {
         alert('Please select a start date for the job offer');
         return;
     }
     
-    if (!userId) {
-        alert('Error: Missing user ID. Please try again.');
+    if (!applicantId) {
+        console.error('❌ Missing applicantId from modal');
+        alert('Error: Missing applicant ID. Please try again.');
         return;
     }
     
+    // Button state management
     const sendButton = document.getElementById('sendOfferButton');
+    if (!sendButton) {
+        console.error('❌ Send button not found');
+        return;
+    }
+    
     const originalButtonText = sendButton.textContent;
     sendButton.disabled = true;
-    sendButton.textContent = 'Sending...';
+    sendButton.textContent = 'Submitting to HR...';
+    
+    // Prepare request payload
+    const payload = {
+        applicantId: applicantId,
+        startDate: startDate,
+        additionalNotes: additionalNotes
+    };
+    
+    console.log('📤 Sending payload to HR:', payload);
     
     fetch('/linemanager/send-job-offer', {
         method: 'POST',
         headers: {
             'Content-Type': 'application/json',
         },
-        body: JSON.stringify({
-            userId,           // CHANGED: Send userId instead of applicantId
-            startDate,
-            additionalNotes
-        }),
+        body: JSON.stringify(payload),
     })
     .then(response => {
-        console.log('Response Status:', response.status);
+        console.log('📥 Response status:', response.status);
+        console.log('📥 Response ok:', response.ok);
         return response.json();
     })
     .then(data => {
-        console.log('Server Response:', data);
+        console.log('📥 Server Response:', data);
         
         if (data.success) {
+            console.log('✅ HR notification successful');
             closeModal('sendJobOfferModal');
             
-            alert(`Job offer sent successfully to ${data.applicantName || 'applicant'}!`);
+            // Show success message specific to HR workflow
+            const successMessage = `HR has been notified of the job offer for ${data.applicantName || 'the applicant'}.\n\nThe job offer will be sent to the applicant once HR confirms.`;
+            alert(successMessage);
             
-            // Update applicant status in the UI
-            updateApplicantStatusInUI(userId, 'P3 - PASSED - Job Offer Sent');
+            // Debug status update
+            console.log('🔄 Status update info:', data.statusUpdate);
             
-            // Refresh the page after a short delay
+            // Update UI if status update was successful
+            if (data.statusUpdate && data.statusUpdate.successful) {
+                console.log('✅ Status update was successful, updating UI');
+                updateApplicantStatusInUI(applicantId, 'P3 - PASSED - Job Offer Sent');
+            } else {
+                console.log('⚠️ Status update may have failed:', data.statusUpdate);
+            }
+            
+            // Refresh the page to show updated status
             setTimeout(() => {
-                const activeFilter = document.querySelector(".filter-button.active");
-                if (activeFilter) {
-                    activeFilter.click();
-                } else {
-                    window.location.reload();
-                }
-            }, 500);
+                console.log('🔄 Refreshing page...');
+                window.location.reload();
+            }, 2000);
+            
         } else {
-            alert(data.message || 'Failed to send job offer');
+            console.error('❌ Server returned error:', data);
+            alert(data.message || 'Failed to notify HR of job offer');
+            
+            // Log debug information if available
+            if (data.debug) {
+                console.error('🐛 Debug info:', data.debug);
+            }
         }
         
+        // Reset button
         sendButton.disabled = false;
         sendButton.textContent = originalButtonText;
     })
     .catch(error => {
-        console.error('FRONTEND ERROR:', error);
-        alert('An error occurred while sending the job offer');
+        console.error('❌ FRONTEND ERROR:', error);
+        alert('An error occurred while notifying HR');
         
+        // Reset button
         sendButton.disabled = false;
         sendButton.textContent = originalButtonText;
     });
 }
+
+// Function to open the HR notification modal
+function openSendJobOfferModal(applicantId, name, email, position, department) {
+    console.log('🎯 Opening HR notification modal with data:', { 
+        applicantId, name, email, position, department 
+    });
+    
+    // Validation
+    if (!applicantId) {
+        console.error('❌ No applicantId provided to modal');
+        alert('Error: No applicant ID provided');
+        return;
+    }
+    
+    // Get modal
+    const modal = document.getElementById('sendJobOfferModal');
+    if (!modal) {
+        console.error('❌ Modal not found');
+        alert('Error: Modal not found');
+        return;
+    }
+    
+    // Store applicantId in modal
+    modal.setAttribute('data-applicant-id', applicantId);
+    console.log('✅ Stored applicantId in modal:', applicantId);
+    
+    // Populate modal fields
+    const elements = {
+        name: document.getElementById('applicant-name-job-offer'),
+        position: document.getElementById('applicant-position-job-offer'),
+        department: document.getElementById('applicant-department-job-offer'),
+        startDate: document.getElementById('startDate'),
+        notes: document.getElementById('offerNotes')
+    };
+    
+    // Check if elements exist
+    Object.keys(elements).forEach(key => {
+        if (!elements[key]) {
+            console.warn(`⚠️ Element not found: ${key}`);
+        }
+    });
+    
+    // Populate fields
+    if (elements.name) elements.name.textContent = name || 'Name not available';
+    if (elements.position) elements.position.textContent = position || 'Position not available';
+    if (elements.department) elements.department.textContent = department || 'Department not available';
+    
+    // Set default start date (2 weeks from now)
+    if (elements.startDate) {
+        const twoWeeksFromNow = new Date();
+        twoWeeksFromNow.setDate(twoWeeksFromNow.getDate() + 14);
+        elements.startDate.valueAsDate = twoWeeksFromNow;
+        console.log('✅ Set default start date:', elements.startDate.value);
+    }
+    
+    // Clear notes
+    if (elements.notes) {
+        elements.notes.value = '';
+    }
+    
+    // Show modal
+    modal.style.display = 'block';
+    console.log('✅ HR notification modal opened successfully');
+}
+
+
 function updateApplicantStatusInUI(userId, newStatus) {
     const applicantRow = document.querySelector(`tr[data-userid="${userId}"]`);
     if (!applicantRow) return;

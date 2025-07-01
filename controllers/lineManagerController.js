@@ -4253,114 +4253,38 @@ submitInterviewEvaluation: async function(req, res) {
 //     }
 // },
 // 
-// 
+
 sendJobOffer: async function(req, res) {
     if (req.session.user && req.session.user.userRole === 'Line Manager') {
         try {
-            const { userId, startDate, additionalNotes } = req.body;
+            const { applicantId, startDate, additionalNotes } = req.body;
             
-            console.log('🔧 BACKEND DEBUG - Job Offer Send:');
-            console.log('Received User ID:', userId);
-            console.log('Start Date:', startDate);
-            console.log('Additional Notes:', additionalNotes);
-            
-            if (!userId || !startDate) {
+            if (!applicantId || !startDate) {
                 return res.status(400).json({ success: false, message: 'Missing required information' });
             }
             
-            // STEP 1: Find the applicant data using the CORRECT userId
-            console.log('=== FINDING APPLICANT DATA ===');
-            
-            let applicantData = null;
-            let jobId = null;
-            let applicantId = null;
-            let actualUserId = parseInt(userId); // The actual userId we should use
-            
-            // CORRECTED APPROACH: Try to find by userId first (this should be the primary lookup)
-            console.log('Approach 1: Looking for applicantaccounts by userId:', actualUserId);
-            try {
-                const { data: approach1Data, error: approach1Error } = await supabase
-                    .from('applicantaccounts')
-                    .select('*')
-                    .eq('userId', actualUserId)
-                    .single();
-                    
-                if (approach1Data && !approach1Error) {
-                    console.log('✅ Found data by userId:', approach1Data);
-                    applicantData = approach1Data;
-                    applicantId = approach1Data.applicantId;
-                    jobId = approach1Data.jobId;
-                    console.log('🎯 CORRECT MAPPING: userId', actualUserId, '-> applicantId', applicantId);
-                } else {
-                    console.log('❌ Approach 1 failed:', approach1Error);
-                }
-            } catch (error) {
-                console.log('❌ Approach 1 exception:', error.message);
+            // Get the jobId from the applicant record
+            const { data: applicantData, error: applicantError } = await supabase
+                .from('applicantaccounts')
+                .select('jobId')
+                .eq('applicantId', applicantId)
+                .single();
+                
+            if (applicantError || !applicantData) {
+                console.error('Error fetching applicant data:', applicantError);
+                return res.status(500).json({ success: false, message: 'Failed to fetch applicant data' });
             }
             
-            // FALLBACK: If not found by userId, try by applicantId (but this suggests wrong data)
-            if (!applicantData) {
-                console.log('Approach 2: Looking for applicantaccounts by applicantId (FALLBACK):', actualUserId);
-                try {
-                    const { data: approach2Data, error: approach2Error } = await supabase
-                        .from('applicantaccounts')
-                        .select('*')
-                        .eq('applicantId', actualUserId)
-                        .single();
-                        
-                    if (approach2Data && !approach2Error) {
-                        console.log('⚠️ WARNING: Found by applicantId, but userId mismatch!');
-                        console.log('Found data:', approach2Data);
-                        console.log('🚨 FRONTEND ISSUE: You clicked userId', actualUserId, 'but this is actually applicantId', actualUserId);
-                        console.log('🚨 The REAL userId should be:', approach2Data.userId);
-                        
-                        applicantData = approach2Data;
-                        applicantId = approach2Data.applicantId;
-                        jobId = approach2Data.jobId;
-                        // CRITICAL: Use the REAL userId from the database
-                        actualUserId = approach2Data.userId;
-                        
-                        console.log('🔧 CORRECTED: Now using actual userId:', actualUserId);
-                    } else {
-                        console.log('❌ Approach 2 failed:', approach2Error);
-                    }
-                } catch (error) {
-                    console.log('❌ Approach 2 exception:', error.message);
-                }
-            }
+            const jobId = applicantData.jobId;
             
-            // Final validation
-            if (!applicantData || !applicantId || !jobId) {
-                console.error('❌ FINAL ERROR: Could not find applicant data');
-                return res.status(500).json({ 
-                    success: false, 
-                    message: `Failed to fetch applicant data for userId: ${userId}`,
-                    debug: {
-                        receivedUserId: userId,
-                        parsedUserId: parseInt(userId),
-                        foundData: !!applicantData
-                    }
-                });
-            }
-            
-            console.log('✅ SUCCESS: Found applicant data');
-            console.log('📋 FINAL MAPPING:');
-            console.log('  - Received from frontend:', userId);
-            console.log('  - Actual userId to use:', actualUserId);
-            console.log('  - ApplicantId:', applicantId);
-            console.log('  - JobId:', jobId);
-            
-            // STEP 2: Save to onboarding table with CORRECT userId
-            console.log('Saving to onboarding_position-startdate table...');
-            
+            // Save the start date to the onboarding_position-startdate table
             const { error: startDateError } = await supabase
                 .from('onboarding_position-startdate')
-                .upsert({
-                    userId: actualUserId, // Use the CORRECT userId
+                .upsert({ 
                     jobId: jobId,
                     setStartDate: startDate,
                     updatedAt: new Date().toISOString(),
-                    isAccepted: false,
+                    isAccepted: false, // Initialize as false until applicant accepts
                     additionalNotes: additionalNotes || ''
                 });
                 
@@ -4369,9 +4293,7 @@ sendJobOffer: async function(req, res) {
                 return res.status(500).json({ success: false, message: 'Failed to save start date' });
             }
             
-            console.log('✅ Start date saved with userId:', actualUserId);
-            
-            // STEP 3: Update applicant status
+            // Update the applicant status
             const { error: updateError } = await supabase
                 .from('applicantaccounts')
                 .update({ applicantStatus: 'P3 - PASSED - Job Offer Sent' })
@@ -4382,62 +4304,10 @@ sendJobOffer: async function(req, res) {
                 return res.status(500).json({ success: false, message: 'Failed to update applicant status' });
             }
             
-            console.log('✅ Applicant status updated for applicantId:', applicantId);
-            
-            // STEP 4: Get applicant details using CORRECT userId
-            const { data: userDetails, error: userError } = await supabase
-                .from('users')
-                .select('firstName, lastName, email, userEmail')
-                .eq('userId', actualUserId)
-                .single();
-            
-            let applicantName = 'Unknown Applicant';
-            let applicantEmail = '';
-            
-            if (userDetails && !userError) {
-                applicantName = `${userDetails.firstName} ${userDetails.lastName}`;
-                applicantEmail = userDetails.email || userDetails.userEmail || '';
-                console.log('✅ Found user details:', { applicantName, applicantEmail });
-            } else {
-                console.log('❌ Could not fetch user details:', userError);
-                // Try from applicantaccounts table
-                applicantName = applicantData.firstName && applicantData.lastName ? 
-                    `${applicantData.firstName} ${applicantData.lastName}` : 'Unknown Applicant';
-                applicantEmail = applicantData.userEmail || '';
-            }
-            
-            console.log('✅ JOB OFFER SENT SUCCESSFULLY');
-            console.log('📋 FINAL SUMMARY:');
-            console.log('  - Frontend sent userId:', userId);
-            console.log('  - Actual userId used:', actualUserId);
-            console.log('  - ApplicantId:', applicantId);
-            console.log('  - Saved to onboarding with userId:', actualUserId);
-            console.log('  - Applicant name:', applicantName);
-            console.log('  - Applicant email:', applicantEmail);
-            
-            return res.json({ 
-                success: true, 
-                message: 'Job offer sent successfully',
-                applicantName: applicantName,
-                applicantEmail: applicantEmail,
-                applicantId: applicantId,
-                jobId: jobId,
-                userId: actualUserId, // Return the CORRECT userId
-                debug: {
-                    frontendSentUserId: userId,
-                    actualUserIdUsed: actualUserId,
-                    applicantId: applicantId,
-                    savedToOnboardingWithUserId: actualUserId
-                }
-            });
-            
+            return res.json({ success: true, message: 'Job offer sent successfully' });
         } catch (error) {
-            console.error('❌ CRITICAL ERROR in sendJobOffer:', error);
-            return res.status(500).json({ 
-                success: false, 
-                message: 'Internal server error',
-                debug: { error: error.message }
-            });
+            console.error('Error sending job offer:', error);
+            return res.status(500).json({ success: false, message: 'Internal server error' });
         }
     } else {
         return res.status(401).json({ success: false, message: 'Unauthorized access. Line Manager role required.' });
@@ -6343,170 +6213,138 @@ console.log('Final applicants list:', applicants);
             return res.status(500).json({ success: false, message: "Error getting email templates: " + error.message });
         }
     },
-updateP1Statuses: async function(req, res) {
-    try {
-        console.log('✅ [LineManager] Updating P1 statuses after Gmail emails sent');
-        
-        const { passedUserIds, failedUserIds } = req.body;
-        
-        if (!passedUserIds || !failedUserIds) {
-            return res.status(400).json({ success: false, message: "Missing user IDs" });
-        }
-        
-        console.log(`✅ [LineManager] P1 Status Update: ${passedUserIds.length} passed, ${failedUserIds.length} failed`);
-        
-        let updateResults = {
-            passed: { updated: 0, errors: [] },
-            failed: { updated: 0, errors: [] }
-        };
-        
-        // Update passed applicants
-        for (const userId of passedUserIds) {
-            try {
-                console.log(`✅ [LineManager] Updating P1 PASSED status for userId: ${userId}`);
-                
-                // Update applicant status in the database
-                const { data: updateData, error: updateError } = await supabase
-                    .from('applicantaccounts')
-                    .update({ applicantStatus: 'P1 - PASSED' })
-                    .eq('userId', userId);
-                    
-                if (updateError) {
-                    console.error(`❌ [LineManager] Error updating status for ${userId}:`, updateError);
-                    updateResults.passed.errors.push(`${userId}: ${updateError.message}`);
-                    continue;
-                }
-                
-                updateResults.passed.updated++;
-                
-                // 🔥 NEW: Add the congratulations message
-                const congratsMessage = "Congratulations! We are delighted to inform you that you have successfully passed the initial screening process. We look forward to proceeding with the next interview stage via Calendly.";
-                
-                const { data: congratsChatData, error: congratsChatError } = await supabase
-                    .from('chatbot_history')
-                    .insert([{
-                        userId,
-                        message: JSON.stringify({ text: congratsMessage }),
-                        sender: 'bot',
-                        timestamp: new Date().toISOString(),
-                        applicantStage: 'P1 - PASSED'
-                    }]);
-                    
-                if (congratsChatError) {
-                    console.error(`❌ [LineManager] Error adding congratulations message for ${userId}:`, congratsChatError);
-                } else {
-                    console.log(`💬 [LineManager] Added congratulations message for passed applicant ${userId}`);
-                }
-                
-                // 🔥 NEW: Add the Calendly link message with slight delay
-                const calendlyMessage = "Please click the button below to schedule your interview at your convenience:";
-                
-                const { data: calendlyChatData, error: calendlyChatError } = await supabase
-                    .from('chatbot_history')
-                    .insert([{
-                        userId,
-                        message: JSON.stringify({ 
-                            text: calendlyMessage,
-                            buttons: [
-                                { 
-                                    text: "Schedule Interview", 
-                                    value: "schedule_interview",
-                                    url: "/applicant/schedule-interview"
-                                }
-                            ]
-                        }),
-                        sender: 'bot',
-                        timestamp: new Date(Date.now() + 1000).toISOString(), // 1 second delay
-                        applicantStage: 'P1 - PASSED'
-                    }]);
-                    
-                if (calendlyChatError) {
-                    console.error(`❌ [LineManager] Error adding Calendly message for ${userId}:`, calendlyChatError);
-                } else {
-                    console.log(`💬 [LineManager] Added Calendly message for passed applicant ${userId}`);
-                }
-                
-            } catch (error) {
-                console.error(`❌ [LineManager] Error processing passed applicant ${userId}:`, error);
-                updateResults.passed.errors.push(`${userId}: ${error.message}`);
-            }
-        }
-        
-        // Update failed applicants
-        for (const userId of failedUserIds) {
-            try {
-                console.log(`✅ [LineManager] Updating P1 FAILED status for userId: ${userId}`);
-                
-                // Update applicant status in the database
-                const { data: updateData, error: updateError } = await supabase
-                    .from('applicantaccounts')
-                    .update({ applicantStatus: 'P1 - FAILED' })
-                    .eq('userId', userId);
-                    
-                if (updateError) {
-                    console.error(`❌ [LineManager] Error updating status for ${userId}:`, updateError);
-                    updateResults.failed.errors.push(`${userId}: ${updateError.message}`);
-                    continue;
-                }
-                
-                updateResults.failed.updated++;
-                
-                // Add chatbot message
-                const { data: chatData, error: chatError } = await supabase
-                    .from('chatbot_history')
-                    .insert([{
-                        userId,
-                        message: JSON.stringify({ text: "We regret to inform you that you have not been chosen as a candidate for this position. Thank you for your interest in Company ABC, and we wish you the best in your future endeavors." }),
-                        sender: 'bot',
-                        timestamp: new Date().toISOString(),
-                        applicantStage: 'P1 - FAILED'
-                    }]);
-                    
-                if (chatError) {
-                    console.error(`❌ [LineManager] Error adding chat message for ${userId}:`, chatError);
-                }
-                
-            } catch (error) {
-                console.error(`❌ [LineManager] Error processing failed applicant ${userId}:`, error);
-                updateResults.failed.errors.push(`${userId}: ${error.message}`);
-            }
-        }
-        
-        // Prepare response
-        const totalUpdated = updateResults.passed.updated + updateResults.failed.updated;
-        const totalErrors = updateResults.passed.errors.length + updateResults.failed.errors.length;
-        
-        if (totalErrors > 0) {
-            console.warn(`⚠️ [LineManager] P1 status update completed with ${totalErrors} errors`);
-            return res.status(207).json({ // 207 Multi-Status for partial success
-                success: true,
-                message: `P1 statuses updated with some errors. ${totalUpdated} successful, ${totalErrors} failed.`,
-                updateResults: updateResults,
-                passedUpdated: updateResults.passed.updated,
-                failedUpdated: updateResults.failed.updated,
-                totalErrors: totalErrors
-            });
-        } else {
-            console.log(`✅ [LineManager] P1 status update completed successfully`);
-            return res.status(200).json({ 
-                success: true, 
-                message: "P1 statuses updated successfully. All applicants have been processed.",
-                updateResults: updateResults,
-                passedUpdated: updateResults.passed.updated,
-                failedUpdated: updateResults.failed.updated,
-                totalUpdated: totalUpdated
-            });
-        }
-        
-    } catch (error) {
-        console.error('❌ [LineManager] Error updating P1 statuses:', error);
-        return res.status(500).json({ 
-            success: false, 
-            message: "Error updating P1 statuses: " + error.message 
-        });
-    }
-},
 
+    updateP1Statuses: async function(req, res) {
+        try {
+            console.log('✅ [LineManager] Updating P1 statuses after Gmail emails sent');
+            
+            const { passedUserIds, failedUserIds } = req.body;
+            
+            if (!passedUserIds || !failedUserIds) {
+                return res.status(400).json({ success: false, message: "Missing user IDs" });
+            }
+            
+            console.log(`✅ [LineManager] P1 Status Update: ${passedUserIds.length} passed, ${failedUserIds.length} failed`);
+            
+            let updateResults = {
+                passed: { updated: 0, errors: [] },
+                failed: { updated: 0, errors: [] }
+            };
+            
+            // Update passed applicants
+            for (const userId of passedUserIds) {
+                try {
+                    console.log(`✅ [LineManager] Updating P1 PASSED status for userId: ${userId}`);
+                    
+                    // Update applicant status in the database
+                    const { data: updateData, error: updateError } = await supabase
+                        .from('applicantaccounts')
+                        .update({ applicantStatus: 'P1 - PASSED' })
+                        .eq('userId', userId);
+                        
+                    if (updateError) {
+                        console.error(`❌ [LineManager] Error updating status for ${userId}:`, updateError);
+                        updateResults.passed.errors.push(`${userId}: ${updateError.message}`);
+                        continue;
+                    }
+                    
+                    updateResults.passed.updated++;
+                    
+                    // Add chatbot message
+                    const { data: chatData, error: chatError } = await supabase
+                        .from('chatbot_history')
+                        .insert([{
+                            userId,
+                            message: JSON.stringify({ text: "Congratulations! You have successfully passed the initial screening process. We look forward to proceeding with the next interview stage." }),
+                            sender: 'bot',
+                            timestamp: new Date().toISOString(),
+                            applicantStage: 'P1 - PASSED'
+                        }]);
+                        
+                    if (chatError) {
+                        console.error(`❌ [LineManager] Error adding chat message for ${userId}:`, chatError);
+                    }
+                    
+                } catch (error) {
+                    console.error(`❌ [LineManager] Error processing passed applicant ${userId}:`, error);
+                    updateResults.passed.errors.push(`${userId}: ${error.message}`);
+                }
+            }
+            
+            // Update failed applicants
+            for (const userId of failedUserIds) {
+                try {
+                    console.log(`✅ [LineManager] Updating P1 FAILED status for userId: ${userId}`);
+                    
+                    // Update applicant status in the database
+                    const { data: updateData, error: updateError } = await supabase
+                        .from('applicantaccounts')
+                        .update({ applicantStatus: 'P1 - FAILED' })
+                        .eq('userId', userId);
+                        
+                    if (updateError) {
+                        console.error(`❌ [LineManager] Error updating status for ${userId}:`, updateError);
+                        updateResults.failed.errors.push(`${userId}: ${updateError.message}`);
+                        continue;
+                    }
+                    
+                    updateResults.failed.updated++;
+                    
+                    // Add chatbot message
+                    const { data: chatData, error: chatError } = await supabase
+                        .from('chatbot_history')
+                        .insert([{
+                            userId,
+                            message: JSON.stringify({ text: "We regret to inform you that you have not been chosen as a candidate for this position. Thank you for your interest in Company ABC, and we wish you the best in your future endeavors." }),
+                            sender: 'bot',
+                            timestamp: new Date().toISOString(),
+                            applicantStage: 'P1 - FAILED'
+                        }]);
+                        
+                    if (chatError) {
+                        console.error(`❌ [LineManager] Error adding chat message for ${userId}:`, chatError);
+                    }
+                    
+                } catch (error) {
+                    console.error(`❌ [LineManager] Error processing failed applicant ${userId}:`, error);
+                    updateResults.failed.errors.push(`${userId}: ${error.message}`);
+                }
+            }
+            
+            // Prepare response
+            const totalUpdated = updateResults.passed.updated + updateResults.failed.updated;
+            const totalErrors = updateResults.passed.errors.length + updateResults.failed.errors.length;
+            
+            if (totalErrors > 0) {
+                console.warn(`⚠️ [LineManager] P1 status update completed with ${totalErrors} errors`);
+                return res.status(207).json({ // 207 Multi-Status for partial success
+                    success: true,
+                    message: `P1 statuses updated with some errors. ${totalUpdated} successful, ${totalErrors} failed.`,
+                    updateResults: updateResults,
+                    passedUpdated: updateResults.passed.updated,
+                    failedUpdated: updateResults.failed.updated,
+                    totalErrors: totalErrors
+                });
+            } else {
+                console.log(`✅ [LineManager] P1 status update completed successfully`);
+                return res.status(200).json({ 
+                    success: true, 
+                    message: "P1 statuses updated successfully. All applicants have been processed.",
+                    updateResults: updateResults,
+                    passedUpdated: updateResults.passed.updated,
+                    failedUpdated: updateResults.failed.updated,
+                    totalUpdated: totalUpdated
+                });
+            }
+            
+        } catch (error) {
+            console.error('❌ [LineManager] Error updating P1 statuses:', error);
+            return res.status(500).json({ 
+                success: false, 
+                message: "Error updating P1 statuses: " + error.message 
+            });
+        }
+    },
 
     markAsP1Passed: async function(req, res) {
         try {
