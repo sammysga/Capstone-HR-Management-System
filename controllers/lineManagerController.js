@@ -1,9 +1,11 @@
 const supabase = require('../public/config/supabaseClient');
 const bcrypt = require('bcrypt');
 const { getISOWeek } = require('date-fns');
-const { getEmailTemplateData } = require('../utils/emailService');
+const { sendCustomEmail, sendBatchStatusEmails, getEmailTemplateData } = require('../utils/emailService');
 const PDFDocument = require('pdfkit');
 
+// Store for tracking email batch processes
+const emailBatches = new Map();
 
 
 async function getLeaveTypeName(leaveTypeId) {
@@ -68,6 +70,316 @@ function calculateProgressionInsights(allFeedbackItems) {
     
     return insights;
 }
+
+
+// Helper function to fetch applicant data for emails
+async function fetchApplicantDataForEmails(passedUserIds, failedUserIds) {
+    const allUserIds = [...passedUserIds, ...failedUserIds];
+    
+    if (allUserIds.length === 0) {
+        return { passedApplicants: [], failedApplicants: [] };
+    }
+    
+    // Fetch applicant data with emails
+    const { data: applicantData, error: applicantError } = await supabase
+        .from('applicantaccounts')
+        .select(`
+            userId,
+            firstName,
+            lastName,
+            jobId,
+            useraccounts!inner(userEmail)
+        `)
+        .in('userId', allUserIds);
+        
+    if (applicantError) {
+        throw new Error('Error fetching applicant data: ' + applicantError.message);
+    }
+    
+    // Fetch job titles
+    const jobIds = [...new Set(applicantData.map(a => a.jobId))];
+    let jobTitles = {};
+    
+    if (jobIds.length > 0) {
+        const { data: jobData, error: jobError } = await supabase
+            .from('job_positions')
+            .select('jobId, jobTitle')
+            .in('jobId', jobIds);
+            
+        if (!jobError && jobData) {
+            jobTitles = jobData.reduce((acc, job) => {
+                acc[job.jobId] = job.jobTitle;
+                return acc;
+            }, {});
+        }
+    }
+    
+    // Separate passed and failed applicants
+    const passedApplicants = applicantData
+        .filter(a => passedUserIds.includes(a.userId))
+        .map(applicant => ({
+            userId: applicant.userId,
+            name: `${applicant.firstName} ${applicant.lastName}`,
+            email: applicant.useraccounts.userEmail,
+            jobTitle: jobTitles[applicant.jobId] || 'Position'
+        }));
+        
+    const failedApplicants = applicantData
+        .filter(a => failedUserIds.includes(a.userId))
+        .map(applicant => ({
+            userId: applicant.userId,
+            name: `${applicant.firstName} ${applicant.lastName}`,
+            email: applicant.useraccounts.userEmail,
+            jobTitle: jobTitles[applicant.jobId] || 'Position'
+        }));
+    
+    return { passedApplicants, failedApplicants };
+}
+
+// Process email batch in background
+async function processEmailBatch(batchId, applicants, subject, template) {
+    const batch = emailBatches.get(batchId);
+    
+    try {
+        for (let i = 0; i < applicants.length; i++) {
+            const applicant = applicants[i];
+            
+            try {
+                const result = await sendCustomEmail(
+                    applicant.email,
+                    subject,
+                    template,
+                    applicant.name,
+                    applicant.jobTitle
+                );
+                
+                if (result.success) {
+                    batch.sent++;
+                    console.log(`✅ [Batch ${batchId}] Email sent to: ${applicant.email}`);
+                } else {
+                    batch.failed++;
+                    batch.errors.push(`${applicant.name} (${applicant.email}): ${result.error}`);
+                    console.error(`❌ [Batch ${batchId}] Failed to send email to: ${applicant.email}`);
+                }
+                
+                // Small delay between emails
+                await new Promise(resolve => setTimeout(resolve, 1000));
+                
+            } catch (error) {
+                batch.failed++;
+                batch.errors.push(`${applicant.name} (${applicant.email}): ${error.message}`);
+                console.error(`❌ [Batch ${batchId}] Error sending to ${applicant.email}:`, error);
+            }
+        }
+        
+        batch.status = 'completed';
+        batch.endTime = new Date();
+        
+        console.log(`✅ [Batch ${batchId}] Completed: ${batch.sent} sent, ${batch.failed} failed`);
+        
+        // Clean up old batches after 1 hour
+        setTimeout(() => {
+            emailBatches.delete(batchId);
+        }, 3600000);
+        
+    } catch (error) {
+        batch.status = 'error';
+        batch.error = error.message;
+        console.error(`❌ [Batch ${batchId}] Batch processing error:`, error);
+    }
+}
+
+// Send automated P1 emails
+async function sendAutomatedP1Emails(passedApplicants, failedApplicants, emailData) {
+    const results = {
+        success: true,
+        passed: { sent: 0, failed: 0, errors: [] },
+        failed: { sent: 0, failed: 0, errors: [] }
+    };
+    
+    try {
+        // Send emails to passed applicants
+        if (passedApplicants.length > 0 && emailData.passedSubject && emailData.passedTemplate) {
+            for (const applicant of passedApplicants) {
+                try {
+                    const result = await sendCustomEmail(
+                        applicant.email,
+                        emailData.passedSubject,
+                        emailData.passedTemplate,
+                        applicant.name,
+                        applicant.jobTitle
+                    );
+                    
+                    if (result.success) {
+                        results.passed.sent++;
+                    } else {
+                        results.passed.failed++;
+                        results.passed.errors.push(`${applicant.name}: ${result.error}`);
+                    }
+                } catch (error) {
+                    results.passed.failed++;
+                    results.passed.errors.push(`${applicant.name}: ${error.message}`);
+                }
+                
+                // Delay between emails
+                await new Promise(resolve => setTimeout(resolve, 500));
+            }
+        }
+        
+        // Send emails to failed applicants
+        if (failedApplicants.length > 0 && emailData.failedSubject && emailData.failedTemplate) {
+            for (const applicant of failedApplicants) {
+                try {
+                    const result = await sendCustomEmail(
+                        applicant.email,
+                        emailData.failedSubject,
+                        emailData.failedTemplate,
+                        applicant.name,
+                        applicant.jobTitle
+                    );
+                    
+                    if (result.success) {
+                        results.failed.sent++;
+                    } else {
+                        results.failed.failed++;
+                        results.failed.errors.push(`${applicant.name}: ${result.error}`);
+                    }
+                } catch (error) {
+                    results.failed.failed++;
+                    results.failed.errors.push(`${applicant.name}: ${error.message}`);
+                }
+                
+                // Delay between emails
+                await new Promise(resolve => setTimeout(resolve, 500));
+            }
+        }
+        
+        // Determine overall success
+        const totalErrors = results.passed.failed + results.failed.failed;
+        results.success = totalErrors === 0;
+        
+        return results;
+        
+    } catch (error) {
+        console.error('❌ Error in automated P1 email sending:', error);
+        results.success = false;
+        results.error = error.message;
+        return results;
+    }
+}
+
+// Send automated P3 emails
+async function sendAutomatedP3Emails(passedApplicants, failedApplicants, emailData) {
+    // Similar implementation as P1 but with P3-specific logic
+    return await sendAutomatedP1Emails(passedApplicants, failedApplicants, emailData);
+}
+
+// Update P1 statuses after emails
+async function updateP1StatusesAfterEmails(passedUserIds, failedUserIds) {
+    const updatePromises = [];
+    
+    // Update passed applicants
+    for (const userId of passedUserIds) {
+        updatePromises.push(
+            supabase
+                .from('applicantaccounts')
+                .update({ applicantStatus: 'P1 - PASSED' })
+                .eq('userId', userId)
+        );
+        
+        // Add chatbot message
+        updatePromises.push(
+            supabase
+                .from('chatbot_history')
+                .insert([{
+                    userId,
+                    message: JSON.stringify({ text: "Congratulations! You have successfully passed the initial screening process." }),
+                    sender: 'bot',
+                    timestamp: new Date().toISOString(),
+                    applicantStage: 'P1 - PASSED'
+                }])
+        );
+    }
+    
+    // Update failed applicants
+    for (const userId of failedUserIds) {
+        updatePromises.push(
+            supabase
+                .from('applicantaccounts')
+                .update({ applicantStatus: 'P1 - FAILED' })
+                .eq('userId', userId)
+        );
+        
+        // Add chatbot message
+        updatePromises.push(
+            supabase
+                .from('chatbot_history')
+                .insert([{
+                    userId,
+                    message: JSON.stringify({ text: "Thank you for your interest. We regret to inform you that you have not been selected for this position." }),
+                    sender: 'bot',
+                    timestamp: new Date().toISOString(),
+                    applicantStage: 'P1 - FAILED'
+                }])
+        );
+    }
+    
+    await Promise.all(updatePromises);
+}
+
+// Update P3 statuses after emails
+async function updateP3StatusesAfterEmails(passedUserIds, failedUserIds) {
+    const updatePromises = [];
+    
+    // Update passed applicants
+    for (const userId of passedUserIds) {
+        updatePromises.push(
+            supabase
+                .from('applicantaccounts')
+                .update({ applicantStatus: 'P3 - PASSED' })
+                .eq('userId', userId)
+        );
+        
+        // Add chatbot message
+        updatePromises.push(
+            supabase
+                .from('chatbot_history')
+                .insert([{
+                    userId,
+                    message: JSON.stringify({ text: "Congratulations! You have successfully passed the final interview stage." }),
+                    sender: 'bot',
+                    timestamp: new Date().toISOString(),
+                    applicantStage: 'P3 - PASSED'
+                }])
+        );
+    }
+    
+    // Update failed applicants
+    for (const userId of failedUserIds) {
+        updatePromises.push(
+            supabase
+                .from('applicantaccounts')
+                .update({ applicantStatus: 'P3 - FAILED' })
+                .eq('userId', userId)
+        );
+        
+        // Add chatbot message
+        updatePromises.push(
+            supabase
+                .from('chatbot_history')
+                .insert([{
+                    userId,
+                    message: JSON.stringify({ text: "Thank you for participating in our interview process. We regret to inform you that we will not be proceeding with your application." }),
+                    sender: 'bot',
+                    timestamp: new Date().toISOString(),
+                    applicantStage: 'P3 - FAILED'
+                }])
+        );
+    }
+    
+    await Promise.all(updatePromises);
+}
+
 
 const lineManagerController = {
     
@@ -5697,18 +6009,29 @@ getApplicantTracker: async function(req, res) {
                 }
                 console.log('Fetched departments:', departments);
 
-            for (const applicant of applicants) {
-                console.log(`Processing applicant: ${applicant.firstName} ${applicant.lastName}`);
+for (const applicant of applicants) {
+    console.log(`Processing applicant: ${applicant.firstName} ${applicant.lastName}`);
 
-
-                applicant.jobTitle = jobTitles.find(job => job.jobId === applicant.jobId)?.jobTitle || 'N/A';
+    applicant.jobTitle = jobTitles.find(job => job.jobId === applicant.jobId)?.jobTitle || 'N/A';
     applicant.deptName = departments.find(dept => dept.departmentId === applicant.departmentId)?.deptName || 'N/A';
     applicant.userEmail = userAccounts.find(user => user.userId === applicant.userId)?.userEmail || 'N/A';
     applicant.birthDate = userAccounts.find(user => user.userId === applicant.userId)?.birthDate || 'N/A';
 
-
     // Match `userId` to fetch the corresponding initial screening assessment
     const screeningData = screeningAssessments.find(assessment => assessment.userId === applicant.userId) || {};
+
+    // FIXED: Proper boolean handling for Work Setup and Availability
+    const workSetupScore = screeningData.workSetupScore;
+    const availabilityScore = screeningData.availabilityScore;
+    
+    // Convert to proper boolean values
+    const workSetupPassed = (workSetupScore === true || workSetupScore === 'true' || workSetupScore === '1' || workSetupScore === 1);
+    const availabilityPassed = (availabilityScore === true || availabilityScore === 'true' || availabilityScore === '1' || availabilityScore === 1);
+    
+    console.log(`UserId ${applicant.userId} Work Setup Logic:`);
+    console.log(`  workSetupScore: ${workSetupScore} (${typeof workSetupScore}) -> ${workSetupPassed}`);
+    console.log(`  availabilityScore: ${availabilityScore} (${typeof availabilityScore}) -> ${availabilityPassed}`);
+    console.log(`  Both passed: ${workSetupPassed && availabilityPassed}`);
 
     // Merge the screening assessment data into the applicant object
     applicant.initialScreeningAssessment = {
@@ -5717,8 +6040,8 @@ getApplicantTracker: async function(req, res) {
         certificationScore: screeningData.certificationScore || 'N/A',
         hardSkillsScore: screeningData.hardSkillsScore || 'N/A',
         softSkillsScore: screeningData.softSkillsScore || 'N/A',
-        workSetupScore: screeningData.workSetupScore || 'N/A',
-        availabilityScore: screeningData.availabilityScore || 'N/A',
+        workSetupScore: workSetupPassed, // Send as boolean
+        availabilityScore: availabilityPassed, // Send as boolean
         totalScore: screeningData.totalScore || 'N/A',
         degree_url: screeningData.degree_url || '#',
         cert_url: screeningData.cert_url || '#',
@@ -6102,7 +6425,7 @@ console.log('Final applicants list:', applicants);
                         .from('chatbot_history')
                         .insert([{
                             userId,
-                            message: JSON.stringify({ text: "We regret to inform you that you have not been chosen as a candidate for this position. Thank you for your interest in Prime Infrastructure, and we wish you the best in your future endeavors." }),
+                            message: JSON.stringify({ text: "We regret to inform you that you have not been chosen as a candidate for this position. Thank you for your interest in Company ABC, and we wish you the best in your future endeavors." }),
                             sender: 'bot',
                             timestamp: new Date().toISOString(),
                             applicantStage: 'P1 - FAILED'
@@ -6218,68 +6541,67 @@ console.log('Final applicants list:', applicants);
      * This doesn't notify the applicant yet
      */
     markAsP3Passed: async function(req, res) {
-        try {
-            const { userId } = req.body;
-            
-            if (!userId) {
-                return res.status(400).json({ success: false, message: "Missing user ID" });
-            }
-            
-            // Update the status for display purposes only
-            const { data, error } = await supabase
-                .from('applicantaccounts')
-                .update({ applicantStatus: 'P3 - PASSED (Pending Finalization)' })
-                .eq('userId', userId);
-                
-            if (error) {
-                console.error('❌ [LineManager] Error marking applicant as P3 PASSED:', error);
-                return res.status(500).json({ success: false, message: "Error updating applicant status" });
-            }
-            
-            return res.status(200).json({ 
-                success: true, 
-                message: "Applicant marked as P3 PASSED. Status will be finalized and applicant will be notified upon review finalization."
-            });
-            
-        } catch (error) {
+    try {
+        const { userId } = req.body;
+        
+        if (!userId) {
+            return res.status(400).json({ success: false, message: "Missing userId" });
+        }
+        
+        console.log(`✅ [LineManager] Marking userId ${userId} as P3 PASSED (Pending Finalization)`);
+        
+        const { data, error } = await supabase
+            .from('applicantaccounts')
+            .update({ applicantStatus: 'P3 - PASSED (Pending Finalization)' })
+            .eq('userId', userId);
+        
+        if (error) {
             console.error('❌ [LineManager] Error marking as P3 PASSED:', error);
-            return res.status(500).json({ success: false, message: "Error marking applicant as P3 PASSED: " + error.message });
+            return res.status(500).json({ success: false, message: error.message });
         }
-    },
-    
-    /**
-     * Temporary marks an applicant as FAILED for P3 in the Line Manager's view
-     * This doesn't notify the applicant yet
-     */
-    markAsP3Failed: async function(req, res) {
-        try {
-            const { userId } = req.body;
-            
-            if (!userId) {
-                return res.status(400).json({ success: false, message: "Missing user ID" });
-            }
-            
-            // Update the status for display purposes only
-            const { data, error } = await supabase
-                .from('applicantaccounts')
-                .update({ applicantStatus: 'P3 - FAILED (Pending Finalization)' })
-                .eq('userId', userId);
-                
-            if (error) {
-                console.error('❌ [LineManager] Error marking applicant as P3 FAILED:', error);
-                return res.status(500).json({ success: false, message: "Error updating applicant status" });
-            }
-            
-            return res.status(200).json({ 
-                success: true, 
-                message: "Applicant marked as P3 FAILED. Status will be finalized and applicant will be notified upon review finalization."
-            });
-            
-        } catch (error) {
+        
+        return res.status(200).json({ 
+            success: true, 
+            message: 'Applicant marked as P3 PASSED (Pending Finalization)' 
+        });
+        
+    } catch (error) {
+        console.error('❌ [LineManager] Error in markAsP3Passed:', error);
+        return res.status(500).json({ success: false, message: error.message });
+    }
+},
+
+markAsP3Failed: async function(req, res) {
+    try {
+        const { userId } = req.body;
+        
+        if (!userId) {
+            return res.status(400).json({ success: false, message: "Missing userId" });
+        }
+        
+        console.log(`✅ [LineManager] Marking userId ${userId} as P3 FAILED (Pending Finalization)`);
+        
+        const { data, error } = await supabase
+            .from('applicantaccounts')
+            .update({ applicantStatus: 'P3 - FAILED (Pending Finalization)' })
+            .eq('userId', userId);
+        
+        if (error) {
             console.error('❌ [LineManager] Error marking as P3 FAILED:', error);
-            return res.status(500).json({ success: false, message: "Error marking applicant as P3 FAILED: " + error.message });
+            return res.status(500).json({ success: false, message: error.message });
         }
-    },
+        
+        return res.status(200).json({ 
+            success: true, 
+            message: 'Applicant marked as P3 FAILED (Pending Finalization)' 
+        });
+        
+    } catch (error) {
+        console.error('❌ [LineManager] Error in markAsP3Failed:', error);
+        return res.status(500).json({ success: false, message: error.message });
+    }
+},
+
 
 // Modified finalizeP1Review function with email notifications
 // finalizeP1Review: async function(req, res) {
@@ -6561,7 +6883,7 @@ console.log('Final applicants list:', applicants);
                 }
                 
                 // 2. Send rejection message through the chatbot history
-                const rejectionMessage = "We appreciate your participation in our interview process. After careful consideration, we regret to inform you that we will not be proceeding with your application at this time. Thank you for your interest in Prime Infrastructure.";
+                const rejectionMessage = "We appreciate your participation in our interview process. After careful consideration, we regret to inform you that we will not be proceeding with your application at this time. Thank you for your interest in Company ABC.";
                 
                 const { data: chatData, error: chatError } = await supabase
                     .from('chatbot_history')
@@ -6590,6 +6912,7 @@ console.log('Final applicants list:', applicants);
             return res.status(500).json({ success: false, message: "Error finalizing P3 review: " + error.message });
         }
     },
+    
     // Function to prepare P3 finalization with Gmail compose
 finalizeP3ReviewGmail: async function(req, res) {
     try {
@@ -6663,7 +6986,7 @@ finalizeP3ReviewGmail: async function(req, res) {
         
         if (allJobIds.length > 0) {
             const { data: jobData, error: jobError } = await supabase
-                .from('jobpositions')
+                .from('job_positions')
                 .select('jobId, jobTitle')
                 .in('jobId', allJobIds);
                 
@@ -6700,40 +7023,62 @@ finalizeP3ReviewGmail: async function(req, res) {
         return res.status(500).json({ success: false, message: "Error preparing P3 review finalization: " + error.message });
     }
 },
-
 // Function to get P3 email templates
 getP3EmailTemplates: async function(req, res) {
     try {
+        console.log('✅ [LineManager] Getting P3 email templates');
+        
         const templates = {
             passed: {
-                subject: 'Congratulations! Job Offer - Prime Infrastructure',
+                subject: 'Congratulations! Job Offer - Company ABC',
                 template: `Dear {applicantName},
 
-Congratulations! We are delighted to inform you that you have successfully passed our final interview process for the {jobTitle} position at {companyName}.
+🎉 Congratulations! We are thrilled to extend a job offer for the {jobTitle} position at {companyName}.
 
-We are pleased to extend a formal job offer to you. Our HR team will be contacting you within the next 1-2 business days with detailed information regarding:
+After careful consideration of all candidates throughout our comprehensive interview process, we believe you are the perfect fit for our team and organization.
 
-• Your compensation package
-• Start date options
-• Benefits information
-• Next steps in the onboarding process
+📋 Your Job Offer Details:
+• Position: {jobTitle}
+• Company: {companyName}  
+• Status: Job Offer Extended
+• Next Steps: Please log into your applicant portal to review and respond to the offer
 
-We are excited about the possibility of you joining our team and look forward to your positive response.
+We were particularly impressed with your performance during the final interview stage, and we're excited about the unique skills and perspective you'll bring to our team.
 
-Best regards,
+🚀 What's Next?
+• Check your applicant portal for detailed offer information
+• Review the complete compensation package and benefits  
+• Respond to the offer within the specified timeframe
+• Prepare for an exciting journey with {companyName}
+
+We're excited to welcome you to the {companyName} family and look forward to your contribution to our continued success.
+
+Congratulations once again!
+
+Warm regards,
 The {companyName} Recruitment Team`
             },
             failed: {
                 subject: 'Thank You for Your Interest - Interview Process Complete',
                 template: `Dear {applicantName},
 
-Thank you for taking the time to participate in our interview process for the {jobTitle} position at {companyName}.
+Thank you for participating in our comprehensive interview process for the {jobTitle} position at {companyName}, including your final interview with our senior management team.
 
-After careful consideration of all candidates, we regret to inform you that we have decided to proceed with another candidate whose background more closely matches our current requirements.
+We want to express our sincere appreciation for the time, effort, and enthusiasm you demonstrated throughout our entire recruitment process. Your professionalism and the thoughtful responses you provided during all stages of our interviews were truly impressive.
 
-We were impressed by your qualifications and experience, and we encourage you to apply for future opportunities that may be a better fit for your skills and career goals.
+After extensive deliberation and careful consideration of all candidates, we have made the difficult decision to extend an offer to another candidate whose background and experience align slightly more closely with our current specific requirements for this role.
 
-We wish you the best of luck in your job search and future endeavors.
+Please know that this decision was particularly challenging for our team. You demonstrated excellent qualifications, strong technical skills, and would undoubtedly be a valuable addition to any organization.
+
+🌟 Moving Forward:
+• Your application details will remain in our talent database for future opportunities
+• We may contact you if a suitable position becomes available
+• Please feel free to apply for other positions that align with your skills
+• Follow our careers page for new openings that might be an excellent fit
+
+We strongly encourage you to apply for future positions with us that align with your career goals and expertise. We believe you have much to offer and would welcome the opportunity to consider you for other roles.
+
+Thank you again for your interest in {companyName} and for the professionalism you demonstrated throughout our process. We wish you tremendous success in your career journey.
 
 Best regards,
 The {companyName} Recruitment Team`
@@ -6747,11 +7092,68 @@ The {companyName} Recruitment Team`
         return res.status(500).json({ success: false, message: "Error getting P3 email templates: " + error.message });
     }
 },
-// Add P3 email templates function
+
 getP3EmailTemplates: async function(req, res) {
     try {
-        const { getEmailTemplateData } = require('../utils/emailService');
-        const templates = getEmailTemplateData('P3'); // Pass 'P3' phase
+        console.log('✅ [LineManager] Getting P3 email templates');
+        
+        const templates = {
+            passed: {
+                subject: 'Congratulations! Job Offer - Company ABC',
+                template: `Dear {applicantName},
+
+🎉 Congratulations! We are thrilled to extend a job offer for the {jobTitle} position at {companyName}.
+
+After careful consideration of all candidates throughout our comprehensive interview process, we believe you are the perfect fit for our team and organization.
+
+📋 Your Job Offer Details:
+• Position: {jobTitle}
+• Company: {companyName}  
+• Status: Job Offer Extended
+• Next Steps: Please log into your applicant portal to review and respond to the offer
+
+We were particularly impressed with your performance during the final interview stage, and we're excited about the unique skills and perspective you'll bring to our team.
+
+🚀 What's Next?
+• Check your applicant portal for detailed offer information
+• Review the complete compensation package and benefits  
+• Respond to the offer within the specified timeframe
+• Prepare for an exciting journey with {companyName}
+
+We're excited to welcome you to the {companyName} family and look forward to your contribution to our continued success.
+
+Congratulations once again!
+
+Warm regards,
+The {companyName} Recruitment Team`
+            },
+            failed: {
+                subject: 'Thank You for Your Interest - Interview Process Complete',
+                template: `Dear {applicantName},
+
+Thank you for participating in our comprehensive interview process for the {jobTitle} position at {companyName}, including your final interview with our senior management team.
+
+We want to express our sincere appreciation for the time, effort, and enthusiasm you demonstrated throughout our entire recruitment process. Your professionalism and the thoughtful responses you provided during all stages of our interviews were truly impressive.
+
+After extensive deliberation and careful consideration of all candidates, we have made the difficult decision to extend an offer to another candidate whose background and experience align slightly more closely with our current specific requirements for this role.
+
+Please know that this decision was particularly challenging for our team. You demonstrated excellent qualifications, strong technical skills, and would undoubtedly be a valuable addition to any organization.
+
+🌟 Moving Forward:
+• Your application details will remain in our talent database for future opportunities
+• We may contact you if a suitable position becomes available
+• Please feel free to apply for other positions that align with your skills
+• Follow our careers page for new openings that might be an excellent fit
+
+We strongly encourage you to apply for future positions with us that align with your career goals and expertise. We believe you have much to offer and would welcome the opportunity to consider you for other roles.
+
+Thank you again for your interest in {companyName} and for the professionalism you demonstrated throughout our process. We wish you tremendous success in your career journey.
+
+Best regards,
+The {companyName} Recruitment Team`
+            }
+        };
+        
         return res.status(200).json({ success: true, templates });
         
     } catch (error) {
@@ -6760,6 +7162,7 @@ getP3EmailTemplates: async function(req, res) {
     }
 },
 
+// Add P3 status update function
 // Add P3 status update function
 updateP3Statuses: async function(req, res) {
     try {
@@ -6802,7 +7205,7 @@ updateP3Statuses: async function(req, res) {
                     .from('chatbot_history')
                     .insert([{
                         userId,
-                        message: JSON.stringify({ text: "Congratulations! You have successfully passed the final interview stage. We will be contacting you soon with job offer details." }),
+                        message: JSON.stringify({ text: "Congratulations! You have been selected for the position. We will be contacting you soon with job offer details." }),
                         sender: 'bot',
                         timestamp: new Date().toISOString(),
                         applicantStage: 'P3 - PASSED'
@@ -6962,6 +7365,373 @@ getP3Assessment: async function(req, res) {
         });
     }
 },
+
+
+getP3Assessment: async function(req, res) {
+    try {
+        const { userId } = req.params;
+        
+        console.log('Fetching P3 assessment for userId:', userId);
+        
+        if (!userId) {
+            return res.status(400).json({ 
+                success: false, 
+                message: 'User ID is required' 
+            });
+        }
+        
+        // Fetch the P3 panel screening assessment data
+        const { data: assessment, error: assessmentError } = await supabase
+            .from('applicant_panelscreening_assessment')
+            .select(`
+                userId,
+                totalAssessmentRating,
+                conclusion,
+                interviewDate,
+                recommendationReason
+            `)
+            .eq('userId', userId)
+            .single();
+            
+        if (assessmentError) {
+            console.error('Error fetching P3 assessment:', assessmentError);
+            return res.status(404).json({ 
+                success: false, 
+                message: 'P3 assessment not found',
+                error: assessmentError.message 
+            });
+        }
+        
+        // Fetch applicant basic info for context
+        const { data: applicant, error: applicantError } = await supabase
+            .from('applicantaccounts')
+            .select('firstName, lastName, applicantStatus')
+            .eq('userId', userId)
+            .single();
+        
+        const responseData = {
+            success: true,
+            assessmentData: {
+                userId: userId,
+                firstName: applicant?.firstName || 'N/A',
+                lastName: applicant?.lastName || 'N/A',
+                status: applicant?.applicantStatus || 'N/A',
+                totalAssessmentRating: assessment?.totalAssessmentRating || 'N/A',
+                conclusion: assessment?.conclusion || 'N/A',
+                interviewDate: assessment?.interviewDate || 'N/A',
+                recommendationReason: assessment?.recommendationReason || 'N/A'
+            }
+        };
+        
+        console.log('Returning P3 assessment data:', responseData);
+        
+        return res.json(responseData);
+        
+    } catch (error) {
+        console.error('Error in getP3Assessment:', error);
+        return res.status(500).json({
+            success: false,
+            message: 'Error fetching P3 assessment data',
+            error: error.message
+        });
+    }
+},
+
+// Send automated email (individual)
+sendAutomatedEmail: async function(req, res) {
+    try {
+        console.log('✅ [LineManager] Sending automated email');
+        
+        const { email, subject, template, applicantName, jobTitle, phase, type } = req.body;
+        
+        if (!email || !subject || !template || !applicantName || !jobTitle) {
+            return res.status(400).json({ 
+                success: false, 
+                message: "Missing required email parameters" 
+            });
+        }
+        
+        console.log(`✅ [LineManager] Sending ${type} email to: ${email}`);
+        
+        // Send email using the email service
+        const result = await sendCustomEmail(
+            email,
+            subject,
+            template,
+            applicantName,
+            jobTitle
+        );
+        
+        if (result.success) {
+            console.log(`✅ [LineManager] Email sent successfully to ${email}: ${result.messageId}`);
+            return res.status(200).json({
+                success: true,
+                messageId: result.messageId,
+                message: 'Email sent successfully'
+            });
+        } else {
+            console.error(`❌ [LineManager] Failed to send email to ${email}: ${result.error}`);
+            return res.status(500).json({
+                success: false,
+                message: result.error || 'Failed to send email'
+            });
+        }
+        
+    } catch (error) {
+        console.error('❌ [LineManager] Error sending automated email:', error);
+        return res.status(500).json({
+            success: false,
+            message: 'Error sending automated email: ' + error.message
+        });
+    }
+},
+
+// Send bulk emails (batch process)
+sendBulkEmails: async function(req, res) {
+    try {
+        console.log('✅ [LineManager] Starting bulk email sending process');
+        
+        const { applicants, subject, template, phase, type } = req.body;
+        
+        if (!applicants || !Array.isArray(applicants) || applicants.length === 0) {
+            return res.status(400).json({ 
+                success: false, 
+                message: "Invalid applicants data" 
+            });
+        }
+        
+        if (!subject || !template) {
+            return res.status(400).json({ 
+                success: false, 
+                message: "Missing email subject or template" 
+            });
+        }
+        
+        console.log(`✅ [LineManager] Bulk sending ${applicants.length} ${type} emails for ${phase}`);
+        
+        // Generate batch ID
+        const batchId = `batch_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+        
+        // Initialize batch tracking
+        emailBatches.set(batchId, {
+            total: applicants.length,
+            sent: 0,
+            failed: 0,
+            errors: [],
+            startTime: new Date(),
+            status: 'processing'
+        });
+        
+        // Process emails in background
+        processEmailBatch(batchId, applicants, subject, template);
+        
+        return res.status(200).json({
+            success: true,
+            batchId: batchId,
+            message: 'Bulk email process started',
+            totalEmails: applicants.length
+        });
+        
+    } catch (error) {
+        console.error('❌ [LineManager] Error starting bulk email process:', error);
+        return res.status(500).json({
+            success: false,
+            message: 'Error starting bulk email process: ' + error.message
+        });
+    }
+},
+
+// Get email sending status
+getEmailStatus: async function(req, res) {
+    try {
+        const { batchId } = req.params;
+        
+        if (!emailBatches.has(batchId)) {
+            return res.status(404).json({
+                success: false,
+                message: 'Batch ID not found'
+            });
+        }
+        
+        const batchInfo = emailBatches.get(batchId);
+        
+        return res.status(200).json({
+            success: true,
+            batch: batchInfo
+        });
+        
+    } catch (error) {
+        console.error('❌ [LineManager] Error getting email status:', error);
+        return res.status(500).json({
+            success: false,
+            message: 'Error getting email status: ' + error.message
+        });
+    }
+},
+
+// Enhanced P1 finalization with automated emails
+finalizeP1ReviewWithEmails: async function(req, res) {
+    try {
+        console.log('✅ [LineManager] P1 review finalization with automated emails');
+        
+        const { passedUserIds, failedUserIds, sendEmails = false, emailData } = req.body;
+        
+        if (!passedUserIds || !failedUserIds) {
+            return res.status(400).json({ success: false, message: "Missing user IDs" });
+        }
+        
+        console.log(`✅ [LineManager] P1 Finalization: ${passedUserIds.length} passed, ${failedUserIds.length} failed, sendEmails: ${sendEmails}`);
+        
+        // Fetch applicant data
+        const applicantData = await fetchApplicantDataForEmails(passedUserIds, failedUserIds);
+        
+        if (sendEmails && emailData) {
+            // Send automated emails
+            const emailResults = await sendAutomatedP1Emails(
+                applicantData.passedApplicants,
+                applicantData.failedApplicants,
+                emailData
+            );
+            
+            // Update statuses if emails were sent successfully
+            if (emailResults.success) {
+                await updateP1StatusesAfterEmails(passedUserIds, failedUserIds);
+                
+                return res.status(200).json({
+                    success: true,
+                    message: 'P1 review finalized and emails sent successfully',
+                    emailResults: emailResults,
+                    passedUpdated: passedUserIds.length,
+                    failedUpdated: failedUserIds.length
+                });
+            } else {
+                return res.status(207).json({
+                    success: false,
+                    message: 'P1 review processed but some emails failed',
+                    emailResults: emailResults
+                });
+            }
+        } else {
+            // Just return applicant data for manual processing
+            return res.status(200).json({ 
+                success: true,
+                requiresEmailCompose: true,
+                passedApplicants: applicantData.passedApplicants,
+                failedApplicants: applicantData.failedApplicants,
+                message: "Ready for email composition"
+            });
+        }
+        
+    } catch (error) {
+        console.error('❌ [LineManager] Error in P1 review finalization with emails:', error);
+        return res.status(500).json({ 
+            success: false, 
+            message: "Error in P1 review finalization: " + error.message 
+        });
+    }
+},
+
+// Enhanced P3 finalization with automated emails
+finalizeP3ReviewWithEmails: async function(req, res) {
+    try {
+        console.log('✅ [LineManager] P3 review finalization with automated emails');
+        
+        const { passedUserIds, failedUserIds, sendEmails = false, emailData } = req.body;
+        
+        if (!passedUserIds || !failedUserIds) {
+            return res.status(400).json({ success: false, message: "Missing user IDs" });
+        }
+        
+        console.log(`✅ [LineManager] P3 Finalization: ${passedUserIds.length} passed, ${failedUserIds.length} failed, sendEmails: ${sendEmails}`);
+        
+        // Fetch applicant data
+        const applicantData = await fetchApplicantDataForEmails(passedUserIds, failedUserIds);
+        
+        if (sendEmails && emailData) {
+            // Send automated emails
+            const emailResults = await sendAutomatedP3Emails(
+                applicantData.passedApplicants,
+                applicantData.failedApplicants,
+                emailData
+            );
+            
+            // Update statuses if emails were sent successfully
+            if (emailResults.success) {
+                await updateP3StatusesAfterEmails(passedUserIds, failedUserIds);
+                
+                return res.status(200).json({
+                    success: true,
+                    message: 'P3 review finalized and emails sent successfully',
+                    emailResults: emailResults,
+                    passedUpdated: passedUserIds.length,
+                    failedUpdated: failedUserIds.length
+                });
+            } else {
+                return res.status(207).json({
+                    success: false,
+                    message: 'P3 review processed but some emails failed',
+                    emailResults: emailResults
+                });
+            }
+        } else {
+            // Just return applicant data for manual processing
+            return res.status(200).json({ 
+                success: true,
+                requiresEmailCompose: true,
+                passedApplicants: applicantData.passedApplicants,
+                failedApplicants: applicantData.failedApplicants,
+                message: "Ready for email composition"
+            });
+        }
+        
+    } catch (error) {
+        console.error('❌ [LineManager] Error in P3 review finalization with emails:', error);
+        return res.status(500).json({ 
+            success: false, 
+            message: "Error in P3 review finalization: " + error.message 
+        });
+    }
+},
+
+// Get user email for job offer system
+getUserEmail: async function(req, res) {
+    try {
+        const { userId } = req.params;
+        
+        if (!userId) {
+            return res.status(400).json({ success: false, message: "Missing userId" });
+        }
+        
+        console.log(`✅ [LineManager] Fetching email for userId: ${userId}`);
+        
+        const { data: userData, error: userError } = await supabase
+            .from('useraccounts')
+            .select('userEmail')
+            .eq('userId', userId)
+            .single();
+            
+        if (userError) {
+            console.error('❌ [LineManager] Error fetching user email:', userError);
+            return res.status(404).json({ 
+                success: false, 
+                message: "User not found" 
+            });
+        }
+        
+        return res.status(200).json({
+            success: true,
+            email: userData.userEmail
+        });
+        
+    } catch (error) {
+        console.error('❌ [LineManager] Error getting user email:', error);
+        return res.status(500).json({
+            success: false,
+            message: 'Error getting user email: ' + error.message
+        });
+    }
+},
+
     // updateP1LineManagerPassed: async function(req, res) {
     //     try {
     //         const { passedUserIds, failedUserIds } = req.body;
