@@ -1228,19 +1228,29 @@ function displaySkills() {
     allActivitiesCompleted = trainingData.activities.every(activity => activity.status === 'Completed');
     updateCompletionRequirement();
 
+    // Check if we're within training period
+    const withinPeriod = isWithinTrainingPeriod();
+    const isDisabled = !withinPeriod;
+
     tableBody.innerHTML = trainingData.activities.map(activity => `
         <tr data-activity-id="${activity.activityId}">
             <td>${activity.activityName || 'Unknown Activity'}</td>
             <td>${activity.estActivityDuration || 0} minutes</td>
             <td class="editable-field">
-                <select class="status-select ${getStatusClass(activity.status)}" 
+                <select class="status-select ${getStatusClass(activity.status)} ${isDisabled ? 'disabled' : ''}" 
                         onchange="updateActivityStatus(${activity.activityId}, this.value)"
                         data-activity-id="${activity.activityId}" 
-                        data-field="status">
+                        data-field="status"
+                        ${isDisabled ? 'disabled' : ''}>
                     <option value="Not Started" ${activity.status === 'Not Started' ? 'selected' : ''}>Not Started</option>
                     <option value="In Progress" ${activity.status === 'In Progress' ? 'selected' : ''}>In Progress</option>
                     <option value="Completed" ${activity.status === 'Completed' ? 'selected' : ''}>Completed</option>
                 </select>
+                ${isDisabled ? `
+                    <div style="font-size: 11px; color: #dc2626; margin-top: 2px;">
+                        <i class="fas fa-calendar-times"></i> Updates restricted outside training period
+                    </div>
+                ` : ''}
             </td>
             <td>
                 <div class="timestamp-display ${activity.timestampzStarted ? 'has-value' : ''}">
@@ -1257,8 +1267,81 @@ function displaySkills() {
         </tr>
     `).join('');
 
+    // Show date restriction banner if outside training period
+    if (!withinPeriod) {
+        showDateRestrictionBanner();
+    }
+
     console.log('✅ Activities displayed successfully');
 }
+
+// Function to show date restriction banner
+function showDateRestrictionBanner() {
+    // Remove existing banner if any
+    const existingBanner = document.querySelector('.date-restriction-banner');
+    if (existingBanner) {
+        existingBanner.remove();
+    }
+
+    const startDate = trainingData.setStartDate ? new Date(trainingData.setStartDate).toLocaleDateString() : 'Not set';
+    const endDate = trainingData.setEndDate ? new Date(trainingData.setEndDate).toLocaleDateString() : 'Not set';
+
+    const banner = document.createElement('div');
+    banner.className = 'date-restriction-banner';
+    banner.style.cssText = `
+        background: #fef2f2;
+        border: 1px solid #fecaca;
+        border-radius: 8px;
+        padding: 12px 16px;
+        margin-bottom: 20px;
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        color: #dc2626;
+        font-size: 14px;
+    `;
+    
+    banner.innerHTML = `
+        <i class="fas fa-calendar-times" style="font-size: 16px;"></i>
+        <div>
+            <strong>Activity updates are currently restricted.</strong><br>
+            <small>Updates are only allowed during the training period: <strong>${startDate}</strong> to <strong>${endDate}</strong></small>
+        </div>
+    `;
+
+    // Insert banner before the activities table
+    const activitiesSection = document.querySelector('.activities-section');
+    const instructionsBanner = document.querySelector('.instructions-banner');
+    if (activitiesSection && instructionsBanner) {
+        instructionsBanner.insertAdjacentElement('afterend', banner);
+    }
+}
+
+// Add CSS for disabled status selects
+function addDateRestrictionStyles() {
+    if (!document.querySelector('#date-restriction-styles')) {
+        const style = document.createElement('style');
+        style.id = 'date-restriction-styles';
+        style.textContent = `
+            .status-select.disabled {
+                background-color: #f9fafb !important;
+                color: #6b7280 !important;
+                cursor: not-allowed !important;
+                opacity: 0.6;
+            }
+            
+            .status-select.disabled:hover {
+                background-color: #f9fafb !important;
+            }
+        `;
+        document.head.appendChild(style);
+    }
+}
+
+// Call this when the page loads
+document.addEventListener('DOMContentLoaded', () => {
+    addDateRestrictionStyles();
+});
 
 function updateCompletionRequirement() {
         const completionReq = document.getElementById('completionRequirement');
@@ -1375,10 +1458,55 @@ function updateCompletionRequirement() {
         return status.toLowerCase().replace(' ', '-');
     }
 
+// Add this function to check if current date is within training period
+function isWithinTrainingPeriod() {
+    if (!trainingData || !trainingData.setStartDate || !trainingData.setEndDate) {
+        console.log('⚠️ Missing training date information');
+        return false;
+    }
+
+    const now = new Date();
+    const startDate = new Date(trainingData.setStartDate);
+    const endDate = new Date(trainingData.setEndDate);
+    
+    // Set time to start/end of day for proper comparison
+    startDate.setHours(0, 0, 0, 0);
+    endDate.setHours(23, 59, 59, 999);
+    
+    const isWithin = now >= startDate && now <= endDate;
+    
+    console.log('📅 Training period check:', {
+        currentDate: now.toISOString(),
+        startDate: startDate.toISOString(),
+        endDate: endDate.toISOString(),
+        isWithin: isWithin
+    });
+    
+    return isWithin;
+}
 
         // Updated activity status change with timestamp handling
        async function updateActivityStatus(activityId, newStatus) {
     console.log('🔄 Updating activity status:', { activityId, newStatus });
+    
+    // Check if current date is within training period
+    if (!isWithinTrainingPeriod()) {
+        const startDate = trainingData.setStartDate ? new Date(trainingData.setStartDate).toLocaleDateString() : 'Not set';
+        const endDate = trainingData.setEndDate ? new Date(trainingData.setEndDate).toLocaleDateString() : 'Not set';
+        
+        showError(`Activity updates are only allowed during the training period (${startDate} - ${endDate}). Current date is outside this range.`);
+        
+        // Revert the select dropdown to original value
+        const activity = trainingData.activities.find(a => a.activityId === activityId);
+        if (activity) {
+            const selectElement = document.querySelector(`tr[data-activity-id="${activityId}"] .status-select`);
+            if (selectElement) {
+                selectElement.value = activity.status;
+            }
+        }
+        
+        return;
+    }
     
     // Find the activity in our data
     const activity = trainingData.activities.find(a => a.activityId === activityId);
@@ -1414,7 +1542,7 @@ function updateCompletionRequirement() {
 
         console.log('📡 Sending update request:', requestData);
 
-        // Save to database - FIXED: Use correct endpoint
+        // Save to database
         const response = await fetch(`/employee/training/${trainingRecordId}/activity/${activityId}`, {
             method: 'PUT',
             headers: {
