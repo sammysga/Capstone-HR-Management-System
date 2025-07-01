@@ -11,6 +11,8 @@ const { hr } = require('date-fns/locale');
 router.use(express.urlencoded({ extended: true }));
 router.use(fileUpload());
 
+const emailService = require('../utils/emailService');
+
 // Route to render the public home page
 router.get('/', applicantController.getAboutPage);
 router.get('/applicant/signup', applicantController.getApplicantRegisterPage);
@@ -68,17 +70,6 @@ router.post('/hr/api/departments', hrController.addNewDepartment);
 router.post('/hr/api/job-titles', hrController.addNewJobTitle);
 router.post('/hr/api/add-staff', hrController.addNewStaff);
 router.put('/hr/api/update-leavetypes/:leaveTypeId', hrController.updateLeaveTypes); // Ensure leaveTypeId is included in the URL
-router.post('/hr/reject-applicant', hrController.rejectApplicant);
-router.post('/hr/pass-applicant', hrController.passApplicant);
-router.get('/hr/view-evaluation/:applicantId', hrController.viewEvaluation);
-// Mark applicant as P2 PASSED (pending finalization)
-router.post('/hr/markAsP2Passed', hrController.markAsP2Passed);
-// Mark applicant as P2 FAILED (pending finalization)
-router.post('/hr/markAsP2Failed', hrController.markAsP2Failed);
-// Finalize P2 review and notify all applicants
-router.post('/hr/finalizeP2Review', hrController.finalizeP2Review);
-router.get('/hr/getP2EmailTemplates', hrController.getP2EmailTemplates);
-router.get('/getEmailTemplates', hrController.getEmailTemplates);
 
 router.get('/hr/useraccount', hrController.getUserAccount);
 router.post('/hr/update-info', hrController.updateUserInfo);
@@ -228,14 +219,19 @@ router.get('/interview-form/:applicantId', lineManagerController.getInterviewFor
 router.get('/linemanager/view-interview-form/:applicantId', lineManagerController.getViewInterviewForm);
 router.get('/linemanager/view-interview-form-by-userid/:userId', lineManagerController.getViewInterviewFormByUserId);
 
-// Routes for passing and rejecting applicants through web interface
-router.get('/linemanager/passp3-applicant/:applicantId', lineManagerController.passP3Applicant);
-router.get('/linemanager/rejectp3-applicant/:applicantId', lineManagerController.rejectP3Applicant);
-router.post('/reject-applicant/:applicantId', lineManagerController.rejectApplicant); // For form submission with reason
-router.post('/linemanager/applicant-tracker-jobposition/finalizeP3ReviewGmail', lineManagerController.finalizeP3ReviewGmail);
-router.get('/linemanager/applicant-tracker-jobposition/getP3EmailTemplates', lineManagerController.getP3EmailTemplates);
-router.post('/linemanager/applicant-tracker-jobposition/updateP3Statuses', lineManagerController.updateP3Statuses);
-router.get('/linemanager/get-p3-assessment/:userId', lineManagerController.getP3Assessment);
+// automated email sending (individual email)
+router.post('/linemanager/send-automated-email', lineManagerController.sendAutomatedEmail);
+// bulk email sending (batch process)
+router.post('/linemanager/send-bulk-emails', lineManagerController.sendBulkEmails);
+// get email sending status
+router.get('/linemanager/email-status/:batchId', lineManagerController.getEmailStatus);
+// routes for P1 with email automation
+router.post('/linemanager/applicant-tracker-jobposition/finalizeP1ReviewWithEmails', lineManagerController.finalizeP1ReviewWithEmails);
+// routes for P3 with email automation  
+router.post('/linemanager/applicant-tracker-jobposition/finalizeP3ReviewWithEmails', lineManagerController.finalizeP3ReviewWithEmails);
+// Route to fetch user email (for job offer system)
+router.get('/linemanager/get-user-email/:userId', lineManagerController.getUserEmail);
+
 
 // API routes for handling pass/reject actions from main applicant list
 router.post('/handle-pass-applicant', lineManagerController.handlePassApplicant);
@@ -291,7 +287,17 @@ router.get('/staff/managerdashboard', lineManagerController.getLineManagerNotifi
 
 
 
+// Routes for passing and rejecting applicants through web interface
+router.get('/linemanager/passp3-applicant/:applicantId', lineManagerController.passP3Applicant);
+router.get('/linemanager/rejectp3-applicant/:applicantId', lineManagerController.rejectP3Applicant);
+router.post('/reject-applicant/:applicantId', lineManagerController.rejectApplicant); // For form submission with reason
+router.post('/linemanager/applicant-tracker-jobposition/finalizeP3ReviewGmail', lineManagerController.finalizeP3ReviewGmail);
+router.get('/linemanager/applicant-tracker-jobposition/getP3EmailTemplates', lineManagerController.getP3EmailTemplates);
+router.post('/linemanager/applicant-tracker-jobposition/updateP3Statuses', lineManagerController.updateP3Statuses);
+router.get('/linemanager/get-p3-assessment/:userId', lineManagerController.getP3Assessment);
+
 /* ORDER OF ATS CODES  */ 
+
 router.get('/hr/applicant-tracker', hrController.getApplicantTrackerAllJobPositions);
 router.get('/hr/applicant-tracker-jobposition', hrController.getApplicantTrackerByJobPositions);
 router.post('/hr/applicant-tracker-jobposition/P1AwaitingforLineManager', hrController.updateStatusToP1AwaitingforLineManager);
@@ -314,6 +320,21 @@ router.post('/linemanager/applicant-tracker-jobposition/markAsP1Failed',  lineMa
 // Email functionality routes
 router.get('/linemanager/applicant-tracker-jobposition/getEmailTemplates', lineManagerController.getEmailTemplates);
 router.post('/linemanager/applicant-tracker-jobposition/updateP1Statuses', lineManagerController.updateP1Statuses);
+
+
+router.post('/hr/reject-applicant', hrController.rejectApplicant);
+router.post('/hr/pass-applicant', hrController.passApplicant);
+router.get('/hr/view-evaluation/:applicantId', hrController.viewEvaluation);
+// Mark applicant as P2 PASSED (pending finalization)
+router.post('/hr/markAsP2Passed', hrController.markAsP2Passed);
+// Mark applicant as P2 FAILED (pending finalization)
+router.post('/hr/markAsP2Failed', hrController.markAsP2Failed);
+// Finalize P2 review and notify all applicants
+router.post('/hr/finalizeP2Review', hrController.finalizeP2Review);
+router.get('/hr/getP2EmailTemplates', hrController.getP2EmailTemplates);
+router.get('/getEmailTemplates', hrController.getEmailTemplates);
+
+
 // Routes for P3 review management
 router.post('/linemanager/applicant-tracker-jobposition/finalizeP3Review', lineManagerController.finalizeP3Review);
 router.post('/linemanager/applicant-tracker-jobposition/markAsP3Passed',  lineManagerController.markAsP3Passed);
