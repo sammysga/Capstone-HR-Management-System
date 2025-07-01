@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Job Recruitment - Prime Infra</title>
+    <title>Job Recruitment - Company ABC</title>
 
     <!-- Link to Inter Font -->
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
@@ -17,6 +17,59 @@
             margin: 0;
             padding: 0;
             color: #333;
+        }
+
+        /* Header Styles */
+        header {
+            background-color: #fff;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+            position: sticky;
+            top: 0;
+            z-index: 1000;
+        }
+
+        .header-container {
+            max-width: 1200px;
+            margin: 0 auto;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 15px 20px;
+        }
+
+        .logo {
+            height: 40px;
+        }
+
+        .nav-links {
+            display: flex;
+            align-items: center;
+            gap: 30px;
+        }
+
+        .nav-link {
+            color: #334155;
+            text-decoration: none;
+            font-weight: 500;
+            transition: color 0.3s;
+        }
+
+        .nav-link:hover {
+            color: #07ACB9;
+        }
+
+        .apply-now-btn {
+            background-color: #07ACB9;
+            color: white;
+            padding: 10px 20px;
+            border-radius: 6px;
+            text-decoration: none;
+            font-weight: 600;
+            transition: background-color 0.3s;
+        }
+
+        .apply-now-btn:hover {
+            background-color: #056770;
         }
 
         .page-banner {
@@ -104,8 +157,9 @@
 
         .job-listing {
             display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(340px, 1fr));
-            gap: 25px;
+            grid-template-columns: repeat(auto-fill, minmax(380px, 1fr));
+            gap: 35px 30px; /* vertical gap (35px) horizontal gap (30px) */
+            margin-top: 20px;
         }
 
         .job-count {
@@ -113,22 +167,41 @@
             color: #666;
             margin-bottom: 20px;
         }
+.job-item {
+    background-color: #fff;
+    border-radius: 12px;
+    box-shadow: 0 8px 25px rgba(0, 0, 0, 0.08);
+    padding: 30px;
+    /* margin-bottom: 20px; ❌ REMOVE THIS */
+    transition: all 0.3s ease;
+    border-top: 5px solid #07ACB9;
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+    position: relative;
+    overflow: hidden;
+}
 
-        .job-item {
-            background-color: #fff;
-            border-radius: 10px;
-            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.05);
-            padding: 25px;
-            transition: all 0.3s ease;
-            border-top: 5px solid #07ACB9;
-            display: flex;
-            flex-direction: column;
-            height: 100%;
+
+        .job-item::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: linear-gradient(135deg, rgba(7, 172, 185, 0.02), rgba(5, 103, 112, 0.02));
+            opacity: 0;
+            transition: opacity 0.3s ease;
         }
 
         .job-item:hover {
-            transform: translateY(-5px);
-            box-shadow: 0 15px 35px rgba(0, 0, 0, 0.1);
+            transform: translateY(-8px);
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.12);
+        }
+
+        .job-item:hover::before {
+            opacity: 1;
         }
 
         .job-item a {
@@ -137,22 +210,26 @@
             display: flex;
             flex-direction: column;
             height: 100%;
+            position: relative;
+            z-index: 1;
         }
 
         .job-meta {
             display: flex;
             align-items: center;
-            margin-bottom: 15px;
+            margin-bottom: 20px;
+            flex-wrap: wrap;
+            gap: 10px;
         }
 
         .job-type {
-            background-color: rgba(7, 172, 185, 0.1);
+            background: linear-gradient(135deg, rgba(7, 172, 185, 0.15), rgba(7, 172, 185, 0.1));
             color: #07ACB9;
-            padding: 4px 10px;
-            border-radius: 50px;
+            padding: 6px 12px;
+            border-radius: 20px;
             font-size: 0.75rem;
             font-weight: 600;
-            margin-right: 10px;
+            border: 1px solid rgba(7, 172, 185, 0.2);
         }
 
         .job-location {
@@ -160,45 +237,50 @@
             align-items: center;
             color: #666;
             font-size: 0.85rem;
+            background-color: #f8fafc;
+            padding: 6px 12px;
+            border-radius: 20px;
         }
 
         .job-location i {
-            margin-right: 5px;
+            margin-right: 6px;
             font-size: 0.8rem;
         }
 
         .job-item .title {
             font-weight: 700;
-            font-size: 1.3rem;
-            color: #2c2c2c;
-            margin-bottom: 10px;
+            font-size: 1.35rem;
+            color: #1e293b;
+            margin-bottom: 12px;
             line-height: 1.3;
         }
 
         .job-item .company {
-            font-size: 0.9rem;
+            font-size: 0.95rem;
             color: #07ACB9;
-            margin-bottom: 15px;
-            font-weight: 500;
+            margin-bottom: 18px;
+            font-weight: 600;
             display: flex;
             align-items: center;
         }
 
         .job-item .company i {
-            margin-right: 6px;
+            margin-right: 8px;
+            font-size: 0.9rem;
         }
 
         .job-item .description {
             font-weight: 400;
             font-size: 0.95rem;
-            color: #666;
-            margin-bottom: 20px;
-            line-height: 1.5;
+            color: #64748b;
+            margin-bottom: 25px;
+            line-height: 1.6;
             flex-grow: 1;
             display: -webkit-box;
             -webkit-line-clamp: 3;
             -webkit-box-orient: vertical;
             overflow: hidden;
+            
         }
 
         .job-footer {
@@ -206,52 +288,87 @@
             justify-content: space-between;
             align-items: center;
             margin-top: auto;
-            padding-top: 15px;
-            border-top: 1px solid #eee;
+            padding-top: 20px;
+            border-top: 1px solid #e2e8f0;
         }
 
         .job-item .status {
             font-size: 0.85rem;
-            font-weight: 500;
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .job-item .status i {
+            font-size: 0.8rem;
         }
 
         .job-item .status.active {
-            color: #4CAF50;
+            color: #10b981;
         }
 
         .job-item .status.inactive {
-            color: #f44336;
+            color: #ef4444;
         }
 
         .view-job {
-            background-color: #07ACB9;
+            background: linear-gradient(135deg, #07ACB9, #056770);
             color: white;
-            padding: 8px 15px;
-            border-radius: 6px;
+            padding: 10px 18px;
+            border-radius: 8px;
             font-size: 0.85rem;
             font-weight: 600;
             transition: all 0.3s;
+            border: none;
+            cursor: pointer;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
         }
 
         .view-job:hover {
-            background-color: #056770;
+            background: linear-gradient(135deg, #056770, #044a52);
+            transform: translateY(-2px);
+            box-shadow: 0 8px 20px rgba(7, 172, 185, 0.3);
         }
 
         .no-jobs {
             text-align: center;
-            padding: 50px 0;
+            padding: 60px 0;
             color: #666;
             grid-column: 1 / -1;
         }
 
         .no-jobs i {
-            font-size: 3rem;
-            color: #ddd;
-            margin-bottom: 15px;
+            font-size: 4rem;
+            color: #e2e8f0;
+            margin-bottom: 20px;
             display: block;
         }
 
+        .no-jobs p {
+            font-size: 1.1rem;
+            margin: 8px 0;
+        }
+
+        .no-jobs p:first-of-type {
+            font-weight: 600;
+            color: #475569;
+        }
+
         @media (max-width: 768px) {
+            .header-container {
+                flex-direction: column;
+                gap: 15px;
+                text-align: center;
+            }
+
+            .nav-links {
+                flex-wrap: wrap;
+                justify-content: center;
+                gap: 20px;
+            }
+
             .page-banner {
                 padding: 40px 20px;
             }
@@ -270,14 +387,49 @@
                 width: 100%;
             }
             
+.job-listing {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(380px, 1fr));
+    margin-top: 30px;
+    margin-bottom: 90px; /* Add bottom spacing */
+    gap: 200px;
+}
+
+
+            .job-item {
+                padding: 25px;
+            }
+
+            .job-meta {
+                flex-direction: column;
+                align-items: flex-start;
+            }
+        }
+
+        @media (max-width: 1024px) and (min-width: 769px) {
             .job-listing {
-                grid-template-columns: 1fr;
+                grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
+                gap: 30px 25px; /* Adjust spacing for tablet view */
             }
         }
     </style>
 </head>
 <body>
-    <%- include('../partials/publicheader') %>
+    <!-- Header -->
+    <header>
+        <div class="header-container">
+            <div class="logo-container">
+                <img src="/images/prime_assets/company-logo-text.png" alt="Company ABC Logo" class="logo">
+            </div>
+            <nav class="nav-links">
+                <a href="/about" class="nav-link">About Us</a>
+                <a href="/about#announcements" class="nav-link">Announcements</a>
+                <a href="/jobrecruitment" class="nav-link">Job Recruitments</a>
+                <a href="/contactform" class="nav-link">Contact</a>
+                <a href="/applicant/signup" class="apply-now-btn">Apply Now</a> 
+            </nav>
+        </div>
+    </header>
 
     <!-- Banner Section -->
     <section class="page-banner">
@@ -348,7 +500,7 @@
             <% } else { %>
                 <div class="no-jobs">
                     <i class="fas fa-briefcase"></i>
-                    <p>No job offers</p>
+                    <p>No job offers available</p>
                     <p>Please check back later for new opportunities.</p>
                 </div>
             <% } %>
@@ -398,7 +550,7 @@
                     message.className = 'no-jobs';
                     message.innerHTML = `
                         <i class="fas fa-search"></i>
-                        <p>No job offers</p>
+                        <p>No job offers found</p>
                         <p>Try adjusting your search or filters.</p>
                     `;
                     document.querySelector('.job-listing').appendChild(message);

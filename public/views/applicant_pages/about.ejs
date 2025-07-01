@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>About the Company - Prime Infra</title>
+    <title>About the Company - Company ABC</title>
     <link rel="stylesheet" href="/css/publicapplicant.css">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
@@ -16,6 +16,61 @@
             padding: 0;
             color: #334155;
             line-height: 1.6;
+            scroll-behavior: smooth;
+        }
+
+        /* Header Styles */
+        header {
+            background-color: #fff;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+            position: sticky;
+            top: 0;
+            z-index: 1000;
+        }
+
+        .header-container {
+            max-width: 1200px;
+            margin: 0 auto;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 15px 20px;
+        }
+
+        .logo {
+            height: 40px;
+        }
+
+        .nav-links {
+            display: flex;
+            align-items: center;
+            gap: 30px;
+        }
+
+        .nav-link {
+            color: #334155;
+            text-decoration: none;
+            font-weight: 500;
+            transition: color 0.3s;
+            cursor: pointer;
+        }
+
+        .nav-link:hover {
+            color: #07ACB9;
+        }
+
+        .apply-now-btn {
+            background-color: #07ACB9;
+            color: white;
+            padding: 10px 20px;
+            border-radius: 6px;
+            text-decoration: none;
+            font-weight: 600;
+            transition: background-color 0.3s;
+        }
+
+        .apply-now-btn:hover {
+            background-color: #056770;
         }
 
         /* Hero Section */
@@ -72,8 +127,8 @@
             z-index: 1;
         }
 
-        /* Announcements Section */
-        .announcements {
+        /* About Us Section */
+        .about-us {
             background-color: #fff;
             border-radius: 12px;
             box-shadow: 0 5px 20px rgba(0, 0, 0, 0.05);
@@ -106,86 +161,6 @@
             width: 5px;
             background-color: #07ACB9;
             border-radius: 4px;
-        }
-
-        .announcement-content {
-            display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
-            gap: 25px;
-        }
-
-        .announcement-item {
-            background-color: #f8fafc;
-            padding: 25px;
-            border-radius: 10px;
-            transition: all 0.3s ease;
-            border-top: 4px solid #07ACB9;
-            position: relative;
-            overflow: hidden;
-        }
-
-        .announcement-item:hover {
-            transform: translateY(-5px);
-            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.05);
-        }
-
-        .announcement-item .subject {
-            font-weight: 600;
-            font-size: 1.2rem;
-            color: #1e293b;
-            margin-bottom: 10px;
-        }
-
-        .announcement-item .timestamp {
-            display: inline-flex;
-            align-items: center;
-            font-size: 0.85rem;
-            color: #64748b;
-            margin-bottom: 15px;
-            background-color: rgba(7, 172, 185, 0.1);
-            padding: 4px 12px;
-            border-radius: 20px;
-        }
-
-        .announcement-item .timestamp i {
-            margin-right: 6px;
-        }
-
-        .announcement-item .description {
-            color: #475569;
-            line-height: 1.7;
-            font-size: 0.95rem;
-        }
-
-        .announcement-item img {
-            max-width: 100%;
-            height: auto;
-            margin-top: 15px;
-            border-radius: 8px;
-        }
-
-        .no-announcement {
-            text-align: center;
-            color: #94a3b8;
-            font-style: italic;
-            padding: 40px 0;
-            grid-column: 1 / -1;
-        }
-
-        .no-announcement i {
-            font-size: 3rem;
-            color: #e2e8f0;
-            margin-bottom: 15px;
-            display: block;
-        }
-
-        /* About Us Section */
-        .about-us {
-            background-color: #fff;
-            border-radius: 12px;
-            box-shadow: 0 5px 20px rgba(0, 0, 0, 0.05);
-            padding: 40px;
-            overflow: hidden;
         }
 
         .purpose-mission {
@@ -321,8 +296,151 @@
             margin: 0;
         }
 
+        /* Announcements Section */
+        .announcements {
+            background-color: #fff;
+            border-radius: 12px;
+            box-shadow: 0 5px 20px rgba(0, 0, 0, 0.05);
+            padding: 40px;
+            overflow: hidden;
+        }
+
+        .announcement-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 30px;
+        }
+
+        .time-filter {
+            display: flex;
+            gap: 10px;
+            align-items: center;
+        }
+
+        .time-btn {
+            padding: 8px 16px;
+            border: 2px solid #e2e8f0;
+            background: white;
+            color: #64748b;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 0.875rem;
+            font-weight: 500;
+            transition: all 0.3s ease;
+        }
+
+        .time-btn.active {
+            border-color: #07ACB9;
+            background-color: #07ACB9;
+            color: white;
+        }
+
+        .announcement-content {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+            gap: 25px;
+        }
+
+        .announcement-item {
+            background-color: #f8fafc;
+            padding: 25px;
+            border-radius: 10px;
+            transition: all 0.3s ease;
+            border-top: 4px solid #07ACB9;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .announcement-item:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.05);
+        }
+
+        .announcement-item .subject {
+            font-weight: 600;
+            font-size: 1.2rem;
+            color: #1e293b;
+            margin-bottom: 10px;
+        }
+
+        .announcement-item .timestamp {
+            display: inline-flex;
+            align-items: center;
+            font-size: 0.85rem;
+            color: #64748b;
+            margin-bottom: 15px;
+            background-color: rgba(7, 172, 185, 0.1);
+            padding: 4px 12px;
+            border-radius: 20px;
+        }
+
+        .announcement-item .timestamp i {
+            margin-right: 6px;
+        }
+
+        .announcement-item .description {
+            color: #475569;
+            line-height: 1.7;
+            font-size: 0.95rem;
+        }
+
+        .announcement-item img {
+            max-width: 100%;
+            height: auto;
+            margin-top: 15px;
+            border-radius: 8px;
+        }
+
+        .view-more-btn {
+            display: block;
+            width: fit-content;
+            margin: 20px auto 0;
+            padding: 12px 24px;
+            background-color: #07ACB9;
+            color: white;
+            border: none;
+            border-radius: 6px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-decoration: none;
+        }
+
+        .view-more-btn:hover {
+            background-color: #056770;
+            transform: translateY(-2px);
+        }
+
+        .no-announcement {
+            text-align: center;
+            color: #94a3b8;
+            font-style: italic;
+            padding: 40px 0;
+            grid-column: 1 / -1;
+        }
+
+        .no-announcement i {
+            font-size: 3rem;
+            color: #e2e8f0;
+            margin-bottom: 15px;
+            display: block;
+        }
+
         /* Responsive adjustments */
         @media (max-width: 768px) {
+            .header-container {
+                flex-direction: column;
+                gap: 15px;
+                text-align: center;
+            }
+
+            .nav-links {
+                flex-wrap: wrap;
+                justify-content: center;
+                gap: 20px;
+            }
+
             .hero-section {
                 padding: 60px 20px;
             }
@@ -354,6 +472,17 @@
             .values-container {
                 grid-template-columns: 1fr;
             }
+
+            .announcement-header {
+                flex-direction: column;
+                gap: 15px;
+                align-items: flex-start;
+            }
+
+            .time-filter {
+                align-self: stretch;
+                justify-content: center;
+            }
         }
 
         /* Animation for values */
@@ -377,10 +506,28 @@
         .value:nth-child(2) { animation-delay: 0.3s; }
         .value:nth-child(3) { animation-delay: 0.5s; }
         .value:nth-child(4) { animation-delay: 0.7s; }
+
+        .hidden {
+            display: none;
+        }
     </style>
 </head>
 <body>
-    <%- include('../partials/publicheader') %>
+    <!-- Header -->
+    <header>
+        <div class="header-container">
+            <div class="logo-container">
+                <img src="/images/prime_assets/company-logo-text.png" alt="Company ABC Logo" class="logo">
+            </div>
+            <nav class="nav-links">
+                <a onclick="scrollToSection('about-us')" class="nav-link">About Us</a>
+                <a onclick="scrollToSection('announcements')" class="nav-link">Announcements</a>
+                <a href="/jobrecruitment" class="nav-link">Job Recruitments</a>
+                <a href="/contactform" class="nav-link">Contact</a>
+                <a href="/applicant/signup" class="apply-now-btn">Apply Now</a> 
+            </nav>
+        </div>
+    </header>
 
     <!-- Hero Section -->
     <section class="hero-section">
@@ -391,38 +538,8 @@
     </section>
 
     <div class="main-content">
-        <!-- Announcements Section -->
-        <section class="announcements">
-            <div class="section-header">
-                <h2 class="section-title">Announcements</h2>
-            </div>
-            <div class="announcement-content">
-                <% if (announcements && announcements.length > 0) { %>
-                    <% announcements.forEach(announcement => { %>
-                        <div class="announcement-item">
-                            <div class="subject"><%= announcement.subject %></div>
-                            <div class="timestamp">
-                                <i class="far fa-calendar-alt"></i>
-                                <%= new Date(announcement.createdAt).toLocaleDateString('en-US', { weekday: 'short', year: 'numeric', month: 'short', day: 'numeric' }) %>
-                            </div>
-                            <div class="description"><%= announcement.content %></div>
-                            <% if (announcement.imageUrl) { %>
-                                <img src="<%= announcement.imageUrl %>" alt="Announcement Image">
-                            <% } %>
-                        </div>
-                    <% }) %>
-                <% } else { %>
-                    <div class="no-announcement">
-                        <i class="far fa-bell-slash"></i>
-                        <p>No announcements available at the moment.</p>
-                        <p>Check back later for updates.</p>
-                    </div>
-                <% } %>
-            </div>
-        </section>
-
         <!-- About Us Section -->
-        <section class="about-us">
+        <section id="about-us" class="about-us">
             <div class="section-header">
                 <h2 class="section-title">About Us</h2>
             </div>
@@ -458,6 +575,195 @@
                 </div>
             </div>
         </section>
+
+        <!-- Announcements Section -->
+        <section id="announcements" class="announcements">
+            <div class="announcement-header">
+                <h2 class="section-title">Announcements</h2>
+                <div class="time-filter">
+                    <button class="time-btn active" onclick="filterAnnouncements('week')">This Week</button>
+                    <button class="time-btn" onclick="filterAnnouncements('month')">This Month</button>
+                    <button class="time-btn" onclick="filterAnnouncements('all')">All</button>
+                </div>
+            </div>
+            <div class="announcement-content" id="announcement-content">
+                <!-- Sample announcements for demonstration -->
+                <div class="announcement-item" data-date="2025-07-01">
+                    <div class="subject">Weekly Team Meeting</div>
+                    <div class="timestamp">
+                        <i class="far fa-calendar-alt"></i>
+                        Tue, Jul 01, 2025
+                    </div>
+                    <div class="description">Join us for our weekly team sync to discuss project updates and upcoming milestones.</div>
+                </div>
+                <div class="announcement-item" data-date="2025-06-25">
+                    <div class="subject">Monthly Company Newsletter</div>
+                    <div class="timestamp">
+                        <i class="far fa-calendar-alt"></i>
+                        Wed, Jun 25, 2025
+                    </div>
+                    <div class="description">Read about our latest achievements, new team members, and upcoming events in this month's newsletter.</div>
+                </div>
+                <div class="announcement-item" data-date="2025-06-15">
+                    <div class="subject">Q2 Results Presentation</div>
+                    <div class="timestamp">
+                        <i class="far fa-calendar-alt"></i>
+                        Sun, Jun 15, 2025
+                    </div>
+                    <div class="description">Celebrating a successful Q2 with outstanding performance across all departments.</div>
+                </div>
+                <div class="announcement-item hidden" data-date="2025-05-20">
+                    <div class="subject">New Office Opening</div>
+                    <div class="timestamp">
+                        <i class="far fa-calendar-alt"></i>
+                        Tue, May 20, 2025
+                    </div>
+                    <div class="description">We're excited to announce the opening of our new regional office in Manila.</div>
+                </div>
+                <div class="announcement-item hidden" data-date="2025-05-10">
+                    <div class="subject">Training Program Launch</div>
+                    <div class="timestamp">
+                        <i class="far fa-calendar-alt"></i>
+                        Sat, May 10, 2025
+                    </div>
+                    <div class="description">New professional development training program now available for all employees.</div>
+                </div>
+            </div>
+            <button class="view-more-btn" id="view-more-btn" onclick="showMoreAnnouncements()">
+                View More Announcements
+            </button>
+        </section>
     </div>
+
+    <script>
+        // Smooth scrolling function
+        function scrollToSection(sectionId) {
+            const element = document.getElementById(sectionId);
+            if (element) {
+                const headerHeight = document.querySelector('header').offsetHeight;
+                const elementPosition = element.offsetTop - headerHeight - 20;
+                
+                window.scrollTo({
+                    top: elementPosition,
+                    behavior: 'smooth'
+                });
+            }
+        }
+
+        // Announcement filtering functionality
+        let currentFilter = 'week';
+        let showingAll = false;
+
+        function filterAnnouncements(period) {
+            const buttons = document.querySelectorAll('.time-btn');
+            const announcements = document.querySelectorAll('.announcement-item');
+            const viewMoreBtn = document.getElementById('view-more-btn');
+            
+            // Update active button
+            buttons.forEach(btn => btn.classList.remove('active'));
+            event.target.classList.add('active');
+            
+            currentFilter = period;
+            showingAll = false;
+            
+            const now = new Date();
+            const oneWeekAgo = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
+            const oneMonthAgo = new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000);
+            
+            let visibleCount = 0;
+            let hasHiddenItems = false;
+            
+            announcements.forEach((announcement, index) => {
+                const dateStr = announcement.getAttribute('data-date');
+                const announcementDate = new Date(dateStr);
+                let shouldShow = false;
+                
+                if (period === 'week') {
+                    shouldShow = announcementDate >= oneWeekAgo;
+                } else if (period === 'month') {
+                    shouldShow = announcementDate >= oneMonthAgo;
+                } else {
+                    shouldShow = true;
+                }
+                
+                if (shouldShow) {
+                    if (visibleCount < 3) {
+                        announcement.classList.remove('hidden');
+                        visibleCount++;
+                    } else {
+                        announcement.classList.add('hidden');
+                        hasHiddenItems = true;
+                    }
+                } else {
+                    announcement.classList.add('hidden');
+                }
+            });
+            
+            // Show/hide view more button
+            if (hasHiddenItems) {
+                viewMoreBtn.style.display = 'block';
+                viewMoreBtn.textContent = 'View More Announcements';
+            } else {
+                viewMoreBtn.style.display = 'none';
+            }
+            
+            // If no announcements match the filter, show appropriate message
+            if (visibleCount === 0) {
+                showFallback(period);
+            }
+        }
+        
+        function showFallback(period) {
+            if (period === 'week') {
+                // If no weekly announcements, show monthly
+                filterAnnouncements('month');
+                // Update button to show month is active
+                document.querySelectorAll('.time-btn').forEach(btn => btn.classList.remove('active'));
+                document.querySelectorAll('.time-btn')[1].classList.add('active');
+            }
+        }
+        
+        function showMoreAnnouncements() {
+            const announcements = document.querySelectorAll('.announcement-item');
+            const viewMoreBtn = document.getElementById('view-more-btn');
+            
+            if (!showingAll) {
+                // Show all relevant announcements
+                const now = new Date();
+                const oneWeekAgo = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
+                const oneMonthAgo = new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000);
+                
+                announcements.forEach(announcement => {
+                    const dateStr = announcement.getAttribute('data-date');
+                    const announcementDate = new Date(dateStr);
+                    let shouldShow = false;
+                    
+                    if (currentFilter === 'week') {
+                        shouldShow = announcementDate >= oneWeekAgo;
+                    } else if (currentFilter === 'month') {
+                        shouldShow = announcementDate >= oneMonthAgo;
+                    } else {
+                        shouldShow = true;
+                    }
+                    
+                    if (shouldShow) {
+                        announcement.classList.remove('hidden');
+                    }
+                });
+                
+                viewMoreBtn.textContent = 'Show Less';
+                showingAll = true;
+            } else {
+                // Show only first 3
+                filterAnnouncements(currentFilter);
+                showingAll = false;
+            }
+        }
+        
+        // Initialize with weekly filter
+        document.addEventListener('DOMContentLoaded', function() {
+            filterAnnouncements('week');
+        });
+    </script>
 </body>
 </html>

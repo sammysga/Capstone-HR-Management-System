@@ -4977,6 +4977,7 @@ passApplicant: async function(req, res) {
     }
 },
 
+
 getEmailTemplates: async function(req, res) {
  try {
         const { phase } = req.query; // P1, P2, or P3

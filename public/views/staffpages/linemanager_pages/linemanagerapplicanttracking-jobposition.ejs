@@ -14897,7 +14897,7 @@ function openGmailForSingleApplicant(applicant, subject, template) {
   const processedTemplate = template
     .replace(/\{applicantName\}/g, applicant.name)
     .replace(/\{jobTitle\}/g, applicant.jobTitle)
-    .replace(/\{companyName\}/g, 'Prime Infrastructure');
+    .replace(/\{companyName\}/g, 'Company ABC');
   
   const plainTextBody = htmlToPlainText(processedTemplate);
   

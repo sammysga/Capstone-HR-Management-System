@@ -3,9 +3,9 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Contact Us - Prime Infra</title>
+    <title>Contact Us - Company ABC</title>
     <link rel="stylesheet" href="/css/publicapplicant.css">
-    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
     <style>
         :root {
@@ -25,36 +25,121 @@
         }
 
         body {
-            font-family: 'Poppins', sans-serif;
+            font-family: 'Inter', sans-serif;
             background-color: var(--bg-light);
             margin: 0;
             padding: 0;
             font-size: 16px;
             color: var(--text-medium);
             line-height: 1.6;
+            scroll-behavior: smooth;
+        }
+
+        /* Header Styles */
+        header {
+            background-color: #fff;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+            position: sticky;
+            top: 0;
+            z-index: 1000;
+        }
+
+        .header-container {
+            max-width: 1200px;
+            margin: 0 auto;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 15px 20px;
+        }
+
+        .logo {
+            height: 40px;
+        }
+
+        .nav-links {
+            display: flex;
+            align-items: center;
+            gap: 30px;
+        }
+
+        .nav-link {
+            color: #334155;
+            text-decoration: none;
+            font-weight: 500;
+            transition: color 0.3s;
+            cursor: pointer;
+        }
+
+        .nav-link:hover {
+            color: #07ACB9;
+        }
+
+        .apply-now-btn {
+            background-color: #07ACB9;
+            color: white;
+            padding: 10px 20px;
+            border-radius: 6px;
+            text-decoration: none;
+            font-weight: 600;
+            transition: background-color 0.3s;
+        }
+
+        .apply-now-btn:hover {
+            background-color: #056770;
+        }
+
+        /* Hero Section */
+        .hero-section {
+            background: linear-gradient(135deg, #07ACB9, #056770);
+            color: white;
+            padding: 60px 20px;
+            text-align: center;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .hero-section::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-image: url('data:image/svg+xml;charset=utf8,%3Csvg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1440 320"%3E%3Cpath fill="%23ffffff" fill-opacity="0.1" d="M0,192L48,197.3C96,203,192,213,288,229.3C384,245,480,267,576,250.7C672,235,768,181,864,181.3C960,181,1056,235,1152,234.7C1248,235,1344,181,1392,154.7L1440,128L1440,320L1392,320C1344,320,1248,320,1152,320C1056,320,960,320,864,320C768,320,672,320,576,320C480,320,384,320,288,320C192,320,96,320,48,320L0,320Z"%3E%3C/path%3E%3C/svg%3E');
+            background-size: cover;
+            background-position: center bottom;
+            opacity: 0.2;
+        }
+
+        .hero-content {
+            position: relative;
+            z-index: 1;
+            max-width: 800px;
+            margin: 0 auto;
+        }
+
+        .hero-title {
+            font-size: 2.5rem;
+            font-weight: 700;
+            margin-bottom: 15px;
+        }
+
+        .hero-description {
+            font-size: 1.1rem;
+            margin-bottom: 30px;
+            font-weight: 300;
+            max-width: 600px;
+            margin-left: auto;
+            margin-right: auto;
         }
 
         .page-container {
             max-width: 1200px;
-            margin: 0 auto;
-            padding: 40px 20px;
-        }
-
-        .page-title {
-            text-align: center;
-            margin-bottom: 30px;
-            color: var(--text-dark);
-            font-size: 32px;
-            font-weight: 600;
-        }
-
-        .page-description {
-            text-align: center;
-            max-width: 700px;
-            margin: 0 auto 40px;
-            color: var(--text-light);
-            font-size: 16px;
-            line-height: 1.7;
+            margin: -40px auto 40px;
+            padding: 0 20px;
+            position: relative;
+            z-index: 1;
         }
 
         .contact-container {
@@ -106,13 +191,6 @@
         .form-grid .full-width {
             grid-column: 1 / -1;
         }
-        
-        @media (max-width: 768px) {
-            .form-grid {
-                grid-template-columns: 1fr;
-                gap: 15px;
-            }
-        }
 
         .form-group {
             margin-bottom: 25px;
@@ -135,7 +213,7 @@
             transition: all 0.3s ease;
             background-color: #fafafa;
             color: var(--text-dark);
-            font-family: 'Poppins', sans-serif;
+            font-family: 'Inter', sans-serif;
             box-sizing: border-box;
         }
 
@@ -186,6 +264,12 @@
             box-shadow: 0 2px 4px rgba(7, 172, 185, 0.2);
         }
 
+        .submit-button:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+            transform: none;
+        }
+
         .form-error {
             color: var(--error);
             font-size: 13px;
@@ -203,18 +287,34 @@
             font-size: 12px;
         }
 
+        .form-success {
+            background-color: rgba(16, 185, 129, 0.1);
+            color: var(--success);
+            padding: 15px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            text-align: center;
+            font-weight: 500;
+            border: 1px solid rgba(16, 185, 129, 0.2);
+        }
+
         .contact-info {
             display: flex;
             justify-content: center;
             flex-wrap: wrap;
             gap: 30px;
             margin-top: 40px;
+            background-color: var(--white);
+            padding: 30px;
+            border-radius: 12px;
+            box-shadow: var(--shadow);
         }
 
         .info-item {
             display: flex;
             align-items: center;
             margin-bottom: 20px;
+            min-width: 250px;
         }
 
         .info-icon {
@@ -254,73 +354,151 @@
         }
 
         @media (max-width: 768px) {
+            .header-container {
+                flex-direction: column;
+                gap: 15px;
+                text-align: center;
+            }
+
+            .nav-links {
+                flex-wrap: wrap;
+                justify-content: center;
+                gap: 20px;
+            }
+
+            .hero-section {
+                padding: 40px 20px;
+            }
+
+            .hero-title {
+                font-size: 2rem;
+            }
+
+            .page-container {
+                margin-top: -30px;
+            }
+
             .contact-form {
                 padding: 30px 25px;
             }
 
-            .page-title {
-                font-size: 26px;
+            .form-grid {
+                grid-template-columns: 1fr;
+                gap: 15px;
+            }
+
+            .contact-info {
+                flex-direction: column;
+                align-items: center;
+            }
+
+            .info-item {
+                min-width: auto;
+                width: 100%;
+                justify-content: center;
             }
         }
     </style>
 </head>
 <body>
-    <%- include('../partials/publicheader') %>
+    <!-- Header -->
+    <header>
+        <div class="header-container">
+            <div class="logo-container">
+                <img src="/images/prime_assets/company-logo-text.png" alt="Company ABC Logo" class="logo">
+            </div>
+            <nav class="nav-links">
+                <a href="/about" class="nav-link">About Us</a>
+                <a href="/about#announcements" class="nav-link">Announcements</a>
+                <a href="/jobrecruitment" class="nav-link">Job Recruitments</a>
+                <a href="/contactform" class="nav-link">Contact</a>
+                <a href="/applicant/signup" class="apply-now-btn">Apply Now</a> 
+            </nav>
+        </div>
+    </header>
+
+    <!-- Hero Section -->
+    <section class="hero-section">
+        <div class="hero-content">
+            <h1 class="hero-title">Get in Touch</h1>
+            <p class="hero-description">We'd love to hear from you. Please fill out the form below and we'll get back to you as soon as possible.</p>
+        </div>
+    </section>
     
     <div class="page-container">
-        <h1 class="page-title">Get in Touch</h1>
-        <p class="page-description">We'd love to hear from you. Please fill out the form below and we'll get back to you as soon as possible.</p>
-        
         <div class="contact-container">
             <section class="contact-form">
                 <h2 class="form-title">Contact Us</h2>
                 
-                <form action="/contact" method="POST">
+                <% if (typeof success !== 'undefined' && success) { %>
+                    <div class="form-success">
+                        <i class="fas fa-check-circle"></i>
+                        Thank you for your message! We'll get back to you soon.
+                    </div>
+                <% } %>
+                
+                <form action="/contact" method="POST" id="contactForm">
                     <div class="form-grid">
                         <div class="form-group">
                             <label for="firstName" class="required-field">First Name</label>
-                            <input type="text" class="form-control" name="firstName" id="firstName" required>
-                            <% if (errors.firstName) { %><p class="form-error"><%= errors.firstName %></p><% } %>
+                            <input type="text" class="form-control" name="firstName" id="firstName" 
+                                   value="<%= typeof formData !== 'undefined' ? formData.firstName || '' : '' %>" required>
+                            <% if (typeof errors !== 'undefined' && errors.firstName) { %>
+                                <p class="form-error"><%= errors.firstName %></p>
+                            <% } %>
                         </div>
                         
                         <div class="form-group">
                             <label for="lastName" class="required-field">Last Name</label>
-                            <input type="text" class="form-control" name="lastName" id="lastName" required>
-                            <% if (errors.lastName) { %><p class="form-error"><%= errors.lastName %></p><% } %>
+                            <input type="text" class="form-control" name="lastName" id="lastName" 
+                                   value="<%= typeof formData !== 'undefined' ? formData.lastName || '' : '' %>" required>
+                            <% if (typeof errors !== 'undefined' && errors.lastName) { %>
+                                <p class="form-error"><%= errors.lastName %></p>
+                            <% } %>
                         </div>
                         
                         <div class="form-group full-width">
                             <label for="email" class="required-field">Email Address</label>
-                            <input type="email" class="form-control" name="email" id="email" required>
-                            <% if (errors.email) { %><p class="form-error"><%= errors.email %></p><% } %>
+                            <input type="email" class="form-control" name="email" id="email" 
+                                   value="<%= typeof formData !== 'undefined' ? formData.email || '' : '' %>" required>
+                            <% if (typeof errors !== 'undefined' && errors.email) { %>
+                                <p class="form-error"><%= errors.email %></p>
+                            <% } %>
                         </div>
                         
                         <div class="form-group full-width">
                             <label for="inquiry" class="required-field">Inquiry Type</label>
                             <select class="form-control" name="inquiry" id="inquiry" required>
                                 <option value="">Please select...</option>
-                                <option value="general">General Inquiry</option>
-                                <option value="support">Technical Support</option>
-                                <option value="feedback">Feedback</option>
-                                <option value="business">Business Opportunity</option>
+                                <option value="general" <%= typeof formData !== 'undefined' && formData.inquiry === 'general' ? 'selected' : '' %>>General Inquiry</option>
+                                <option value="support" <%= typeof formData !== 'undefined' && formData.inquiry === 'support' ? 'selected' : '' %>>Technical Support</option>
+                                <option value="feedback" <%= typeof formData !== 'undefined' && formData.inquiry === 'feedback' ? 'selected' : '' %>>Feedback</option>
+                                <option value="business" <%= typeof formData !== 'undefined' && formData.inquiry === 'business' ? 'selected' : '' %>>Business Opportunity</option>
                             </select>
-                            <% if (errors.inquiry) { %><p class="form-error"><%= errors.inquiry %></p><% } %>
+                            <% if (typeof errors !== 'undefined' && errors.inquiry) { %>
+                                <p class="form-error"><%= errors.inquiry %></p>
+                            <% } %>
                         </div>
                         
                         <div class="form-group full-width">
                             <label for="subject" class="required-field">Subject</label>
-                            <input type="text" class="form-control" name="subject" id="subject" required>
-                            <% if (errors.subject) { %><p class="form-error"><%= errors.subject %></p><% } %>
+                            <input type="text" class="form-control" name="subject" id="subject" 
+                                   value="<%= typeof formData !== 'undefined' ? formData.subject || '' : '' %>" required>
+                            <% if (typeof errors !== 'undefined' && errors.subject) { %>
+                                <p class="form-error"><%= errors.subject %></p>
+                            <% } %>
                         </div>
                         
                         <div class="form-group full-width">
                             <label for="message" class="required-field">Message</label>
-                            <textarea class="form-control" name="message" id="message" required></textarea>
-                            <% if (errors.message) { %><p class="form-error"><%= errors.message %></p><% } %>
+                            <textarea class="form-control" name="message" id="message" required><%= typeof formData !== 'undefined' ? formData.message || '' : '' %></textarea>
+                            <% if (typeof errors !== 'undefined' && errors.message) { %>
+                                <p class="form-error"><%= errors.message %></p>
+                            <% } %>
                         </div>
                         
                         <div class="form-group full-width">
-                            <button type="submit" class="submit-button">
+                            <button type="submit" class="submit-button" id="submitBtn">
                                 <i class="fas fa-paper-plane"></i> Send Message
                             </button>
                         </div>
@@ -347,7 +525,7 @@
                     </div>
                     <div class="info-text">
                         <strong>Email</strong>
-                        info@primeinfra.com
+                        iscap2251@gmail.com
                     </div>
                 </div>
                 
@@ -363,5 +541,13 @@
             </div>
         </div>
     </div>
+
+    <script>
+        document.getElementById('contactForm').addEventListener('submit', function() {
+            const submitBtn = document.getElementById('submitBtn');
+            submitBtn.disabled = true;
+            submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Sending...';
+        });
+    </script>
 </body>
 </html>
