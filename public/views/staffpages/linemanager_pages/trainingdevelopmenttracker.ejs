@@ -779,7 +779,7 @@ async function viewTrainingDetails(trainingRecordId) {
         
         const training = data.training;
         
-        // Build comprehensive training details HTML
+        // Build comprehensive training details HTML with IDP context
         const detailsHTML = `
             <div class="training-details-container">
                 <!-- Header Section -->
@@ -829,6 +829,147 @@ async function viewTrainingDetails(trainingRecordId) {
                     </div>
                 </div>
 
+                <!-- IDP Development Context (New Section) -->
+                ${(training.midyearIdp || training.finalyearIdp) ? `
+                <div class="details-section idp-context-section">
+                    <h3>📊 Employee Development Context (IDP)</h3>
+                    <p class="section-subtitle">Understanding the employee's development goals and areas for improvement</p>
+                    
+                    ${training.finalyearIdp ? `
+                    <div class="idp-card final-idp">
+                        <h4>📋 Final Year IDP (${training.finalyearIdp.year || 'Current'})</h4>
+                        <div class="idp-content">
+                            ${training.finalyearIdp.profAreasForDevelopment ? `
+                            <div class="idp-item">
+                                <strong>🎯 Professional Areas for Development:</strong>
+                                <p>${training.finalyearIdp.profAreasForDevelopment}</p>
+                            </div>
+                            ` : ''}
+                            
+                            ${training.finalyearIdp.profActionsToTake ? `
+                            <div class="idp-item">
+                                <strong>🚀 Professional Actions to Take:</strong>
+                                <p>${training.finalyearIdp.profActionsToTake}</p>
+                            </div>
+                            ` : ''}
+                            
+                            ${training.finalyearIdp.leaderAreasForDevelopment ? `
+                            <div class="idp-item">
+                                <strong>👑 Leadership Areas for Development:</strong>
+                                <p>${training.finalyearIdp.leaderAreasForDevelopment}</p>
+                            </div>
+                            ` : ''}
+                            
+                            ${training.finalyearIdp.leaderActionsToTake ? `
+                            <div class="idp-item">
+                                <strong>⚡ Leadership Actions to Take:</strong>
+                                <p>${training.finalyearIdp.leaderActionsToTake}</p>
+                            </div>
+                            ` : ''}
+                            
+                            ${training.finalyearIdp.topDevAreas ? `
+                            <div class="idp-item">
+                                <strong>🔝 Top Development Areas:</strong>
+                                <p>${training.finalyearIdp.topDevAreas}</p>
+                            </div>
+                            ` : ''}
+                            
+                            ${training.finalyearIdp.trainingRemarks ? `
+                            <div class="idp-item">
+                                <strong>💭 Training Remarks:</strong>
+                                <p>${training.finalyearIdp.trainingRemarks}</p>
+                            </div>
+                            ` : ''}
+                            
+                            ${training.finalyearIdp.trainingCategories ? `
+                            <div class="idp-item">
+                                <strong>📚 Preferred Training Categories:</strong>
+                                <p>${training.finalyearIdp.trainingCategories}</p>
+                            </div>
+                            ` : ''}
+                            
+                            <div class="career-goals">
+                                <h5>🎯 Career Aspirations</h5>
+                                ${training.finalyearIdp.nextRoleShortTerm ? `<p><strong>Short-term Goal:</strong> ${training.finalyearIdp.nextRoleShortTerm}</p>` : ''}
+                                ${training.finalyearIdp.nextRoleLongTerm ? `<p><strong>Long-term Goal:</strong> ${training.finalyearIdp.nextRoleLongTerm}</p>` : ''}
+                                ${training.finalyearIdp.nextRoleMobility ? `<p><strong>Mobility Preference:</strong> ${training.finalyearIdp.nextRoleMobility}</p>` : ''}
+                            </div>
+                        </div>
+                    </div>
+                    ` : ''}
+                    
+                    ${training.midyearIdp ? `
+                    <div class="idp-card midyear-idp">
+                        <h4>📋 Mid-Year IDP (${training.midyearIdp.year || 'Current'})</h4>
+                        <div class="idp-content">
+                            ${training.midyearIdp.profAreasForDevelopment ? `
+                            <div class="idp-item">
+                                <strong>🎯 Professional Areas for Development:</strong>
+                                <p>${training.midyearIdp.profAreasForDevelopment}</p>
+                            </div>
+                            ` : ''}
+                            
+                            ${training.midyearIdp.profActionsToTake ? `
+                            <div class="idp-item">
+                                <strong>🚀 Professional Actions to Take:</strong>
+                                <p>${training.midyearIdp.profActionsToTake}</p>
+                            </div>
+                            ` : ''}
+                            
+                            ${training.midyearIdp.leaderAreasForDevelopment ? `
+                            <div class="idp-item">
+                                <strong>👑 Leadership Areas for Development:</strong>
+                                <p>${training.midyearIdp.leaderAreasForDevelopment}</p>
+                            </div>
+                            ` : ''}
+                            
+                            ${training.midyearIdp.leaderActionsToTake ? `
+                            <div class="idp-item">
+                                <strong>⚡ Leadership Actions to Take:</strong>
+                                <p>${training.midyearIdp.leaderActionsToTake}</p>
+                            </div>
+                            ` : ''}
+                            
+                            ${training.midyearIdp.topDevAreas ? `
+                            <div class="idp-item">
+                                <strong>🔝 Top Development Areas:</strong>
+                                <p>${training.midyearIdp.topDevAreas}</p>
+                            </div>
+                            ` : ''}
+                            
+                            ${training.midyearIdp.trainingRemarks ? `
+                            <div class="idp-item">
+                                <strong>💭 Training Remarks:</strong>
+                                <p>${training.midyearIdp.trainingRemarks}</p>
+                            </div>
+                            ` : ''}
+                            
+                            ${training.midyearIdp.trainingCategories ? `
+                            <div class="idp-item">
+                                <strong>📚 Preferred Training Categories:</strong>
+                                <p>${training.midyearIdp.trainingCategories}</p>
+                            </div>
+                            ` : ''}
+                            
+                            <div class="career-goals">
+                                <h5>🎯 Career Aspirations</h5>
+                                ${training.midyearIdp.nextRoleShortTerm ? `<p><strong>Short-term Goal:</strong> ${training.midyearIdp.nextRoleShortTerm}</p>` : ''}
+                                ${training.midyearIdp.nextRoleLongTerm ? `<p><strong>Long-term Goal:</strong> ${training.midyearIdp.nextRoleLongTerm}</p>` : ''}
+                                ${training.midyearIdp.nextRoleMobility ? `<p><strong>Mobility Preference:</strong> ${training.midyearIdp.nextRoleMobility}</p>` : ''}
+                            </div>
+                        </div>
+                    </div>
+                    ` : ''}
+                </div>
+                ` : `
+                <div class="details-section">
+                    <h3>📊 Employee Development Context</h3>
+                    <div class="no-idp-message">
+                        <p style="color: #6c757d; font-style: italic;">No IDP (Individual Development Plan) data available for this employee.</p>
+                    </div>
+                </div>
+                `}
+
                 <!-- Training Information -->
                 <div class="details-section">
                     <h3>Training Details</h3>
@@ -870,11 +1011,10 @@ async function viewTrainingDetails(trainingRecordId) {
                             <div class="activity-item">
                                 <div class="activity-header">
                                     <span class="activity-name">${activity.activityName || 'Unnamed Activity'}</span>
-                                    <span class="activity-type-badge">${activity.activityType || 'N/A'}</span>
+                                    <span class="activity-type-badge">${activity.training_records_activities_types?.activityType || 'N/A'}</span>
                                 </div>
                                 <div class="activity-details">
                                     <p><strong>Duration:</strong> ${activity.estActivityDuration || 0} hours</p>
-                                    ${activity.activityDesc ? `<p><strong>Description:</strong> ${activity.activityDesc}</p>` : ''}
                                     ${activity.activityRemarks ? `<p><strong>Remarks:</strong> ${activity.activityRemarks}</p>` : ''}
                                 </div>
                             </div>
@@ -905,7 +1045,7 @@ async function viewTrainingDetails(trainingRecordId) {
                 <div class="details-section">
                     <h3>Learning Objectives (${training.objectives.length})</h3>
                     <ul class="objectives-list">
-                        ${training.objectives.map(obj => `<li>${obj.objectiveName || 'Learning objective'}</li>`).join('')}
+                        ${training.objectives.map(obj => `<li>${obj.objectivesettings_objectives?.objectiveDescrpt || 'Learning objective'}</li>`).join('')}
                     </ul>
                 </div>
                 ` : ''}
@@ -921,7 +1061,7 @@ async function viewTrainingDetails(trainingRecordId) {
                 ` : ''}
 
                 <!-- Decision History -->
-                ${training.lmDecisionRemarks || training.hrDecisionRemarks || training.remarks ? `
+                ${training.lmDecisionRemarks || training.hrDecisionRemarks ? `
                 <div class="details-section">
                     <h3>Decision History & Remarks</h3>
                     <div class="decision-history">
@@ -943,11 +1083,6 @@ async function viewTrainingDetails(trainingRecordId) {
                         ${training.hrDecisionRemarks ? `
                             <div class="decision-item">
                                 <strong>HR Remarks:</strong> ${training.hrDecisionRemarks}
-                            </div>
-                        ` : ''}
-                        ${training.remarks ? `
-                            <div class="decision-item">
-                                <strong>Additional Remarks:</strong> ${training.remarks}
                             </div>
                         ` : ''}
                     </div>
@@ -984,15 +1119,6 @@ async function viewTrainingDetails(trainingRecordId) {
                     <button class="btn btn-secondary" onclick="closeTrainingDetailsModal()" style="margin-right: 10px;">Close</button>
                     <button class="btn btn-primary" onclick="viewTrainingDetails('${trainingRecordId}')" style="background: #007bff; color: white;">Try Again</button>
                 </div>
-                <details style="margin-top: 20px; text-align: left;">
-                    <summary style="cursor: pointer; padding: 10px; background: #e9ecef; border-radius: 4px;">Technical Details</summary>
-                    <div style="padding: 10px; background: #f8f9fa; border-radius: 4px; margin-top: 10px; font-family: monospace; font-size: 0.8rem;">
-                        <p><strong>Training Record ID:</strong> ${trainingRecordId}</p>
-                        <p><strong>Error Type:</strong> ${error.name || 'Unknown'}</p>
-                        <p><strong>Timestamp:</strong> ${new Date().toLocaleString()}</p>
-                        <p><strong>Expected URL:</strong> /linemanager/api/training/details/${trainingRecordId}</p>
-                    </div>
-                </details>
             </div>
         `;
     }

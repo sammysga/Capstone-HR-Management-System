@@ -1000,6 +1000,68 @@ getTrainingDetails: async function (req, res) {
         // Add staff account to training object
         training.staffaccounts = staffAccount || null;
 
+        // Fetch midyear IDP details for employee context
+        const { data: midyearIdp, error: midyearError } = await supabase
+            .from('midyearidps')
+            .select(`
+                midyearidpId,
+                profAreasForDevelopment,
+                profActionsToTake,
+                leaderAreasForDevelopment,
+                leaderActionsToTake,
+                nextRoleShortTerm,
+                nextRoleLongTerm,
+                nextRoleMobility,
+                trainingRemarks,
+                trainingCategories,
+                topDevAreas,
+                year,
+                created_at
+            `)
+            .eq('userId', training.userId)
+            .order('year', { ascending: false })
+            .order('created_at', { ascending: false })
+            .limit(1)
+            .maybeSingle();
+
+        if (midyearError) {
+            console.error('❌ Error fetching midyear IDP:', midyearError);
+        }
+
+        training.midyearIdp = midyearIdp || null;
+        console.log(`📋 Midyear IDP found: ${midyearIdp ? 'Yes' : 'No'}`);
+
+        // Fetch final year IDP details for employee context
+        const { data: finalyearIdp, error: finalyearError } = await supabase
+            .from('finalyearidps')
+            .select(`
+                finalyearidpId,
+                profAreasForDevelopment,
+                profActionsToTake,
+                leaderAreasForDevelopment,
+                leaderActionsToTake,
+                nextRoleShortTerm,
+                nextRoleLongTerm,
+                nextRoleMobility,
+                trainingRemarks,
+                trainingCategories,
+                topDevAreas,
+                year,
+                created_at
+            `)
+            .eq('userId', training.userId)
+            .order('year', { ascending: false })
+            .order('created_at', { ascending: false })
+            .limit(1)
+            .maybeSingle();
+
+        if (finalyearError) {
+            console.error('❌ Error fetching final year IDP:', finalyearError);
+        }
+
+        training.finalyearIdp = finalyearIdp || null;
+        console.log(`📋 Final year IDP found: ${finalyearIdp ? 'Yes' : 'No'}`);
+
         // Fetch training activities
         const { data: activities, error: activitiesError } = await supabase
             .from('training_records_activities')
@@ -1120,7 +1182,7 @@ getTrainingDetails: async function (req, res) {
         training.certificates = certificates || [];
         console.log(`📋 Found ${training.certificates.length} certificates`);
 
-        console.log('✅ Training details fetched successfully');
+        console.log('✅ Training details fetched successfully with IDP context');
 
         res.json({
             success: true,
