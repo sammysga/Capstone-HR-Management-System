@@ -5359,7 +5359,7 @@ finalizeP2Review: async function(req, res) {
                         .insert([{
                             userId: applicantData.userId,
                             message: JSON.stringify({ 
-                                text: "We regret to inform you that you have not been selected to proceed to the next stage of the recruitment process. Thank you for your interest in Prime Infrastructure, and we wish you the best in your future endeavors." 
+                                text: "We regret to inform you that you have not been selected to proceed to the next stage of the recruitment process. Thank you for your interest in Company ABC, and we wish you the best in your future endeavors." 
                             }),
                             sender: 'bot',
                             timestamp: new Date().toISOString(),

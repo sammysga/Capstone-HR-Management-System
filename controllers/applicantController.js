@@ -652,7 +652,7 @@ getChatbotPage: async function(req, res) {
         let initialResponse = {};
 
         // Always define an initialResponse (even if empty)
-        const initialMessage = "Hi! Welcome to Prime Infrastructure Recruitment Screening Portal. What position are you going to apply for?";
+        const initialMessage = "Hi! Welcome to Company ABC Recruitment Screening Portal. What position are you going to apply for?";
 
         // If no chat history in session, fetch it from Supabase
         if (chatData.length === 0) {
@@ -1315,7 +1315,7 @@ Please upload each requested document using the buttons below. You need to uploa
             else if (applicantData.applicantStatus === 'P1 - FAILED') {
                 console.log('❌ [Chatbot] Applicant status is P1 - FAILED. Sending rejection message.');
                 
-                const rejectionMessage = "We regret to inform you that you have not been chosen as a candidate for this position. Thank you for your interest in applying at Prime Infrastructure, and we wish you the best in your future endeavors.";
+                const rejectionMessage = "We regret to inform you that you have not been chosen as a candidate for this position. Thank you for your interest in applying at Company ABC, and we wish you the best in your future endeavors.";
                 
                 // Save rejection message to chat history
                 await supabase
@@ -1504,7 +1504,8 @@ Please upload each requested document using the buttons below. You need to uploa
             return res.status(200).json({ response: botResponse });
 
         // Process Answered Questions
-        } else if (applicantStage === 'screening_questions') {
+       // Process Answered Questions - FIXED VERSION
+} else if (applicantStage === 'screening_questions') {
     const questions = req.session.screeningQuestions;
     const currentIndex = req.session.currentQuestionIndex;
 
@@ -1555,7 +1556,7 @@ Please upload each requested document using the buttons below. You need to uploa
 
             // Send the EXACT rejection message
             const rejectionMessage = {
-                text: "We regret to inform you that you have not been chosen as a candidate for this position. Thank you for your interest in applying at Prime Infrastructure, and we wish you the best in your future endeavors."
+                text: "We regret to inform you that you have not been chosen as a candidate for this position. Thank you for your interest in applying at Company ABC, and we wish you the best in your future endeavors."
             };
             
             req.session.applicantStage = 'P1 - FAILED';
@@ -1573,7 +1574,7 @@ Please upload each requested document using the buttons below. You need to uploa
             return res.status(200).json({ response: rejectionMessage });
         }
 
-        // File upload requests for degree and certification "Yes" answers
+        // 🔥 KEY FIX: Only request file upload for "Yes" answers to degree and certification
         if (questionType === 'degree' && answerValue === 1) {
             req.session.awaitingFileUpload = 'degree';
             req.session.applicantStage = 'file_upload';
@@ -1618,7 +1619,11 @@ Please upload each requested document using the buttons below. You need to uploa
             return res.status(200).json({ response: botResponse });
         }
 
-        // Increment question index for all processed questions
+        // 🔥 NEW FIX: For "No" answers to degree/certification OR any other question type,
+        // immediately proceed to the next question without file upload
+        console.log(`➡️ [Chatbot] ${questionType} = ${answerValue}, proceeding to next question`);
+        
+        // Increment question index for all other cases
         req.session.currentQuestionIndex++;
 
         // Check if we've reached the end of questions
@@ -1661,7 +1666,7 @@ Please upload each requested document using the buttons below. You need to uploa
                         
                         req.session.applicantStage = 'P1 - FAILED';
                         botResponse = {
-                            text: "We regret to inform you that you have not been chosen as a candidate for this position. Thank you for your interest in applying at Prime Infrastructure, and we wish you the best in your future endeavors.",
+                            text: "We regret to inform you that you have not been chosen as a candidate for this position. Thank you for your interest in applying at Company ABC, and we wish you the best in your future endeavors.",
                             buttons: []
                         };
                     } else if (saveResult.rejectionType === 'low_score') {
@@ -1731,93 +1736,105 @@ Please upload each requested document using the buttons below. You need to uploa
         }
     }
 }
-        else if (applicantStage === 'file_upload') {
-            if (req.session.awaitingFileUpload) {
-                const fileType = req.session.awaitingFileUpload;
-                console.log(`📂 [Chatbot] File Upload Detected: ${fileType}`);
 
-                const fileUrl = await fileUpload(req, fileType); // Upload file
+// 🔥 ALSO UPDATE the file_upload handler to properly handle the flow back to questions
+else if (applicantStage === 'file_upload') {
+    if (req.session.awaitingFileUpload) {
+        const fileType = req.session.awaitingFileUpload;
+        console.log(`📂 [Chatbot] File Upload Detected: ${fileType}`);
 
-                let successMessage = "";
-                if (fileType === 'degree') {
-                    req.session.degreeUrl = fileUrl;
-                    console.log(`✅ [Chatbot] Degree Uploaded: ${fileUrl}`);
+        const fileUrl = await fileUpload(req, fileType); // Upload file
 
-                    await supabase
-                        .from('applicant_initialscreening_assessment')
-                        .update({ degree_url: fileUrl })
-                        .eq('userId', userId);
+        let successMessage = "";
+        if (fileType === 'degree') {
+            req.session.degreeUrl = fileUrl;
+            console.log(`✅ [Chatbot] Degree Uploaded: ${fileUrl}`);
 
-                    successMessage = "✅ Degree uploaded successfully. Let's continue.";
-                } else if (fileType === 'certification') {
-                    req.session.certificationUrl = fileUrl;
-                    console.log(`✅ [Chatbot] Certification Uploaded: ${fileUrl}`);
+            await supabase
+                .from('applicant_initialscreening_assessment')
+                .update({ degree_url: fileUrl })
+                .eq('userId', userId);
 
-                    await supabase
-                        .from('applicant_initialscreening_assessment')
-                        .update({ cert_url: fileUrl })
-                        .eq('userId', userId);
+            successMessage = "✅ Degree uploaded successfully. Let's continue.";
+        } else if (fileType === 'certification') {
+            req.session.certificationUrl = fileUrl;
+            console.log(`✅ [Chatbot] Certification Uploaded: ${fileUrl}`);
 
-                    successMessage = "✅ Certification uploaded successfully. Let's continue.";
-                }
+            await supabase
+                .from('applicant_initialscreening_assessment')
+                .update({ cert_url: fileUrl })
+                .eq('userId', userId);
 
-                // Reset file upload status
-                delete req.session.awaitingFileUpload;
-                console.log(`🔄 [Chatbot] Awaiting file upload reset. Moving to next question.`);
+            successMessage = "✅ Certification uploaded successfully. Let's continue.";
+        }
 
-                // Save success message to chat history
-                await supabase
-                    .from('chatbot_history')
-                    .insert([{
-                        userId,
-                        message: JSON.stringify({ text: successMessage }),
-                        sender: 'bot',
-                        timestamp,
-                        applicantStage: req.session.applicantStage
-                    }]);
+        // Reset file upload status
+        delete req.session.awaitingFileUpload;
+        console.log(`🔄 [Chatbot] Awaiting file upload reset. Moving to next question.`);
 
-                // Change stage back to screening_questions
-                req.session.applicantStage = 'screening_questions';
+        // Save success message to chat history
+        await supabase
+            .from('chatbot_history')
+            .insert([{
+                userId,
+                message: JSON.stringify({ text: successMessage }),
+                sender: 'bot',
+                timestamp,
+                applicantStage: req.session.applicantStage
+            }]);
 
-                // Increment question index after file upload
-                req.session.currentQuestionIndex++;
-                console.log(`➡️ [Chatbot] Next Question Index: ${req.session.currentQuestionIndex}`);
+        // Change stage back to screening_questions
+        req.session.applicantStage = 'screening_questions';
 
-                // Check if there are more questions
-                if (req.session.currentQuestionIndex < req.session.screeningQuestions.length) {
-                    const nextQuestion = req.session.screeningQuestions[req.session.currentQuestionIndex];
-                    
-                    // Save next question to chat history
-                    const nextQuestionResponse = {
-                        text: nextQuestion.text,
-                        buttons: [
-                            { text: 'Yes', value: 1 },
-                            { text: 'No', value: 0 }
-                        ]
-                    };
-                    
-                    await supabase
-                        .from('chatbot_history')
-                        .insert([{
-                            userId,
-                            message: JSON.stringify(nextQuestionResponse),
-                            sender: 'bot',
-                            timestamp: new Date(Date.now() + 1000).toISOString(), // Slight delay
-                            applicantStage: req.session.applicantStage
-                        }]);
-                    
-                    botResponse = {
-                        text: successMessage,
-                        nextMessage: nextQuestionResponse
-                    };
-                } else {
-                    // All questions answered, proceed to resume upload
+        // 🔥 KEY FIX: Increment question index AFTER file upload
+        req.session.currentQuestionIndex++;
+        console.log(`➡️ [Chatbot] Next Question Index: ${req.session.currentQuestionIndex}`);
+
+        // Check if there are more questions
+        if (req.session.currentQuestionIndex < req.session.screeningQuestions.length) {
+            const nextQuestion = req.session.screeningQuestions[req.session.currentQuestionIndex];
+            
+            // Save next question to chat history
+            const nextQuestionResponse = {
+                text: nextQuestion.text,
+                buttons: [
+                    { text: 'Yes', value: 1 },
+                    { text: 'No', value: 0 }
+                ]
+            };
+            
+            await supabase
+                .from('chatbot_history')
+                .insert([{
+                    userId,
+                    message: JSON.stringify(nextQuestionResponse),
+                    sender: 'bot',
+                    timestamp: new Date(Date.now() + 1000).toISOString(), // Slight delay
+                    applicantStage: req.session.applicantStage
+                }]);
+            
+            botResponse = {
+                text: successMessage,
+                nextMessage: nextQuestionResponse
+            };
+        } else {
+            // 🔥 FIX: All questions completed after file upload - process final scoring
+            console.log('✅ [Chatbot] All screening questions completed after file upload. Processing final scores...');
+            
+            try {
+                const saveResult = await applicantController.saveScreeningScores(
+                    userId, req.session.selectedPosition, req.session.screeningScores, req.session.resumeUrl
+                );
+
+                console.log('💾 [Chatbot] Final save result after file upload:', saveResult);
+
+                if (saveResult && saveResult.success && saveResult.passes) {
+                    // Proceed to resume upload
                     const resumeUploadMessage = {
                         text: "All screening questions have been completed. Please upload your resume.",
                         buttons: [{ text: 'Upload Resume', type: 'file_upload' }]
                     };
                     
-                    // Save resume upload request to chat history
                     await supabase
                         .from('chatbot_history')
                         .insert([{
@@ -1835,28 +1852,78 @@ Please upload each requested document using the buttons below. You need to uploa
                         text: successMessage,
                         nextMessage: resumeUploadMessage
                     };
+                } else {
+                    // Handle rejection or error
+                    const rejectionMessage = {
+                        text: saveResult?.message || "Unfortunately, you did not meet the requirements for this position."
+                    };
+                    
+                    req.session.applicantStage = 'P1 - FAILED';
+                    
+                    await supabase
+                        .from('chatbot_history')
+                        .insert([{
+                            userId,
+                            message: JSON.stringify(rejectionMessage),
+                            sender: 'bot',
+                            timestamp: new Date(Date.now() + 1000).toISOString(),
+                            applicantStage: req.session.applicantStage
+                        }]);
+                    
+                    botResponse = {
+                        text: successMessage,
+                        nextMessage: rejectionMessage
+                    };
                 }
+            } catch (error) {
+                console.error('❌ [Chatbot] Error in final scoring after file upload:', error);
                 
-                // Return response immediately
-                return res.status(200).json({ response: botResponse });
-            } else {
-                console.log(`⚠️ [Chatbot] No pending file upload detected!`);
-                botResponse = { text: "No file upload is currently expected. Please continue with the screening questions." };
+                // Fallback to resume upload
+                const resumeUploadMessage = {
+                    text: "All screening questions have been completed. Please upload your resume.",
+                    buttons: [{ text: 'Upload Resume', type: 'file_upload' }]
+                };
                 
-                // Save error message to chat history
                 await supabase
                     .from('chatbot_history')
                     .insert([{
                         userId,
-                        message: JSON.stringify(botResponse),
+                        message: JSON.stringify(resumeUploadMessage),
                         sender: 'bot',
-                        timestamp,
-                        applicantStage: req.session.applicantStage
+                        timestamp: new Date(Date.now() + 1000).toISOString(),
+                        applicantStage: 'resume_upload'
                     }]);
-                    
-                return res.status(200).json({ response: botResponse });
+                
+                req.session.applicantStage = 'resume_upload';
+                req.session.awaitingFileUpload = 'resume';
+                
+                botResponse = {
+                    text: successMessage,
+                    nextMessage: resumeUploadMessage
+                };
             }
         }
+        
+        // Return response immediately
+        return res.status(200).json({ response: botResponse });
+    } else {
+        console.log(`⚠️ [Chatbot] No pending file upload detected!`);
+        botResponse = { text: "No file upload is currently expected. Please continue with the screening questions." };
+        
+        // Save error message to chat history
+        await supabase
+            .from('chatbot_history')
+            .insert([{
+                userId,
+                message: JSON.stringify(botResponse),
+                sender: 'bot',
+                timestamp,
+                applicantStage: req.session.applicantStage
+            }]);
+            
+        return res.status(200).json({ response: botResponse });
+    }
+}
 
         else if (applicantStage === 'resume_upload' || (applicantStage === 'file_upload' && req.session.awaitingFileUpload === 'resume')) {
             console.log('📂 [Chatbot] Resume Upload Detected');
@@ -2037,7 +2104,7 @@ Please upload each requested document using the buttons below. You need to uploa
         // Handle rejected applications
         else if (applicantStage === 'rejected' || applicantStage === 'P1 - FAILED') {
             botResponse = { 
-                text: "Your application has been completed. Thank you for your interest in Prime Infrastructure. You may apply for other positions if available." 
+                text: "Your application has been completed. Thank you for your interest in Company ABC. You may apply for other positions if available." 
             };
             
             // Save response to chat history
@@ -2080,7 +2147,8 @@ Please upload each requested document using the buttons below. You need to uploa
         res.status(500).send('Internal Server Error');
     }
 },
-// Function to fetch and structure all screening questions
+
+// Function to fetch and structure all screening questions - COMPLETE FIXED VERSION
 getInitialScreeningQuestions: async function (jobId) {
     try {
         // Fetch job-related data
@@ -2095,7 +2163,7 @@ getInitialScreeningQuestions: async function (jobId) {
         // Check for errors
         const errors = jobDetailsQueries.filter(result => result.error);
         if (errors.length > 0) {
-            console.error("Error fetching job details:", errors);
+            console.error("❌ [Screening] Error fetching job details:", errors);
             return [];
         }
 
@@ -2110,86 +2178,217 @@ getInitialScreeningQuestions: async function (jobId) {
 
         // Check if job position data is available
         if (!jobPositionQuery || jobPositionQuery.length === 0) {
-            console.error("Job position details not found.");
+            console.error("❌ [Screening] Job position details not found for jobId:", jobId);
             return [];
         }
 
         const jobPosition = jobPositionQuery[0]; // Assuming one job position per job ID
+        console.log(`📋 [Screening] Processing job position: ${jobPosition.jobTitle} (ID: ${jobId})`);
 
         // Separate and sort skills by type
-        const hardSkills = skillsQuery.filter(skill => skill.jobReqSkillType === 'Hard');
-        const softSkills = skillsQuery.filter(skill => skill.jobReqSkillType === 'Soft');
-        const sortedSkillsQuery = [...hardSkills, ...softSkills];
+        const hardSkills = skillsQuery ? skillsQuery.filter(skill => skill.jobReqSkillType === 'Hard') : [];
+        const softSkills = skillsQuery ? skillsQuery.filter(skill => skill.jobReqSkillType === 'Soft') : [];
 
-        // Map questions
-        const questions = [
-            ...degreesQuery.map(d => ({
-                type: 'degree',
-                text: `Do you have a degree related to ${d.jobReqDegreeType}: ${d.jobReqDegreeDescrpt}?`,
-                buttons: [
-                    { text: 'Yes', value: 1 },
-                    { text: 'No', value: 0 }
-                ]
-            })),
-            ...experiencesQuery.map(e => ({
-                type: 'experience',
-                text: `Do you have ${e.jobReqExperienceType}: ${e.jobReqExperienceDescrpt}?`,
-                buttons: [
-                    { text: 'Yes', value: 1 },
-                    { text: 'No', value: 0 }
-                ]
-            })),
-            ...certificationsQuery.map(c => ({
-                type: 'certification',
-                text: `Have you earned ${c.jobReqCertificateType}: ${c.jobReqCertificateDescrpt}?`,
-                buttons: [
-                    { text: 'Yes', value: 1 },
-                    { text: 'No', value: 0 }
-                ]
-            })),
-            ...hardSkills.map(s => ({
-                type: 'hardSkill',
-                text: `To assess your hard skills, do you have experience with ${s.jobReqSkillName}?`,
-                buttons: [
-                  { text: 'Yes', value: 1 },
-                  { text: 'No', value: 0 }
-                ]
-              })),
-              ...softSkills.map(s => ({
-                type: 'softSkill',
-                text: `To assess your soft skills, do you possess ${s.jobReqSkillName}?`,
-                buttons: [
-                  { text: 'Yes', value: 1 },
-                  { text: 'No', value: 0 }
-                ]
-              })),
-            // Add work setup question
-            {
+        // 🔥 KEY FIX: Filter out empty or invalid data before creating questions
+        const questions = [];
+
+        // Add degree questions only if data exists and is valid
+        if (degreesQuery && degreesQuery.length > 0) {
+            console.log(`📋 [Screening] Processing ${degreesQuery.length} degree requirements`);
+            degreesQuery.forEach(d => {
+                // Check if degree data is valid and not empty
+                if (d.jobReqDegreeType && d.jobReqDegreeType.trim() !== '' && 
+                    d.jobReqDegreeDescrpt && d.jobReqDegreeDescrpt.trim() !== '') {
+                    questions.push({
+                        type: 'degree',
+                        text: `Do you have a degree related to ${d.jobReqDegreeType}: ${d.jobReqDegreeDescrpt}?`,
+                        buttons: [
+                            { text: 'Yes', value: 1 },
+                            { text: 'No', value: 0 }
+                        ]
+                    });
+                    console.log(`✅ [Screening] Added degree question: ${d.jobReqDegreeType}`);
+                } else {
+                    console.log('🚫 [Screening] Skipping invalid degree question:', d);
+                }
+            });
+        } else {
+            console.log('ℹ️ [Screening] No degree requirements found for this job');
+        }
+
+        // Add experience questions only if data exists and is valid
+        if (experiencesQuery && experiencesQuery.length > 0) {
+            console.log(`📋 [Screening] Processing ${experiencesQuery.length} experience requirements`);
+            experiencesQuery.forEach(e => {
+                // Check if experience data is valid and not empty
+                if (e.jobReqExperienceType && e.jobReqExperienceType.trim() !== '' && 
+                    e.jobReqExperienceDescrpt && e.jobReqExperienceDescrpt.trim() !== '') {
+                    questions.push({
+                        type: 'experience',
+                        text: `Do you have ${e.jobReqExperienceType}: ${e.jobReqExperienceDescrpt}?`,
+                        buttons: [
+                            { text: 'Yes', value: 1 },
+                            { text: 'No', value: 0 }
+                        ]
+                    });
+                    console.log(`✅ [Screening] Added experience question: ${e.jobReqExperienceType}`);
+                } else {
+                    console.log('🚫 [Screening] Skipping invalid experience question:', e);
+                }
+            });
+        } else {
+            console.log('ℹ️ [Screening] No experience requirements found for this job');
+        }
+
+        // Add certification questions only if data exists and is valid
+        if (certificationsQuery && certificationsQuery.length > 0) {
+            console.log(`📋 [Screening] Processing ${certificationsQuery.length} certification requirements`);
+            certificationsQuery.forEach(c => {
+                // Check if certification data is valid and not empty
+                if (c.jobReqCertificateType && c.jobReqCertificateType.trim() !== '' && 
+                    c.jobReqCertificateDescrpt && c.jobReqCertificateDescrpt.trim() !== '') {
+                    questions.push({
+                        type: 'certification',
+                        text: `Have you earned ${c.jobReqCertificateType}: ${c.jobReqCertificateDescrpt}?`,
+                        buttons: [
+                            { text: 'Yes', value: 1 },
+                            { text: 'No', value: 0 }
+                        ]
+                    });
+                    console.log(`✅ [Screening] Added certification question: ${c.jobReqCertificateType}`);
+                } else {
+                    console.log('🚫 [Screening] Skipping invalid certification question:', c);
+                }
+            });
+        } else {
+            console.log('ℹ️ [Screening] No certification requirements found for this job');
+        }
+
+        // Add hard skill questions only if data exists and is valid
+        if (hardSkills && hardSkills.length > 0) {
+            console.log(`📋 [Screening] Processing ${hardSkills.length} hard skill requirements`);
+            hardSkills.forEach(s => {
+                // Check if skill data is valid and not empty
+                if (s.jobReqSkillName && s.jobReqSkillName.trim() !== '') {
+                    questions.push({
+                        type: 'hardSkill',
+                        text: `To assess your hard skills, do you have experience with ${s.jobReqSkillName}?`,
+                        buttons: [
+                            { text: 'Yes', value: 1 },
+                            { text: 'No', value: 0 }
+                        ]
+                    });
+                    console.log(`✅ [Screening] Added hard skill question: ${s.jobReqSkillName}`);
+                } else {
+                    console.log('🚫 [Screening] Skipping invalid hard skill question:', s);
+                }
+            });
+        } else {
+            console.log('ℹ️ [Screening] No hard skill requirements found for this job');
+        }
+
+        // Add soft skill questions only if data exists and is valid
+        if (softSkills && softSkills.length > 0) {
+            console.log(`📋 [Screening] Processing ${softSkills.length} soft skill requirements`);
+            softSkills.forEach(s => {
+                // Check if skill data is valid and not empty
+                if (s.jobReqSkillName && s.jobReqSkillName.trim() !== '') {
+                    questions.push({
+                        type: 'softSkill',
+                        text: `To assess your soft skills, do you possess ${s.jobReqSkillName}?`,
+                        buttons: [
+                            { text: 'Yes', value: 1 },
+                            { text: 'No', value: 0 }
+                        ]
+                    });
+                    console.log(`✅ [Screening] Added soft skill question: ${s.jobReqSkillName}`);
+                } else {
+                    console.log('🚫 [Screening] Skipping invalid soft skill question:', s);
+                }
+            });
+        } else {
+            console.log('ℹ️ [Screening] No soft skill requirements found for this job');
+        }
+
+        // Add work setup question (always include this as it's from job position data)
+        if (jobPosition.jobType && jobPosition.jobType.trim() !== '') {
+            questions.push({
                 type: 'work_setup',
                 text: `With regards to the work setup, are you comfortable working as ${jobPosition.jobType}?`,
                 buttons: [
                     { text: 'Yes', value: 1 },
                     { text: 'No', value: 0 }
                 ]
-            },
-            // Add availability question
-            {
+            });
+            console.log(`✅ [Screening] Added work setup question: ${jobPosition.jobType}`);
+        } else {
+            console.log('⚠️ [Screening] Job type not specified for work setup question');
+        }
+
+        // Add availability question (always include this as it's from job position data)
+        if (jobPosition.jobTimeCommitment && jobPosition.jobTimeCommitment_startTime && jobPosition.jobTimeCommitment_endTime) {
+            questions.push({
                 type: 'availability',
                 text: `With regards to your availability, are you amenable to working ${jobPosition.jobTimeCommitment} from ${jobPosition.jobTimeCommitment_startTime} AM to ${jobPosition.jobTimeCommitment_endTime} PM?`,
                 buttons: [
                     { text: 'Yes', value: 1 },
                     { text: 'No', value: 0 }
                 ]
-            },
-        ];
+            });
+            console.log(`✅ [Screening] Added availability question: ${jobPosition.jobTimeCommitment}`);
+        } else {
+            console.log('⚠️ [Screening] Job time commitment details not specified for availability question');
+            
+            // Fallback availability question if specific times aren't set
+            if (jobPosition.jobTimeCommitment && jobPosition.jobTimeCommitment.trim() !== '') {
+                questions.push({
+                    type: 'availability',
+                    text: `With regards to your availability, are you amenable to working ${jobPosition.jobTimeCommitment}?`,
+                    buttons: [
+                        { text: 'Yes', value: 1 },
+                        { text: 'No', value: 0 }
+                    ]
+                });
+                console.log(`✅ [Screening] Added basic availability question: ${jobPosition.jobTimeCommitment}`);
+            }
+        }
+
+        console.log(`✅ [Screening] Generated ${questions.length} valid screening questions for jobId ${jobId}`);
+        
+        // Log the question types for debugging
+        const questionTypes = questions.map(q => q.type);
+        console.log('📋 [Screening] Question types included:', questionTypes);
+
+        // Additional validation - ensure we have at least work_setup and availability questions
+        const hasWorkSetup = questions.some(q => q.type === 'work_setup');
+        const hasAvailability = questions.some(q => q.type === 'availability');
+        
+        if (!hasWorkSetup) {
+            console.log('⚠️ [Screening] Warning: No work_setup question generated');
+        }
+        if (!hasAvailability) {
+            console.log('⚠️ [Screening] Warning: No availability question generated');
+        }
+
+        // Log a summary of what was found vs what was skipped
+        const summary = {
+            total_questions: questions.length,
+            degrees_found: degreesQuery ? degreesQuery.length : 0,
+            experiences_found: experiencesQuery ? experiencesQuery.length : 0,
+            certifications_found: certificationsQuery ? certificationsQuery.length : 0,
+            hard_skills_found: hardSkills ? hardSkills.length : 0,
+            soft_skills_found: softSkills ? softSkills.length : 0,
+            question_types: questionTypes
+        };
+        
+        console.log('📊 [Screening] Generation summary:', summary);
 
         return questions;
     } catch (error) {
-        console.error("Error fetching screening questions:", error);
+        console.error("❌ [Screening] Error fetching screening questions:", error);
         return [];
     }
 },
-
 handleReuploadsFileUpload: async function(req, res) {
     console.log('📂 [Reupload] Initiating reupload file upload process...');
 
