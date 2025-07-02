@@ -5649,7 +5649,7 @@ createNewTrainingRequest: async function(req, res) {
             address,
             country,
             activities,
-            certificates,
+            //certificates,
             objectives = [], 
             skills = [],
             trainingCategories = [] // Training categories from IDP
@@ -5677,12 +5677,12 @@ createNewTrainingRequest: async function(req, res) {
             });
         }
 
-        if (!certificates || certificates.length === 0) {
-            return res.status(400).json({
-                success: false,
-                message: 'At least one training certificate is required'
-            });
-        }
+        // if (!certificates || certificates.length === 0) {
+        //     return res.status(400).json({
+        //         success: false,
+        //         message: 'At least one training certificate is required'
+        //     });
+        // }
 
         // Validate date fields
         if (!setStartDate || !setEndDate) {
@@ -6033,43 +6033,43 @@ if (idpTrainingCategories && idpTrainingCategories.length > 0) {
         }
 
         // Create certificate records
-        let certificatesCreated = 0;
-        let certificatesFailed = 0;
+        // let certificatesCreated = 0;
+        // let certificatesFailed = 0;
 
-        for (const [index, certificate] of certificates.entries()) {
-            try {
-                const certificateRecordData = {
-                    trainingRecordId: trainingRecordId,
-                    trainingCertTitle: certificate.trainingCertTitle,
-                    trainingCertDesc: certificate.trainingCertDesc,
-                    certificate_url: null, // Will be populated when certificate is issued
-                    created_at: new Date().toISOString()
-                };
+        // for (const [index, certificate] of certificates.entries()) {
+        //     try {
+        //         const certificateRecordData = {
+        //             trainingRecordId: trainingRecordId,
+        //             trainingCertTitle: certificate.trainingCertTitle,
+        //             trainingCertDesc: certificate.trainingCertDesc,
+        //             certificate_url: null, // Will be populated when certificate is issued
+        //             created_at: new Date().toISOString()
+        //         };
 
-                console.log(`Creating certificate record ${index + 1}:`, certificateRecordData);
+        //         console.log(`Creating certificate record ${index + 1}:`, certificateRecordData);
 
-                const { data: certificateRecord, error: certificateError } = await supabase
-                    .from('training_records_certificates')
-                    .insert([certificateRecordData])
-                    .select()
-                    .single();
+        //         const { data: certificateRecord, error: certificateError } = await supabase
+        //             .from('training_records_certificates')
+        //             .insert([certificateRecordData])
+        //             .select()
+        //             .single();
 
-                if (certificateError) {
-                    console.error(`Error creating certificate record ${index + 1}:`, certificateError);
-                    certificatesFailed++;
-                } else {
-                    certificatesCreated++;
-                    console.log(`Successfully created certificate record: ${certificateRecord.trainingRecordCertificateId}`);
-                }
-            } catch (certificateError) {
-                console.error(`Exception creating certificate record ${index + 1}:`, certificateError);
-                certificatesFailed++;
-            }
-        }
+        //         if (certificateError) {
+        //             console.error(`Error creating certificate record ${index + 1}:`, certificateError);
+        //             certificatesFailed++;
+        //         } else {
+        //             certificatesCreated++;
+        //             console.log(`Successfully created certificate record: ${certificateRecord.trainingRecordCertificateId}`);
+        //         }
+        //     } catch (certificateError) {
+        //         console.error(`Exception creating certificate record ${index + 1}:`, certificateError);
+        //         certificatesFailed++;
+        //     }
+        // }
 
         console.log(`Training request created successfully: ${trainingRecordId}`);
         console.log(`- Activities: ${activitiesCreated}/${activities.length} created (${activitiesFailed} failed)`);
-        console.log(`- Certificates: ${certificatesCreated}/${certificates.length} created (${certificatesFailed} failed)`);
+        // console.log(`- Certificates: ${certificatesCreated}/${certificates.length} created (${certificatesFailed} failed)`);
         console.log(`- Categories: ${categoriesCreated}/${idpTrainingCategories.length} created (${categoriesFailed} failed)`);
         console.log(`- Objectives linked: ${objectivesCreated}/${objectives.length}`);
         console.log(`- Skills linked: ${skillsCreated}/${skills.length}`);
@@ -6088,10 +6088,10 @@ if (idpTrainingCategories && idpTrainingCategories.length > 0) {
                 totalActivities: activities.length,
                 activitiesFailed: activitiesFailed,
                 allActivitiesCreated: activitiesCreated === activities.length,
-                certificatesCreated: certificatesCreated,
-                totalCertificates: certificates.length,
-                certificatesFailed: certificatesFailed,
-                allCertificatesCreated: certificatesCreated === certificates.length,
+                // certificatesCreated: certificatesCreated,
+                // totalCertificates: certificates.length,
+                // certificatesFailed: certificatesFailed,
+                // allCertificatesCreated: certificatesCreated === certificates.length,
                 categoriesCreated: categoriesCreated,
                 totalCategories: idpTrainingCategories.length,
                 categoriesFailed: categoriesFailed,

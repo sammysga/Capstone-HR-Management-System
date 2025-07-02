@@ -3464,6 +3464,178 @@ const errorStyles = `
     cursor: not-allowed;
     transform: none !important;
 }
+
+/* Smart Training Schedule Styles */
+.suggestion-option {
+    background: white;
+    padding: 20px;
+    border-radius: 12px;
+    border: 2px solid #a7f3d0;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    position: relative;
+    overflow: hidden;
+}
+
+.suggestion-option:hover {
+    border-color: #10b981;
+    transform: translateY(-3px);
+    box-shadow: 0 12px 24px rgba(16, 185, 129, 0.15);
+}
+
+.suggestion-option.selected {
+    border-color: #10b981;
+    background: linear-gradient(135deg, #ecfdf5 0%, #d1fae5 100%);
+    box-shadow: 0 8px 16px rgba(16, 185, 129, 0.2);
+}
+
+.suggestion-option .suggestion-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 12px;
+    padding-left: 12px;
+    border-radius: 6px;
+}
+
+.suggestion-option .title {
+    font-weight: bold;
+    color: #064e3b;
+    font-size: 1.1rem;
+}
+
+.suggestion-option .date {
+    color: #059669;
+    font-size: 1.2rem;
+    font-weight: 600;
+    margin: 8px 0;
+    text-align: center;
+}
+
+.suggestion-option .description {
+    font-size: 0.9rem;
+    color: #065f46;
+    margin-bottom: 12px;
+    text-align: center;
+}
+
+.suggestion-option .stats {
+    display: flex;
+    justify-content: space-around;
+    font-size: 0.8rem;
+    color: #059669;
+    background: #f0fdf4;
+    padding: 8px;
+    border-radius: 6px;
+    margin-top: 10px;
+}
+
+.suggestion-option .stats span {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+}
+
+.suggestion-option .stats i {
+    font-size: 0.7rem;
+}
+
+/* Intensity Badges */
+.intensity-badge {
+    padding: 4px 12px;
+    border-radius: 20px;
+    font-size: 0.75rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.intensity-high {
+    background: #fee2e2;
+    color: #991b1b;
+    border: 1px solid #fecaca;
+}
+
+.intensity-medium {
+    background: #fef3c7;
+    color: #92400e;
+    border: 1px solid #fde68a;
+}
+
+.intensity-normal {
+    background: #dbeafe;
+    color: #1e40af;
+    border: 1px solid #bfdbfe;
+}
+
+.intensity-low {
+    background: #f3e8ff;
+    color: #6b21a8;
+    border: 1px solid #e9d5ff;
+}
+
+/* Duration Calculator Enhancements */
+.duration-calculator:hover {
+    box-shadow: 0 8px 16px rgba(14, 165, 233, 0.1);
+}
+
+.duration-item:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 8px rgba(14, 165, 233, 0.1);
+}
+
+/* Notification Animations */
+@keyframes slideInRight {
+    from {
+        transform: translateX(100%);
+        opacity: 0;
+    }
+    to {
+        transform: translateX(0);
+        opacity: 1;
+    }
+}
+
+@keyframes slideOutRight {
+    from {
+        transform: translateX(0);
+        opacity: 1;
+    }
+    to {
+        transform: translateX(100%);
+        opacity: 0;
+    }
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+    .suggestion-options {
+        grid-template-columns: 1fr !important;
+    }
+    
+    .duration-info {
+        grid-template-columns: repeat(2, 1fr) !important;
+    }
+    
+    .suggestion-option .stats {
+        flex-direction: column;
+        gap: 8px;
+    }
+}
+
+@media (max-width: 480px) {
+    .duration-info {
+        grid-template-columns: 1fr !important;
+    }
+    
+    .calculator-header,
+    .suggestion-header {
+        flex-direction: column;
+        align-items: flex-start !important;
+        gap: 5px;
+    }
+}
+
 </style>
 `;
 </head>
@@ -3840,8 +4012,8 @@ const errorStyles = `
                         </div>
                     </div>
 
-                    <!-- Training Certificates Section
-                    <div class="form-section">
+                    <!-- Training Certificates Section -->
+                    <!-- <div class="form-section">
                         <h3><i class="fas fa-certificate"></i> Training Certificates</h3>
                         
                         <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;">
@@ -3880,47 +4052,87 @@ const errorStyles = `
                                 </div>
                             </div>
                         </div>
-                    </div> -->
+                    </div>  -->
 
                     <!-- Training Schedule Section -->
-                    <div class="form-section">
-                        <h3><i class="fas fa-calendar-alt"></i> Training Schedule</h3>
-                        
-                        <div class="form-row">
-                            <div class="form-group">
-                                <label for="setStartDate">
-                                    <i class="fas fa-play"></i> Training Start Date *
-                                </label>
-                                <input type="date" id="setStartDate" name="setStartDate" required 
-                                       placeholder="Select start date">
-                                <small style="color: #64748b; font-size: 12px; margin-top: 4px; display: block;">
-                                    When the training program will begin
-                                </small>
-                            </div>
-                            
-                            <div class="form-group">
-                                <label for="setEndDate">
-                                    <i class="fas fa-flag-checkered"></i> Training End Date *
-                                </label>
-                                <input type="date" id="setEndDate" name="setEndDate" required 
-                                       placeholder="Select end date">
-                                <small style="color: #64748b; font-size: 12px; margin-top: 4px; display: block;">
-                                    When the training program will be completed
-                                </small>
-                            </div>
-                        </div>
-                        
-                        <!-- Duration Calculator Display -->
-                        <div class="duration-calculator" style="margin-top: 15px; padding: 15px; background: linear-gradient(135deg, #f0f9ff 0%, #e0f2fe 100%); border: 2px solid #0ea5e9; border-radius: 12px;">
-                            <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 10px;">
-                                <i class="fas fa-calculator" style="color: #0ea5e9;"></i>
-                                <strong style="color: #0c4a6e;">Training Duration</strong>
-                            </div>
-                            <div id="durationDisplay" style="color: #0c4a6e; font-size: 14px;">
-                                Select start and end dates to calculate duration
-                            </div>
-                        </div>
-                    </div>
+<div class="form-section">
+    <h3><i class="fas fa-calendar-alt"></i> Smart Training Schedule</h3>
+    
+    <div class="form-row">
+        <div class="form-group">
+            <label for="setStartDate">
+                <i class="fas fa-play"></i> Training Start Date *
+            </label>
+            <input type="date" id="setStartDate" name="setStartDate" required 
+                   onchange="calculateEndDateSuggestions()" 
+                   placeholder="Select start date">
+            <small style="color: #64748b; font-size: 12px; margin-top: 4px; display: block;">
+                When the training program will begin
+            </small>
+        </div>
+        
+        <div class="form-group">
+            <label for="setEndDate">
+                <i class="fas fa-flag-checkered"></i> Training End Date *
+            </label>
+            <input type="date" id="setEndDate" name="setEndDate" required 
+                   onchange="updateDurationDisplay()" 
+                   placeholder="Select end date">
+            <small style="color: #64748b; font-size: 12px; margin-top: 4px; display: block;">
+                When the training program will be completed
+            </small>
+        </div>
+    </div>
+    
+    <!-- Enhanced Duration Calculator Display -->
+    <div class="duration-calculator" style="background: linear-gradient(135deg, #f0f9ff 0%, #e0f2fe 100%); border: 2px solid #0ea5e9; border-radius: 12px; padding: 20px; margin-top: 20px;">
+        <div class="calculator-header" style="display: flex; align-items: center; gap: 10px; margin-bottom: 15px;">
+            <i class="fas fa-calculator" style="color: #0ea5e9; font-size: 1.2rem;"></i>
+            <strong style="color: #0c4a6e; font-size: 1.1rem;">Training Duration Analysis</strong>
+        </div>
+        <div id="durationDisplay" style="color: #0c4a6e; font-size: 14px;">
+            Add activities and select start date to see smart suggestions
+        </div>
+        <div class="duration-info" id="durationInfo" style="display: none; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: 15px; margin-top: 15px;">
+            <div class="duration-item" style="background: white; padding: 15px; border-radius: 8px; text-align: center; border: 1px solid #bae6fd;">
+                <div class="value" id="totalDays" style="font-size: 1.8rem; font-weight: bold; color: #0c4a6e; margin-bottom: 5px;">0</div>
+                <div class="label" style="font-size: 0.85rem; color: #0369a1; font-weight: 500;">Total Days</div>
+            </div>
+            <div class="duration-item" style="background: white; padding: 15px; border-radius: 8px; text-align: center; border: 1px solid #bae6fd;">
+                <div class="value" id="totalHours" style="font-size: 1.8rem; font-weight: bold; color: #0c4a6e; margin-bottom: 5px;">0</div>
+                <div class="label" style="font-size: 0.85rem; color: #0369a1; font-weight: 500;">Training Hours</div>
+            </div>
+            <div class="duration-item" style="background: white; padding: 15px; border-radius: 8px; text-align: center; border: 1px solid #bae6fd;">
+                <div class="value" id="hoursPerDay" style="font-size: 1.8rem; font-weight: bold; color: #0c4a6e; margin-bottom: 5px;">0</div>
+                <div class="label" style="font-size: 0.85rem; color: #0369a1; font-weight: 500;">Hours per Day</div>
+            </div>
+            <div class="duration-item" style="background: white; padding: 15px; border-radius: 8px; text-align: center; border: 1px solid #bae6fd;">
+                <div class="value" id="workingDays" style="font-size: 1.8rem; font-weight: bold; color: #0c4a6e; margin-bottom: 5px;">0</div>
+                <div class="label" style="font-size: 0.85rem; color: #0369a1; font-weight: 500;">Working Days</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Smart Date Suggestions -->
+    <div class="suggestion-section" id="suggestionSection" style="display: none; background: linear-gradient(135deg, #ecfdf5 0%, #dcfce7 100%); border: 2px solid #10b981; border-radius: 12px; padding: 20px; margin-top: 20px;">
+        <div class="suggestion-header" style="display: flex; align-items: center; gap: 10px; margin-bottom: 15px;">
+            <i class="fas fa-lightbulb" style="color: #10b981; font-size: 1.2rem;"></i>
+            <strong style="color: #064e3b; font-size: 1.1rem;">Smart End Date Suggestions (Optional)</strong>
+        </div>
+        <p style="margin-bottom: 15px; color: #065f46;">
+            Based on your <span id="suggestedTotalHours">0</span> training hours, here are optimal end date suggestions. 
+            <strong>You can still enter a custom end date if preferred.</strong>
+        </p>
+        <div class="suggestion-options" id="suggestionOptions" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 15px;">
+            <!-- Suggestions will be populated here by JavaScript -->
+        </div>
+    </div>
+
+    <!-- Training Intensity Alert -->
+    <div id="intensityAlert" style="display: none;">
+        <!-- Alert will be shown here by JavaScript -->
+    </div>
+</div>
 
                     <!-- Hidden inputs for selected data -->
                     <input type="hidden" id="selectedObjectives" name="selectedObjectives" value="">
@@ -3997,7 +4209,7 @@ const errorStyles = `
         let selectedSkills = [];
         let activityTypes = [];
        let activityCount = 1;
-        let certificateCount = 1;
+        // let certificateCount = 1;
         let totalDuration = 0;
 
         let currentUser = null;
@@ -4006,75 +4218,76 @@ const errorStyles = `
         let userSkills = [];
 
 
-        document.addEventListener('DOMContentLoaded', () => {
-            // Tab functionality
-            const tabButtons = document.querySelectorAll('.tab-button');
-            const tabContents = document.querySelectorAll('.tab-content');
+        document.addEventListener('DOMContentLoaded', function() {
+    // === EXISTING CODE - KEEP ALL OF THIS ===
+    const tabButtons = document.querySelectorAll('.tab-button');
+    const tabContents = document.querySelectorAll('.tab-content');
 
-            tabButtons.forEach(button => {
-                button.addEventListener('click', () => {
-                    // Remove active class from all buttons and contents
-                    tabButtons.forEach(btn => btn.classList.remove('active'));
-                    tabContents.forEach(content => content.classList.remove('active'));
+    tabButtons.forEach(button => {
+        button.addEventListener('click', () => {
+            // Remove active class from all buttons and contents
+            tabButtons.forEach(btn => btn.classList.remove('active'));
+            tabContents.forEach(content => content.classList.remove('active'));
 
-                    // Add active class to clicked button
-                    button.classList.add('active');
+            // Add active class to clicked button
+            button.classList.add('active');
 
-                    // Show corresponding content
-                    const tabId = button.getAttribute('data-tab');
-                    document.getElementById(tabId).classList.add('active');
-                });
-            });
+            // Show corresponding content
+            const tabId = button.getAttribute('data-tab');
+            document.getElementById(tabId).classList.add('active');
+        });
+    });
 
-            // View toggle functionality
-            document.querySelectorAll('.view-btn').forEach(btn => {
-                btn.addEventListener('click', function() {
-                    document.querySelectorAll('.view-btn').forEach(b => b.classList.remove('active'));
-                    this.classList.add('active');
-                });
-            });
+    // View toggle functionality
+    document.querySelectorAll('.view-btn').forEach(btn => {
+        btn.addEventListener('click', function() {
+            document.querySelectorAll('.view-btn').forEach(b => b.classList.remove('active'));
+            this.classList.add('active');
+        });
+    });
 
-            // Progress category click to scroll to section
-            document.querySelectorAll('.progress-category').forEach(category => {
-                category.addEventListener('click', function() {
-                    const filterType = this.getAttribute('data-filter');
-                    const sectionId = filterType + '-section';
-                    scrollToSection(sectionId);
-                });
-            });
+    // Progress category click to scroll to section
+    document.querySelectorAll('.progress-category').forEach(category => {
+        category.addEventListener('click', function() {
+            const filterType = this.getAttribute('data-filter');
+            const sectionId = filterType + '-section';
+            scrollToSection(sectionId);
+        });
+    });
 
-            // Upload certificate functionality
-            const uploadBtn = document.querySelector('.upload-certificate-btn');
-            if (uploadBtn) {
-                uploadBtn.addEventListener('click', function() {
-                    // Create file input
-                    const fileInput = document.createElement('input');
-                    fileInput.type = 'file';
-                    fileInput.accept = '.pdf,.jpg,.jpeg,.png';
-                    fileInput.style.display = 'none';
-                    
-                    fileInput.addEventListener('change', function() {
-                        if (this.files.length > 0) {
-                            alert(`Certificate "${this.files[0].name}" selected for upload.`);
-                            // Here you would typically handle the file upload
-                        }
-                    });
-                    
-                    document.body.appendChild(fileInput);
-                    fileInput.click();
-                    document.body.removeChild(fileInput);
-                });
-            }
-
-            // Setup form submission
-            document.getElementById('newTrainingRequestForm').addEventListener('submit', handleFormSubmit);
+    // Upload certificate functionality
+    const uploadBtn = document.querySelector('.upload-certificate-btn');
+    if (uploadBtn) {
+        uploadBtn.addEventListener('click', function() {
+            // Create file input
+            const fileInput = document.createElement('input');
+            fileInput.type = 'file';
+            fileInput.accept = '.pdf,.jpg,.jpeg,.png';
+            fileInput.style.display = 'none';
             
-            // Load user data
-            loadActivityTypes();
-            loadUserObjectives();
-            loadUserSkills();
+            fileInput.addEventListener('change', function() {
+                if (this.files.length > 0) {
+                    alert(`Certificate "${this.files[0].name}" selected for upload.`);
+                    // Here you would typically handle the file upload
+                }
+            });
+            
+            document.body.appendChild(fileInput);
+            fileInput.click();
+            document.body.removeChild(fileInput);
+        });
+    }
 
-            const startDateInput = document.getElementById('setStartDate');
+    // Setup form submission
+    document.getElementById('newTrainingRequestForm').addEventListener('submit', handleFormSubmit);
+    
+    // Load user data
+    loadActivityTypes();
+    loadUserObjectives();
+    loadUserSkills();
+
+    // === EXISTING DATE HANDLING CODE - KEEP AND ENHANCE ===
+    const startDateInput = document.getElementById('setStartDate');
     const endDateInput = document.getElementById('setEndDate');
     
     if (startDateInput && endDateInput) {
@@ -4094,7 +4307,11 @@ const errorStyles = `
                     endDateInput.value = '';
                 }
                 
+                // EXISTING: Update duration display
                 updateDurationDisplay();
+                
+                // NEW: Calculate smart suggestions
+                calculateEndDateSuggestions();
             }
         });
         
@@ -4108,50 +4325,225 @@ const errorStyles = `
                 return;
             }
             
+            // ENHANCED: Update duration display with new features
             updateDurationDisplay();
         });
     }
+
+    // === NEW: SMART SCHEDULE ENHANCEMENTS ===
+    
+    // Initialize suggestion section if needed
+    setTimeout(() => {
+        createSuggestionSection();
+    }, 100);
+    
+    // Add validation event listeners to activity inputs for real-time suggestions
+    setTimeout(() => {
+        const activityDurationInputs = document.querySelectorAll('input[name="estActivityDuration[]"]');
+        activityDurationInputs.forEach(input => {
+            input.addEventListener('change', function() {
+                updateTotalDuration(); // This will trigger calculateEndDateSuggestions()
+            });
+            input.addEventListener('input', function() {
+                updateTotalDuration(); // This will trigger calculateEndDateSuggestions()
+            });
+        });
+    }, 200);
+    
+    // Add global click handler for suggestion options
+    document.addEventListener('click', function(event) {
+        if (event.target.closest('.suggestion-option')) {
+            // Handle suggestion selection - this will be handled by the onclick in the HTML
+            console.log('Suggestion clicked');
+        }
+    });
+    
+    console.log('✅ Smart training schedule feature initialized');
 });
 
+// 5. ENHANCED updateDurationDisplay function (REPLACE your existing one)
 function updateDurationDisplay() {
-            const startDate = document.getElementById('setStartDate').value;
-            const endDate = document.getElementById('setEndDate').value;
-            const durationDisplay = document.getElementById('durationDisplay');
-            
-            if (!startDate || !endDate) {
-                durationDisplay.textContent = 'Select start and end dates to calculate duration';
-                return;
-            }
-            
-            const start = new Date(startDate);
-            const end = new Date(endDate);
-            const diffTime = Math.abs(end - start);
-            const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24)) + 1;
-            
-            // Calculate working days (excluding weekends)
-            let workingDays = 0;
-            let current = new Date(start);
-            
-            while (current <= end) {
-                const dayOfWeek = current.getDay();
-                if (dayOfWeek !== 0 && dayOfWeek !== 6) {
-                    workingDays++;
-                }
-                current.setDate(current.getDate() + 1);
-            }
-            
-            durationDisplay.innerHTML = `
-                <div style="display: flex; justify-content: space-between; margin-bottom: 5px;">
-                    <span>Total Days:</span>
-                    <strong>${diffDays} days</strong>
-                </div>
-                <div style="display: flex; justify-content: space-between;">
-                    <span>Working Days:</span>
-                    <strong>${workingDays} working days</strong>
-                </div>
-            `;
-        }
+    const startDate = document.getElementById('setStartDate').value;
+    const endDate = document.getElementById('setEndDate').value;
+    const totalHours = parseFloat(document.getElementById('totalDurationValue').textContent) || 0;
+    
+    const durationDisplayElement = document.getElementById('durationDisplay');
+    
+    if (!startDate || !endDate) {
+        durationDisplayElement.textContent = 'Select start and end dates to calculate duration';
+        
+        // Hide detailed duration info if it exists
+        const durationInfoElement = document.getElementById('durationInfo');
+        if (durationInfoElement) durationInfoElement.style.display = 'none';
+        return;
+    }
+    
+    const start = new Date(startDate);
+    const end = new Date(endDate);
+    
+    if (end < start) {
+        durationDisplayElement.innerHTML = `
+            <i class="fas fa-exclamation-triangle" style="color: #ef4444;"></i>
+            End date cannot be before start date
+        `;
+        return;
+    }
+    
+    const totalDays = Math.ceil((end - start) / (1000 * 60 * 60 * 24)) + 1;
+    const workingDays = calculateWorkingDays(start, end);
+    const hoursPerDay = workingDays > 0 ? (totalHours / workingDays).toFixed(1) : 0;
+    
+    // Update individual duration elements if they exist
+    const elements = {
+        'totalDays': totalDays,
+        'totalHours': totalHours,
+        'hoursPerDay': hoursPerDay,
+        'workingDays': workingDays
+    };
+    
+    Object.keys(elements).forEach(id => {
+        const element = document.getElementById(id);
+        if (element) element.textContent = elements[id];
+    });
+    
+    // Update main duration display with enhanced info
+    durationDisplayElement.innerHTML = `
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
+            <span><i class="fas fa-check-circle" style="color: #10b981;"></i> Duration Analysis</span>
+            <span style="color: #10b981; font-weight: 600;">${totalHours} hours total</span>
+        </div>
+        <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px; font-size: 14px;">
+            <div>📅 <strong>${totalDays}</strong> total days</div>
+            <div>💼 <strong>${workingDays}</strong> working days</div>
+            <div>⏱️ <strong>${hoursPerDay}</strong> hrs/day average</div>
+            <div>📈 <strong>${Math.round((totalHours/totalDays)*10)/10}</strong> hrs/day overall</div>
+        </div>
+    `;
+    
+    // Show detailed duration info if it exists
+    const durationInfoElement = document.getElementById('durationInfo');
+    if (durationInfoElement) durationInfoElement.style.display = 'grid';
+}
 
+// 6. NEW: Calculate working days
+function calculateWorkingDays(startDate, endDate) {
+    let count = 0;
+    const current = new Date(startDate);
+    
+    while (current <= endDate) {
+        const dayOfWeek = current.getDay();
+        if (dayOfWeek !== 0 && dayOfWeek !== 6) { // Not Sunday or Saturday
+            count++;
+        }
+        current.setDate(current.getDate() + 1);
+    }
+    
+    return count;
+}
+
+// 7. NEW: Create suggestion section if it doesn't exist
+function createSuggestionSection() {
+    const scheduleSection = document.querySelector('.form-section:has(#setStartDate)');
+    if (!scheduleSection) return;
+    
+    const suggestionHTML = `
+        <!-- Smart Date Suggestions -->
+        <div class="suggestion-section" id="suggestionSection" style="display: none; background: linear-gradient(135deg, #ecfdf5 0%, #dcfce7 100%); border: 2px solid #10b981; border-radius: 12px; padding: 20px; margin-top: 20px;">
+            <div class="suggestion-header" style="display: flex; align-items: center; gap: 10px; margin-bottom: 15px;">
+                <i class="fas fa-lightbulb" style="color: #10b981; font-size: 1.2rem;"></i>
+                <strong style="color: #064e3b; font-size: 1.1rem;">Smart End Date Suggestions (Optional)</strong>
+            </div>
+            <p style="margin-bottom: 15px; color: #065f46;">
+                Based on your <span id="suggestedTotalHours">0</span> training hours, here are optimal end date suggestions. 
+                <strong>You can still enter a custom end date if preferred.</strong>
+            </p>
+            <div class="suggestion-options" id="suggestionOptions" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 15px;">
+                <!-- Suggestions will be populated here -->
+            </div>
+        </div>
+
+        <!-- Training Intensity Alert -->
+        <div id="intensityAlert" style="display: none;">
+            <!-- Alert will be shown here -->
+        </div>
+    `;
+    
+    scheduleSection.insertAdjacentHTML('beforeend', suggestionHTML);
+}
+
+// 8. NEW: Show/hide suggestion section
+function showSuggestionSection() {
+    const section = document.getElementById('suggestionSection');
+    if (section) {
+        section.style.display = 'block';
+    }
+}
+
+function hideSuggestionSection() {
+    const section = document.getElementById('suggestionSection');
+    if (section) {
+        section.style.display = 'none';
+    }
+}
+
+// 9. NEW: Show intensity alerts
+function showIntensityAlert(totalHours) {
+    const alertDiv = document.getElementById('intensityAlert');
+    if (!alertDiv) return;
+    
+    let alertContent = '';
+    let alertClass = '';
+    
+    if (totalHours > 80) {
+        alertClass = 'alert' + ' alert-danger';
+        alertContent = `
+            <div style="padding: 15px; background: linear-gradient(135deg, #fee2e2 0%, #fecaca 100%); border: 2px solid #ef4444; border-radius: 12px; display: flex; align-items: center; gap: 12px;">
+                <i class="fas fa-exclamation-triangle" style="color: #ef4444;"></i>
+                <div>
+                    <strong style="color: #991b1b;">Very High Intensity Training</strong><br>
+                    <span style="color: #dc2626;">${totalHours} hours is extremely intensive. Consider breaking this into multiple training programs.</span>
+                </div>
+            </div>
+        `;
+    } else if (totalHours > 40) {
+        alertClass = 'alert' + ' alert-warning';
+        alertContent = `
+            <div style="padding: 15px; background: linear-gradient(135deg, #fef3c7 0%, #fed7aa 100%); border: 2px solid #f59e0b; border-radius: 12px; display: flex; align-items: center; gap: 12px;">
+                <i class="fas fa-exclamation-triangle" style="color: #f59e0b;"></i>
+                <div>
+                    <strong style="color: #92400e;">High Intensity Training Detected</strong><br>
+                    <span style="color: #d97706;">This ${totalHours}-hour training is quite intensive. Consider spreading it over multiple weeks.</span>
+                </div>
+            </div>
+        `;
+    } else if (totalHours > 0 && totalHours <= 8) {
+        alertClass = 'alert' + ' alert-info';
+        alertContent = `
+            <div style="padding: 15px; background: linear-gradient(135deg, #dbeafe 0%, #bfdbfe 100%); border: 2px solid #3b82f6; border-radius: 12px; display: flex; align-items: center; gap: 12px;">
+                <i class="fas fa-info-circle" style="color: #3b82f6;"></i>
+                <div>
+                    <strong style="color: #1e40af;">Short Training Program</strong><br>
+                    <span style="color: #2563eb;">This ${totalHours}-hour training can be completed in 1-2 days.</span>
+                </div>
+            </div>
+        `;
+    }
+    
+    if (alertContent) {
+        alertDiv.innerHTML = alertContent;
+        alertDiv.style.display = 'block';
+    } else {
+        alertDiv.style.display = 'none';
+    }
+}
+
+// 10. NEW: Helper functions
+function getIntensityLabel(hoursPerDay) {
+    if (hoursPerDay >= 8) return 'High';
+    if (hoursPerDay >= 6) return 'Medium';
+    if (hoursPerDay >= 4) return 'Normal';
+    return 'Low';
+}
 
 function openTrainingModal() {
             console.log('Opening training modal...');
@@ -4177,7 +4569,7 @@ function resetForm() {
             selectedObjectives = [];
             selectedSkills = [];
             activityCount = 1;
-            certificateCount = 1;
+            // certificateCount = 1;
             
             // Hide conditional sections
             document.getElementById('idpOverviewCard').style.display = 'none';
@@ -4186,7 +4578,7 @@ function resetForm() {
             
             // Reset containers to single item
             resetActivitiesContainer();
-            resetCertificatesContainer();
+            // resetCertificatesContainer();
             resetMultiSelects();
             
             // Reset total duration
@@ -5745,69 +6137,55 @@ function addActivity() {
     activityCount++;
     const container = document.getElementById('activitiesContainer');
     
-    const activityHtml = `
-        <div class="activity-item" data-activity-index="${activityCount}">
-            <div class="item-header">
-                <h4 class="item-title">Activity ${activityCount}</h4>
-                <button type="button" class="remove-item-btn" onclick="removeActivity(this)" ${activityCount === 1 ? 'style="display: none;"' : ''}>
-                    <i class="fas fa-trash"></i> Remove
-                </button>
-            </div>
-            <div class="form-row">
-                <div class="form-group">
-                    <label>
-                        <i class="fas fa-play"></i> Activity Name *
-                    </label>
-                    <input type="text" name="activityName[]" required 
-                           placeholder="e.g., Introduction to Python"
-                           onchange="validateActivitySection()"
-                           onblur="validateActivitySection()">
-                </div>
-                
-                <div class="form-group">
-                    <label>Activity Type *</label>
-                    <div class="activity-type-container" data-activity-index="${activityCount}">
-                        <input type="text" 
-                               class="activity-type-input" 
-                               name="activityType[]" 
-                               placeholder="Select or type activity type"
-                               readonly
-                               required
-                               onclick="toggleActivityTypeDropdown(this)">
-                        <input type="hidden" name="activityTypeId[]" value="">
-                        <button type="button" class="activity-type-dropdown-btn" onclick="toggleActivityTypeDropdown(this.previousElementSibling)">
-                            <i class="fas fa-chevron-down"></i>
-                        </button>
-                        <div class="activity-type-suggestions">
-                            <!-- Options will be populated here -->
-                        </div>
-                    </div>
-                </div>
-                
-                <div class="form-group" style="flex: 0.4;">
-                    <label>
-                        <i class="fas fa-clock"></i> Duration (hrs) *
-                    </label>
-                    <input type="number" name="estActivityDuration[]" required 
-                           min="0.5" step="0.5" placeholder="2.5" 
-                           onchange="updateTotalDuration(); validateActivitySection();"
-                           onblur="validateActivitySection()">
-                </div>
-            </div>
-            
+    const activityDiv = document.createElement('div');
+    activityDiv.className = 'activity-item';
+    activityDiv.setAttribute('data-activity-index', activityCount);
+    
+    activityDiv.innerHTML = `
+        <div class="item-header">
+            <h4 class="item-title">Activity ${activityCount}</h4>
+            <button type="button" class="remove-item-btn" onclick="removeActivity(this)">
+                <i class="fas fa-trash"></i> Remove
+            </button>
+        </div>
+        <div class="form-row">
             <div class="form-group">
                 <label>
-                    <i class="fas fa-comment"></i> Activity Remarks
+                    <i class="fas fa-play"></i> Activity Name *
                 </label>
-                <textarea name="activityRemarks[]" rows="2" 
-                          placeholder="Additional notes about this activity"></textarea>
+                <input type="text" name="activityName[]" required 
+                       placeholder="e.g., Advanced Python Concepts">
             </div>
+            
+            <div class="form-group" style="flex: 0.4;">
+                <label>
+                    <i class="fas fa-clock"></i> Duration (hrs) *
+                </label>
+                <input type="number" name="estActivityDuration[]" required 
+                       min="0.5" step="0.5" placeholder="2.5" 
+                       onchange="updateTotalDuration()" 
+                       oninput="updateTotalDuration()">
+            </div>
+        </div>
+        
+        <div class="form-group">
+            <label>
+                <i class="fas fa-comment"></i> Activity Remarks
+            </label>
+            <textarea name="activityRemarks[]" rows="2" 
+                      placeholder="Additional notes about this activity"></textarea>
         </div>
     `;
     
-    container.insertAdjacentHTML('beforeend', activityHtml);
-    updateRemoveButtonsVisibility('activity');
-    console.log(`Added activity ${activityCount}`);
+    container.appendChild(activityDiv);
+    updateRemoveButtons();
+    
+    // NEW: Add event listener to the new duration input for smart suggestions
+    const newDurationInput = activityDiv.querySelector('input[name="estActivityDuration[]"]');
+    if (newDurationInput) {
+        newDurationInput.addEventListener('change', updateTotalDuration);
+        newDurationInput.addEventListener('input', updateTotalDuration);
+    }
 }
          function removeActivity(button) {
     const activityItem = button.closest('.activity-item');
@@ -5815,15 +6193,36 @@ function addActivity() {
     
     if (container.children.length > 1) {
         activityItem.remove();
+        updateTotalDuration(); // This will trigger calculateEndDateSuggestions()
         updateTotalDuration();
         renumberItems('activity');
         updateRemoveButtonsVisibility('activity');
+        calculateEndDateSuggestions(); // Ensure suggestions update when activity is removed
         validateActivitySection(); // Validate after removal
         console.log('Activity removed successfully');
     } else {
         alert('At least one activity is required.');
     }
+
+    
 }
+function debugSmartSchedule() {
+    console.log('=== SMART SCHEDULE DEBUG ===');
+    console.log('Start Date:', document.getElementById('setStartDate')?.value);
+    console.log('End Date:', document.getElementById('setEndDate')?.value);
+    console.log('Total Hours:', document.getElementById('totalDurationValue')?.textContent);
+    console.log('Suggestion Section Exists:', !!document.getElementById('suggestionSection'));
+    console.log('Suggestion Options Container:', !!document.getElementById('suggestionOptions'));
+    
+    const activities = document.querySelectorAll('input[name="estActivityDuration[]"]');
+    console.log('Activity Count:', activities.length);
+    activities.forEach((input, index) => {
+        console.log(`Activity ${index + 1} Hours:`, input.value);
+    });
+}
+
+// Make debug function globally available
+window.debugSmartSchedule = debugSmartSchedule;
         // Utility functions for activities and certificates
         function updateRemoveButtonsVisibility(type) {
             const containerSelector = type === 'activity' ? '#activitiesContainer' : '#certificatesContainer';
@@ -5864,104 +6263,104 @@ function addActivity() {
 
 
         // Certificate management functions
-        function addCertificate() {
-    certificateCount++;
-    const container = document.getElementById('certificatesContainer');
+//         function addCertificate() {
+//     certificateCount++;
+//     const container = document.getElementById('certificatesContainer');
     
-    const certificateHtml = `
-        <div class="certificate-item" data-certificate-index="${certificateCount}">
-            <div class="item-header">
-                <h4 class="item-title">Certificate ${certificateCount}</h4>
-                <button type="button" class="remove-item-btn" onclick="removeCertificate(this)" ${certificateCount === 1 ? 'style="display: none;"' : ''}>
-                    <i class="fas fa-trash"></i> Remove
-                </button>
-            </div>
-            <div class="form-row">
-                <div class="form-group">
-                    <label>
-                        <i class="fas fa-award"></i> Certificate Title *
-                    </label>
-                    <input type="text" name="trainingCertTitle[]" required 
-                           placeholder="e.g., Python Programming Certificate"
-                           onchange="validateCertificateSection()"
-                           onblur="validateCertificateSection()">
-                </div>
-            </div>
+//     const certificateHtml = `
+//         <div class="certificate-item" data-certificate-index="${certificateCount}">
+//             <div class="item-header">
+//                 <h4 class="item-title">Certificate ${certificateCount}</h4>
+//                 <button type="button" class="remove-item-btn" onclick="removeCertificate(this)" ${certificateCount === 1 ? 'style="display: none;"' : ''}>
+//                     <i class="fas fa-trash"></i> Remove
+//                 </button>
+//             </div>
+//             <div class="form-row">
+//                 <div class="form-group">
+//                     <label>
+//                         <i class="fas fa-award"></i> Certificate Title *
+//                     </label>
+//                     <input type="text" name="trainingCertTitle[]" required 
+//                            placeholder="e.g., Python Programming Certificate"
+//                            onchange="validateCertificateSection()"
+//                            onblur="validateCertificateSection()">
+//                 </div>
+//             </div>
             
-            <div class="form-group">
-                <label>
-                    <i class="fas fa-file-alt"></i> Certificate Description *
-                </label>
-                <textarea name="trainingCertDesc[]" rows="3" required 
-                          placeholder="Describe what this certificate validates and its significance"
-                          onchange="validateCertificateSection()"
-                          onblur="validateCertificateSection()"></textarea>
-            </div>
-        </div>
-    `;
+//             <div class="form-group">
+//                 <label>
+//                     <i class="fas fa-file-alt"></i> Certificate Description *
+//                 </label>
+//                 <textarea name="trainingCertDesc[]" rows="3" required 
+//                           placeholder="Describe what this certificate validates and its significance"
+//                           onchange="validateCertificateSection()"
+//                           onblur="validateCertificateSection()"></textarea>
+//             </div>
+//         </div>
+//     `;
     
-    container.insertAdjacentHTML('beforeend', certificateHtml);
-    updateRemoveButtonsVisibility('certificate');
-    console.log(`Added certificate ${certificateCount}`);
-}
+//     container.insertAdjacentHTML('beforeend', certificateHtml);
+//     updateRemoveButtonsVisibility('certificate');
+//     console.log(`Added certificate ${certificateCount}`);
+// }
 
-        function removeCertificate(button) {
-    const certificateItem = button.closest('.certificate-item');
-    const container = document.getElementById('certificatesContainer');
+//         function removeCertificate(button) {
+//     const certificateItem = button.closest('.certificate-item');
+//     const container = document.getElementById('certificatesContainer');
     
-    if (container.children.length > 1) {
-        certificateItem.remove();
-        renumberItems('certificate');
-        updateRemoveButtonsVisibility('certificate');
-        validateCertificateSection(); // Validate after removal
-        console.log('Certificate removed successfully');
-    } else {
-        alert('At least one certificate is required.');
-    }
-}
+//     if (container.children.length > 1) {
+//         certificateItem.remove();
+//         renumberItems('certificate');
+//         updateRemoveButtonsVisibility('certificate');
+//         validateCertificateSection(); // Validate after removal
+//         console.log('Certificate removed successfully');
+//     } else {
+//         alert('At least one certificate is required.');
+//     }
+// }
 
-function validateCertificateSection() {
-    console.log('🔍 Validating certificate section...');
+// function validateCertificateSection() {
+//     console.log('🔍 Validating certificate section...');
     
-    const certificateItems = document.querySelectorAll('.certificate-item');
-    let allValid = true;
-    let validCertificates = 0;
+//     const certificateItems = document.querySelectorAll('.certificate-item');
+//     let allValid = true;
+//     let validCertificates = 0;
     
-    certificateItems.forEach((item, index) => {
-        const titleInput = item.querySelector('input[name="trainingCertTitle[]"]');
-        const descInput = item.querySelector('textarea[name="trainingCertDesc[]"]');
+//     certificateItems.forEach((item, index) => {
+//         const titleInput = item.querySelector('input[name="trainingCertTitle[]"]');
+//         const descInput = item.querySelector('textarea[name="trainingCertDesc[]"]');
         
-        // Reset error styles
-        [titleInput, descInput].forEach(input => {
-            if (input) input.classList.remove('error');
-        });
+//         // Reset error styles
+//         [titleInput, descInput].forEach(input => {
+//             if (input) input.classList.remove('error');
+//         });
         
-        // Validate each field
-        const isTitleValid = titleInput && titleInput.value.trim() !== '';
-        const isDescValid = descInput && descInput.value.trim() !== '';
+//         // Validate each field
+//         const isTitleValid = titleInput && titleInput.value.trim() !== '';
+//         const isDescValid = descInput && descInput.value.trim() !== '';
         
-        // Add error styling for invalid fields
-        if (!isTitleValid && titleInput) titleInput.classList.add('error');
-        if (!isDescValid && descInput) descInput.classList.add('error');
+//         // Add error styling for invalid fields
+//         if (!isTitleValid && titleInput) titleInput.classList.add('error');
+//         if (!isDescValid && descInput) descInput.classList.add('error');
         
-        const isCertificateValid = isTitleValid && isDescValid;
+//         const isCertificateValid = isTitleValid && isDescValid;
         
-        if (isCertificateValid) {
-            validCertificates++;
-        } else {
-            allValid = false;
-        }
+//         if (isCertificateValid) {
+//             validCertificates++;
+//         } else {
+//             allValid = false;
+//         }
         
-        console.log(`Certificate ${index + 1}: Title=${isTitleValid}, Desc=${isDescValid}, Valid=${isCertificateValid}`);
-    });
+//         console.log(`Certificate ${index + 1}: Title=${isTitleValid}, Desc=${isDescValid}, Valid=${isCertificateValid}`);
+//     });
     
-    console.log(`Certificate validation result: ${validCertificates}/${certificateItems.length} valid, all valid: ${allValid}`);
+//     console.log(`Certificate validation result: ${validCertificates}/${certificateItems.length} valid, all valid: ${allValid}`);
     
-    // Update form validation state
-    updateFormValidationState();
+//     // Update form validation state
+//     updateFormValidationState();
     
-    return allValid && validCertificates > 0;
-}
+//     return allValid && validCertificates > 0;
+// }
 function updateFormValidationState() {
     const submitBtn = document.getElementById('submitBtn');
     if (!submitBtn) return;
@@ -5982,10 +6381,10 @@ function updateFormValidationState() {
     }
     
     const hasValidActivities = validateActivitySection();
-    const hasValidCertificates = validateCertificateSection();
+    // const hasValidCertificates = validateCertificateSection();
     
     const isFormValid = hasValidIDP && hasValidTraining && hasValidDates && 
-                       hasValidFormat && hasValidLocation && hasValidActivities && hasValidCertificates;
+                   hasValidFormat && hasValidLocation && hasValidActivities;
     
     // Update submit button state
     submitBtn.disabled = !isFormValid;
@@ -5998,41 +6397,41 @@ function updateFormValidationState() {
 }
 
 
-function resetCertificatesContainer() {
-    const container = document.getElementById('certificatesContainer');
-    container.innerHTML = `
-        <div class="certificate-item" data-certificate-index="1">
-            <div class="item-header">
-                <h4 class="item-title">Certificate 1</h4>
-                <button type="button" class="remove-item-btn" onclick="removeCertificate(this)" style="display: none;">
-                    <i class="fas fa-trash"></i> Remove
-                </button>
-            </div>
-            <div class="form-row">
-                <div class="form-group">
-                    <label>
-                        <i class="fas fa-award"></i> Certificate Title *
-                    </label>
-                    <input type="text" name="trainingCertTitle[]" required 
-                           placeholder="e.g., Python Programming Certificate"
-                           onchange="validateCertificateSection()"
-                           onblur="validateCertificateSection()">
-                </div>
-            </div>
+// function resetCertificatesContainer() {
+//     const container = document.getElementById('certificatesContainer');
+//     container.innerHTML = `
+//         <div class="certificate-item" data-certificate-index="1">
+//             <div class="item-header">
+//                 <h4 class="item-title">Certificate 1</h4>
+//                 <button type="button" class="remove-item-btn" onclick="removeCertificate(this)" style="display: none;">
+//                     <i class="fas fa-trash"></i> Remove
+//                 </button>
+//             </div>
+//             <div class="form-row">
+//                 <div class="form-group">
+//                     <label>
+//                         <i class="fas fa-award"></i> Certificate Title *
+//                     </label>
+//                     <input type="text" name="trainingCertTitle[]" required 
+//                            placeholder="e.g., Python Programming Certificate"
+//                            onchange="validateCertificateSection()"
+//                            onblur="validateCertificateSection()">
+//                 </div>
+//             </div>
             
-            <div class="form-group">
-                <label>
-                    <i class="fas fa-file-alt"></i> Certificate Description *
-                </label>
-                <textarea name="trainingCertDesc[]" rows="3" required 
-                          placeholder="Describe what this certificate validates and its significance"
-                          onchange="validateCertificateSection()"
-                          onblur="validateCertificateSection()"></textarea>
-            </div>
-        </div>
-    `;
-    certificateCount = 1;
-}
+//             <div class="form-group">
+//                 <label>
+//                     <i class="fas fa-file-alt"></i> Certificate Description *
+//                 </label>
+//                 <textarea name="trainingCertDesc[]" rows="3" required 
+//                           placeholder="Describe what this certificate validates and its significance"
+//                           onchange="validateCertificateSection()"
+//                           onblur="validateCertificateSection()"></textarea>
+//             </div>
+//         </div>
+//     `;
+//     certificateCount = 1;
+// }
 
 function renumberActivities() {
     const activities = document.querySelectorAll('.activity-item');
@@ -6042,18 +6441,513 @@ function renumberActivities() {
     });
 }
 
+// 1. ENHANCED updateTotalDuration function (REPLACE your existing one)
 function updateTotalDuration() {
-            const durationInputs = document.querySelectorAll('input[name="estActivityDuration[]"]');
-            let total = 0;
+    const durationInputs = document.querySelectorAll('input[name="estActivityDuration[]"]');
+    let total = 0;
+    
+    durationInputs.forEach(input => {
+        const value = parseFloat(input.value) || 0;
+        total += value;
+    });
+    
+    const totalDisplay = document.getElementById('totalDurationValue');
+    if (totalDisplay) {
+        totalDisplay.textContent = total.toFixed(1);
+    }
+    
+    // Update hidden input for form submission
+    const totalInput = document.getElementById('totalDuration');
+    if (totalInput) {
+        totalInput.value = total.toFixed(1);
+    }
+    
+    // NEW: Trigger smart date suggestions
+    calculateEndDateSuggestions();
+    
+    console.log(`Total duration updated: ${total} hours`);
+}
+
+// 2. NEW: Smart Date Suggestions Function
+function calculateEndDateSuggestions() {
+    console.log('🚀 calculateEndDateSuggestions started');
+    
+    const startDateInput = document.getElementById('setStartDate');
+    const totalHoursElement = document.getElementById('totalDurationValue');
+    
+    if (!startDateInput) {
+        console.error('❌ Start date input element not found');
+        return;
+    }
+    
+    if (!totalHoursElement) {
+        console.error('❌ Total duration element not found');
+        return;
+    }
+    
+    const startDate = startDateInput.value;
+    const totalHours = parseFloat(totalHoursElement.textContent) || 0;
+    
+    console.log('📊 Current values:', { startDate, totalHours });
+    
+    // Validation with clear feedback
+    if (!startDate || startDate.trim() === '') {
+        console.log('⚠️ No start date selected - hiding suggestions');
+        hideSuggestionSection();
+        return;
+    }
+    
+    if (totalHours <= 0) {
+        console.log('⚠️ No training hours specified - hiding suggestions');
+        hideSuggestionSection();
+        return;
+    }
+    
+    console.log(`✅ Valid inputs - proceeding with suggestions`);
+    
+    // Update suggested hours display
+    const suggestedHoursElement = document.getElementById('suggestedTotalHours');
+    if (suggestedHoursElement) {
+        suggestedHoursElement.textContent = totalHours;
+    }
+    
+    // Ensure suggestion section exists
+    let suggestionOptions = document.getElementById('suggestionOptions');
+    if (!suggestionOptions) {
+        console.log('📦 Creating suggestion section...');
+        createSuggestionSection();
+        suggestionOptions = document.getElementById('suggestionOptions');
+        
+        if (!suggestionOptions) {
+            console.error('❌ Failed to create suggestion options container');
+            return;
+        }
+    }
+    
+    // Clear existing suggestions
+    suggestionOptions.innerHTML = '';
+    
+    // Define training scenarios
+    const scenarios = [
+        {
+            title: "Intensive (8 hrs/day)",
+            hoursPerDay: 8,
+            description: "Full-day intensive training",
+            weekdaysOnly: true,
+            color: "#ef4444"
+        },
+        {
+            title: "Standard (6 hrs/day)",
+            hoursPerDay: 6,
+            description: "Standard training pace",
+            weekdaysOnly: true,
+            color: "#3b82f6"
+        },
+        {
+            title: "Part-time (4 hrs/day)",
+            hoursPerDay: 4,
+            description: "Balanced work-training schedule",
+            weekdaysOnly: true,
+            color: "#10b981"
+        },
+        {
+            title: "Flexible (3 hrs/day)",
+            hoursPerDay: 3,
+            description: "Flexible learning pace",
+            weekdaysOnly: false,
+            color: "#8b5cf6"
+        },
+        {
+            title: "Extended (2 hrs/day)",
+            hoursPerDay: 2,
+            description: "Extended learning schedule",
+            weekdaysOnly: false,
+            color: "#f59e0b"
+        }
+    ];
+    
+    console.log(`🎯 Processing ${scenarios.length} scenarios...`);
+    
+    let successfulScenarios = 0;
+    
+    scenarios.forEach((scenario, index) => {
+        console.log(`\n--- Scenario ${index + 1}: ${scenario.title} ---`);
+        
+        // Calculate end date for this scenario
+        const endDate = calculateEndDate(startDate, totalHours, scenario.hoursPerDay, scenario.weekdaysOnly);
+        
+        if (!endDate) {
+            console.warn(`❌ Skipping ${scenario.title} - end date calculation failed`);
+            return;
+        }
+        
+        console.log(`✅ ${scenario.title} calculated end date: ${endDate.toDateString()}`);
+        
+        // Calculate display stats
+        try {
+            const startDateObj = new Date(startDate + 'T00:00:00');
+            const totalDays = Math.ceil((endDate - startDateObj) / (1000 * 60 * 60 * 24)) + 1;
+            const workingDays = Math.ceil(totalHours / scenario.hoursPerDay);
             
-            durationInputs.forEach(input => {
-                const value = parseFloat(input.value) || 0;
-                total += value;
+            // Create suggestion element
+            const optionDiv = document.createElement('div');
+            optionDiv.className = 'suggestion-option';
+            optionDiv.style.cursor = 'pointer';
+            
+            // FIXED: Capture endDate in closure to avoid undefined issues
+            optionDiv.addEventListener('click', function() {
+                console.log(`🎯 Suggestion clicked: ${scenario.title}`);
+                console.log(`🎯 End date to pass: ${endDate}`);
+                selectSuggestion(endDate, scenario, optionDiv);
             });
             
-            document.getElementById('totalDurationValue').textContent = total.toFixed(1);
-            document.getElementById('totalDuration').value = total;
+            optionDiv.innerHTML = `
+                <div class="suggestion-header" style="border-left: 4px solid ${scenario.color}; padding-left: 12px; margin-bottom: 10px;">
+                    <div class="title" style="font-weight: bold; color: #1f2937;">${scenario.title}</div>
+                    <div class="intensity-badge" style="background: ${scenario.color}20; color: ${scenario.color}; padding: 2px 8px; border-radius: 12px; font-size: 11px; font-weight: 600;">
+                        ${getIntensityLabel(scenario.hoursPerDay)}
+                    </div>
+                </div>
+                <div class="date" style="color: #059669; font-size: 1.1rem; font-weight: 600; margin: 8px 0; text-align: center;">
+                    ${formatDateForDisplay(endDate)}
+                </div>
+                <div class="description" style="color: #065f46; margin-bottom: 12px; text-align: center; font-size: 0.9rem;">
+                    ${scenario.description}
+                </div>
+                <div class="stats" style="display: flex; justify-content: space-around; font-size: 0.8rem; color: #059669; background: #f0fdf4; padding: 8px; border-radius: 6px;">
+                    <span><i class="fas fa-calendar-day"></i> ${totalDays} days</span>
+                    <span><i class="fas fa-clock"></i> ${workingDays} training days</span>
+                    <span><i class="fas fa-chart-line"></i> ${scenario.hoursPerDay}h/day</span>
+                </div>
+            `;
+            
+            suggestionOptions.appendChild(optionDiv);
+            successfulScenarios++;
+            
+            console.log(`✅ Successfully added ${scenario.title} suggestion`);
+            
+        } catch (statsError) {
+            console.error(`❌ Error creating stats for ${scenario.title}:`, statsError);
         }
+    });
+    
+    console.log(`\n🎉 Successfully created ${successfulScenarios}/${scenarios.length} suggestions`);
+    
+    if (successfulScenarios > 0) {
+        showSuggestionSection();
+        showIntensityAlert(totalHours);
+        console.log('✅ Suggestion section displayed');
+    } else {
+        console.error('❌ No valid suggestions created');
+        hideSuggestionSection();
+    }
+}
+
+// 3. NEW: Calculate end date based on scenario
+function calculateEndDate(startDate, totalHours, hoursPerDay, weekdaysOnly) {
+    console.log('🔧 calculateEndDate called with:', { 
+        startDate, 
+        totalHours, 
+        hoursPerDay, 
+        weekdaysOnly,
+        startDateType: typeof startDate 
+    });
+    
+    try {
+        // Input validation
+        if (!startDate) {
+            console.error('❌ Start date is missing or falsy:', startDate);
+            return null;
+        }
+        
+        if (!totalHours || totalHours <= 0) {
+            console.error('❌ Total hours invalid:', totalHours);
+            return null;
+        }
+        
+        if (!hoursPerDay || hoursPerDay <= 0) {
+            console.error('❌ Hours per day invalid:', hoursPerDay);
+            return null;
+        }
+        
+        // FIXED: Enhanced date parsing for YYYY-MM-DD format (HTML5 date input)
+        let date;
+        if (typeof startDate === 'string') {
+            console.log('📅 Parsing string date:', startDate);
+            
+            if (startDate.includes('-') && startDate.match(/^\d{4}-\d{2}-\d{2}$/)) {
+                // YYYY-MM-DD format (HTML5 date input format)
+                console.log('📅 Detected YYYY-MM-DD format');
+                
+                const parts = startDate.split('-');
+                const year = parseInt(parts[0], 10);
+                const month = parseInt(parts[1], 10);
+                const day = parseInt(parts[2], 10);
+                
+                console.log('📅 Parsed components:', { year, month, day });
+                
+                // Validate components
+                if (isNaN(year) || isNaN(month) || isNaN(day)) {
+                    console.error('❌ Invalid date components:', { year, month, day });
+                    return null;
+                }
+                
+                if (month < 1 || month > 12) {
+                    console.error('❌ Invalid month:', month);
+                    return null;
+                }
+                
+                if (day < 1 || day > 31) {
+                    console.error('❌ Invalid day:', day);
+                    return null;
+                }
+                
+                if (year < 1900 || year > 2100) {
+                    console.error('❌ Invalid year:', year);
+                    return null;
+                }
+                
+                // Create date object (month is 0-indexed in JavaScript)
+                date = new Date(year, month - 1, day);
+                console.log('📅 Created date from YYYY-MM-DD:', date);
+                
+                // Verify the date was created correctly
+                if (date.getFullYear() !== year || date.getMonth() !== (month - 1) || date.getDate() !== day) {
+                    console.error('❌ Date creation mismatch:', {
+                        input: { year, month, day },
+                        created: { 
+                            year: date.getFullYear(),
+                            month: date.getMonth() + 1, 
+                            day: date.getDate()
+                        }
+                    });
+                    return null;
+                }
+                
+            } else if (startDate.includes('/')) {
+                // MM/DD/YYYY format (fallback)
+                console.log('📅 Detected MM/DD/YYYY format');
+                const parts = startDate.split('/');
+                
+                if (parts.length !== 3) {
+                    console.error('❌ Invalid MM/DD/YYYY format');
+                    return null;
+                }
+                
+                const month = parseInt(parts[0], 10);
+                const day = parseInt(parts[1], 10);
+                const year = parseInt(parts[2], 10);
+                
+                date = new Date(year, month - 1, day);
+                console.log('📅 Created date from MM/DD/YYYY:', date);
+                
+            } else {
+                // Try direct parsing as fallback
+                console.log('📅 Attempting direct Date parsing');
+                date = new Date(startDate);
+            }
+        } else if (startDate instanceof Date) {
+            console.log('📅 Date object provided');
+            date = new Date(startDate.getTime());
+        } else {
+            console.error('❌ Invalid start date type:', typeof startDate, startDate);
+            return null;
+        }
+        
+        // Validate the created Date object
+        if (!date || isNaN(date.getTime())) {
+            console.error('❌ Invalid date created from:', startDate, 'Result:', date);
+            return null;
+        }
+        
+        console.log('✅ Valid start date created:', date.toDateString(), '(' + date.toISOString().split('T')[0] + ')');
+        
+        // Calculate end date with detailed logging
+        let remainingHours = totalHours;
+        let currentDate = new Date(date.getTime());
+        let iterationCount = 0;
+        const maxIterations = 1000;
+        
+        console.log(`🔄 Starting calculation:`);
+        console.log(`   - Total hours: ${remainingHours}`);
+        console.log(`   - Hours per day: ${hoursPerDay}`);
+        console.log(`   - Weekdays only: ${weekdaysOnly}`);
+        console.log(`   - Starting date: ${currentDate.toDateString()}`);
+        
+        while (remainingHours > 0 && iterationCount < maxIterations) {
+            iterationCount++;
+            
+            // Check if current day should count towards training
+            const dayOfWeek = currentDate.getDay();
+            const isWeekend = (dayOfWeek === 0 || dayOfWeek === 6);
+            const shouldSkipDay = weekdaysOnly && isWeekend;
+            
+            if (shouldSkipDay) {
+                console.log(`⏭️ Day ${iterationCount}: Skipping ${getDayName(dayOfWeek)} ${currentDate.toDateString()}`);
+                currentDate.setDate(currentDate.getDate() + 1);
+                continue;
+            }
+            
+            // This is a valid training day
+            remainingHours -= hoursPerDay;
+            const remainingHoursDisplay = Math.max(0, remainingHours);
+            
+            console.log(`📚 Day ${iterationCount}: Training on ${getDayName(dayOfWeek)} ${currentDate.toDateString()}`);
+            console.log(`     Used ${hoursPerDay} hours, ${remainingHoursDisplay} hours remaining`);
+            
+            // If we still have hours remaining, move to next day
+            if (remainingHours > 0) {
+                currentDate.setDate(currentDate.getDate() + 1);
+            }
+        }
+        
+        if (iterationCount >= maxIterations) {
+            console.error('❌ Hit maximum iterations limit - possible infinite loop');
+            return null;
+        }
+        
+        console.log(`✅ Calculation complete:`);
+        console.log(`   - End date: ${currentDate.toDateString()}`);
+        console.log(`   - YYYY-MM-DD: ${formatDateForInput(currentDate)}`);
+        console.log(`   - Total iterations: ${iterationCount}`);
+        
+        return currentDate;
+        
+    } catch (error) {
+        console.error('❌ Exception in calculateEndDate:', error);
+        console.error('❌ Stack trace:', error.stack);
+        return null;
+    }
+}
+
+// Helper function to get day name
+function getDayName(dayOfWeek) {
+    const days = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
+    return days[dayOfWeek];
+}
+
+// FIXED: selectSuggestion with proper YYYY-MM-DD format handling
+function selectSuggestion(endDate, scenario, optionElement) {
+    try {
+        console.log('🎯 selectSuggestion called with:', { 
+            endDate, 
+            endDateType: typeof endDate,
+            endDateValid: endDate instanceof Date,
+            scenario: scenario?.title 
+        });
+        
+        // Enhanced validation
+        if (!endDate) {
+            console.error('❌ endDate is null or undefined');
+            showNotification('Error: No end date provided. Please try again.', 'error');
+            return;
+        }
+        
+        if (!(endDate instanceof Date)) {
+            console.error('❌ endDate is not a Date object:', typeof endDate, endDate);
+            showNotification('Error: Invalid end date type. Please try again.', 'error');
+            return;
+        }
+        
+        if (isNaN(endDate.getTime())) {
+            console.error('❌ endDate is an invalid Date object');
+            showNotification('Error: Invalid end date value. Please try again.', 'error');
+            return;
+        }
+        
+        const endDateInput = document.getElementById('setEndDate');
+        if (!endDateInput) {
+            console.error('❌ End date input element not found');
+            showNotification('Error: End date input not found. Please refresh the page.', 'error');
+            return;
+        }
+        
+        // Clear previous selections
+        document.querySelectorAll('.suggestion-option').forEach(opt => {
+            opt.classList.remove('selected');
+        });
+        
+        // Mark current selection
+        if (optionElement) {
+            optionElement.classList.add('selected');
+        }
+        
+        // FIXED: Since start date is YYYY-MM-DD, end date should be too
+        const formattedDate = formatDateForInput(endDate); // This returns YYYY-MM-DD
+        
+        if (!formattedDate) {
+            console.error('❌ Failed to format end date');
+            showNotification('Error: Could not format end date. Please try again.', 'error');
+            return;
+        }
+        
+        console.log('📅 Setting end date input value to:', formattedDate);
+        endDateInput.value = formattedDate;
+        
+        // Trigger change events
+        endDateInput.dispatchEvent(new Event('change', { bubbles: true }));
+        endDateInput.dispatchEvent(new Event('input', { bubbles: true }));
+        
+        // Update duration display
+        if (typeof updateDurationDisplay === 'function') {
+            updateDurationDisplay();
+        }
+        
+        // Show success notification
+        showNotification(`✅ Selected: ${scenario.title} - End date set to ${formatDateForDisplay(endDate)}`, 'success');
+        
+        console.log(`✅ Successfully selected ${scenario.title} with end date ${endDate.toDateString()}`);
+        
+    } catch (error) {
+        console.error('❌ Exception in selectSuggestion:', error);
+        showNotification('Error selecting suggestion. Please try again.', 'error');
+    }
+}
+
+// Format date for display (human readable)
+function formatDateForDisplay(date) {
+    if (!date || !(date instanceof Date) || isNaN(date.getTime())) {
+        return 'Invalid Date';
+    }
+    return date.toLocaleDateString('en-US', {
+        weekday: 'short',
+        year: 'numeric',
+        month: 'short',
+        day: 'numeric'
+    });
+}
+
+// Helper function for intensity labels
+function getIntensityLabel(hoursPerDay) {
+    if (hoursPerDay >= 8) return 'High';
+    if (hoursPerDay >= 6) return 'Medium';
+    if (hoursPerDay >= 4) return 'Normal';
+    return 'Low';
+}
+
+
+function formatDateForInput(date) {
+    if (!date || !(date instanceof Date) || isNaN(date.getTime())) {
+        console.error('❌ Invalid date provided to formatDateForInput:', date);
+        return '';
+    }
+    
+    const year = date.getFullYear();
+    const month = String(date.getMonth() + 1).padStart(2, '0');
+    const day = String(date.getDate()).padStart(2, '0');
+    const formatted = `${year}-${month}-${day}`;
+    
+    console.log('📅 Formatted date for input:', formatted);
+    return formatted;
+}
+
+// Helper function to format date as MM/DD/YYYY
+function formatDateMMDDYYYY(date) {
+    const month = String(date.getMonth() + 1).padStart(2, '0');
+    const day = String(date.getDate()).padStart(2, '0');
+    const year = date.getFullYear();
+    return `${month}/${day}/${year}`;
+}
 
 // Dropdown toggle functions
 function toggleDropdown(dropdownId) {
@@ -6161,28 +7055,28 @@ async function handleFormSubmit(event) {
     }
     
     // Collect certificates with better validation
-    data.certificates = [];
-    const certTitles = formData.getAll('trainingCertTitle[]');
-    const certDescs = formData.getAll('trainingCertDesc[]');
+    // data.certificates = [];
+    // const certTitles = formData.getAll('trainingCertTitle[]');
+    // const certDescs = formData.getAll('trainingCertDesc[]');
     
-    console.log('Raw certificate data:', {
-        titles: certTitles,
-        descriptions: certDescs
-    });
+    // console.log('Raw certificate data:', {
+    //     titles: certTitles,
+    //     descriptions: certDescs
+    // });
     
-    for (let i = 0; i < certTitles.length; i++) {
-        const title = certTitles[i]?.trim();
-        const desc = certDescs[i]?.trim();
+    // for (let i = 0; i < certTitles.length; i++) {
+    //     const title = certTitles[i]?.trim();
+    //     const desc = certDescs[i]?.trim();
         
-        if (title && desc) {
-            data.certificates.push({
-                trainingCertTitle: title,
-                trainingCertDesc: desc
-            });
-        } else {
-            console.warn(`Skipping incomplete certificate ${i + 1}:`, { title, desc });
-        }
-    }
+    //     if (title && desc) {
+    //         data.certificates.push({
+    //             trainingCertTitle: title,
+    //             trainingCertDesc: desc
+    //         });
+    //     } else {
+    //         console.warn(`Skipping incomplete certificate ${i + 1}:`, { title, desc });
+    //     }
+    // }
     
     // Handle selected objectives and skills
     data.objectives = selectedObjectives.map(obj => ({ 
@@ -6218,7 +7112,7 @@ async function handleFormSubmit(event) {
     
     console.log('📋 Collected form data:', data);
     console.log(`- Activities: ${data.activities.length}`);
-    console.log(`- Certificates: ${data.certificates.length}`);
+    // console.log(`- Certificates: ${data.certificates.length}`);
     console.log(`- Objectives: ${data.objectives.length}`);
     console.log(`- Skills: ${data.skills.length}`);
     
@@ -6236,8 +7130,8 @@ async function handleFormSubmit(event) {
         window.toggleLocationFields = toggleLocationFields;
         window.addActivity = addActivity;
         window.removeActivity = removeActivity;
-        window.addCertificate = addCertificate;
-        window.removeCertificate = removeCertificate;
+        // window.addCertificate = addCertificate;
+        // window.removeCertificate = removeCertificate;
         window.updateTotalDuration = updateTotalDuration;
         window.submitTrainingRequest = submitTrainingRequest;
         window.handleFormSubmit = handleFormSubmit;
@@ -6246,12 +7140,12 @@ async function handleFormSubmit(event) {
         window.filterActivityTypes = filterActivityTypes;
         window.selectActivityType = selectActivityType;
         window.validateActivitySection = validateActivitySection;
-        window.validateCertificateSection = validateCertificateSection;
+        // window.validateCertificateSection = validateCertificateSection;
         window.validateFormData = validateFormData;
         window.updateFormValidationState = updateFormValidationState;
         window.collectFormData = collectFormData;
         window.resetActivitiesContainer = resetActivitiesContainer;
-        window.resetCertificatesContainer = resetCertificatesContainer;
+        // window.resetCertificatesContainer = resetCertificatesContainer;
         window.toggleActivityTypeDropdown = toggleActivityTypeDropdown;
         window.toggleMultiSelect = toggleMultiSelect;
         window.toggleSelectOption = toggleSelectOption;
@@ -7116,7 +8010,7 @@ function selectScheduleType(type) {
 }
 
 
-function calculateEndDate() {
+function calculateEndDateOldModal() {
     if (!selectedTraining || !selectedScheduleType) return;
     
     // Skip calculation for custom schedule - user sets dates manually
@@ -7243,14 +8137,60 @@ function updateScheduleSummary() {
 }
 
 
-function formatDate(dateString) {
-    const date = new Date(dateString);
-    return date.toLocaleDateString('en-US', { 
-        year: 'numeric', 
-        month: 'short', 
-        day: 'numeric' 
+function formatDate(date) {
+    return date.toLocaleDateString('en-US', {
+        weekday: 'short',
+        year: 'numeric',
+        month: 'short',
+        day: 'numeric'
     });
 }
+
+function showNotification(message, type = 'info') {
+    const notification = document.createElement('div');
+    notification.style.cssText = `
+        position: fixed;
+        top: 20px;
+        right: 20px;
+        padding: 15px 20px;
+        border-radius: 8px;
+        box-shadow: 0 10px 20px rgba(0,0,0,0.1);
+        z-index: 10000;
+        max-width: 350px;
+        color: white;
+        font-weight: 500;
+        animation: slideInRight 0.3s ease;
+    `;
+    
+    const colors = {
+        success: '#10b981',
+        warning: '#f59e0b',
+        error: '#ef4444',
+        info: '#3b82f6'
+    };
+    
+    notification.style.background = colors[type] || colors.info;
+    
+    const icons = {
+        success: 'fas fa-check-circle',
+        warning: 'fas fa-exclamation-triangle',
+        error: 'fas fa-times-circle',
+        info: 'fas fa-info-circle'
+    };
+    
+    notification.innerHTML = `
+        <i class="${icons[type] || icons.info}"></i>
+        <span style="margin-left: 10px;">${message}</span>
+    `;
+    
+    document.body.appendChild(notification);
+    
+    setTimeout(() => {
+        notification.style.animation = 'slideOutRight 0.3s ease';
+        setTimeout(() => notification.remove(), 300);
+    }, 4000);
+}
+
 function loadTrainings() {
     const dropdownList = document.getElementById('trainingDropdownList');
     dropdownList.innerHTML = '<div class="loading"><i class="fas fa-spinner fa-spin"></i> Loading available trainings...</div>';
@@ -7736,7 +8676,7 @@ async function submitTrainingRequest() {
                         `Training Record ID: ${result.data.trainingRecordId}`,
                         `Duration: ${result.data.totalDuration} hours`,
                         `Activities: ${result.data.activitiesCreated}/${result.data.totalActivities} created`,
-                        `Certificates: ${result.data.certificatesCreated}/${result.data.totalCertificates} created`
+                        // `Certificates: ${result.data.certificatesCreated}/${result.data.totalCertificates} created`
                     ];
                     
                     if (result.data.categoriesCreated !== undefined) {
@@ -7845,21 +8785,21 @@ function validateFormData(formData) {
     }
     
     // Validate certificates
-    if (!formData.certificates || formData.certificates.length === 0) {
-        console.error('❌ No certificates provided');
-        alert('Please add at least one training certificate');
-        return false;
-    }
+    // if (!formData.certificates || formData.certificates.length === 0) {
+    //     console.error('❌ No certificates provided');
+    //     alert('Please add at least one training certificate');
+    //     return false;
+    // }
     
     // Validate each certificate
-    for (let i = 0; i < formData.certificates.length; i++) {
-        const certificate = formData.certificates[i];
-        if (!certificate.trainingCertTitle || !certificate.trainingCertDesc) {
-            console.error(`❌ Certificate ${i + 1} is incomplete`);
-            alert(`Certificate ${i + 1} is incomplete. Please fill in all required fields.`);
-            return false;
-        }
-    }
+    // for (let i = 0; i < formData.certificates.length; i++) {
+    //     const certificate = formData.certificates[i];
+    //     if (!certificate.trainingCertTitle || !certificate.trainingCertDesc) {
+    //         console.error(`❌ Certificate ${i + 1} is incomplete`);
+    //         alert(`Certificate ${i + 1} is incomplete. Please fill in all required fields.`);
+    //         return false;
+    //     }
+    // }
     
     // Validate dates
     const startDate = new Date(formData.setStartDate);
@@ -9074,15 +10014,15 @@ document.addEventListener('DOMContentLoaded', function() {
             input.addEventListener('blur', validateActivitySection);
         });
         
-        const certificateInputs = document.querySelectorAll('input[name="trainingCertTitle[]"], textarea[name="trainingCertDesc[]"]');
-        certificateInputs.forEach(input => {
-            input.addEventListener('change', validateCertificateSection);
-            input.addEventListener('blur', validateCertificateSection);
-        });
+        // const certificateInputs = document.querySelectorAll('input[name="trainingCertTitle[]"], textarea[name="trainingCertDesc[]"]');
+        // certificateInputs.forEach(input => {
+        //     input.addEventListener('change', validateCertificateSection);
+        //     input.addEventListener('blur', validateCertificateSection);
+        // });
         
         // Initial validation
         validateActivitySection();
-        validateCertificateSection();
+        // validateCertificateSection();
         updateFormValidationState();
     }, 100);
 });
