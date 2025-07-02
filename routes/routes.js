@@ -332,8 +332,8 @@ router.post('/hr/markAsP2Failed', hrController.markAsP2Failed);
 // Finalize P2 review and notify all applicants
 router.post('/hr/finalizeP2Review', hrController.finalizeP2Review);
 router.get('/hr/getP2EmailTemplates', hrController.getP2EmailTemplates);
+router.post('/hr/send-automated-email', hrController.sendAutomatedEmail);
 router.get('/getEmailTemplates', hrController.getEmailTemplates);
-
 
 // Routes for P3 review management
 router.post('/linemanager/applicant-tracker-jobposition/finalizeP3Review', lineManagerController.finalizeP3Review);
