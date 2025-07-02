@@ -150,7 +150,7 @@
             color: white;
             padding: 15px 20px;
             display: flex;
-            justify-content: space-between;
+            justify-content: center;
             align-items: center;
             box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
         }
@@ -161,38 +161,27 @@
             font-weight: 600;
         }
         
-        .chat-header-buttons {
-            display: flex;
-            gap: 10px;
-        }
-        
-        .back-button {
-            background-color: transparent;
-            border: 1px solid white;
-            color: white;
-            border-radius: 5px;
-            padding: 8px 15px;
-            cursor: pointer;
-            transition: background-color 0.3s;
-            font-weight: 500;
-            display: flex;
-            align-items: center;
-            gap: 5px;
-        }
-        
-        .back-button:hover {
-            background-color: rgba(255, 255, 255, 0.2);
-        }
-        
-        .chat-messages {
-            flex: 1;
-            padding: 20px;
-            overflow-y: auto;
-            background-color: #f8f9fa;
-            display: flex;
-            flex-direction: column;
-        }
-        
+
+/* Ensure chat messages container handles the banner properly */
+.chat-messages {
+    flex: 1;
+    padding: 20px;
+    overflow-y: auto;
+    background-color: #f8f9fa;
+    display: flex;
+    flex-direction: column;
+    position: relative;
+}
+
+/* Style for the banner when it's at the bottom */
+.banner-at-bottom {
+    margin-top: auto;
+    position: sticky;
+    bottom: 0;
+    background: linear-gradient(135deg, #f44336, #d32f2f);
+    backdrop-filter: blur(10px);
+    border-top: 3px solid #fff;
+} 
         .message {
             max-width: 70%;
             padding: 12px 16px;
@@ -224,56 +213,18 @@
             border-left: 4px solid #07ACB9;
         }
         
+        /* Red rejection message styling */
+        .bot-message.rejection {
+            background-color: #ffebee;
+            border-left: 4px solid #f44336;
+            color: #c62828;
+        }
+        
         .message-timestamp {
             font-size: 0.7rem;
             color: #6c757d;
             margin-top: 5px;
             text-align: right;
-        }
-        
-        .chat-input {
-            display: flex;
-            background-color: white;
-            border-top: 1px solid #eee;
-            padding: 15px;
-            position: relative;
-        }
-        
-        .chat-input-wrapper {
-            display: flex;
-            width: 100%;
-            border-radius: 24px;
-            overflow: hidden;
-            border: 1px solid #ddd;
-            background-color: white;
-            transition: all 0.3s ease;
-        }
-        
-        .chat-input-wrapper:focus-within {
-            box-shadow: 0 0 0 2px #B4E3E3;
-            border-color: #07ACB9;
-        }
-        
-        .chat-input input {
-            flex: 1;
-            padding: 12px 16px;
-            border: none;
-            outline: none;
-            font-size: 1rem;
-        }
-        
-        .chat-input button {
-            padding: 10px 20px;
-            background-color: #07ACB9;
-            color: white;
-            border: none;
-            cursor: pointer;
-            font-weight: 600;
-            transition: background-color 0.3s;
-        }
-        
-        .chat-input button:hover {
-            background-color: #059DAF;
         }
         
         .button-container {
@@ -322,6 +273,41 @@
             transform: scale(1.05);
         }
         
+/* Application ended banner - Fixed positioning */
+.application-ended-banner {
+    display: none;
+    background: linear-gradient(135deg, #f44336, #d32f2f);
+    color: white;
+    text-align: center;
+    padding: 20px;
+    margin: 20px 0;
+    border-radius: 12px;
+    font-weight: bold;
+    font-size: 1.2rem;
+    box-shadow: 0 4px 12px rgba(244, 67, 54, 0.3);
+    animation: slideUp 0.5s ease;
+    position: relative;
+    z-index: 10;
+    /* Ensure it appears at the bottom of the chat messages */
+    order: 9999;
+}
+
+@keyframes slideUp {
+    from { 
+        opacity: 0; 
+        transform: translateY(20px); 
+    }
+    to { 
+        opacity: 1; 
+        transform: translateY(0); 
+    }
+}
+
+.application-ended-banner i {
+    margin-right: 10px;
+    font-size: 1.4rem;
+}
+
         /* Loading indicator */
         .typing-indicator {
             display: flex;
@@ -442,7 +428,7 @@
         
         <div class="logout-container">
             <button id="logout-button" class="logout-button">
-                <i class="fas fa-sign-out-alt"></i> Logout
+                <i class="fas fa-sign-out-alt"></i> Log Out
             </button>
         </div>
     </div>
@@ -451,11 +437,6 @@
     <div class="chat-container">
         <div class="chat-header">
             <h1>Online Applicant Screening</h1>
-            <div class="chat-header-buttons">
-                <button id="back-button" class="back-button">
-                    <i class="fas fa-arrow-left"></i> Back
-                </button>
-            </div>
         </div>
         <div class="chat-messages" id="chat-messages">
             <!-- Messages will be added here dynamically -->
@@ -464,11 +445,10 @@
                 <span></span>
                 <span></span>
             </div>
-        </div>
-        <div class="chat-input">
-            <div class="chat-input-wrapper">
-                <input type="text" id="user-input" placeholder="Type your message..." />
-                <button id="send-button"><i class="fas fa-paper-plane"></i></button>
+            <!-- Application ended banner -->
+            <div class="application-ended-banner" id="application-ended-banner">
+                <i class="fas fa-exclamation-triangle"></i>
+                Application Process Has Ended
             </div>
         </div>
 
@@ -602,37 +582,9 @@ document.addEventListener("DOMContentLoaded", function() {
         }
     }
 
-    // Event listeners for input
-    document.getElementById("send-button").addEventListener("click", handleUserInput);
-    document.getElementById("user-input").addEventListener("keypress", function(event) {
-        if (event.key === "Enter") {
-            handleUserInput();
-        }
-    });
-
-    // Back button functionality
-    document.getElementById("back-button").addEventListener("click", function() {
-        window.location.href = '/'; // Redirect to the about page route
-    });
-
-    // Logout button functionality
+    // Back to Home button functionality (formerly logout)
     document.getElementById("logout-button").addEventListener("click", function() {
-        fetch("/logout", {
-            method: "GET",
-            headers: {
-                "Content-Type": "application/json"
-            }
-        })
-        .then(response => {
-            if (response.ok) {
-                window.location.href = "/applicant/login";
-            } else {
-                console.error("Logout failed");
-            }
-        })
-        .catch(error => {
-            console.error("Error during logout:", error);
-        });
+        window.location.href = '/logout'; // Redirect to the about page route
     });
 
     // 🔥 REMOVED: Single status check on page load
@@ -758,25 +710,6 @@ async function sendMessageToServer(userInput, predefinedMessage = null) {
     updateStepper('job_selection');
 }
 
-    function handleUserInput() {
-        const inputField = document.getElementById("user-input");
-        const userInput = inputField.value.trim();
-
-        if (!userInput) {
-            console.log("Input is empty.");
-            return;
-        }
-
-        console.log("User input:", userInput);
-        addMessage("You", userInput);
-        inputField.value = "";
-        
-        // Show typing indicator
-        showTypingIndicator(true);
-        
-        sendMessageToServer(userInput);
-    }
-
     async function sendMessage(message) {
         try {
             const response = await fetch("/chatbothome", {
@@ -807,12 +740,18 @@ async function sendMessageToServer(userInput, predefinedMessage = null) {
             addMessage("Bot", "There was an error sending your message. Please try again.");
         }
     }
-
-function addMessage(sender, message) {
+    
+    function addMessage(sender, message, isRejection = false) {
     console.log(`Adding message from ${sender}:`, message);
     const chatMessages = document.getElementById("chat-messages");
     const messageDiv = document.createElement("div");
     messageDiv.classList.add("message", sender === "You" ? "user-message" : "bot-message");
+    
+    // Add rejection class for styling red messages
+    if (isRejection && sender === "Bot") {
+        messageDiv.classList.add("rejection");
+    }
+    
     messageDiv.textContent = message;
     
     // Add timestamp
@@ -821,12 +760,61 @@ function addMessage(sender, message) {
     timestamp.innerText = new Date().toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'});
     messageDiv.appendChild(timestamp);
     
-    chatMessages.appendChild(messageDiv);
+    // Insert before the banner if it exists, otherwise append normally
+    const banner = document.getElementById('application-ended-banner');
+    if (banner && banner.style.display === 'block') {
+        chatMessages.insertBefore(messageDiv, banner);
+    } else {
+        chatMessages.appendChild(messageDiv);
+    }
+    
     chatMessages.scrollTop = chatMessages.scrollHeight;
+
+    // Show application ended banner if this is a rejection message
+    if (isRejection && sender === "Bot") {
+        setTimeout(() => {
+            showApplicationEndedBanner();
+        }, 1000);
+    }
 
     // Only save to localStorage for local backup, not to database
     // The database saving is handled by the server-side code
     saveChatHistoryLocal(sender, message);
+}
+function showApplicationEndedBanner() {
+    const banner = document.getElementById('application-ended-banner');
+    const chatMessages = document.getElementById("chat-messages");
+    
+    // Add the banner-at-bottom class for better positioning
+    banner.classList.add('banner-at-bottom');
+    banner.style.display = 'block';
+    
+    // Move the banner to the end of the chat messages (after all messages)
+    chatMessages.appendChild(banner);
+    
+    // Scroll to show the banner at the bottom
+    setTimeout(() => {
+        chatMessages.scrollTop = chatMessages.scrollHeight;
+    }, 100);
+}
+
+
+// Function to check if a message is a rejection message
+function isRejectionMessage(text) {
+    const rejectionKeywords = [
+        "regret to inform you",
+        "not been chosen",
+        "not been selected",
+        "will not be proceeding",
+        "did not meet the requirements",
+        "unfortunately",
+        "we regret to inform",
+        "application has been completed",
+        "not selected to proceed"
+    ];
+    
+    const lowerText = text.toLowerCase();
+    return rejectionKeywords.some(keyword => lowerText.includes(keyword));
 }
 
 function saveChatHistoryLocal(sender, message) {
@@ -992,6 +980,7 @@ async function uploadFile(event) {
         document.getElementById("fileUpload").removeAttribute('data-doc-type');
     }
 }
+
 async function checkReuploadProgress() {
     if (!window.currentReuploadData) return;
     
@@ -1019,7 +1008,9 @@ function displayBotResponse(response, isFromHistory = false) {
     const chatMessages = document.getElementById("chat-messages");
 
     if (typeof response === "object" && response.text) {
-        addMessage("Bot", response.text);
+        // Check if this is a rejection message
+        const isRejection = isRejectionMessage(response.text);
+        addMessage("Bot", response.text, isRejection);
         
         // Handle buttons for main message
         if (response.buttons && response.buttons.length) {
@@ -1077,9 +1068,16 @@ function displayBotResponse(response, isFromHistory = false) {
             window.currentReuploadData = response.reuploadData;
         }
         
-        // Handle nextMessage (rest of the function remains the same)...
+        // Handle nextMessage
+        if (response.nextMessage) {
+            setTimeout(() => {
+                displayBotResponse(response.nextMessage);
+            }, 1000);
+        }
     } else {
-        addMessage("Bot", response);
+        // Check if this is a rejection message for plain text responses
+        const isRejection = typeof response === "string" ? isRejectionMessage(response) : false;
+        addMessage("Bot", response, isRejection);
     }
 
     chatMessages.scrollTop = chatMessages.scrollHeight;
@@ -1125,7 +1123,8 @@ function loadChatHistory() {
                     lastBotMessage = { ...chat, parsedMessage: botMessage };
                 } catch (error) {
                     // If it's not JSON, it's a plain text message
-                    addMessage("Bot", chat.message);
+                    const isRejection = isRejectionMessage(chat.message);
+                    addMessage("Bot", chat.message, isRejection);
                     lastBotMessage = { ...chat, parsedMessage: { text: chat.message } };
                     
                     // Check if this is the initial message in plain text

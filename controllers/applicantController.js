@@ -2033,27 +2033,50 @@ else if (applicantStage === 'file_upload') {
         }
         
         // Handle "No" response to job application continuation
-        else if (applicantStage === 'job_selection' && userMessage.includes('no')) {
-            botResponse = {
-                text: "Thank you for your interest. Feel free to explore other positions or return when you're ready to apply."
-            };
-            
-            req.session.applicantStage = 'initial';
-            
-            // Save response to chat history
-            await supabase
-                .from('chatbot_history')
-                .insert([{
-                    userId,
-                    message: JSON.stringify(botResponse),
-                    sender: 'bot',
-                    timestamp,
-                    applicantStage: req.session.applicantStage
-                }]);
-                
-            return res.status(200).json({ response: botResponse });
-        }
+// Handle "No" response to job application continuation
+else if (applicantStage === 'job_selection' && userMessage.includes('no')) {
+    // Reset session to initial state
+    req.session.applicantStage = 'initial';
+    delete req.session.selectedPosition;
+    delete req.session.screeningQuestions;
+    delete req.session.currentQuestionIndex;
+    delete req.session.screeningScores;
+    delete req.session.screeningCounters;
+    
+    // Get available job positions again
+    const positions = await applicantController.getActiveJobPositionsList();
+    const today = new Date().toISOString().split('T')[0];
+    
+    if (positions && positions.length > 0) {
+        // Create buttons for available positions
+        const jobButtons = positions.map(position => ({
+            text: position.jobTitle,
+            value: position.jobTitle.toLowerCase()
+        }));
         
+        botResponse = {
+            text: "Hi! Welcome to Company ABC Recruitment Screening Portal. What position are you going to apply for? Here are our current job openings:",
+            buttons: jobButtons
+        };
+    } else {
+        botResponse = {
+            text: "Thank you for your interest. Unfortunately, there are no active job openings at the moment. Please check back later."
+        };
+    }
+    
+    // Save response to chat history
+    await supabase
+        .from('chatbot_history')
+        .insert([{
+            userId,
+            message: JSON.stringify(botResponse),
+            sender: 'bot',
+            timestamp,
+            applicantStage: req.session.applicantStage
+        }]);
+        
+    return res.status(200).json({ response: botResponse });
+}
         // Handle file upload reupload scenarios
         else if (applicantStage === 'file_upload_reupload') {
             console.log('📂 [Chatbot] Document reupload scenario detected');
