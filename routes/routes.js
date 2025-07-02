@@ -438,6 +438,9 @@ router.get('/linemanager/api/employee/trainings/:userId', lineManagerController.
 router.get('/linemanager/api/employee/progress/:userId', lineManagerController.getEmployeeProgressForLineManagerRoute);
 // Add this route with your other linemanager API routes
 router.get('/linemanager/api/training/details/:trainingRecordId', lineManagerController.getTrainingDetails);
+router.get('/linemanager/api/training-needs-report', lineManagerController.getEmployeeTrainingNeedsReport);
+router.get('/linemanager/api/performance-improvement-report', lineManagerController.getPerformanceImprovementReport);
+router.get('/linemanager/api/training-summary-report', lineManagerController.getTrainingSummaryReport);
 
 // Alternative: If you want to include it in your existing training routes
 // GET /api/training/employee/:userId

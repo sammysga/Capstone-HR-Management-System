@@ -6,7 +6,9 @@
     <title>Training & Development</title>
     <link rel="stylesheet" href="/css/sidebar.css">
     <link rel="stylesheet" href="/css/linemanagertrainingdevelopment.css">
-</head>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.25/jspdf.plugin.autotable.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/3.9.1/chart.min.js"></script>
 <body>
    <%- include('../../partials/linemanager_partials') %>
     
@@ -100,6 +102,11 @@
             <li class="tab-item">
                 <button class="tab-button" onclick="showTab('view-employees')">
                     View Employees
+                </button>
+            </li>
+            <li class="tab-item">
+                <button class="tab-button" onclick="showTab('training-reports')">
+                    Training Reports
                 </button>
             </li>
         </ul>
@@ -308,6 +315,188 @@
             </div>
         <% } %>
     </div>
+    <div id="training-reports" class="tab-content"> 
+    <div class="reports-section">
+        <div class="reports-header">
+            <div>
+                <h2 class="reports-title">Training Reports Dashboard</h2>
+                <p class="chart-subtitle">Comprehensive training analysis for your department</p>
+            </div>
+            <div class="reports-filters">
+                <select class="filter-select" id="reportsTimeFilter">
+                    <option value="thisYear">This Year</option>
+                    <option value="lastYear">Last Year</option>
+                    <option value="last6Months">Last 6 Months</option>
+                    <option value="last3Months">Last 3 Months</option>
+                </select>
+                <button class="refresh-btn" onclick="refreshCurrentReport()">
+                    <i class="fas fa-sync-alt"></i> Refresh
+                </button>
+            </div>
+        </div>
+
+        <!-- Report Type Selector -->
+        <div class="report-type-selector">
+            <button class="report-type-btn active" data-report="training-needs" onclick="switchReport('training-needs')">
+                <i class="fas fa-user-graduate"></i>
+                Training Needs vs Completion
+            </button>
+            <button class="report-type-btn" data-report="performance-improvement" onclick="switchReport('performance-improvement')">
+                <i class="fas fa-chart-line"></i>
+                Performance Improvement
+            </button>
+            <button class="report-type-btn" data-report="training-summary" onclick="switchReport('training-summary')">
+                <i class="fas fa-clipboard-list"></i>
+                Training Summary
+            </button>
+        </div>
+
+        <!-- Report 1: Training Needs vs Completion -->
+        <div id="training-needs-report" class="report-container active">
+            <div class="training-needs-report">
+                <div class="chart-header">
+                    <div>
+                        <h3 class="chart-title">Employee Training Needs vs Completion</h3>
+                        <p class="chart-subtitle">Track individual employee training progress based on IDP evaluations</p>
+                    </div>
+                    <div class="report-actions">
+                        <button class="download-pdf-btn" onclick="downloadReportPDF('training-needs')" id="trainingNeedsPDFBtn">
+                            <i class="fas fa-file-pdf"></i> Download PDF
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Summary Cards -->
+                <div class="report-summary-cards" id="trainingNeedsSummary">
+                    <div class="report-summary-card employees">
+                        <div class="report-summary-number" id="totalEmployeesCount">0</div>
+                        <div class="report-summary-label">Total Employees</div>
+                    </div>
+                    <div class="report-summary-card completion">
+                        <div class="report-summary-number" id="avgCompletionRate">0%</div>
+                        <div class="report-summary-label">Avg Completion Rate</div>
+                    </div>
+                    <div class="report-summary-card employees">
+                        <div class="report-summary-number" id="employeesWithNeeds">0</div>
+                        <div class="report-summary-label">Employees with Needs</div>
+                    </div>
+                    <div class="report-summary-card completion">
+                        <div class="report-summary-number" id="totalNeedsIdentified">0</div>
+                        <div class="report-summary-label">Total Needs Identified</div>
+                    </div>
+                </div>
+
+                <!-- UPDATED: Chart Container instead of employee cards -->
+                <div class="chart-container" id="trainingNeedsChart" style="background: white; padding: 20px; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); min-height: 400px;">
+                    <!-- Charts will be rendered here -->
+                    <div class="reports-loading">
+                        <i class="fas fa-spinner fa-spin"></i>
+                        <p>Loading training needs charts...</p>
+                    </div>
+                </div>
+
+                <!-- Employee Details Table (below charts) -->
+                <div class="employee-needs-grid" id="employeeNeedsGrid" style="margin-top: 30px;">
+                    <!-- Employee cards will still be here for detailed view -->
+                </div>
+            </div>
+        </div>
+
+        <!-- Report 2: Performance Improvement -->
+        <div id="performance-improvement-report" class="report-container" style="display: none;">
+            <div class="performance-improvement-report">
+                <div class="chart-header">
+                    <div>
+                        <h3 class="chart-title">Performance Improvement After Training</h3>
+                        <p class="chart-subtitle">Analyze the effectiveness of training on employee performance</p>
+                    </div>
+                    <div class="report-actions">
+                        <button class="download-pdf-btn" onclick="downloadReportPDF('performance-improvement')" id="performanceImprovementPDFBtn">
+                            <i class="fas fa-file-pdf"></i> Download PDF
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Summary Cards -->
+                <div class="report-summary-cards" id="performanceImprovementSummary">
+                    <div class="report-summary-card employees">
+                        <div class="report-summary-number" id="employeesWithTrainingCount">0</div>
+                        <div class="report-summary-label">Employees with Training</div>
+                    </div>
+                    <div class="report-summary-card improvement">
+                        <div class="report-summary-number" id="avgImprovementPercentage">0%</div>
+                        <div class="report-summary-label">Avg Improvement</div>
+                    </div>
+                    <div class="report-summary-card completion">
+                        <div class="report-summary-number" id="employeesWithDataCount">0</div>
+                        <div class="report-summary-label">With Performance Data</div>
+                    </div>
+                    <div class="report-summary-card completion">
+                        <div class="report-summary-number" id="totalTrainingsCompletedCount">0</div>
+                        <div class="report-summary-label">Total Trainings</div>
+                    </div>
+                </div>
+
+                <!-- UPDATED: Chart Container -->
+                <div class="chart-container" id="performanceTrendingChart" style="background: white; padding: 20px; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); min-height: 400px;">
+                    <div class="performance-loading">
+                        <i class="fas fa-chart-line"></i>
+                        <p>Loading performance improvement charts...</p>
+                    </div>
+                </div>
+
+                <!-- Performance Employee Details -->
+                <div class="performance-employee-grid" id="performanceEmployeeGrid" style="margin-top: 30px;">
+                    <!-- Employee performance cards -->
+                </div>
+            </div>
+        </div>
+
+        <!-- Report 3: Training Summary -->
+        <div id="training-summary-report" class="report-container" style="display: none;">
+            <div class="training-summary-report">
+                <div class="chart-header">
+                    <div>
+                        <h3 class="chart-title">Training Summary by Employee</h3>
+                        <p class="chart-subtitle">Overview of training completion and categories per team member</p>
+                    </div>
+                    <div class="report-actions">
+                        <button class="download-pdf-btn" onclick="downloadReportPDF('training-summary')" id="trainingSummaryPDFBtn">
+                            <i class="fas fa-file-pdf"></i> Download PDF
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Summary Cards -->
+                <div class="report-summary-cards" id="trainingSummarySummary">
+                    <div class="report-summary-card employees">
+                        <div class="report-summary-number" id="totalEmployeesSummary">0</div>
+                        <div class="report-summary-label">Total Employees</div>
+                    </div>
+                    <div class="report-summary-card completion">
+                        <div class="report-summary-number" id="totalTrainingsSummary">0</div>
+                        <div class="report-summary-label">Total Trainings</div>
+                    </div>
+                    <div class="report-summary-card cost">
+                        <div class="report-summary-number" id="totalCostSummary">₱0</div>
+                        <div class="report-summary-label">Total Cost</div>
+                    </div>
+                    <div class="report-summary-card improvement">
+                        <div class="report-summary-number" id="avgCompletionRateSummary">0%</div>
+                        <div class="report-summary-label">Avg Completion Rate</div>
+                    </div>
+                </div>
+
+                <!-- UPDATED: Chart Container will be populated by renderTrainingSummaryCharts -->
+                <div class="summary-employee-grid" id="summaryEmployeeGrid" style="min-height: 400px;">
+                    <div class="reports-loading">
+                        <i class="fas fa-clipboard-list"></i>
+                        <p>Loading training summary charts...</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
 </div>
 
 <!-- Enhanced Training Details Modal -->
@@ -360,6 +549,970 @@
                 loadEmployeeProgress();
             }, 100);
         }
+    }
+
+    let currentReport = 'training-needs';
+    let currentReportData = null;
+
+    // Switch between different report types
+    function switchReport(reportType) {
+        currentReport = reportType;
+        
+        // Update button states
+        document.querySelectorAll('.report-type-btn').forEach(btn => {
+            btn.classList.remove('active');
+        });
+        document.querySelector(`[data-report="${reportType}"]`).classList.add('active');
+        
+        // Hide all report containers
+        document.querySelectorAll('.report-container').forEach(container => {
+            container.classList.remove('active');
+            container.style.display = 'none';
+        });
+        
+        // Show selected report container
+        const targetContainer = document.getElementById(`${reportType}-report`);
+        if (targetContainer) {
+            targetContainer.style.display = 'block';
+            targetContainer.classList.add('active');
+        }
+        
+        // Load the appropriate report data
+        loadCurrentReport();
+    }
+
+    // Load current report based on selected type
+    function loadCurrentReport() {
+        switch(currentReport) {
+            case 'training-needs':
+                loadTrainingNeedsReport();
+                break;
+            case 'performance-improvement':
+                loadPerformanceImprovementReport();
+                break;
+            case 'training-summary':
+                loadTrainingSummaryReport();
+                break;
+        }
+    }
+
+    // Refresh current report
+    function refreshCurrentReport() {
+        showNotification('Refreshing report data...', 'info');
+        loadCurrentReport();
+    }
+
+    // 1. Training Needs vs Completion Report
+    async function loadTrainingNeedsReport() {
+        try {
+            console.log('📊 Loading Training Needs Report...');
+            
+            const timePeriod = document.getElementById('reportsTimeFilter')?.value || 'thisYear';
+            
+            // Show loading state
+            document.getElementById('employeeNeedsGrid').innerHTML = `
+                <div class="reports-loading">
+                    <i class="fas fa-spinner fa-spin"></i>
+                    <p>Loading training needs report...</p>
+                </div>
+            `;
+            
+            const response = await fetch(`/linemanager/api/training-needs-report?timePeriod=${timePeriod}`);
+            
+            if (!response.ok) {
+                throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+            }
+            
+            const result = await response.json();
+            
+            if (result.success) {
+                currentReportData = result.data;
+                renderTrainingNeedsReport(result.data);
+                showNotification('Training needs report loaded successfully', 'success');
+            } else {
+                throw new Error(result.message || 'Failed to load training needs report');
+            }
+            
+        } catch (error) {
+            console.error('❌ Error loading training needs report:', error);
+            showTrainingNeedsError(error.message);
+            showNotification('Failed to load training needs report: ' + error.message, 'error');
+        }
+    }
+
+    // Render Training Needs Report
+    function renderTrainingNeedsReport(data) {
+        // Update summary cards
+        document.getElementById('totalEmployeesCount').textContent = data.summary.totalEmployees;
+        document.getElementById('avgCompletionRate').textContent = `${data.summary.averageCompletionRate}%`;
+        document.getElementById('employeesWithNeeds').textContent = data.summary.employeesWithNeeds;
+        document.getElementById('totalNeedsIdentified').textContent = data.summary.totalNeedsIdentified;
+        
+        // 🎯 CALL THE TRAINING NEEDS CHART FUNCTION
+        renderTrainingNeedsChart(data);
+        
+        // Render employee detail cards below charts
+        renderEmployeeNeedsCards(data);
+    }
+
+    // 2. Performance Improvement Report - Main Renderer  
+    function renderPerformanceImprovementReport(data) {
+        // Update summary cards
+        document.getElementById('employeesWithTrainingCount').textContent = data.summary.employeesWithTraining;
+        document.getElementById('avgImprovementPercentage').textContent = `${data.summary.averageImprovement > 0 ? '+' : ''}${data.summary.averageImprovement}%`;
+        document.getElementById('employeesWithDataCount').textContent = data.summary.employeesWithPerformanceData;
+        document.getElementById('totalTrainingsCompletedCount').textContent = data.summary.totalTrainingsCompleted;
+        
+        // 🎯 CALL THE PERFORMANCE CHART FUNCTION
+        renderPerformanceChart(data);
+        
+        // Render employee performance cards below charts
+        renderPerformanceEmployeeCards(data);
+    }
+
+    // 3. Training Summary Report - Main Renderer
+    function renderTrainingSummaryReport(data) {
+        // Update summary cards
+        document.getElementById('totalEmployeesSummary').textContent = data.summary.totalEmployees;
+        document.getElementById('totalTrainingsSummary').textContent = data.summary.totalTrainings;
+        document.getElementById('totalCostSummary').textContent = `₱${data.summary.totalCost.toLocaleString()}`;
+        document.getElementById('avgCompletionRateSummary').textContent = `${data.summary.averageCompletionRate}%`;
+        
+        // 🎯 CALL THE TRAINING SUMMARY CHARTS FUNCTION
+        renderTrainingSummaryCharts(data);
+    }
+
+    // ==================================================
+    // CHART FUNCTIONS (Called by the main renderers above)
+    // ==================================================
+
+    // 🎨 Chart Function 1: Training Needs vs Completion Charts
+    function renderTrainingNeedsChart(data) {
+        const chartContainer = document.getElementById('trainingNeedsChart');
+        
+        if (!chartContainer || !data.employees) {
+            console.warn('⚠️ Chart container or data not found');
+            return;
+        }
+
+        // Clear existing content
+        chartContainer.innerHTML = '';
+
+        if (data.employees.length === 0) {
+            chartContainer.innerHTML = `
+                <div class="no-data-state">
+                    <i class="fas fa-chart-bar"></i>
+                    <h3>No Training Data Available</h3>
+                    <p>No training needs or completion data found for ${data.departmentName || 'your department'}.</p>
+                </div>
+            `;
+            return;
+        }
+
+        // Create layout for multiple charts
+        const chartsGrid = document.createElement('div');
+        chartsGrid.style.cssText = 'display: grid; grid-template-columns: 2fr 1fr; gap: 20px; margin-bottom: 20px;';
+
+        // 1. Bar Chart Container (Needs vs Completion)
+        const barChartContainer = document.createElement('div');
+        barChartContainer.style.cssText = 'background: #f8f9fa; padding: 15px; border-radius: 6px;';
+        
+        const barCanvas = document.createElement('canvas');
+        barCanvas.id = 'needsCompletionChart';
+        barChartContainer.appendChild(barCanvas);
+        chartsGrid.appendChild(barChartContainer);
+
+        // 2. Donut Chart Container (Overall Completion Rate)
+        const donutContainer = document.createElement('div');
+        donutContainer.style.cssText = 'background: #f8f9fa; padding: 15px; border-radius: 6px;';
+        
+        const donutCanvas = document.createElement('canvas');
+        donutCanvas.id = 'completionRateDonut';
+        donutContainer.appendChild(donutCanvas);
+        chartsGrid.appendChild(donutContainer);
+
+        chartContainer.appendChild(chartsGrid);
+
+        // Prepare data for bar chart
+        const employees = data.employees.slice(0, 10);
+        const labels = employees.map(emp => {
+            const names = emp.name.split(' ');
+            return names.length > 1 ? `${names[0]} ${names[names.length - 1]}` : names[0];
+        });
+        const needsData = employees.map(emp => emp.needsIdentified);
+        const completedData = employees.map(emp => emp.needsMet);
+
+        // Create bar chart
+        const barCtx = barCanvas.getContext('2d');
+        new Chart(barCtx, {
+            type: 'bar',
+            data: {
+                labels: labels,
+                datasets: [
+                    {
+                        label: 'Training Needs',
+                        data: needsData,
+                        backgroundColor: 'rgba(59, 130, 246, 0.7)',
+                        borderColor: 'rgba(59, 130, 246, 1)',
+                        borderWidth: 1
+                    },
+                    {
+                        label: 'Needs Met',
+                        data: completedData,
+                        backgroundColor: 'rgba(16, 185, 129, 0.7)',
+                        borderColor: 'rgba(16, 185, 129, 1)',
+                        borderWidth: 1
+                    }
+                ]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    title: {
+                        display: true,
+                        text: 'Training Needs vs Completion by Employee'
+                    }
+                }
+            }
+        });
+
+        // Create donut chart for overall completion
+        const totalNeeds = data.summary.totalNeedsIdentified;
+        const totalMet = data.summary.totalNeedsMet || 0;
+        const totalUnmet = Math.max(0, totalNeeds - totalMet);
+
+        const donutCtx = donutCanvas.getContext('2d');
+        new Chart(donutCtx, {
+            type: 'doughnut',
+            data: {
+                labels: ['Needs Met', 'Needs Unmet'],
+                datasets: [{
+                    data: [totalMet, totalUnmet],
+                    backgroundColor: ['rgba(16, 185, 129, 0.8)', 'rgba(239, 68, 68, 0.8)']
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    title: {
+                        display: true,
+                        text: 'Overall Completion Rate'
+                    }
+                }
+            }
+        });
+    }
+
+    // 🎨 Chart Function 2: Performance Improvement Charts
+    function renderPerformanceChart(data) {
+        const chartContainer = document.getElementById('performanceTrendingChart');
+        
+        if (!chartContainer || !data.employees) {
+            console.warn('⚠️ Performance chart container not found');
+            return;
+        }
+
+        chartContainer.innerHTML = '';
+
+        if (data.employees.length === 0) {
+            chartContainer.innerHTML = `
+                <div class="performance-no-data">
+                    <i class="fas fa-chart-line"></i>
+                    <h3>No Performance Data Available</h3>
+                    <p>No performance data found.</p>
+                </div>
+            `;
+            return;
+        }
+
+        // Filter employees with performance data
+        const employeesWithData = data.employees.filter(emp => emp.hasPerformanceData);
+        
+        if (employeesWithData.length === 0) {
+            chartContainer.innerHTML = `
+                <div class="performance-no-data">
+                    <i class="fas fa-chart-line"></i>
+                    <h3>No Performance Improvement Data</h3>
+                    <p>No employees have both training and performance data.</p>
+                </div>
+            `;
+            return;
+        }
+
+        // Create canvas for performance improvement chart
+        const canvas = document.createElement('canvas');
+        canvas.id = 'performanceImprovementChart';
+        chartContainer.appendChild(canvas);
+
+        // Prepare data
+        const labels = employeesWithData.map(emp => emp.name.split(' ').map(n => n[0]).join(''));
+        const improvementData = employeesWithData.map(emp => emp.averageImprovement);
+
+        // Create chart
+        const ctx = canvas.getContext('2d');
+        new Chart(ctx, {
+            type: 'bar',
+            data: {
+                labels: labels,
+                datasets: [{
+                    label: 'Performance Improvement (%)',
+                    data: improvementData,
+                    backgroundColor: improvementData.map(val => 
+                        val > 0 ? 'rgba(16, 185, 129, 0.7)' : 
+                        val < 0 ? 'rgba(239, 68, 68, 0.7)' : 
+                        'rgba(156, 163, 175, 0.7)'
+                    )
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    title: {
+                        display: true,
+                        text: 'Performance Improvement After Training'
+                    }
+                }
+            }
+        });
+    }
+
+    // 🎨 Chart Function 3: Training Summary Charts
+    function renderTrainingSummaryCharts(data) {
+        const chartContainer = document.getElementById('summaryEmployeeGrid');
+        
+        if (!chartContainer || !data.employees) {
+            console.warn('⚠️ Summary chart container not found');
+            return;
+        }
+
+        chartContainer.innerHTML = '';
+
+        if (data.employees.length === 0) {
+            chartContainer.innerHTML = `
+                <div class="no-data-state">
+                    <i class="fas fa-clipboard-list"></i>
+                    <h3>No Training Summary Data</h3>
+                    <p>No training data found.</p>
+                </div>
+            `;
+            return;
+        }
+
+        // Create charts grid
+        const chartsGrid = document.createElement('div');
+        chartsGrid.style.cssText = 'display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-bottom: 30px;';
+
+        // 1. Completion Rate Chart
+        const completionChartContainer = document.createElement('div');
+        completionChartContainer.style.cssText = 'background: white; padding: 20px; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.1);';
+        
+        const completionCanvas = document.createElement('canvas');
+        completionCanvas.id = 'completionRateChart';
+        completionChartContainer.appendChild(completionCanvas);
+        chartsGrid.appendChild(completionChartContainer);
+
+        // 2. Cost Distribution Chart
+        const costChartContainer = document.createElement('div');
+        costChartContainer.style.cssText = 'background: white; padding: 20px; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.1);';
+        
+        const costCanvas = document.createElement('canvas');
+        costCanvas.id = 'costDistributionChart';
+        costChartContainer.appendChild(costCanvas);
+        chartsGrid.appendChild(costChartContainer);
+
+        chartContainer.appendChild(chartsGrid);
+
+        // Create completion rate chart
+        const employees = data.employees.slice(0, 10);
+        const completionLabels = employees.map(emp => emp.name.split(' ').map(n => n[0]).join(''));
+        const completionRates = employees.map(emp => emp.completionRate);
+
+        const completionCtx = completionCanvas.getContext('2d');
+        new Chart(completionCtx, {
+            type: 'bar',
+            data: {
+                labels: completionLabels,
+                datasets: [{
+                    label: 'Completion Rate (%)',
+                    data: completionRates,
+                    backgroundColor: completionRates.map(rate => 
+                        rate >= 80 ? 'rgba(16, 185, 129, 0.7)' :
+                        rate >= 50 ? 'rgba(245, 158, 11, 0.7)' :
+                        'rgba(239, 68, 68, 0.7)'
+                    )
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    title: {
+                        display: true,
+                        text: 'Training Completion Rates'
+                    }
+                }
+            }
+        });
+
+        // Create cost distribution chart
+        const employeesWithCost = data.employees.filter(emp => emp.totalCost > 0).slice(0, 8);
+        const costLabels = employeesWithCost.map(emp => emp.name.split(' ').map(n => n[0]).join(''));
+        const costData = employeesWithCost.map(emp => emp.totalCost);
+
+        const costCtx = costCanvas.getContext('2d');
+        new Chart(costCtx, {
+            type: 'pie',
+            data: {
+                labels: costLabels,
+                datasets: [{
+                    data: costData,
+                    backgroundColor: [
+                        'rgba(59, 130, 246, 0.8)',
+                        'rgba(16, 185, 129, 0.8)',
+                        'rgba(245, 158, 11, 0.8)',
+                        'rgba(239, 68, 68, 0.8)',
+                        'rgba(139, 92, 246, 0.8)',
+                        'rgba(236, 72, 153, 0.8)',
+                        'rgba(34, 197, 94, 0.8)',
+                        'rgba(251, 113, 133, 0.8)'
+                    ]
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    title: {
+                        display: true,
+                        text: 'Training Cost Distribution'
+                    }
+                }
+            }
+        });
+    }
+
+    // 2. Performance Improvement Report
+    async function loadPerformanceImprovementReport() {
+        try {
+            console.log('📈 Loading Performance Improvement Report...');
+            
+            const timePeriod = document.getElementById('reportsTimeFilter')?.value || 'thisYear';
+            
+            // Show loading state
+            document.getElementById('performanceEmployeeGrid').innerHTML = `
+                <div class="performance-loading">
+                    <i class="fas fa-chart-line"></i>
+                    <p>Loading performance improvement data...</p>
+                </div>
+            `;
+            
+            const response = await fetch(`/linemanager/api/performance-improvement-report?timePeriod=${timePeriod}`);
+            
+            if (!response.ok) {
+                throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+            }
+            
+            const result = await response.json();
+            
+            if (result.success) {
+                currentReportData = result.data;
+                renderPerformanceImprovementReport(result.data);
+                showNotification('Performance improvement report loaded successfully', 'success');
+            } else {
+                throw new Error(result.message || 'Failed to load performance improvement report');
+            }
+            
+        } catch (error) {
+            console.error('❌ Error loading performance improvement report:', error);
+            showPerformanceImprovementError(error.message);
+            showNotification('Failed to load performance improvement report: ' + error.message, 'error');
+        }
+    }
+
+    // Render Performance Improvement Report
+    function renderPerformanceImprovementReport(data) {
+        // Update summary cards
+        document.getElementById('employeesWithTrainingCount').textContent = data.summary.employeesWithTraining;
+        document.getElementById('avgImprovementPercentage').textContent = `${data.summary.averageImprovement > 0 ? '+' : ''}${data.summary.averageImprovement}%`;
+        document.getElementById('employeesWithDataCount').textContent = data.summary.employeesWithPerformanceData;
+        document.getElementById('totalTrainingsCompletedCount').textContent = data.summary.totalTrainingsCompleted;
+        
+        // Render the charts
+        renderPerformanceChart(data);
+        
+        // Render employee cards below the charts
+        const grid = document.getElementById('performanceEmployeeGrid');
+        
+        if (data.employees.length === 0) {
+            grid.innerHTML = `
+                <div class="performance-no-data">
+                    <i class="fas fa-chart-line"></i>
+                    <h3>No Performance Data</h3>
+                    <p>No performance improvement data found for ${data.departmentName}.</p>
+                </div>
+            `;
+            return;
+        }
+        
+        let cardsHTML = '';
+        
+        data.employees.forEach(employee => {
+            const cardClass = employee.averageImprovement > 5 ? 'improved' : 
+                            employee.averageImprovement < -5 ? 'declined' : 'no-data';
+            
+            cardsHTML += `
+                <div class="performance-employee-card ${cardClass}">
+                    <div class="employee-header">
+                        <div class="employee-info">
+                            <h4>${employee.name}</h4>
+                            <p>${employee.position} • ${employee.email}</p>
+                        </div>
+                    </div>
+                    
+                    <div class="performance-metrics">
+                        <div class="performance-metric">
+                            <div class="performance-metric-value neutral">${employee.trainingsCompleted}</div>
+                            <div class="performance-metric-label">Trainings</div>
+                        </div>
+                        <div class="performance-metric">
+                            <div class="performance-metric-value ${employee.averageImprovement > 0 ? 'positive' : employee.averageImprovement < 0 ? 'negative' : 'neutral'}">
+                                ${employee.averageImprovement > 0 ? '+' : ''}${employee.averageImprovement.toFixed(1)}%
+                            </div>
+                            <div class="performance-metric-label">Improvement</div>
+                        </div>
+                        <div class="performance-metric">
+                            <div class="performance-metric-value ${employee.hasPerformanceData ? 'positive' : 'neutral'}">
+                                ${employee.hasPerformanceData ? 'Yes' : 'No'}
+                            </div>
+                            <div class="performance-metric-label">Has Data</div>
+                        </div>
+                    </div>
+                    
+                    ${employee.trainingPerformance.length > 0 ? `
+                    <div class="training-performance-list">
+                        <h6>Training Performance Details</h6>
+                        ${employee.trainingPerformance.map(tp => `
+                            <div class="training-performance-item">
+                                <span class="training-name">${tp.trainingName}</span>
+                                <span class="improvement-indicator ${tp.improvement !== null ? (tp.improvement > 0 ? 'positive' : 'negative') : 'no-data'}">
+                                    ${tp.improvement !== null 
+                                        ? `${tp.improvement > 0 ? '+' : ''}${tp.improvement.toFixed(1)}%`
+                                        : 'No data'
+                                    }
+                                    ${tp.improvement !== null 
+                                        ? (tp.improvement > 0 ? '<i class="fas fa-arrow-up"></i>' : '<i class="fas fa-arrow-down"></i>')
+                                        : '<i class="fas fa-minus"></i>'
+                                    }
+                                </span>
+                            </div>
+                        `).join('')}
+                    </div>
+                    ` : '<p style="text-align: center; color: #9ca3af; font-style: italic;">No training performance data available</p>'}
+                </div>
+            `;
+        });
+        
+        grid.innerHTML = cardsHTML;
+    }
+
+    // 3. Training Summary Report
+    async function loadTrainingSummaryReport() {
+        try {
+            console.log('📋 Loading Training Summary Report...');
+            
+            const timePeriod = document.getElementById('reportsTimeFilter')?.value || 'thisYear';
+            
+            // Show loading state
+            document.getElementById('summaryEmployeeGrid').innerHTML = `
+                <div class="reports-loading">
+                    <i class="fas fa-clipboard-list"></i>
+                    <p>Loading training summary data...</p>
+                </div>
+            `;
+            
+            const response = await fetch(`/linemanager/api/training-summary-report?timePeriod=${timePeriod}`);
+            
+            if (!response.ok) {
+                throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+            }
+            
+            const result = await response.json();
+            
+            if (result.success) {
+                currentReportData = result.data;
+                renderTrainingSummaryReport(result.data);
+                showNotification('Training summary report loaded successfully', 'success');
+            } else {
+                throw new Error(result.message || 'Failed to load training summary report');
+            }
+            
+        } catch (error) {
+            console.error('❌ Error loading training summary report:', error);
+            showTrainingSummaryError(error.message);
+            showNotification('Failed to load training summary report: ' + error.message, 'error');
+        }
+    }
+
+    // Render Training Summary Report
+    function renderTrainingSummaryReport(data) {
+        // Update summary cards
+        document.getElementById('totalEmployeesSummary').textContent = data.summary.totalEmployees;
+        document.getElementById('totalTrainingsSummary').textContent = data.summary.totalTrainings;
+        document.getElementById('totalCostSummary').textContent = `₱${data.summary.totalCost.toLocaleString()}`;
+        document.getElementById('avgCompletionRateSummary').textContent = `${data.summary.averageCompletionRate}%`;
+        
+        // Render employee cards
+        const grid = document.getElementById('summaryEmployeeGrid');
+        
+        if (data.employees.length === 0) {
+            grid.innerHTML = `
+                <div class="no-data-state">
+                    <i class="fas fa-clipboard-list"></i>
+                    <h3>No Training Summary Data</h3>
+                    <p>No training summary data found for ${data.departmentName}.</p>
+                </div>
+            `;
+            return;
+        }
+        
+        let cardsHTML = '';
+        
+        data.employees.forEach(employee => {
+            cardsHTML += `
+                <div class="summary-employee-card">
+                    <div class="employee-header">
+                        <div class="employee-info">
+                            <h4>${employee.name}</h4>
+                            <p>${employee.position} • ${employee.email}</p>
+                        </div>
+                        <div class="completion-badge ${employee.completionRate >= 80 ? 'high' : employee.completionRate >= 50 ? 'medium' : employee.completionRate > 0 ? 'low' : 'none'}">
+                            ${employee.completionRate}%
+                        </div>
+                    </div>
+                    
+                    <div class="training-stats-grid">
+                        <div class="training-stat">
+                            <div class="training-stat-number">${employee.totalTrainings}</div>
+                            <div class="training-stat-label">Total Trainings</div>
+                        </div>
+                        <div class="training-stat">
+                            <div class="training-stat-number">${employee.completedTrainings}</div>
+                            <div class="training-stat-label">Completed</div>
+                        </div>
+                        <div class="training-stat">
+                            <div class="training-stat-number">₱${employee.totalCost.toLocaleString()}</div>
+                            <div class="training-stat-label">Total Cost</div>
+                        </div>
+                        <div class="training-stat">
+                            <div class="training-stat-number">${employee.totalHours}h</div>
+                            <div class="training-stat-label">Total Hours</div>
+                        </div>
+                    </div>
+                    
+                    ${employee.categoryBreakdown.length > 0 ? `
+                    <div class="category-breakdown">
+                        <h6>Training Categories</h6>
+                        ${employee.categoryBreakdown.map(category => `
+                            <div class="category-item">
+                                <span class="category-name">${category.category}</span>
+                                <div class="category-stats">
+                                    <span>${category.completed}/${category.count}</span>
+                                    <span>(${category.completionRate}%)</span>
+                                </div>
+                            </div>
+                        `).join('')}
+                    </div>
+                    ` : '<p style="text-align: center; color: #9ca3af; font-style: italic;">No training categories available</p>'}
+                </div>
+            `;
+        });
+        
+        grid.innerHTML = cardsHTML;
+    }
+
+    // PDF Download Function
+    async function downloadReportPDF(reportType) {
+        try {
+            if (!currentReportData) {
+                showNotification('No report data available. Please load the report first.', 'warning');
+                return;
+            }
+            
+            const button = document.getElementById(`${reportType.replace('-', '')}PDFBtn`);
+            if (button) {
+                button.disabled = true;
+                button.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Generating PDF...';
+            }
+            
+            // Initialize jsPDF
+            const { jsPDF } = window.jspdf;
+            const doc = new jsPDF(); 
+            
+            // Set up PDF styling
+            const pageWidth = doc.internal.pageSize.getWidth();
+            const pageHeight = doc.internal.pageSize.getHeight();
+            let yPosition = 20;
+            
+            // Helper function to add text with line breaks
+            function addText(doc, text, x, y, options = {}) {
+                const fontSize = options.fontSize || 12;
+                const maxWidth = options.maxWidth || doc.internal.pageSize.getWidth() - 40;
+                
+                doc.setFontSize(fontSize);
+                if (options.bold) doc.setFont(undefined, 'bold');
+                else doc.setFont(undefined, 'normal');
+                
+                const lines = doc.splitTextToSize(text, maxWidth);
+                doc.text(lines, x, y);
+                
+                return y + (lines.length * (fontSize * 0.5)) + (options.lineSpacing || 5);
+            }
+            
+            // Generate PDF based on report type
+            switch(reportType) {
+                    case 'training-needs':
+                        generateTrainingNeedsPDF(doc, currentReportData, addText);
+                        break;
+                    case 'performance-improvement':
+                        generatePerformanceImprovementPDF(doc, currentReportData, addText);
+                        break;
+                    case 'training-summary':
+                        generateTrainingSummaryPDF(doc, currentReportData, addText);
+                        break;
+                }
+            
+            showNotification('PDF generated successfully!', 'success');
+            
+        } catch (error) {
+            console.error('Error generating PDF:', error);
+            showNotification('Failed to generate PDF: ' + error.message, 'error');
+        } finally {
+            // Reset button
+            const button = document.getElementById(`${reportType.replace('-', '')}PDFBtn`);
+            if (button) {
+                button.disabled = false;
+                button.innerHTML = '<i class="fas fa-file-pdf"></i> Download PDF';
+            }
+        }
+    }
+
+    // Generate Training Needs PDF
+    function generateTrainingNeedsPDF(doc, data, addText) {
+        let yPos = 20;
+        
+        // Title
+        yPos = addText(doc, 'Training Needs vs Completion Report', 20, yPos, { fontSize: 18, bold: true });
+        yPos = addText(doc, `Department: ${data.departmentName}`, 20, yPos, { fontSize: 12 });
+        yPos = addText(doc, `Manager: ${data.managerName}`, 20, yPos, { fontSize: 12 });
+        yPos = addText(doc, `Report Date: ${data.reportDate}`, 20, yPos, { fontSize: 12 });
+        yPos = addText(doc, `Period: ${data.timePeriod}`, 20, yPos, { fontSize: 12, lineSpacing: 10 });
+        
+        // Summary
+        yPos = addText(doc, 'Summary', 20, yPos, { fontSize: 14, bold: true });
+        yPos = addText(doc, `Total Employees: ${data.summary.totalEmployees}`, 25, yPos);
+        yPos = addText(doc, `Employees with Needs: ${data.summary.employeesWithNeeds}`, 25, yPos);
+        yPos = addText(doc, `Average Completion Rate: ${data.summary.averageCompletionRate}%`, 25, yPos);
+        yPos = addText(doc, `Total Needs Identified: ${data.summary.totalNeedsIdentified}`, 25, yPos);
+        yPos += 10;
+        
+        // Employee Details
+        yPos = addText(doc, 'Employee Details', 20, yPos, { fontSize: 14, bold: true });
+        
+        data.employees.forEach((employee, index) => {
+            if (yPos > 250) { // New page if needed
+                doc.addPage();
+                yPos = 20;
+            }
+            
+            yPos = addText(doc, `${index + 1}. ${employee.name}`, 25, yPos, { bold: true });
+            yPos = addText(doc, `Position: ${employee.position}`, 30, yPos);
+            yPos = addText(doc, `Completion Rate: ${employee.completionRate}%`, 30, yPos);
+            yPos = addText(doc, `Training Needs: ${employee.trainingNeeds.join(', ') || 'None'}`, 30, yPos);
+            yPos = addText(doc, `Development Areas: ${employee.developmentAreas}`, 30, yPos);
+            yPos += 8;
+        });
+        
+        // Save the PDF
+        doc.save(`training-needs-report-${data.timePeriod}-${new Date().toISOString().split('T')[0]}.pdf`);
+    }
+
+    // Generate Performance Improvement PDF
+    function generatePerformanceImprovementPDF(doc, data, addText) {
+        let yPos = 20;
+        
+        // Title
+        yPos = addText(doc, 'Performance Improvement After Training Report', 20, yPos, { fontSize: 18, bold: true });
+        yPos = addText(doc, `Department: ${data.departmentName}`, 20, yPos, { fontSize: 12 });
+        yPos = addText(doc, `Manager: ${data.managerName}`, 20, yPos, { fontSize: 12 });
+        yPos = addText(doc, `Report Date: ${data.reportDate}`, 20, yPos, { fontSize: 12 });
+        yPos = addText(doc, `Period: ${data.timePeriod}`, 20, yPos, { fontSize: 12, lineSpacing: 10 });
+        
+        // Summary
+        yPos = addText(doc, 'Summary', 20, yPos, { fontSize: 14, bold: true });
+        yPos = addText(doc, `Total Employees: ${data.summary.totalEmployees}`, 25, yPos);
+        yPos = addText(doc, `Employees with Training: ${data.summary.employeesWithTraining}`, 25, yPos);
+        yPos = addText(doc, `Employees with Performance Data: ${data.summary.employeesWithPerformanceData}`, 25, yPos);
+        yPos = addText(doc, `Average Improvement: ${data.summary.averageImprovement}%`, 25, yPos);
+        yPos = addText(doc, `Total Trainings Completed: ${data.summary.totalTrainingsCompleted}`, 25, yPos);
+        yPos += 10;
+        
+        // Employee Performance Details
+        yPos = addText(doc, 'Employee Performance Details', 20, yPos, { fontSize: 14, bold: true });
+        
+        data.employees.forEach((employee, index) => {
+            if (yPos > 240) { // New page if needed
+                doc.addPage();
+                yPos = 20;
+            }
+            
+            yPos = addText(doc, `${index + 1}. ${employee.name}`, 25, yPos, { bold: true });
+            yPos = addText(doc, `Position: ${employee.position}`, 30, yPos);
+            yPos = addText(doc, `Trainings Completed: ${employee.trainingsCompleted}`, 30, yPos);
+            yPos = addText(doc, `Average Improvement: ${employee.averageImprovement.toFixed(1)}%`, 30, yPos);
+            yPos = addText(doc, `Has Performance Data: ${employee.hasPerformanceData ? 'Yes' : 'No'}`, 30, yPos);
+            
+            if (employee.trainingPerformance.length > 0) {
+                yPos = addText(doc, 'Training Performance:', 30, yPos, { bold: true });
+                employee.trainingPerformance.forEach(tp => {
+                    const improvementText = tp.improvement !== null 
+                        ? `${tp.improvement > 0 ? '+' : ''}${tp.improvement.toFixed(1)}%`
+                        : 'No data';
+                    yPos = addText(doc, `  • ${tp.trainingName}: ${improvementText}`, 35, yPos);
+                });
+            }
+            yPos += 8;
+        });
+        
+        // Save the PDF
+        doc.save(`performance-improvement-report-${data.timePeriod}-${new Date().toISOString().split('T')[0]}.pdf`);
+    }
+
+    // Generate Training Summary PDF
+    function generateTrainingSummaryPDF(doc, data, addText) {
+        let yPos = 20;
+        
+        // Title
+        yPos = addText(doc, 'Training Summary Report', 20, yPos, { fontSize: 18, bold: true });
+        yPos = addText(doc, `Department: ${data.departmentName}`, 20, yPos, { fontSize: 12 });
+        yPos = addText(doc, `Manager: ${data.managerName}`, 20, yPos, { fontSize: 12 });
+        yPos = addText(doc, `Report Date: ${data.reportDate}`, 20, yPos, { fontSize: 12 });
+        yPos = addText(doc, `Period: ${data.timePeriod}`, 20, yPos, { fontSize: 12, lineSpacing: 10 });
+        
+        // Summary
+        yPos = addText(doc, 'Summary', 20, yPos, { fontSize: 14, bold: true });
+        yPos = addText(doc, `Total Employees: ${data.summary.totalEmployees}`, 25, yPos);
+        yPos = addText(doc, `Total Trainings: ${data.summary.totalTrainings}`, 25, yPos);
+        yPos = addText(doc, `Total Completed: ${data.summary.totalCompleted}`, 25, yPos);
+        yPos = addText(doc, `Total In Progress: ${data.summary.totalInProgress}`, 25, yPos);
+        yPos = addText(doc, `Total Cost: ₱${data.summary.totalCost.toLocaleString()}`, 25, yPos);
+        yPos = addText(doc, `Total Hours: ${data.summary.totalHours}`, 25, yPos);
+        yPos = addText(doc, `Average Completion Rate: ${data.summary.averageCompletionRate}%`, 25, yPos);
+        yPos += 10;
+        
+        // Employee Training Summary
+        yPos = addText(doc, 'Employee Training Summary', 20, yPos, { fontSize: 14, bold: true });
+        
+        data.employees.forEach((employee, index) => {
+            if (yPos > 230) { // New page if needed
+                doc.addPage();
+                yPos = 20;
+            }
+            
+            yPos = addText(doc, `${index + 1}. ${employee.name}`, 25, yPos, { bold: true });
+            yPos = addText(doc, `Position: ${employee.position}`, 30, yPos);
+            yPos = addText(doc, `Total Trainings: ${employee.totalTrainings}`, 30, yPos);
+            yPos = addText(doc, `Completed: ${employee.completedTrainings}`, 30, yPos);
+            yPos = addText(doc, `In Progress: ${employee.inProgressTrainings}`, 30, yPos);
+            yPos = addText(doc, `Total Cost: ₱${employee.totalCost.toLocaleString()}`, 30, yPos);
+            yPos = addText(doc, `Total Hours: ${employee.totalHours}`, 30, yPos);
+            yPos = addText(doc, `Completion Rate: ${employee.completionRate}%`, 30, yPos);
+            
+            if (employee.categoryBreakdown.length > 0) {
+                yPos = addText(doc, 'Category Breakdown:', 30, yPos, { bold: true });
+                employee.categoryBreakdown.forEach(category => {
+                    yPos = addText(doc, `  • ${category.category}: ${category.completed}/${category.count} (${category.completionRate}%)`, 35, yPos);
+                });
+            }
+            yPos += 8;
+        });
+        
+        // Save the PDF
+        doc.save(`training-summary-report-${data.timePeriod}-${new Date().toISOString().split('T')[0]}.pdf`);
+    }
+
+
+    // Helper function to add text with automatic page breaks
+    function addText(doc, text, x, y, options = {}) {
+        const fontSize = options.fontSize || 12;
+        const maxWidth = options.maxWidth || doc.internal.pageSize.getWidth() - 40;
+        const pageHeight = doc.internal.pageSize.getHeight();
+        
+        doc.setFontSize(fontSize);
+        if (options.bold) doc.setFont(undefined, 'bold');
+        else doc.setFont(undefined, 'normal');
+        
+        // Check if we need a new page
+        if (y > pageHeight - 30) {
+            doc.addPage();
+            y = 20;
+        }
+        
+        const lines = doc.splitTextToSize(text, maxWidth);
+        doc.text(lines, x, y);
+        
+        return y + (lines.length * (fontSize * 0.5)) + (options.lineSpacing || 5);
+    }
+
+    // Update the existing downloadReportPDF function to use the helper
+    function addText(text, x, y, options = {}) {
+        const fontSize = options.fontSize || 12;
+        const maxWidth = options.maxWidth || doc.internal.pageSize.getWidth() - 40;
+        
+        doc.setFontSize(fontSize);
+        if (options.bold) doc.setFont(undefined, 'bold');
+        else doc.setFont(undefined, 'normal');
+        
+        const lines = doc.splitTextToSize(text, maxWidth);
+        doc.text(lines, x, y);
+        
+        return y + (lines.length * (fontSize * 0.5)) + (options.lineSpacing || 5);
+    }
+
+    // Error handling functions
+    function showTrainingNeedsError(message) {
+        document.getElementById('employeeNeedsGrid').innerHTML = `
+            <div class="reports-error">
+                <i class="fas fa-exclamation-triangle"></i>
+                <h3>Error Loading Training Needs Report</h3>
+                <p>${message}</p>
+                <button onclick="loadTrainingNeedsReport()">Try Again</button>
+            </div>
+        `;
+    }
+
+    function showPerformanceImprovementError(message) {
+        document.getElementById('performanceEmployeeGrid').innerHTML = `
+            <div class="performance-error">
+                <i class="fas fa-exclamation-triangle"></i>
+                <h3>Error Loading Performance Report</h3>
+                <p>${message}</p>
+                <button onclick="loadPerformanceImprovementReport()">Try Again</button>
+            </div>
+        `;
+    }
+
+    function showTrainingSummaryError(message) {
+        document.getElementById('summaryEmployeeGrid').innerHTML = `
+            <div class="reports-error">
+                <i class="fas fa-exclamation-triangle"></i>
+                <h3>Error Loading Training Summary</h3>
+                <p>${message}</p>
+                <button onclick="loadTrainingSummaryReport()">Try Again</button>
+            </div>
+        `;
     }
 
     // Toggle active class for sidebar links
@@ -1127,6 +2280,852 @@ async function viewTrainingDetails(trainingRecordId) {
 // Helper function to close the training details modal
 function closeTrainingDetailsModal() {
     document.getElementById('trainingDetailsModal').style.display = 'none';
+}
+
+// Load training needs analysis data
+async function loadTrainingNeedsAnalysis() {
+    try {
+        console.log('📊 Loading training needs analysis...');
+        
+        const timePeriod = document.getElementById('reportsTimeFilter')?.value || 'thisYear';
+        
+        const response = await fetch(`/linemanager/api/training-needs-analysis?timePeriod=${timePeriod}`);
+        
+        if (!response.ok) {
+            throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+        }
+        
+        const result = await response.json();
+        
+        if (result.success) {
+            renderTrainingNeedsAnalysis(result.data);
+            showNotification('Training needs analysis loaded successfully', 'success');
+        } else {
+            throw new Error(result.message || 'Failed to load training needs analysis');
+        }
+        
+    } catch (error) {
+        console.error('❌ Error loading training needs analysis:', error);
+        showTrainingReportsError(error.message);
+        showNotification('Failed to load training reports: ' + error.message, 'error');
+    }
+}
+
+// Render training needs analysis data
+function renderTrainingNeedsAnalysis(data) {
+    console.log('🎨 Rendering training needs analysis...', data);
+    
+    // Update summary cards
+    const totalNeededEl = document.getElementById('totalNeededCount');
+    const totalCompletedEl = document.getElementById('totalCompletedCount');
+    const completionRateEl = document.getElementById('overallCompletionRate');
+    
+    if (totalNeededEl) totalNeededEl.textContent = data.summary.totalNeeded;
+    if (totalCompletedEl) totalCompletedEl.textContent = data.summary.totalCompleted;
+    if (completionRateEl) completionRateEl.textContent = `${data.summary.completionRate}%`;
+    
+    // Render needs vs completion chart
+    renderNeedsChart(data.needsVsCompletion, data.departmentName);
+}
+
+// Render the needs vs completion chart
+function renderNeedsChart(needsData, departmentName) {
+    const chartContainer = document.getElementById('trainingNeedsChart');
+    
+    if (!chartContainer || !needsData) {
+        console.warn('⚠️ Chart container or data not found');
+        return;
+    }
+    
+    if (needsData.length === 0) {
+        chartContainer.innerHTML = `
+            <div class="no-data-state">
+                <i class="fas fa-chart-bar"></i>
+                <h3>No Training Data Available</h3>
+                <p>No training needs or completion data found for ${departmentName || 'your department'}.</p>
+                <p style="margin-top: 10px; font-size: 0.8rem; color: #9ca3af;">
+                    Training needs come from IDP evaluations and completed trainings are tracked from approved requests.
+                </p>
+            </div>
+        `;
+        return;
+    }
+    
+    let chartHTML = '';
+    
+    needsData.forEach(item => {
+        const completionRate = item.completionRate || 0;
+        const progressClass = completionRate >= 80 ? 'high' : completionRate >= 50 ? 'medium' : 'low';
+        const rateClass = completionRate >= 80 ? 'high' : completionRate >= 50 ? 'medium' : 'low';
+        
+        chartHTML += `
+            <div class="needs-chart-item">
+                <div class="chart-item-info">
+                    <div class="chart-item-category">${item.category}</div>
+                    <div class="chart-item-stats">
+                        ${item.completed} of ${item.needed} completed
+                    </div>
+                </div>
+                <div class="chart-item-progress">
+                    <div class="progress-bar-container">
+                        <div class="progress-bar-fill ${progressClass}" style="width: ${completionRate}%"></div>
+                    </div>
+                    <div class="progress-text">${item.completed}/${item.needed} trainings</div>
+                </div>
+                <div class="chart-item-rate">
+                    <div class="completion-rate ${rateClass}">${completionRate}%</div>
+                    <div class="rate-label">Complete</div>
+                </div>
+            </div>
+        `;
+    });
+    
+    chartContainer.innerHTML = chartHTML;
+    console.log('✅ Training needs chart rendered');
+}
+
+// Show error state for training reports
+function showTrainingReportsError(message) {
+    const chartContainer = document.getElementById('trainingNeedsChart');
+    
+    if (chartContainer) {
+        chartContainer.innerHTML = `
+            <div class="reports-error">
+                <i class="fas fa-exclamation-triangle"></i>
+                <h3>Error Loading Reports</h3>
+                <p>${message}</p>
+                <button onclick="loadTrainingNeedsAnalysis()">
+                    <i class="fas fa-retry"></i> Try Again
+                </button>
+            </div>
+        `;
+    }
+}
+
+// Load performance trending data
+async function loadPerformanceTrending() {
+    try {
+        console.log('📈 Loading performance trending data...');
+        
+        const timePeriod = document.getElementById('reportsTimeFilter')?.value || 'thisYear';
+        
+        const response = await fetch(`/linemanager/api/performance-trending?timePeriod=${timePeriod}`);
+        
+        if (!response.ok) {
+            throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+        }
+        
+        const result = await response.json();
+        
+        if (result.success) {
+            renderPerformanceTrending(result.data);
+            console.log('✅ Performance trending data loaded successfully');
+        } else {
+            throw new Error(result.message || 'Failed to load performance trending data');
+        }
+        
+    } catch (error) {
+        console.error('❌ Error loading performance trending:', error);
+        showPerformanceTrendingError(error.message);
+    }
+}
+
+// Render performance trending data
+function renderPerformanceTrending(data) {
+    console.log('🎨 Rendering performance trending data...', data);
+    
+    // Update summary cards
+    const avgImprovementEl = document.getElementById('avgImprovementRate');
+    const totalTrainingsEl = document.getElementById('totalTrainingsCount');
+    const employeesImprovedEl = document.getElementById('employeesImprovedCount');
+    const avgPerformanceEl = document.getElementById('avgPerformanceScore');
+    
+    if (avgImprovementEl) {
+        const improvement = data.summary.avgImprovement;
+        avgImprovementEl.textContent = improvement > 0 ? `+${improvement}%` : `${improvement}%`;
+    }
+    if (totalTrainingsEl) totalTrainingsEl.textContent = data.summary.totalTrainingsCompleted;
+    if (employeesImprovedEl) employeesImprovedEl.textContent = data.summary.employeesImproved;
+    if (avgPerformanceEl) avgPerformanceEl.textContent = data.summary.avgPerformanceScore;
+    
+    // Render performance trending chart
+    renderPerformanceChart(data.performanceTrend, data.departmentName);
+}
+
+// Render the performance trending chart
+function renderPerformanceChart(data) {
+    const chartContainer = document.getElementById('performanceTrendingChart');
+    
+    if (!chartContainer) {
+        console.warn('⚠️ Performance chart container not found');
+        return;
+    }
+
+    chartContainer.innerHTML = '';
+
+    // ✅ FIX: Safely extract employees array
+    let employees = [];
+    
+    if (data && data.employees && Array.isArray(data.employees)) {
+        employees = data.employees;
+    } else if (Array.isArray(data)) {
+        employees = data;
+    } else {
+        console.warn('⚠️ Invalid data format for performance chart:', data);
+    }
+
+    if (employees.length === 0) {
+        chartContainer.innerHTML = `
+            <div class="performance-no-data">
+                <i class="fas fa-chart-line"></i>
+                <h3>No Performance Data Available</h3>
+                <p>No performance data found.</p>
+            </div>
+        `;
+        return;
+    }
+
+    // ✅ FIX: Filter employees with performance data safely
+    const employeesWithData = employees.filter(emp => 
+        emp && emp.hasPerformanceData && typeof emp.averageImprovement === 'number'
+    );
+    
+    if (employeesWithData.length === 0) {
+        chartContainer.innerHTML = `
+            <div class="performance-no-data">
+                <i class="fas fa-chart-line"></i>
+                <h3>No Performance Improvement Data</h3>
+                <p>No employees have both training and performance data.</p>
+            </div>
+        `;
+        return;
+    }
+
+    try {
+        // Create canvas for performance improvement chart
+        const canvas = document.createElement('canvas');
+        canvas.id = 'performanceImprovementChart';
+        chartContainer.appendChild(canvas);
+
+        // ✅ FIX: Safely prepare data with fallbacks
+        const labels = employeesWithData.map(emp => {
+            if (!emp.name) return 'Unknown';
+            return emp.name.split(' ').map(n => n[0] || '').join('');
+        });
+        
+        const improvementData = employeesWithData.map(emp => emp.averageImprovement || 0);
+
+        // Create chart
+        const ctx = canvas.getContext('2d');
+        new Chart(ctx, {
+            type: 'bar',
+            data: {
+                labels: labels,
+                datasets: [{
+                    label: 'Performance Improvement (%)',
+                    data: improvementData,
+                    backgroundColor: improvementData.map(val => 
+                        val > 0 ? 'rgba(16, 185, 129, 0.7)' : 
+                        val < 0 ? 'rgba(239, 68, 68, 0.7)' : 
+                        'rgba(156, 163, 175, 0.7)'
+                    )
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    title: {
+                        display: true,
+                        text: 'Performance Improvement After Training'
+                    }
+                }
+            }
+        });
+        
+        console.log('✅ Performance chart rendered successfully');
+        
+    } catch (error) {
+        console.error('❌ Error creating performance chart:', error);
+        chartContainer.innerHTML = `
+            <div class="chart-error">
+                <i class="fas fa-exclamation-triangle"></i>
+                <h3>Error Creating Chart</h3>
+                <p>${error.message}</p>
+            </div>
+        `;
+    }
+}
+
+// Show error state for performance trending
+function showPerformanceTrendingError(message) {
+    const chartContainer = document.getElementById('performanceTrendingChart');
+    
+    if (chartContainer) {
+        chartContainer.innerHTML = `
+            <div class="performance-error">
+                <i class="fas fa-exclamation-triangle"></i>
+                <h3>Error Loading Performance Data</h3>
+                <p>${message}</p>
+                <button onclick="loadPerformanceTrending()" style="margin-top: 15px; padding: 8px 16px; background: #dc2626; color: white; border: none; border-radius: 6px; cursor: pointer;">
+                    <i class="fas fa-retry"></i> Try Again
+                </button>
+            </div>
+        `;
+    }
+}
+
+// Refresh training reports
+function refreshTrainingReports() {
+    console.log('🔄 Refreshing training reports...');
+    showNotification('Refreshing training reports...', 'info');
+    
+    // Show loading state
+    const chartContainer = document.getElementById('trainingNeedsChart');
+    if (chartContainer) {
+        chartContainer.innerHTML = `
+            <div class="reports-loading">
+                <i class="fas fa-spinner fa-spin"></i>
+                <p>Loading training needs analysis...</p>
+            </div>
+        `;
+    }
+
+    const performanceChartContainer = document.getElementById('performanceTrendingChart');
+    if (performanceChartContainer) {
+        performanceChartContainer.innerHTML = `
+            <div class="performance-loading">
+                <i class="fas fa-chart-line"></i>
+                <p>Loading performance trending data...</p>
+            </div>
+        `;
+    }
+    
+    // Load fresh data
+    loadTrainingNeedsAnalysis();
+    loadPerformanceTrending();
+}
+
+// Show notification function (if not already defined)
+function showNotification(message, type = 'info') {
+    // Remove any existing notifications
+    const existingNotification = document.querySelector('.notification');
+    if (existingNotification) {
+        existingNotification.remove();
+    }
+    
+    const notification = document.createElement('div');
+    notification.className = 'notification';
+    
+    const colors = {
+        info: '#3b82f6',
+        success: '#10b981',
+        error: '#ef4444',
+        warning: '#f59e0b'
+    };
+    
+    notification.style.cssText = `
+        position: fixed;
+        top: 20px;
+        right: 20px;
+        background-color: ${colors[type] || colors.info};
+        color: white;
+        padding: 15px 20px;
+        border-radius: 8px;
+        box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+        z-index: 10000;
+        font-weight: 500;
+        max-width: 400px;
+        animation: slideIn 0.3s ease;
+    `;
+    
+    notification.textContent = message;
+    document.body.appendChild(notification);
+    
+    setTimeout(() => {
+        if (notification.parentNode) {
+            notification.remove();
+        }
+    }, 4000);
+}
+
+function renderEmployeeNeedsCards(data) {
+    const grid = document.getElementById('employeeNeedsGrid');
+    
+    if (!grid) {
+        console.warn('⚠️ Employee needs grid element not found');
+        return;
+    }
+    
+    if (data.employees.length === 0) {
+        grid.innerHTML = `
+            <div class="no-data-state">
+                <i class="fas fa-user-graduate"></i>
+                <h3>No Training Needs Data</h3>
+                <p>No employees with training needs found for ${data.departmentName}.</p>
+            </div>
+        `;
+        return;
+    }
+    
+    let cardsHTML = '';
+    
+    data.employees.forEach(employee => {
+        const completionClass = employee.completionRate >= 80 ? 'high-completion' : 
+                            employee.completionRate >= 50 ? 'medium-completion' : 'low-completion';
+        
+        const badgeClass = employee.completionRate >= 80 ? 'high' : 
+                        employee.completionRate >= 50 ? 'medium' : 
+                        employee.completionRate > 0 ? 'low' : 'none';
+        
+        cardsHTML += `
+            <div class="employee-needs-card ${completionClass}">
+                <div class="employee-header">
+                    <div class="employee-info">
+                        <h4>${employee.name}</h4>
+                        <p>${employee.position} • ${employee.email}</p>
+                    </div>
+                    <div class="completion-badge ${badgeClass}">
+                        ${employee.completionRate}%
+                    </div>
+                </div>
+                
+                <div class="needs-vs-completion">
+                    <div class="needs-section">
+                        <h5>Training Needs (${employee.needsIdentified})</h5>
+                        <ul class="needs-list">
+                            ${employee.trainingNeeds.length > 0 
+                                ? employee.trainingNeeds.map(need => `<li>${need}</li>`).join('')
+                                : '<li>No specific needs identified</li>'
+                            }
+                        </ul>
+                    </div>
+                    
+                    <div class="completion-section">
+                        <h5>Completed Trainings (${employee.needsMet})</h5>
+                        <ul class="completion-list">
+                            ${employee.completedTrainings.length > 0 
+                                ? employee.completedTrainings.slice(0, 3).map(training => 
+                                    `<li>${training.trainingName}</li>`
+                                ).join('')
+                                : '<li>No trainings completed</li>'
+                            }
+                            ${employee.completedTrainings.length > 3 
+                                ? `<li>+${employee.completedTrainings.length - 3} more...</li>` 
+                                : ''
+                            }
+                        </ul>
+                    </div>
+                </div>
+                
+                <div class="development-areas">
+                    <h6>Development Areas</h6>
+                    <p>${employee.developmentAreas}</p>
+                </div>
+            </div>
+        `;
+    });
+    
+    grid.innerHTML = cardsHTML;
+}
+
+function renderPerformanceEmployeeCards(data) {
+    const grid = document.getElementById('performanceEmployeeGrid');
+    
+    if (!grid) {
+        console.warn('⚠️ Performance employee grid element not found');
+        return;
+    }
+    
+    if (data.employees.length === 0) {
+        grid.innerHTML = `
+            <div class="performance-no-data">
+                <i class="fas fa-chart-line"></i>
+                <h3>No Performance Data</h3>
+                <p>No performance improvement data found for ${data.departmentName}.</p>
+            </div>
+        `;
+        return;
+    }
+    
+    let cardsHTML = '';
+    
+    data.employees.forEach(employee => {
+        const cardClass = employee.averageImprovement > 5 ? 'improved' : 
+                        employee.averageImprovement < -5 ? 'declined' : 'no-data';
+        
+        cardsHTML += `
+            <div class="performance-employee-card ${cardClass}">
+                <div class="employee-header">
+                    <div class="employee-info">
+                        <h4>${employee.name}</h4>
+                        <p>${employee.position} • ${employee.email}</p>
+                    </div>
+                </div>
+                
+                <div class="performance-metrics">
+                    <div class="performance-metric">
+                        <div class="performance-metric-value neutral">${employee.trainingsCompleted}</div>
+                        <div class="performance-metric-label">Trainings</div>
+                    </div>
+                    <div class="performance-metric">
+                        <div class="performance-metric-value ${employee.averageImprovement > 0 ? 'positive' : employee.averageImprovement < 0 ? 'negative' : 'neutral'}">
+                            ${employee.averageImprovement > 0 ? '+' : ''}${employee.averageImprovement.toFixed(1)}%
+                        </div>
+                        <div class="performance-metric-label">Improvement</div>
+                    </div>
+                    <div class="performance-metric">
+                        <div class="performance-metric-value ${employee.hasPerformanceData ? 'positive' : 'neutral'}">
+                            ${employee.hasPerformanceData ? 'Yes' : 'No'}
+                        </div>
+                        <div class="performance-metric-label">Has Data</div>
+                    </div>
+                </div>
+                
+                ${employee.trainingPerformance.length > 0 ? `
+                <div class="training-performance-list">
+                    <h6>Training Performance Details</h6>
+                    ${employee.trainingPerformance.map(tp => `
+                        <div class="training-performance-item">
+                            <span class="training-name">${tp.trainingName}</span>
+                            <span class="improvement-indicator ${tp.improvement !== null ? (tp.improvement > 0 ? 'positive' : 'negative') : 'no-data'}">
+                                ${tp.improvement !== null 
+                                    ? `${tp.improvement > 0 ? '+' : ''}${tp.improvement.toFixed(1)}%`
+                                    : 'No data'
+                                }
+                                ${tp.improvement !== null 
+                                    ? (tp.improvement > 0 ? '<i class="fas fa-arrow-up"></i>' : '<i class="fas fa-arrow-down"></i>')
+                                    : '<i class="fas fa-minus"></i>'
+                                }
+                            </span>
+                        </div>
+                    `).join('')}
+                </div>
+                ` : '<p style="text-align: center; color: #9ca3af; font-style: italic;">No training performance data available</p>'}
+            </div>
+        `;
+    });
+    
+    grid.innerHTML = cardsHTML;
+}
+
+// ==================================================
+// SOLUTION 3: Add Missing API Route
+// ==================================================
+
+// Add this to your controller (lineManagerController.js):
+/*
+getPerformanceTrending: async function (req, res) {
+    try {
+        console.log('📈 Loading Performance Trending...');
+        
+        const currentUserId = req.session?.user?.userId;
+        const { timePeriod = 'thisYear' } = req.query;
+        
+        if (!currentUserId) {
+            return res.status(401).json({
+                success: false,
+                message: 'Unauthorized - User not logged in'
+            });
+        }
+
+        // Get manager info
+        const { data: managerInfo } = await supabase
+            .from('staffaccounts')
+            .select(`
+                departmentId,
+                firstName,
+                lastName,
+                departments!departmentId (deptName)
+            `)
+            .eq('userId', currentUserId)
+            .single();
+
+        const departmentName = managerInfo?.departments?.deptName;
+
+        // For now, return mock data since we don't have the actual trending data
+        const mockData = {
+            departmentName,
+            summary: {
+                avgImprovement: 5.2,
+                totalTrainingsCompleted: 45,
+                employeesImproved: 12,
+                avgPerformanceScore: 4.1
+            },
+            performanceTrend: [
+                { month: 'Jan', performanceImprovement: 3.5, trainingCount: 8, employeesWithTraining: 5, avgPerformanceScore: 3.8 },
+                { month: 'Feb', performanceImprovement: 4.2, trainingCount: 12, employeesWithTraining: 7, avgPerformanceScore: 4.0 },
+                { month: 'Mar', performanceImprovement: 5.8, trainingCount: 15, employeesWithTraining: 9, avgPerformanceScore: 4.3 },
+            ]
+        };
+
+        res.json({ success: true, data: mockData });
+
+    } catch (error) {
+        console.error('❌ Error in getPerformanceTrending:', error);
+        res.status(500).json({
+            success: false,
+            message: 'Failed to load performance trending',
+            error: error.message
+        });
+    }
+},
+*/
+
+// And add this route to your routes file:
+// router.get('/linemanager/api/performance-trending', lineManagerController.getPerformanceTrending);
+
+// ==================================================
+// SOLUTION 4: Fix Element Not Found Issues
+// ==================================================
+
+// Replace your existing showTab function with this safer version:
+function showTab(tabId) {
+    try {
+        // Hide all tab contents
+        document.querySelectorAll('.tab-content').forEach(content => {
+            content.classList.remove('active');
+        });
+        
+        // Remove active class from all tab buttons
+        document.querySelectorAll('.tab-button').forEach(button => {
+            button.classList.remove('active');
+        });
+        
+        // Show selected tab content
+        const targetTab = document.getElementById(tabId);
+        if (targetTab) {
+            targetTab.classList.add('active');
+        }
+        
+        // Add active class to clicked button
+        if (event && event.target) {
+            event.target.classList.add('active');
+        }
+        
+        // Load specific data based on tab
+        if (tabId === 'view-employees') {
+            setTimeout(() => {
+                loadEmployeeProgress();
+            }, 100);
+        } else if (tabId === 'training-reports') {
+            // Only load reports if Chart.js is available
+            if (typeof Chart !== 'undefined') {
+                setTimeout(() => {
+                    loadCurrentReport();
+                    // Comment out this line until the API route is added:
+                    // loadPerformanceTrending();
+                }, 100);
+            } else {
+                showNotification('Charts are not available. Please refresh the page.', 'warning');
+            }
+        }
+    } catch (error) {
+        console.error('❌ Error in showTab:', error);
+        showNotification('Error switching tabs: ' + error.message, 'error');
+    }
+}
+
+// ==================================================
+// SOLUTION 5: Enhanced Chart Creation with Error Handling
+// ==================================================
+
+// Replace your renderTrainingNeedsChart function with this safer version:
+function renderTrainingNeedsChart(data) {
+    // Check if Chart.js is available
+    if (typeof Chart === 'undefined') {
+        console.error('❌ Chart.js is not loaded');
+        const chartContainer = document.getElementById('trainingNeedsChart');
+        if (chartContainer) {
+            chartContainer.innerHTML = `
+                <div class="chart-error">
+                    <i class="fas fa-exclamation-triangle"></i>
+                    <h3>Chart Library Not Loaded</h3>
+                    <p>The Chart.js library failed to load. Please refresh the page.</p>
+                </div>
+            `;
+        }
+        return;
+    }
+
+    const chartContainer = document.getElementById('trainingNeedsChart');
+    
+    if (!chartContainer) {
+        console.warn('⚠️ Chart container not found');
+        return;
+    }
+
+    if (!data || !data.employees) {
+        console.warn('⚠️ Chart data not found');
+        return;
+    }
+
+    // Clear existing content
+    chartContainer.innerHTML = '';
+
+    if (data.employees.length === 0) {
+        chartContainer.innerHTML = `
+            <div class="no-data-state">
+                <i class="fas fa-chart-bar"></i>
+                <h3>No Training Data Available</h3>
+                <p>No training needs or completion data found for ${data.departmentName || 'your department'}.</p>
+            </div>
+        `;
+        return;
+    }
+
+    try {
+        // Create layout for multiple charts
+        const chartsGrid = document.createElement('div');
+        chartsGrid.style.cssText = 'display: grid; grid-template-columns: 2fr 1fr; gap: 20px; margin-bottom: 20px;';
+
+        // 1. Bar Chart Container
+        const barChartContainer = document.createElement('div');
+        barChartContainer.style.cssText = 'background: #f8f9fa; padding: 15px; border-radius: 6px;';
+        
+        const barCanvas = document.createElement('canvas');
+        barCanvas.id = 'needsCompletionChart_' + Date.now(); // Unique ID
+        barChartContainer.appendChild(barCanvas);
+        chartsGrid.appendChild(barChartContainer);
+
+        // 2. Donut Chart Container
+        const donutContainer = document.createElement('div');
+        donutContainer.style.cssText = 'background: #f8f9fa; padding: 15px; border-radius: 6px;';
+        
+        const donutCanvas = document.createElement('canvas');
+        donutCanvas.id = 'completionRateDonut_' + Date.now(); // Unique ID
+        donutContainer.appendChild(donutCanvas);
+        chartsGrid.appendChild(donutContainer);
+
+        chartContainer.appendChild(chartsGrid);
+
+        // Prepare data for bar chart
+        const employees = data.employees.slice(0, 10);
+        const labels = employees.map(emp => {
+            const names = emp.name.split(' ');
+            return names.length > 1 ? `${names[0]} ${names[names.length - 1]}` : names[0];
+        });
+        const needsData = employees.map(emp => emp.needsIdentified || 0);
+        const completedData = employees.map(emp => emp.needsMet || 0);
+
+        // Create bar chart
+        const barCtx = barCanvas.getContext('2d');
+        new Chart(barCtx, {
+            type: 'bar',
+            data: {
+                labels: labels,
+                datasets: [
+                    {
+                        label: 'Training Needs',
+                        data: needsData,
+                        backgroundColor: 'rgba(59, 130, 246, 0.7)',
+                        borderColor: 'rgba(59, 130, 246, 1)',
+                        borderWidth: 1
+                    },
+                    {
+                        label: 'Needs Met',
+                        data: completedData,
+                        backgroundColor: 'rgba(16, 185, 129, 0.7)',
+                        borderColor: 'rgba(16, 185, 129, 1)',
+                        borderWidth: 1
+                    }
+                ]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    title: {
+                        display: true,
+                        text: 'Training Needs vs Completion by Employee'
+                    }
+                }
+            }
+        });
+
+        // Create donut chart
+        const totalNeeds = data.summary.totalNeedsIdentified || 0;
+        const totalMet = data.summary.totalNeedsMet || 0;
+        const totalUnmet = Math.max(0, totalNeeds - totalMet);
+
+        const donutCtx = donutCanvas.getContext('2d');
+        new Chart(donutCtx, {
+            type: 'doughnut',
+            data: {
+                labels: ['Needs Met', 'Needs Unmet'],
+                datasets: [{
+                    data: [totalMet, totalUnmet],
+                    backgroundColor: ['rgba(16, 185, 129, 0.8)', 'rgba(239, 68, 68, 0.8)']
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    title: {
+                        display: true,
+                        text: 'Overall Completion Rate'
+                    }
+                }
+            }
+        });
+
+        console.log('✅ Charts rendered successfully');
+
+    } catch (error) {
+        console.error('❌ Error creating charts:', error);
+        chartContainer.innerHTML = `
+            <div class="chart-error">
+                <i class="fas fa-exclamation-triangle"></i>
+                <h3>Error Creating Charts</h3>
+                <p>${error.message}</p>
+            </div>
+        `;
+    }
+}
+
+// Load reports when the Reports tab is clicked
+document.addEventListener('DOMContentLoaded', function() {
+    // Add event listener for time filter changes
+    const timeFilter = document.getElementById('reportsTimeFilter');
+    if (timeFilter) {
+        timeFilter.addEventListener('change', function() {
+            console.log('📅 Time filter changed to:', this.value);
+            loadCurrentReport();
+        });
+    }
+});
+
+// Update the existing showTab function to load reports when Reports tab is clicked
+// Find your existing showTab function and modify it:
+function showTab(tabId) {
+    // Hide all tab contents
+    document.querySelectorAll('.tab-content').forEach(content => {
+        content.classList.remove('active');
+    });
+    
+    // Remove active class from all tab buttons
+    document.querySelectorAll('.tab-button').forEach(button => {
+        button.classList.remove('active');
+    });
+    
+    // Show selected tab content
+    document.getElementById(tabId).classList.add('active');
+    
+    // Add active class to clicked button
+    event.target.classList.add('active');
+    
+    // Load specific data based on tab
+    if (tabId === 'view-employees') {
+        setTimeout(() => {
+            loadEmployeeProgress();
+        }, 100);
+    } else if (tabId === 'training-reports') {
+        // NEW: Load training reports when Reports tab is clicked
+        setTimeout(() => {
+            loadCurrentReport();
+        }, 100);
+    }
 }
 </script>
 </body>

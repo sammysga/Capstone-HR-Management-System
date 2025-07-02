@@ -1435,7 +1435,7 @@ const hrController = {
             });
 
             return {
-                departments: budgetOverview,
+                departments: budgetOverview.sort((a, b) => b.spent - a.spent),
                 totalAllocated: budgetOverview.reduce((sum, dept) => sum + dept.allocated, 0),
                 totalSpent: budgetOverview.reduce((sum, dept) => sum + dept.spent, 0),
                 totalRemaining: budgetOverview.reduce((sum, dept) => sum + dept.remaining, 0)
