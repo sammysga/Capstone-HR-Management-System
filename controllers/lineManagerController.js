@@ -6250,16 +6250,51 @@ console.log('Final applicants list:', applicants);
                     
                     updateResults.passed.updated++;
                     
-                    // Add chatbot message
-                    const { data: chatData, error: chatError } = await supabase
-                        .from('chatbot_history')
-                        .insert([{
-                            userId,
-                            message: JSON.stringify({ text: "Congratulations! You have successfully passed the initial screening process. We look forward to proceeding with the next interview stage." }),
-                            sender: 'bot',
-                            timestamp: new Date().toISOString(),
-                            applicantStage: 'P1 - PASSED'
-                        }]);
+                    // 🔹 First chatbot message - congratulations
+const { error: messageError1 } = await supabase
+    .from('chatbot_history')
+    .insert([{
+        userId,
+        message: JSON.stringify({ 
+            text: "Congratulations! You have successfully passed the initial screening process. We look forward to proceeding with the next interview stage with the HR." 
+        }),
+        sender: 'bot',
+        timestamp: new Date().toISOString(),
+        applicantStage: 'P1 - PASSED'
+    }]);
+
+if (messageError1) {
+    console.error(`❌ [LineManager] Error adding P1 congratulatory message for ${userId}:`, messageError1);
+} else {
+    console.log(`💬 [LineManager] Sent congratulations to ${userId}`);
+}
+
+// 🔹 Second chatbot message - scheduling link
+const { error: messageError2 } = await supabase
+    .from('chatbot_history')
+    .insert([{
+        userId,
+        message: JSON.stringify({ 
+            text: "Please click the button below to schedule your next interview:",
+            buttons: [
+                {
+                    text: "Schedule Interview",
+                    value: "schedule_p1_interview",
+                    url: "/applicant/schedule-interview?stage=P1"
+                }
+            ]
+        }),
+        sender: 'bot',
+        timestamp: new Date(Date.now() + 1000).toISOString(),
+        applicantStage: 'P1 - PASSED'
+    }]);
+
+if (messageError2) {
+    console.error(`❌ [LineManager] Error adding P1 scheduling button for ${userId}:`, messageError2);
+} else {
+    console.log(`💬 [LineManager] Sent scheduling button to ${userId}`);
+}
+
                         
                     if (chatError) {
                         console.error(`❌ [LineManager] Error adding chat message for ${userId}:`, chatError);
@@ -6276,35 +6311,51 @@ console.log('Final applicants list:', applicants);
                 try {
                     console.log(`✅ [LineManager] Updating P1 FAILED status for userId: ${userId}`);
                     
-                    // Update applicant status in the database
-                    const { data: updateData, error: updateError } = await supabase
-                        .from('applicantaccounts')
-                        .update({ applicantStatus: 'P1 - FAILED' })
-                        .eq('userId', userId);
-                        
-                    if (updateError) {
-                        console.error(`❌ [LineManager] Error updating status for ${userId}:`, updateError);
-                        updateResults.failed.errors.push(`${userId}: ${updateError.message}`);
-                        continue;
-                    }
-                    
-                    updateResults.failed.updated++;
-                    
-                    // Add chatbot message
-                    const { data: chatData, error: chatError } = await supabase
-                        .from('chatbot_history')
-                        .insert([{
-                            userId,
-                            message: JSON.stringify({ text: "We regret to inform you that you have not been chosen as a candidate for this position. Thank you for your interest in Company ABC, and we wish you the best in your future endeavors." }),
-                            sender: 'bot',
-                            timestamp: new Date().toISOString(),
-                            applicantStage: 'P1 - FAILED'
-                        }]);
-                        
-                    if (chatError) {
-                        console.error(`❌ [LineManager] Error adding chat message for ${userId}:`, chatError);
-                    }
-                    
+                   // 🔹 First chatbot message - congratulations
+const { error: messageError1 } = await supabase
+    .from('chatbot_history')
+    .insert([{
+        userId,
+        message: JSON.stringify({ 
+            text: "Congratulations! You have successfully passed the initial screening process. We look forward to proceeding with the next interview stage with the HR." 
+        }),
+        sender: 'bot',
+        timestamp: new Date().toISOString(),
+        applicantStage: 'P1 - PASSED'
+    }]);
+
+if (messageError1) {
+    console.error(`❌ [LineManager] Error adding P1 congratulatory message for ${userId}:`, messageError1);
+} else {
+    console.log(`💬 [LineManager] Sent congratulations to ${userId}`);
+}
+
+// 🔹 Second chatbot message - scheduling link
+const { error: messageError2 } = await supabase
+    .from('chatbot_history')
+    .insert([{
+        userId,
+        message: JSON.stringify({ 
+            text: "Please click the button below to schedule your next interview:",
+            buttons: [
+                {
+                    text: "Schedule Interview",
+                    value: "schedule_p1_interview",
+                    url: "/applicant/schedule-interview?stage=P1"
+                }
+            ]
+        }),
+        sender: 'bot',
+        timestamp: new Date(Date.now() + 1000).toISOString(),
+        applicantStage: 'P1 - PASSED'
+    }]);
+
+if (messageError2) {
+    console.error(`❌ [LineManager] Error adding P1 scheduling button for ${userId}:`, messageError2);
+} else {
+    console.log(`💬 [LineManager] Sent scheduling button to ${userId}`);
+}
+
                 } catch (error) {
                     console.error(`❌ [LineManager] Error processing failed applicant ${userId}:`, error);
                     updateResults.failed.errors.push(`${userId}: ${error.message}`);
@@ -6543,12 +6594,12 @@ markAsP3Failed: async function(req, res) {
 //         const emailHtml = `
 //           <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; border: 1px solid #e0e0e0; border-radius: 8px;">
 //             <div style="text-align: center; margin-bottom: 30px;">
-//               <img src="https://your-company-logo-url.com" alt="Prime Infrastructure Logo" style="max-width: 200px; height: auto;">
+//               <img src="https://your-company-logo-url.com" alt="Company ABC Logo" style="max-width: 200px; height: auto;">
 //             </div>
             
 //             <h1 style="color: #124A5C; text-align: center; margin-bottom: 20px;">Congratulations, ${userName}!</h1>
             
-//             <p style="font-size: 16px; line-height: 1.6; color: #333;">We are delighted to inform you that you have successfully passed the initial screening process for your application with Prime Infrastructure.</p>
+//             <p style="font-size: 16px; line-height: 1.6; color: #333;">We are delighted to inform you that you have successfully passed the initial screening process for your application with Company ABC.</p>
             
 //             <div style="background-color: #f8f8f8; padding: 15px; border-radius: 6px; margin: 25px 0;">
 //               <h2 style="color: #28a745; margin-top: 0;">What's Next?</h2>
@@ -6560,7 +6611,7 @@ markAsP3Failed: async function(req, res) {
 //             <p style="font-size: 16px; line-height: 1.6; color: #333;">If you have any questions in the meantime, feel free to respond to this email or contact our recruitment team at <a href="mailto:careers@primeinfra.com" style="color: #07ACB9;">careers@primeinfra.com</a>.</p>
             
 //             <div style="margin-top: 30px; padding-top: 20px; border-top: 1px solid #e0e0e0;">
-//               <p style="font-size: 14px; color: #666; text-align: center;">Best regards,<br>The Prime Infrastructure Recruitment Team</p>
+//               <p style="font-size: 14px; color: #666; text-align: center;">Best regards,<br>The Company ABC Recruitment Team</p>
 //             </div>
             
 //             <div style="margin-top: 30px; font-size: 12px; color: #999; text-align: center;">
@@ -6571,7 +6622,7 @@ markAsP3Failed: async function(req, res) {
         
 //         try {
 //           await transporter.sendMail({
-//             from: `"Prime Infrastructure Careers" <${process.env.EMAIL_USER}>`,
+//             from: `"Company ABC Careers" <${process.env.EMAIL_USER}>`,
 //             to: userEmail,
 //             subject: emailSubject,
 //             html: emailHtml,
@@ -6618,7 +6669,7 @@ markAsP3Failed: async function(req, res) {
 //         }
         
 //         // 3. Send rejection message through the chatbot history
-//         const rejectionMessage = "We regret to inform you that you have not been chosen as a candidate for this position. Thank you for your interest in applying at Prime Infrastructure, and we wish you the best in your future endeavors.";
+//         const rejectionMessage = "We regret to inform you that you have not been chosen as a candidate for this position. Thank you for your interest in applying at Company ABC, and we wish you the best in your future endeavors.";
         
 //         const { data: chatData, error: chatError } = await supabase
 //           .from('chatbot_history')
@@ -6635,18 +6686,18 @@ markAsP3Failed: async function(req, res) {
 //         }
         
 //         // 4. Send rejection email to the applicant
-//         const emailSubject = 'Update on Your Application with Prime Infrastructure';
+//         const emailSubject = 'Update on Your Application with Company ABC';
 //         const emailHtml = `
 //           <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; border: 1px solid #e0e0e0; border-radius: 8px;">
 //             <div style="text-align: center; margin-bottom: 30px;">
-//               <img src="https://your-company-logo-url.com" alt="Prime Infrastructure Logo" style="max-width: 200px; height: auto;">
+//               <img src="https://your-company-logo-url.com" alt="Company ABC Logo" style="max-width: 200px; height: auto;">
 //             </div>
             
 //             <h1 style="color: #124A5C; text-align: center; margin-bottom: 20px;">Application Update</h1>
             
 //             <p style="font-size: 16px; line-height: 1.6; color: #333;">Dear ${userName},</p>
             
-//             <p style="font-size: 16px; line-height: 1.6; color: #333;">Thank you for your interest in joining Prime Infrastructure and for taking the time to apply for our position.</p>
+//             <p style="font-size: 16px; line-height: 1.6; color: #333;">Thank you for your interest in joining Company ABC and for taking the time to apply for our position.</p>
             
 //             <p style="font-size: 16px; line-height: 1.6; color: #333;">After careful consideration of all applications, we regret to inform you that we have decided not to proceed with your application at this time.</p>
             
@@ -6657,7 +6708,7 @@ markAsP3Failed: async function(req, res) {
 //             <p style="font-size: 16px; line-height: 1.6; color: #333;">We wish you the best in your job search and future career endeavors.</p>
             
 //             <div style="margin-top: 30px; padding-top: 20px; border-top: 1px solid #e0e0e0;">
-//               <p style="font-size: 14px; color: #666; text-align: center;">Best regards,<br>The Prime Infrastructure Recruitment Team</p>
+//               <p style="font-size: 14px; color: #666; text-align: center;">Best regards,<br>The Company ABC Recruitment Team</p>
 //             </div>
             
 //             <div style="margin-top: 30px; font-size: 12px; color: #999; text-align: center;">
@@ -6668,7 +6719,7 @@ markAsP3Failed: async function(req, res) {
         
 //         try {
 //           await transporter.sendMail({
-//             from: `"Prime Infrastructure Careers" <${process.env.EMAIL_USER}>`,
+//             from: `"Company ABC Careers" <${process.env.EMAIL_USER}>`,
 //             to: userEmail,
 //             subject: emailSubject,
 //             html: emailHtml,
