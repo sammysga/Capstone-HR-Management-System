@@ -284,165 +284,7 @@
                     color: white;
                 }
 
-        /* Styling for the Modals */
-        .modal {
-            display: none; 
-            position: fixed; 
-            z-index: 1000; 
-            left: 0;
-            top: 0;
-            width: 100%; 
-            height: 100%; 
-            overflow: auto; 
-            background-color: rgba(0,0,0,0.4); 
-        }
-
-        .modal-content {
-            background-color: #fefefe;
-            margin: 10% auto; 
-            padding: 20px;
-            border: 1px solid #888;
-            border-radius: 8px; 
-            width: 80%; 
-            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2); 
-        }
-
-        .modal-header, .modal-body, .modal-footer {
-            text-align: center;
-        }
-
-        .close-button {
-            color: #aaa;
-            float: right;
-            font-size: 28px;
-            font-weight: bold;
-        }
-
-        .close-button:hover,
-        .close-button:focus {
-            color: black;
-            text-decoration: none;
-            cursor: pointer;
-        }
-
-        .modal-buttons {
-            display: flex;
-            justify-content: center;
-            margin-top: 20px;
-        }
-
-        .modal-buttons button {
-            padding: 10px 20px;
-            margin: 0 10px;
-            border: none;
-            border-radius: 5px;
-            cursor: pointer;
-            font-size: 16px;
-            transition: background-color 0.3s ease;
-        }
-
-        .modal-buttons button#backButton {
-            background-color: rgba(18, 74, 92, 0.5); 
-            color: white;
-        }
-
-        .modal-buttons button#confirmButton {
-            background-color: #124A5C; 
-            color: white;
-        }
-
-        .modal-buttons button:hover {
-            opacity: 0.8; 
-        }
-
-        .divider {
-            height: 2px; 
-            background-color: #124A5C; 
-            margin: 10px 0; 
-        }
-
-        .modal-question {
-            display: flex;
-            justify-content: center;  
-            align-items: center;
-            text-align: center;
-            margin-top: 20px;  
-            margin-bottom: 20px; 
-            font-size: 16px;
-        }
-
-        /* Modal Styling */
 .modal {
-    display: none; /* Hidden by default */
-    position: fixed;
-    z-index: 1000;
-    left: 0;
-    top: 0;
-    width: 100%;
-    height: 100%;
-    background-color: rgba(0, 0, 0, 0.5);
-    overflow: auto;
-}
-
-.modal-content {
-    background-color: #fefefe;
-    margin: 10% auto;
-    padding: 20px;
-    border-radius: 8px;
-    width: 60%; /* Adjust as necessary */
-    text-align: center; /* Center content inside modal */
-    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
-}
-
-.modal-content h2, .modal-content p {
-    color: #124A5C;
-    margin-bottom: 20px;
-}
-
-.modal-buttons {
-    display: flex;
-    justify-content: center;
-    gap: 20px; /* Space between buttons */
-}
-
-.modal-buttons button {
-    padding: 10px 20px;
-    font-size: 16px;
-    font-weight: bold;
-    border: none;
-    border-radius: 5px;
-    cursor: pointer;
-    transition: background-color 0.3s ease;
-}
-
-.back-button {
-    background-color: rgba(18, 74, 92, 0.5); /* Transparent background */
-    color: white;
-}
-
-.confirm-button {
-    background-color: #124A5C;
-    color: white;
-}
-
-.modal-buttons button:hover {
-    opacity: 0.8;
-}
-
-/* Close Button (X) */
-.close-button {
-    color: #aaa;
-    font-size: 28px;
-    font-weight: bold;
-    float: right;
-    cursor: pointer;
-}
-
-.close-button:hover {
-    color: black;
-}
-
-.review-modal {
     display: none;
     position: fixed;
     z-index: 1000;
@@ -451,64 +293,317 @@
     width: 100%;
     height: 100%;
     overflow: auto;
-    background-color: rgba(0, 0, 0, 0.4);
+    background-color: rgba(0, 0, 0, 0.5);
+    backdrop-filter: blur(3px);
 }
 
-.review-modal-content {
+.modal-content {
     background-color: #fefefe;
-    margin: 10% auto;
+    margin: 5% auto;
     padding: 20px;
-    border: 1px solid #888;
-    border-radius: 8px;
-    width: 50%;
-    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
-    text-align: center;
+    border: none;
+    border-radius: 12px;
+    width: 80%;
+    max-width: 600px;
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2);
+    position: relative;
+    animation: modalSlideIn 0.3s ease-out;
 }
 
-.review-close-button {
+@keyframes modalSlideIn {
+    from {
+        opacity: 0;
+        transform: translateY(-50px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.close-button {
     color: #aaa;
     float: right;
     font-size: 28px;
     font-weight: bold;
-}
-
-.review-close-button:hover,
-.review-close-button:focus {
-    color: black;
-    text-decoration: none;
+    position: absolute;
+    top: 15px;
+    right: 20px;
     cursor: pointer;
+    transition: color 0.3s ease;
 }
 
-.review-modal-buttons {
+.close-button:hover,
+.close-button:focus {
+    color: #000;
+    text-decoration: none;
+}
+
+
+.modal h2 {
+    color: #124A5C;
+    margin-bottom: 20px;
+    font-size: 24px;
+    font-weight: 600;
+}
+
+.modal p {
+    line-height: 1.6;
+    margin-bottom: 20px;
+    color: #555;
+}
+
+.modal-buttons {
     display: flex;
     justify-content: center;
-    margin-top: 20px;
+    gap: 15px;
+    margin-top: 30px;
 }
 
-.review-modal-buttons button {
-    padding: 10px 20px;
-    margin: 0 10px;
+.back-button, .confirm-button {
+    padding: 12px 25px;
     border: none;
-    border-radius: 5px;
+    border-radius: 6px;
     cursor: pointer;
     font-size: 16px;
-    transition: background-color 0.3s ease;
+    font-weight: 500;
+    transition: all 0.3s ease;
+    min-width: 120px;
 }
 
-.review-modal-back-button {
-    background-color: rgba(18, 74, 92, 0.5);
+.back-button {
+    background-color: #6c757d;
     color: white;
 }
 
-.review-modal-confirm-button {
-    background-color: #124A5C;
+.back-button:hover {
+    background-color: #5a6268;
+    transform: translateY(-1px);
+}
+
+.confirm-button {
+    background: linear-gradient(135deg, #124A5C, #1a5a6b);
     color: white;
 }
 
-.review-modal-buttons button:hover {
-    opacity: 0.8;
+.confirm-button:hover {
+    background: linear-gradient(135deg, #1a5a6b, #124A5C);
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(18, 74, 92, 0.3);
 }
 
+.divider {
+    height: 1px;
+    background-color: #e0e0e0;
+    margin: 20px 0;
+}
+
+
+/* Progress Steps */
+.progress-step {
+    transition: all 0.3s ease;
+}
+
+.progress-step.active {
+    background: #4caf50 !important;
+    color: white !important;
+}
+
+.progress-step.completed {
+    background: #4caf50 !important;
+    color: white !important;
+}
+
+.progress-step.pending {
+    background: #e0e0e0 !important;
+    color: #666 !important;
+}
+/* Recipients Section */
+.recipients-section {
+    padding: 20px;
+    border-radius: 8px;
+    margin: 20px 0;
+}
+
+.recipients-section h4 {
+    margin-top: 0;
+    margin-bottom: 15px;
+    display: flex;
+    align-items: center;
+}
+
+.recipients-section h4 i {
+    margin-right: 10px;
+}
+
+.recipients-list {
+    max-height: 180px;
+    overflow-y: auto;
+    background: rgba(255, 255, 255, 0.3);
+    padding: 15px;
+    border-radius: 5px;
+}
+
+/* Recipient Items */
+.recipient-item {
+    margin-bottom: 10px;
+    padding: 10px;
+    background: rgba(255, 255, 255, 0.8);
+    border-radius: 5px;
+    border-left: 3px solid #124A5C;
+}
+
+.recipient-name {
+    font-weight: bold;
+    color: #124A5C;
+}
+
+.recipient-email {
+    color: #666;
+    font-size: 14px;
+}
+
+.recipient-job {
+    color: #888;
+    font-size: 12px;
+    font-style: italic;
+}
+
+
+/* Form Elements */
+.modal input[type="text"], .modal textarea {
+    border: 2px solid #ddd;
+    border-radius: 6px;
+    padding: 12px;
+    font-size: 14px;
+    transition: border-color 0.3s ease;
+    width: 100%;
+    box-sizing: border-box;
+}
+
+.modal input[type="text"]:focus, .modal textarea:focus {
+    border-color: #124A5C;
+    outline: none;
+    box-shadow: 0 0 0 3px rgba(18, 74, 92, 0.1);
+}
+
+.modal label {
+    display: block;
+    font-weight: 600;
+    margin-bottom: 8px;
+    color: #333;
+}
+
+/* Email Form Sections */
+.email-subject-section,
+.email-template-section {
+    margin: 25px 0;
+}
+
+.email-subject-section label,
+.email-template-section label {
+    display: block;
+    font-weight: bold;
+    margin-bottom: 10px;
+    color: #333;
+    font-size: 16px;
+}
+
+.email-subject-section label i,
+.email-template-section label i {
+    margin-right: 8px;
+    color: #124A5C;
+}
+
+.email-input {
+    width: 100%;
+    padding: 12px;
+    border: 2px solid #ddd;
+    border-radius: 6px;
+    font-size: 16px;
+    transition: border-color 0.3s ease;
+    box-sizing: border-box;
+}
+
+.email-input:focus {
+    outline: none;
+    border-color: #124A5C;
+    box-shadow: 0 0 5px rgba(18, 74, 92, 0.3);
+}
+
+.template-info {
+    margin: 10px 0;
+    padding: 10px;
+    background-color: #f8f9fa;
+    border-radius: 5px;
+    border-left: 3px solid #17a2b8;
+}
+
+.template-info small {
+    color: #6c757d;
+    font-size: 14px;
+}
+
+.template-info code {
+    background-color: #e9ecef;
+    padding: 2px 4px;
+    border-radius: 3px;
+    font-family: 'Courier New', monospace;
+    color: #495057;
+}
+
+.email-textarea {
+    width: 100%;
+    padding: 15px;
+    border: 2px solid #ddd;
+    border-radius: 6px;
+    font-family: Arial, sans-serif;
+    font-size: 14px;
+    line-height: 1.6;
+    resize: vertical;
+    min-height: 300px;
+    transition: border-color 0.3s ease;
+    box-sizing: border-box;
+}
+
+.email-textarea:focus {
+    outline: none;
+    border-color: #124A5C;
+    box-shadow: 0 0 5px rgba(18, 74, 92, 0.3);
+}
+
+/* Sending Methods Info */
+.sending-methods-info {
+    background: linear-gradient(135deg, #e7f3ff, #f0f8ff);
+    padding: 20px;
+    border-radius: 10px;
+    margin: 20px 0;
+    border-left: 5px solid #007bff;
+}
+
+.sending-methods-info h4 {
+    color: #0066cc;
+    margin-top: 0;
+    margin-bottom: 15px;
+    display: flex;
+    align-items: center;
+    font-size: 18px;
+}
+
+.sending-methods-info h4 i {
+    margin-right: 10px;
+    font-size: 20px;
+}
+
+.sending-methods-info p {
+    color: #0066cc;
+    margin-bottom: 0;
+    line-height: 1.8;
+    font-size: 15px;
+}
+
+
+       
 
 /*USER ID CSS*/
 #applicant-userId {
@@ -621,19 +716,31 @@
     min-width: 180px;
 }
 
-/* Toggle Status Button - P2 */
+
+/* Button Variations */
 .btn-toggle-status {
-    padding: 6px 12px;
-    background-color: #6c757d;
-    color: white;
+    padding: 8px 16px;
     border: none;
     border-radius: 4px;
     cursor: pointer;
-    transition: background-color 0.3s;
+    font-size: 14px;
+    font-weight: 500;
+    transition: all 0.3s ease;
+}
+
+.btn-toggle-status.status-passed {
+    background-color: #28a745;
+    color: white;
+}
+
+.btn-toggle-status.status-failed {
+    background-color: #dc3545;
+    color: white;
 }
 
 .btn-toggle-status:hover {
-    background-color: #5a6268;
+    transform: translateY(-1px);
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
 }
 
 .btn-toggle-status.status-passed {
@@ -644,6 +751,24 @@
     background-color: #dc3545;
 }
 
+/* Responsive Design */
+@media (max-width: 768px) {
+    .modal-content {
+        width: 95%;
+        margin: 10% auto;
+        padding: 15px;
+    }
+    
+    .modal-buttons {
+        flex-direction: column;
+        gap: 10px;
+    }
+    
+    .progress-step {
+        font-size: 12px;
+        padding: 6px !important;
+    }
+}
 /* No data message */
 .no-data-message {
     padding: 20px;
@@ -801,6 +926,141 @@
             font-style: italic;
         }
 
+/* Modal Buttons */
+.modal-buttons {
+    display: flex;
+    justify-content: center;
+    gap: 15px;
+    margin-top: 30px;
+    flex-wrap: wrap;
+}
+
+.modal-buttons button {
+    padding: 12px 20px;
+    border: none;
+    border-radius: 6px;
+    font-size: 16px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    display: flex;
+    align-items: center;
+    min-width: 140px;
+    justify-content: center;
+}
+
+.modal-buttons button i {
+    margin-right: 8px;
+}
+
+.back-button {
+    background: #6c757d;
+    color: white;
+}
+
+.back-button:hover {
+    background: #5a6268;
+    transform: translateY(-2px);
+}
+
+.confirm-button {
+    color: white;
+    font-weight: 600;
+}
+
+.gmail-button {
+    background: linear-gradient(135deg, #db4437, #c23321);
+}
+
+.gmail-button:hover {
+    background: linear-gradient(135deg, #c23321, #a52714);
+    transform: translateY(-2px);
+}
+
+.preview-button {
+    background: linear-gradient(135deg, #17a2b8, #138496);
+}
+
+.preview-button:hover {
+    background: linear-gradient(135deg, #138496, #117a8b);
+    transform: translateY(-2px);
+}
+
+.send-button {
+    font-weight: 600;
+}
+
+.send-passed {
+    background: linear-gradient(135deg, #28a745, #20c997);
+}
+
+.send-passed:hover {
+    background: linear-gradient(135deg, #20c997, #1fa886);
+    transform: translateY(-2px);
+}
+
+.send-failed {
+    background: linear-gradient(135deg, #dc3545, #c82333);
+}
+
+.send-failed:hover {
+    background: linear-gradient(135deg, #c82333, #b21f2d);
+    transform: translateY(-2px);
+}
+
+/* Button toggle states */
+.btn-toggle-status {
+    padding: 8px 16px;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    font-weight: bold;
+    transition: all 0.3s ease;
+}
+
+.btn-toggle-status.status-passed {
+    background-color: #28a745;
+    color: white;
+}
+
+.btn-toggle-status.status-failed {
+    background-color: #dc3545;
+    color: white;
+}
+
+.btn-toggle-status:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+    .modal-content {
+        width: 95%;
+        margin: 5% auto;
+        padding: 20px;
+    }
+    
+    .progress-steps {
+        flex-direction: column;
+        gap: 10px;
+    }
+    
+    .progress-step {
+        font-size: 12px;
+        padding: 8px;
+    }
+    
+    .modal-buttons {
+        flex-direction: column;
+        align-items: stretch;
+    }
+    
+    .modal-buttons button {
+        margin-bottom: 10px;
+        min-width: auto;
+    }
+}
 
     </style>
 </head>
@@ -1261,7 +1521,7 @@ For Review
                 type="text" 
                 id="p2PassedEmailSubject" 
                 style="width: 100%; padding: 12px; border: 2px solid #28a745; border-radius: 6px; font-size: 16px;"
-                value="Great News! You've Advanced to Final Interview - Company ABC"
+                value="Great News! You've Advanced to Final Interview - Prime Infrastructure"
             >
         </div>
         
@@ -1358,7 +1618,7 @@ For Review
                 type="text" 
                 id="p2FailedEmailSubject" 
                 style="width: 100%; padding: 12px; border: 2px solid #dc3545; border-radius: 6px; font-size: 16px;"
-                value="Thank You for Your Interview - Company ABC"
+                value="Thank You for Your Interview - Prime Infrastructure"
             >
         </div>
         
@@ -2106,7 +2366,6 @@ let p2EmailSendingState = {
     failedResults: null
 };
 
-// NEW: P2 Gmail Integration Flow Starter Function
 function startP2GmailIntegrationFlow() {
     console.log("🔥 HR P2: Starting Gmail integration flow from finalization modal");
     p2EmailSendingState.phase = 'P2';
@@ -2116,6 +2375,7 @@ function startP2GmailIntegrationFlow() {
     
     // Close the finalization modal first
     closeModal('finalizeModalP2');
+    closeModal('notifyApplicantsModal');
     
     // Start the P2 review process
     executeP2Finalization();
@@ -2298,6 +2558,7 @@ function moveP2RowToSection(applicantId, fromTableId, toTableId) {
     
     console.log(`✅ [P2 Move] Successfully moved applicant ${applicantId} to ${toTableId}`);
 }
+
 
 // Toggle P2 applicant status between PASSED and FAILED
 function toggleP2ApplicantStatus(button) {
@@ -2570,25 +2831,20 @@ async function executeP2Finalization() {
         console.error("🔥 HR P2: Error in P2 finalization:", error);
         alert("Error preparing P2 email composition: " + error.message);
     }
-} 
+}
 
-// Enhanced fetchP2ApplicantDataForEmails function with better debugging
+
 async function fetchP2ApplicantDataForEmails(passedApplicantIds, failedApplicantIds) {
     try {
-        console.log('📡 [P2 Data] Fetching P2 applicant data for emails...');
-        console.log('📊 [P2 Data] Request payload:', {
-            passedApplicantIds,
-            failedApplicantIds,
-            getEmailData: true
-        });
+        console.log('📡 [HR] Fetching P2 applicant data using existing finalizeP2Review endpoint...');
         
         const requestBody = {
             passedApplicantIds: passedApplicantIds,
             failedApplicantIds: failedApplicantIds,
-            getEmailData: true
+            getEmailData: true  // This triggers your existing email data fetch logic
         };
         
-        console.log('📡 [P2 Data] Sending request to /hr/finalizeP2Review with body:', JSON.stringify(requestBody, null, 2));
+        console.log('📡 [HR] Request payload:', JSON.stringify(requestBody, null, 2));
         
         const response = await fetch('/hr/finalizeP2Review', {
             method: 'POST',
@@ -2598,20 +2854,19 @@ async function fetchP2ApplicantDataForEmails(passedApplicantIds, failedApplicant
             body: JSON.stringify(requestBody),
         });
         
-        console.log('📡 [P2 Data] Response status:', response.status);
-        console.log('📡 [P2 Data] Response headers:', response.headers);
+        console.log('📡 [HR] Response status:', response.status);
         
         const data = await response.json();
-        console.log('📡 [P2 Data] API response data:', JSON.stringify(data, null, 2));
+        console.log('📡 [HR] API response data:', JSON.stringify(data, null, 2));
         
         if (!data.success) {
-            console.error('❌ [P2 Data] API returned error:', data.message);
+            console.error('❌ [HR] API returned error:', data.message);
             throw new Error(data.message || 'Failed to fetch P2 applicant data');
         }
         
-        console.log('✅ [P2 Data] Successfully fetched applicant data');
-        console.log('📊 [P2 Data] Passed applicants:', data.passedApplicants);
-        console.log('📊 [P2 Data] Failed applicants:', data.failedApplicants);
+        console.log('✅ [HR] Successfully fetched P2 applicant data using your existing endpoint');
+        console.log('📊 [HR] Passed applicants:', data.passedApplicants);
+        console.log('📊 [HR] Failed applicants:', data.failedApplicants);
         
         return {
             passedApplicants: data.passedApplicants || [],
@@ -2619,143 +2874,1017 @@ async function fetchP2ApplicantDataForEmails(passedApplicantIds, failedApplicant
         };
         
     } catch (error) {
-        console.error("❌ [P2 Data] Error fetching P2 applicant data:", error);
-        console.error("❌ [P2 Data] Error stack:", error.stack);
+        console.error("❌ [HR] Error fetching P2 applicant data:", error);
         throw error;
     }
 }
 
-// Updated fetchP2EmailTemplates function to use your existing endpoint
+
 async function fetchP2EmailTemplates() {
     try {
-        console.log("📧 [P2 Templates] Fetching P2 email templates from emailService.js via backend...");
+        console.log("📧 HR P2: Fetching P2 email templates...");
         
-        // Use your existing P2-specific endpoint
         const response = await fetch('/hr/getP2EmailTemplates');
-        
-        if (!response.ok) {
-            throw new Error(`HTTP error! status: ${response.status}`);
-        }
-        
         const data = await response.json();
-        console.log('📡 [P2 Templates] Backend response:', data);
         
         if (!data.success) {
             throw new Error(data.message || 'Failed to fetch P2 email templates');
         }
         
-        console.log("✅ [P2 Templates] Successfully fetched P2 templates from emailService.js via backend");
-        console.log("📧 [P2 Templates] Templates received:", data.templates);
+        console.log("✅ HR P2: Successfully fetched P2 templates");
         
         return data.templates;
         
     } catch (error) {
-        console.error("❌ [P2 Templates] Error fetching P2 email templates from backend:", error);
+        console.error("❌ HR P2: Error fetching P2 email templates:", error);
         
-        // Minimal fallback
-        console.log("⚠️ [P2 Templates] Backend failed, using minimal fallback");
+        // Fallback templates
         return {
             passed: {
-                subject: 'Great News! You\'ve Advanced to Final Interview - Company ABC',
+                subject: 'Great News! You\'ve Advanced to Final Interview - Prime Infrastructure',
                 template: 'Congratulations {applicantName}! You have advanced to the final interview stage for the {jobTitle} position. Our team will contact you soon.'
             },
             failed: {
-                subject: 'Thank You for Your Interview - Company ABC',
+                subject: 'Thank You for Your Interview - Prime Infrastructure',
                 template: 'Thank you {applicantName} for your interest in the {jobTitle} position. We have decided to move forward with another candidate.'
             }
         };
     }
 }
-// Show P2 passed applicants email modal
+
+
+// ============================
+// P2 PASS/FAIL FUNCTIONS
+// ============================
+function p2passApplicant(applicantId) {
+    console.log(`🟢 [P2 Pass] Starting pass action for applicantId: ${applicantId}`);
+    
+    if (!applicantId) {
+        console.error('❌ [P2 Pass] Missing applicantId');
+        alert("Error: Invalid Applicant ID");
+        return;
+    }
+
+    // Make API call to update status
+    fetch('/hr/markAsP2Passed', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ applicantId: applicantId }),
+    })
+    .then(response => {
+        console.log(`📡 [P2 Pass] API response status: ${response.status}`);
+        return response.json();
+    })
+    .then(data => {
+        console.log('📡 [P2 Pass] API response data:', data);
+        
+        if (data.success) {
+            // Record this in the pending changes
+            if (!window.pendingP2StatusChanges) {
+                window.pendingP2StatusChanges = {};
+            }
+            window.pendingP2StatusChanges[applicantId] = 'PASSED';
+            
+            // Move the row from awaiting to declared results
+            moveP2RowToSection(applicantId, 'awaitingActionTable', 'declaredResultsTable');
+            
+            console.log(`✅ [P2 Pass] Successfully marked applicant ${applicantId} as P2 PASSED!`);
+            alert("Successfully marked applicant as P2 PASSED!");
+            
+        } else {
+            console.error(`❌ [P2 Pass] API error: ${data.message}`);
+            alert("Error updating applicant status: " + (data.message || "Unknown error"));
+        }
+    })
+    .catch(error => {
+        console.error("❌ [P2 Pass] Network error:", error);
+        alert("Failed to update applicant status.");
+    });
+}
+
+function p2rejectApplicant(applicantId) {
+    console.log(`🔴 [P2 Reject] Starting reject action for applicantId: ${applicantId}`);
+    
+    if (!applicantId) {
+        console.error('❌ [P2 Reject] Missing applicantId');
+        alert("Error: Invalid Applicant ID");
+        return;
+    }
+
+    // Make API call to update status
+    fetch('/hr/markAsP2Failed', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ applicantId: applicantId }),
+    })
+    .then(response => {
+        console.log(`📡 [P2 Reject] API response status: ${response.status}`);
+        return response.json();
+    })
+    .then(data => {
+        console.log('📡 [P2 Reject] API response data:', data);
+        
+        if (data.success) {
+            // Record this in the pending changes
+            if (!window.pendingP2StatusChanges) {
+                window.pendingP2StatusChanges = {};
+            }
+            window.pendingP2StatusChanges[applicantId] = 'FAILED';
+            
+            // Move the row from awaiting to declared results
+            moveP2RowToSection(applicantId, 'awaitingActionTable', 'declaredResultsTable');
+            
+            console.log(`✅ [P2 Reject] Successfully marked applicant ${applicantId} as P2 FAILED!`);
+            alert("Successfully marked applicant as P2 FAILED!");
+            
+        } else {
+            console.error(`❌ [P2 Reject] API error: ${data.message}`);
+            alert("Error updating applicant status: " + (data.message || "Unknown error"));
+        }
+    })
+    .catch(error => {
+        console.error("❌ [P2 Reject] Network error:", error);
+        alert("Failed to update applicant status.");
+    });
+}
+// ============================
+// P2 EMAIL MODAL FUNCTIONS
+// ============================
+
 function showP2PassedEmailModal() {
-    console.log("📧 [P2 Passed Modal] Showing P2 passed applicants Gmail compose modal");
+    console.log("📧 HR P2: Showing P2 passed applicants Gmail compose modal");
     
-    // Populate recipients list
-    const recipientsList = document.getElementById('p2PassedRecipientsList');
-    const recipientsCount = document.getElementById('p2PassedRecipientsCount');
-    
-    if (recipientsList && currentP2PassedApplicants.length > 0) {
-        recipientsCount.textContent = currentP2PassedApplicants.length;
-        
-        recipientsList.innerHTML = currentP2PassedApplicants.map(applicant => `
-            <div class="recipient-item">
-                <div class="recipient-name">${applicant.name}</div>
-                <div class="recipient-email">${applicant.email}</div>
-                <div class="recipient-job">${applicant.jobTitle}</div>
-            </div>
-        `).join('');
-        
-        console.log(`📊 [P2 Passed Modal] Populated ${currentP2PassedApplicants.length} passed recipients`);
+    // Remove existing modal if it exists
+    const existingModal = document.getElementById('emailP2PassedModal');
+    if (existingModal) {
+        existingModal.remove();
     }
     
-    // Set default subject and template
-    document.getElementById('p2PassedEmailSubject').value = p2EmailTemplates.passed?.subject || 'Great News! You\'ve Advanced to Final Interview - Company ABC';
-    document.getElementById('p2PassedEmailTemplate').value = p2EmailTemplates.passed?.template || 'Congratulations! You have advanced to the final interview stage.';
+    // Create modal with proper IDs
+    const modal = createP2EmailModalDynamically('emailP2PassedModal', 'P2', 'passed');
     
-    // Show the modal
-    document.getElementById('emailP2PassedModal').style.display = 'block';
-    console.log("✅ [P2 Passed Modal] P2 passed email modal displayed");
+    // Wait for modal to be added to DOM before accessing elements
+    setTimeout(() => {
+        // Populate recipients list
+        const recipientsList = document.getElementById('p2PassedRecipientsList');
+        const recipientsCount = document.getElementById('p2PassedRecipientsCount');
+        
+        if (recipientsList && currentP2PassedApplicants.length > 0) {
+            recipientsCount.textContent = currentP2PassedApplicants.length;
+            
+            recipientsList.innerHTML = currentP2PassedApplicants.map(applicant => `
+                <div class="recipient-item">
+                    <div class="recipient-name">${applicant.name}</div>
+                    <div class="recipient-email">${applicant.email}</div>
+                    <div class="recipient-job">${applicant.jobTitle}</div>
+                </div>
+            `).join('');
+            
+            console.log(`📊 HR P2: Populated ${currentP2PassedApplicants.length} passed recipients`);
+        }
+        
+        // Set default subject and template with proper element access
+        const subjectElement = document.getElementById('p2PassedEmailSubject');
+        const templateElement = document.getElementById('p2PassedEmailTemplate');
+        
+        if (subjectElement && templateElement) {
+            subjectElement.value = p2EmailTemplates.passed?.subject || 'Great News! You\'ve Advanced to Final Interview - Prime Infrastructure';
+            templateElement.value = p2EmailTemplates.passed?.template || 'Congratulations! You have advanced to the final interview stage.';
+            console.log("✅ HR P2: Set subject and template values");
+        } else {
+            console.error("❌ HR P2: Could not find subject or template elements");
+            console.log("Available elements:", {
+                subject: !!subjectElement,
+                template: !!templateElement
+            });
+        }
+        
+        // Show the modal
+        document.getElementById('emailP2PassedModal').style.display = 'block';
+        console.log("✅ HR P2: P2 passed email modal displayed");
+    }, 100);
 }
 
-// Show P2 failed applicants email modal
 function showP2FailedEmailModal() {
-    console.log("📧 [P2 Failed Modal] Showing P2 failed applicants Gmail compose modal");
+    console.log("📧 HR P2: Showing P2 failed applicants Gmail compose modal");
     
-    // Populate recipients list
-    const recipientsList = document.getElementById('p2FailedRecipientsList');
-    const recipientsCount = document.getElementById('p2FailedRecipientsCount');
-    
-    if (recipientsList && currentP2FailedApplicants.length > 0) {
-        recipientsCount.textContent = currentP2FailedApplicants.length;
-        
-        recipientsList.innerHTML = currentP2FailedApplicants.map(applicant => `
-            <div class="recipient-item">
-                <div class="recipient-name">${applicant.name}</div>
-                <div class="recipient-email">${applicant.email}</div>
-                <div class="recipient-job">${applicant.jobTitle}</div>
-            </div>
-        `).join('');
-        
-        console.log(`📊 [P2 Failed Modal] Populated ${currentP2FailedApplicants.length} failed recipients`);
+    // Remove existing modal if it exists
+    const existingModal = document.getElementById('emailP2FailedModal');
+    if (existingModal) {
+        existingModal.remove();
     }
     
-    // Set default subject and template
-    document.getElementById('p2FailedEmailSubject').value = p2EmailTemplates.failed?.subject || 'Thank You for Your Interview - Company ABC';
-    document.getElementById('p2FailedEmailTemplate').value = p2EmailTemplates.failed?.template || 'Thank you for your interest in our position.';
+    // Create modal with proper IDs
+    const modal = createP2EmailModalDynamically('emailP2FailedModal', 'P2', 'failed');
     
-    // Show the modal
-    document.getElementById('emailP2FailedModal').style.display = 'block';
-    console.log("✅ [P2 Failed Modal] P2 failed email modal displayed");
+    // Wait for modal to be added to DOM before accessing elements
+    setTimeout(() => {
+        // Populate recipients list
+        const recipientsList = document.getElementById('p2FailedRecipientsList');
+        const recipientsCount = document.getElementById('p2FailedRecipientsCount');
+        
+        if (recipientsList && currentP2FailedApplicants.length > 0) {
+            recipientsCount.textContent = currentP2FailedApplicants.length;
+            
+            recipientsList.innerHTML = currentP2FailedApplicants.map(applicant => `
+                <div class="recipient-item">
+                    <div class="recipient-name">${applicant.name}</div>
+                    <div class="recipient-email">${applicant.email}</div>
+                    <div class="recipient-job">${applicant.jobTitle}</div>
+                </div>
+            `).join('');
+            
+            console.log(`📊 HR P2: Populated ${currentP2FailedApplicants.length} failed recipients`);
+        }
+        
+        // Set default subject and template with proper element access
+        const subjectElement = document.getElementById('p2FailedEmailSubject');
+        const templateElement = document.getElementById('p2FailedEmailTemplate');
+        
+        if (subjectElement && templateElement) {
+            subjectElement.value = p2EmailTemplates.failed?.subject || 'Thank You for Your Interview - Prime Infrastructure';
+            templateElement.value = p2EmailTemplates.failed?.template || 'Thank you for your interest in our position.';
+            console.log("✅ HR P2: Set failed subject and template values");
+        } else {
+            console.error("❌ HR P2: Could not find failed subject or template elements");
+        }
+        
+        // Show the modal
+        document.getElementById('emailP2FailedModal').style.display = 'block';
+        console.log("✅ HR P2: P2 failed email modal displayed");
+    }, 100);
 }
 
-// Open Gmail for P2 passed applicants
-function openGmailForP2Passed() {
-    console.log("📧 [P2 Gmail] Opening Gmail for P2 passed applicants");
+function createP2EmailModalDynamically(modalId, modalType, applicantType) {
+    console.log(`🔧 HR P2: Creating ${modalId} dynamically with correct IDs`);
     
-    const subject = document.getElementById('p2PassedEmailSubject').value;
-    const template = document.getElementById('p2PassedEmailTemplate').value;
+    // Remove existing modal if it exists
+    const existingModal = document.getElementById(modalId);
+    if (existingModal) {
+        existingModal.remove();
+    }
+    
+    const modal = document.createElement('div');
+    modal.id = modalId;
+    modal.className = 'modal';
+    modal.style.display = 'none';
+    
+    const titleColor = applicantType === 'passed' ? '#28a745' : '#dc3545';
+    const borderColor = applicantType === 'passed' ? '#28a745' : '#dc3545';
+    const bgColor = applicantType === 'passed' ? '#d4edda' : '#f8d7da';
+    const textColor = applicantType === 'passed' ? '#155724' : '#721c24';
+    
+    const titleText = applicantType === 'passed' 
+        ? '✅ P2 Gmail Compose - Interview Advancement Email'
+        : '❌ P2 Gmail Compose - Interview Notification Email';
+    
+    // Generate correct element IDs
+    const subjectId = `p2${applicantType.charAt(0).toUpperCase() + applicantType.slice(1)}EmailSubject`;
+    const templateId = `p2${applicantType.charAt(0).toUpperCase() + applicantType.slice(1)}EmailTemplate`;
+    const recipientsCountId = `p2${applicantType.charAt(0).toUpperCase() + applicantType.slice(1)}RecipientsCount`;
+    const recipientsListId = `p2${applicantType.charAt(0).toUpperCase() + applicantType.slice(1)}RecipientsList`;
+    
+    console.log(`🔧 HR P2: Using IDs - Subject: ${subjectId}, Template: ${templateId}`);
+    
+    modal.innerHTML = `
+        <div class="modal-content" style="width: 85%; max-width: 900px;">
+            <span class="close-button" onclick="closeModal('${modalId}')">&times;</span>
+            <h2 style="color: ${titleColor};">${titleText}</h2>
+            
+            <!-- Progress Indicator -->
+            <div style="background: linear-gradient(135deg, #e3f2fd, #bbdefb); padding: 15px; border-radius: 8px; margin: 15px 0; border-left: 5px solid #2196f3;">
+                <h4 style="color: #1976d2; margin-top: 0; display: flex; align-items: center;">
+                    <i class="fas fa-route" style="margin-right: 10px;"></i>
+                    P2 Email Process Progress
+                </h4>
+                <div style="display: flex; align-items: center; color: #1976d2;">
+                    <div class="progress-step ${applicantType === 'passed' ? 'active' : 'pending'}" style="flex: 1; text-align: center; padding: 8px; background: ${applicantType === 'passed' ? '#4caf50' : '#e0e0e0'}; color: ${applicantType === 'passed' ? 'white' : '#666'}; border-radius: 4px; margin: 0 2px;">
+                        ${applicantType === 'passed' ? '🟢' : '⚪'} Step 1: Interview Advancement Emails
+                    </div>
+                    <div class="progress-step ${applicantType === 'failed' ? 'active' : 'pending'}" style="flex: 1; text-align: center; padding: 8px; background: ${applicantType === 'failed' ? '#4caf50' : '#e0e0e0'}; color: ${applicantType === 'failed' ? 'white' : '#666'}; border-radius: 4px; margin: 0 2px;">
+                        ${applicantType === 'failed' ? '🟢' : '⚪'} Step 2: Notification Emails
+                    </div>
+                    <div class="progress-step pending" style="flex: 1; text-align: center; padding: 8px; background: #e0e0e0; color: #666; border-radius: 4px; margin: 0 2px;">
+                        ⚪ Step 3: Database Update
+                    </div>
+                </div>
+            </div>
+            
+            <div style="background-color: ${bgColor}; padding: 20px; border-radius: 8px; margin: 20px 0;">
+                <h4 style="color: ${textColor}; margin-top: 0; display: flex; align-items: center;">
+                    <i class="fas fa-users" style="margin-right: 10px;"></i>
+                    Recipients (<span id="${recipientsCountId}">0</span> applicants):
+                </h4>
+                <div id="${recipientsListId}" style="color: ${textColor}; max-height: 180px; overflow-y: auto; background: rgba(255,255,255,0.3); padding: 15px; border-radius: 5px;">
+                    <!-- Will be populated dynamically -->
+                </div>
+            </div>
+            
+            <div style="margin: 25px 0;">
+                <label for="${subjectId}" style="display: block; font-weight: bold; margin-bottom: 8px;">
+                    <i class="fas fa-tag" style="margin-right: 8px;"></i>Email Subject:
+                </label>
+                <input 
+                    type="text" 
+                    id="${subjectId}" 
+                    style="width: 100%; padding: 12px; border: 2px solid ${borderColor}; border-radius: 6px; font-size: 16px;"
+                    value=""
+                >
+            </div>
+            
+            <div style="margin: 25px 0;">
+                <label for="${templateId}" style="display: block; font-weight: bold; margin-bottom: 8px;">
+                    <i class="fas fa-edit" style="margin-right: 8px;"></i>Email Template:
+                </label>
+                <div style="margin: 10px 0; padding: 10px; background-color: #f8f9fa; border-radius: 5px;">
+                    <small style="color: #6c757d;">
+                        <strong>Available placeholders:</strong> 
+                        <code>{applicantName}</code>, <code>{jobTitle}</code>, <code>{companyName}</code>
+                    </small>
+                </div>
+                <textarea 
+                    id="${templateId}" 
+                    rows="14" 
+                    style="width: 100%; padding: 15px; border: 2px solid ${borderColor}; border-radius: 6px; font-family: Arial, sans-serif; font-size: 14px; line-height: 1.5;"
+                    placeholder="Email template will be loaded here..."
+                ></textarea>
+            </div>
+
+            <div style="background: linear-gradient(135deg, #e7f3ff, #f0f8ff); padding: 20px; border-radius: 10px; margin: 20px 0; border-left: 5px solid #007bff;">
+                <h4 style="color: #0066cc; margin-top: 0; display: flex; align-items: center;">
+                    <i class="fas fa-magic" style="margin-right: 10px; font-size: 20px;"></i>
+                    Choose Your Sending Method
+                </h4>
+                <p style="color: #0066cc; margin-bottom: 0; line-height: 1.6;">
+                    • <strong>Gmail Compose:</strong> Opens Gmail with pre-filled content (manual sending)<br>
+                    • <strong>Preview & Edit:</strong> Review template before automatic sending<br>
+                    • <strong>Send Automatically:</strong> Sends all emails via SMTP instantly
+                </p>
+            </div>
+            
+            <div class="modal-buttons" id="${modalId}Buttons">
+                <button class="back-button" onclick="closeModal('${modalId}')">
+                    <i class="fas fa-times" style="margin-right: 5px;"></i>Cancel
+                </button>
+                <button class="confirm-button" onclick="openGmailForP2${applicantType.charAt(0).toUpperCase() + applicantType.slice(1)}()" 
+                        style="background: linear-gradient(135deg, #6c757d, #5a6268); margin-right: 10px;">
+                    <i class="fab fa-google" style="margin-right: 8px;"></i>Gmail Compose
+                </button>
+                <button class="confirm-button" onclick="previewP2EmailTemplate('${applicantType}')" 
+                        style="background: linear-gradient(135deg, #17a2b8, #138496); margin-right: 10px;">
+                    <i class="fas fa-eye" style="margin-right: 8px;"></i>Preview & Edit
+                </button>
+                <button class="confirm-button" onclick="sendAutomatedP2Emails('${applicantType}')" 
+                        style="background: linear-gradient(135deg, ${applicantType === 'passed' ? '#28a745, #20c997' : '#dc3545, #c82333'});" id="sendP2${applicantType.charAt(0).toUpperCase() + applicantType.slice(1)}EmailsBtn">
+                    <i class="fas fa-paper-plane" style="margin-right: 8px;"></i>Send Automatically
+                </button>
+            </div>
+        </div>
+    `;
+    
+    document.body.appendChild(modal);
+    console.log(`✅ HR P2: Modal created with correct IDs - ${subjectId}, ${templateId}`);
+    return modal;
+}
+// ============================
+// P2 EMAIL SENDING FUNCTIONS
+// ============================
+async function sendAutomatedP2Emails(type) {
+    if (p2EmailSendingInProgress) {
+        alert('Email sending is already in progress. Please wait.');
+        return;
+    }
+    
+    console.log(`📧 HR P2: Starting automated P2 email sending for: ${type}`);
+    
+    let applicants, subject, template;
+    let subjectId, templateId;
+    
+    // Use correct IDs
+    if (type === 'passed') {
+        subjectId = 'p2PassedEmailSubject';
+        templateId = 'p2PassedEmailTemplate';
+        applicants = currentP2PassedApplicants;
+    } else if (type === 'failed') {
+        subjectId = 'p2FailedEmailSubject';
+        templateId = 'p2FailedEmailTemplate';
+        applicants = currentP2FailedApplicants;
+    }
+    
+    console.log(`📧 HR P2: Looking for elements with IDs: ${subjectId}, ${templateId}`);
+    
+    const subjectElement = document.getElementById(subjectId);
+    const templateElement = document.getElementById(templateId);
+    
+    if (!subjectElement || !templateElement) {
+        console.error(`❌ HR P2: Missing elements for automated sending:`);
+        console.log(`Subject element (${subjectId}):`, !!subjectElement);
+        console.log(`Template element (${templateId}):`, !!templateElement);
+        
+        // List all elements with similar IDs for debugging
+        const allElements = document.querySelectorAll('[id*="EmailSubject"], [id*="EmailTemplate"]');
+        console.log('Available email-related elements:', Array.from(allElements).map(el => el.id));
+        
+        alert('Error: Could not find email template fields. Please try refreshing the page.');
+        return;
+    }
+    
+    subject = subjectElement.value;
+    template = templateElement.value;
+    
+    if (!applicants || applicants.length === 0) {
+        alert(`No ${type} applicants found to send emails to.`);
+        return;
+    }
     
     if (!subject || !template) {
-        console.warn("⚠️ [P2 Gmail] Missing subject or template");
+        alert('Please fill in both subject and template fields.');
+        return;
+    }
+    
+    if (!confirm(`This will automatically send ${applicants.length} emails to ${type} applicants. Continue?`)) {
+        return;
+    }
+    
+    console.log(`📧 HR P2: Confirmed sending ${applicants.length} P2 ${type} emails`);
+    
+    // Close current modal
+    const modalMap = {
+        'passed': 'emailP2PassedModal',
+        'failed': 'emailP2FailedModal'
+    };
+    
+    closeModal(modalMap[type]);
+    
+    // Show progress modal
+    showP2EmailSendingProgress(type, applicants.length);
+    
+    // Send emails using batch function
+    await sendP2EmailBatch(applicants, subject, template, type);
+}
+
+
+function showP2EmailSendingProgress(type, totalCount) {
+    console.log(`📧 HR P2: Creating progress modal for P2 ${type} emails`);
+    
+    // Remove any existing progress modal
+    const existingModal = document.getElementById('p2EmailProgressModal');
+    if (existingModal) {
+        existingModal.remove();
+    }
+    
+    const progressModal = document.createElement('div');
+    progressModal.id = 'p2EmailProgressModal';
+    progressModal.className = 'modal';
+    progressModal.style.display = 'block';
+    
+    const titleText = type === 'passed' ? 'Interview Advancement' : 'Interview Notification';
+    
+    progressModal.innerHTML = `
+        <div class="modal-content" style="width: 70%; max-width: 600px;">
+            <h2 style="text-align: center; color: #007bff;">
+                <i class="fas fa-paper-plane" style="color: #28a745; margin-right: 10px;"></i>
+                Sending P2 ${titleText} Emails
+            </h2>
+            
+            <div style="margin: 30px 0; text-align: center;">
+                <div style="font-size: 48px; color: #28a745; margin-bottom: 20px;">
+                    <i class="fas fa-spinner fa-spin"></i>
+                </div>
+                <p style="font-size: 18px; margin-bottom: 20px;">Sending P2 emails to ${totalCount} applicant(s)...</p>
+                
+                <div style="background-color: #e9ecef; border-radius: 10px; height: 20px; margin: 20px 0; overflow: hidden;">
+                    <div id="p2EmailProgressBar" style="background: linear-gradient(135deg, #28a745, #20c997); height: 100%; width: 0%; transition: width 0.3s ease;"></div>
+                </div>
+                
+                <div id="p2EmailProgressText" style="font-size: 14px; color: #6c757d;">
+                    Initializing P2 email sending...
+                </div>
+                
+                <div id="p2EmailProgressDetails" style="margin-top: 20px; background-color: #f8f9fa; padding: 15px; border-radius: 5px; text-align: left; max-height: 200px; overflow-y: auto;">
+                    <div style="font-weight: bold; margin-bottom: 10px;">📋 P2 Sending Progress:</div>
+                    <div id="p2EmailProgressLog"></div>
+                </div>
+            </div>
+            
+            <div style="background: linear-gradient(135deg, #fff3cd, #ffeaa7); padding: 20px; border-radius: 10px; margin: 20px 0; border-left: 5px solid #f39c12;">
+                <h4 style="color: #856404; margin-top: 0; display: flex; align-items: center;">
+                    <i class="fas fa-info-circle" style="margin-right: 10px;"></i>
+                    Please Wait
+                </h4>
+                <p style="color: #856404; margin-bottom: 0; line-height: 1.6;">
+                    P2 emails are being sent automatically. This modal will update when the process is complete.
+                </p>
+            </div>
+            
+            <div class="modal-buttons" style="display: none;" id="p2EmailProgressButtons">
+                <!-- Buttons will be shown after completion -->
+            </div>
+        </div>
+    `;
+    
+    document.body.appendChild(progressModal);
+    console.log(`📧 HR P2: Progress modal created with ID: ${progressModal.id}`);
+}
+
+async function sendP2EmailBatch(applicants, subject, template, type) {
+    console.log(`📧 HR P2: Starting email batch for ${type} - ${applicants.length} applicants`);
+    p2EmailSendingInProgress = true;
+    
+    const progressBar = document.getElementById('p2EmailProgressBar');
+    const progressText = document.getElementById('p2EmailProgressText');
+    const progressLog = document.getElementById('p2EmailProgressLog');
+    
+    let sentCount = 0;
+    let errorCount = 0;
+    const errors = [];
+    
+    const updateProgress = (current, total, currentApplicant, success) => {
+        const percentage = Math.round((current / total) * 100);
+        if (progressBar) {
+            progressBar.style.width = percentage + '%';
+        }
+        if (progressText) {
+            progressText.textContent = `Sent ${sentCount} of ${total} P2 emails (${errorCount} errors)`;
+        }
+        
+        const status = success ? '✅' : '❌';
+        const statusText = success ? 'Sent' : 'Failed';
+        if (progressLog) {
+            progressLog.innerHTML += `<div style="margin: 2px 0; font-size: 12px;">${status} ${currentApplicant}: ${statusText}</div>`;
+            progressLog.scrollTop = progressLog.scrollHeight;
+        }
+    };
+    
+    try {
+        console.log(`📧 HR P2: Processing ${applicants.length} applicants for ${type} emails`);
+        
+        for (let i = 0; i < applicants.length; i++) {
+            const applicant = applicants[i];
+            
+            try {
+                console.log(`📧 HR P2: Sending email ${i + 1}/${applicants.length} to: ${applicant.email}`);
+                
+                const response = await fetch('/hr/send-automated-email', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        email: applicant.email,
+                        subject: subject,
+                        template: template,
+                        applicantName: applicant.name,
+                        jobTitle: applicant.jobTitle,
+                        phase: 'P2',
+                        type: type
+                    }),
+                });
+                
+                const result = await response.json();
+                
+                if (result.success) {
+                    sentCount++;
+                    console.log(`✅ HR P2: Email ${i + 1} sent successfully to ${applicant.email}`);
+                    updateProgress(i + 1, applicants.length, applicant.name, true);
+                } else {
+                    errorCount++;
+                    console.error(`❌ HR P2: Email ${i + 1} failed to ${applicant.email}: ${result.message}`);
+                    errors.push(`${applicant.name} (${applicant.email}): ${result.message || 'Unknown error'}`);
+                    updateProgress(i + 1, applicants.length, applicant.name, false);
+                }
+                
+                // Small delay to avoid overwhelming the server
+                await new Promise(resolve => setTimeout(resolve, 500));
+                
+            } catch (error) {
+                console.error(`❌ HR P2: Network error sending email to ${applicant.email}:`, error);
+                errorCount++;
+                errors.push(`${applicant.name} (${applicant.email}): Network error - ${error.message}`);
+                updateProgress(i + 1, applicants.length, applicant.name, false);
+            }
+        }
+        
+        console.log(`📧 HR P2: Batch complete - Sent: ${sentCount}, Failed: ${errorCount}`);
+        
+        // Store results
+        if (type === 'passed') {
+            p2EmailSendingState.passedSent = true;
+            p2EmailSendingState.currentStep = 'passed-complete';
+            p2EmailSendingState.passedResults = { sent: sentCount, failed: errorCount, errors: errors };
+        } else {
+            p2EmailSendingState.failedSent = true;
+            p2EmailSendingState.currentStep = 'failed-complete';
+            p2EmailSendingState.failedResults = { sent: sentCount, failed: errorCount, errors: errors };
+        }
+        
+        console.log(`📧 HR P2: Results stored for P2 ${type}`);
+        
+        // Show completion
+        setTimeout(() => {
+            showP2EmailSendingCompletion(sentCount, errorCount, errors, type);
+        }, 1000);
+        
+    } catch (error) {
+        console.error('❌ HR P2: Critical error in email batch sending:', error);
+        
+        // Show error in progress modal
+        if (progressText) {
+            progressText.innerHTML = `<div style="color: #dc3545; font-weight: bold;">❌ Error: ${error.message}</div>`;
+        }
+        
+        p2EmailSendingInProgress = false;
+        
+        // Remove progress modal after error
+        setTimeout(() => {
+            const progressModal = document.getElementById('p2EmailProgressModal');
+            if (progressModal) {
+                progressModal.remove();
+            }
+            alert('Critical error sending P2 emails: ' + error.message);
+        }, 2000);
+    }
+}
+
+
+function showP2EmailSendingCompletion(sentCount, errorCount, errors, type) {
+    console.log(`📧 HR P2: Email sending completion - ${type} - Sent: ${sentCount}, Errors: ${errorCount}`);
+    
+    p2EmailSendingInProgress = false;
+    
+    // Find the progress modal
+    let progressModal = document.getElementById('p2EmailProgressModal') || 
+                       document.querySelector('.modal[style*="display: block"]');
+    
+    if (!progressModal) {
+        console.error('❌ HR P2: No progress modal found for completion update');
+        createP2CompletionModalFromScratch(sentCount, errorCount, type);
+        return;
+    }
+    
+    // Update the modal content
+    const progressText = progressModal.querySelector('#p2EmailProgressText') || 
+                        progressModal.querySelector('[id*="ProgressText"]');
+    
+    const progressButtons = progressModal.querySelector('#p2EmailProgressButtons') || 
+                           progressModal.querySelector('[id*="ProgressButtons"]') ||
+                           progressModal.querySelector('.modal-buttons');
+    
+    const progressBar = progressModal.querySelector('#p2EmailProgressBar') || 
+                       progressModal.querySelector('[id*="ProgressBar"]');
+    
+    const spinner = progressModal.querySelector('.fa-spinner');
+    
+    // Hide spinner
+    if (spinner) {
+        spinner.style.display = 'none';
+    }
+    
+    // Update progress bar to 100%
+    if (progressBar) {
+        progressBar.style.width = '100%';
+        progressBar.style.background = '#28a745';
+    }
+    
+    // Update text
+    if (progressText) {
+        if (errorCount === 0) {
+            progressText.innerHTML = `<div style="color: #28a745; font-weight: bold; font-size: 18px;">✅ All ${sentCount} P2 ${type} emails sent successfully!</div>`;
+        } else {
+            progressText.innerHTML = `<div style="color: #ffc107; font-weight: bold; font-size: 18px;">⚠️ ${sentCount} P2 ${type} emails sent, ${errorCount} failed</div>`;
+        }
+    }
+    
+    // Determine what's next for P2
+    const hasPassedApplicants = currentP2PassedApplicants?.length > 0;
+    const hasFailedApplicants = currentP2FailedApplicants?.length > 0;
+    
+    let nextStep = '';
+    let nextAction = '';
+    
+    if (type === 'passed' && hasFailedApplicants && !p2EmailSendingState.failedSent) {
+        nextStep = 'Proceed with Notification Emails';
+        nextAction = 'proceedWithP2NextStep';
+    } else {
+        nextStep = 'Proceed to Database Update';
+        nextAction = 'showP2DatabaseUpdateConfirmationModal';
+    }
+    
+    // Update buttons
+    if (progressButtons) {
+        const buttonHtml = `
+            <button class="back-button" onclick="cancelP2EmailProcess()" style="background: #6c757d; color: white; border: none; padding: 12px 20px; border-radius: 5px; cursor: pointer; margin-right: 10px;">
+                <i class="fas fa-times" style="margin-right: 5px;"></i>Cancel Process
+            </button>
+            <button class="confirm-button" onclick="${nextAction}('${type}')" 
+                    style="background: linear-gradient(135deg, #28a745, #20c997); color: white; border: none; padding: 12px 25px; border-radius: 5px; cursor: pointer; font-size: 16px;">
+                <i class="fas fa-arrow-right" style="margin-right: 8px;"></i>
+                ${nextStep}
+            </button>
+        `;
+        
+        progressButtons.innerHTML = buttonHtml;
+        progressButtons.style.display = 'flex';
+        progressButtons.style.justifyContent = 'center';
+        progressButtons.style.gap = '10px';
+        progressButtons.style.marginTop = '20px';
+    }
+    
+    console.log(`✅ HR P2: Modal updated successfully for ${type}`);
+}
+function createP2CompletionModalFromScratch(sentCount, errorCount, type) {
+    console.log(`🔧 HR P2: Creating completion modal from scratch for P2 ${type}`);
+    
+    // Remove any existing modals first
+    const existingModals = document.querySelectorAll('.modal');
+    existingModals.forEach(modal => {
+        if (modal.id.includes('P2') || modal.id.includes('p2')) {
+            modal.remove();
+        }
+    });
+    
+    const completionModal = document.createElement('div');
+    completionModal.className = 'modal';
+    completionModal.style.display = 'block';
+    completionModal.id = 'p2EmailCompletionModal';
+    
+    const titleText = type === 'passed' ? 'Interview Advancement' : 'Interview Notification';
+    
+    completionModal.innerHTML = `
+        <div class="modal-content" style="width: 70%; max-width: 600px; position: relative; background: white; margin: 5% auto; padding: 0; border-radius: 10px; box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);">
+            <div style="padding: 30px; text-align: center;">
+                <h2 style="color: #007bff; margin-bottom: 20px;">
+                    <i class="fas fa-check-circle" style="color: #28a745; margin-right: 10px; font-size: 48px;"></i>
+                    <br>P2 Email Sending Complete!
+                </h2>
+                
+                <div style="font-size: 18px; margin: 20px 0; color: #28a745; font-weight: bold;">
+                    ✅ Successfully sent ${sentCount} P2 ${titleText} email${sentCount > 1 ? 's' : ''}!
+                </div>
+                
+                ${errorCount > 0 ? `
+                <div style="color: #dc3545; margin: 15px 0;">
+                    ⚠️ ${errorCount} email${errorCount > 1 ? 's' : ''} failed to send
+                </div>` : ''}
+                
+                <div style="background: linear-gradient(135deg, #d4edda, #c3e6cb); padding: 20px; border-radius: 10px; margin: 20px 0;">
+                    <h4 style="color: #155724; margin-top: 0;">📊 P2 Email Summary:</h4>
+                    <ul style="color: #155724; text-align: left; margin: 0;">
+                        <li><strong>${titleText} emails sent:</strong> ${sentCount}</li>
+                        <li><strong>Phase:</strong> P2</li>
+                        <li><strong>Status:</strong> ${errorCount === 0 ? 'All emails sent successfully' : 'Some emails failed'}</li>
+                    </ul>
+                </div>
+                
+                <div style="background: linear-gradient(135deg, #fff3cd, #ffeaa7); padding: 20px; border-radius: 10px; margin: 20px 0;">
+                    <h4 style="color: #856404; margin-top: 0;">📋 Next Step:</h4>
+                    <p style="color: #856404; margin: 0;">
+                        Click "Proceed to Database Update" below to finalize the P2 applicant statuses in your system.
+                    </p>
+                </div>
+                
+                <div style="display: flex; justify-content: center; gap: 15px; margin-top: 30px;">
+                    <button onclick="cancelP2EmailProcess()" 
+                            style="background: #6c757d; color: white; border: none; padding: 12px 20px; border-radius: 5px; cursor: pointer;">
+                        <i class="fas fa-times" style="margin-right: 5px;"></i>Cancel
+                    </button>
+                    <button onclick="showP2DatabaseUpdateConfirmationModal()" 
+                            style="background: linear-gradient(135deg, #28a745, #20c997); color: white; border: none; padding: 12px 25px; border-radius: 5px; cursor: pointer; font-size: 16px;">
+                        <i class="fas fa-database" style="margin-right: 8px;"></i>
+                        Proceed to Database Update
+                    </button>
+                </div>
+            </div>
+        </div>
+    `;
+    
+    document.body.appendChild(completionModal);
+    console.log(`✅ HR P2: Completion modal created and displayed for P2 ${type}`);
+}
+
+
+
+function proceedWithP2NextStep(completedType) {
+    console.log(`📧 HR P2: Proceeding with next step after ${completedType} emails`);
+    
+    // Close progress modal
+    const progressModal = document.getElementById('p2EmailProgressModal');
+    if (progressModal) {
+        progressModal.remove();
+    }
+    
+    p2EmailSendingInProgress = false;
+    
+    // Determine next step for P2
+    const hasPassedApplicants = currentP2PassedApplicants?.length > 0;
+    const hasFailedApplicants = currentP2FailedApplicants?.length > 0;
+    
+    if (completedType === 'passed' && hasFailedApplicants && !p2EmailSendingState.failedSent) {
+        // Show failed email modal next
+        console.log('📧 HR P2: Showing failed email modal next');
+        setTimeout(() => {
+            showP2FailedEmailModal();
+        }, 500);
+    } else {
+        // Show database update confirmation
+        console.log('📧 HR P2: Showing database update confirmation');
+        setTimeout(() => {
+            showP2DatabaseUpdateConfirmationModal();
+        }, 500);
+    }
+}
+
+
+function showP2DatabaseUpdateConfirmationModal() {
+    console.log('📧 HR P2: Showing P2 database update confirmation modal');
+    
+    const updateModal = document.createElement('div');
+    updateModal.className = 'modal';
+    updateModal.style.display = 'block';
+    updateModal.id = 'p2DatabaseUpdateConfirmationModal';
+    
+    const passedResults = p2EmailSendingState.passedResults || { sent: 0, failed: 0 };
+    const failedResults = p2EmailSendingState.failedResults || { sent: 0, failed: 0 };
+    const totalSent = passedResults.sent + failedResults.sent;
+    const totalErrors = passedResults.failed + failedResults.failed;
+    
+    updateModal.innerHTML = `
+        <div class="modal-content" style="width: 70%; max-width: 600px;">
+            <h2 style="text-align: center; color: #007bff;">
+                <i class="fas fa-database" style="color: #28a745; margin-right: 10px;"></i>
+                P2 Email Process Complete - Ready for Database Update
+            </h2>
+            
+            <div style="margin: 30px 0; text-align: center;">
+                <div style="font-size: 64px; color: #28a745; margin-bottom: 20px;">
+                    <i class="fas fa-check-double"></i>
+                </div>
+                <p style="font-size: 18px; margin-bottom: 20px;">
+                    All P2 emails have been sent successfully!
+                </p>
+                
+                <div style="background-color: #d4edda; padding: 20px; border-radius: 10px; margin: 20px 0; text-align: left;">
+                    <h4 style="color: #155724; margin-top: 0;">📊 Complete P2 Email Summary:</h4>
+                    <ul style="color: #155724; margin-bottom: 0;">
+                        ${p2EmailSendingState.passedSent ? `<li><strong>Interview advancement emails sent:</strong> ${passedResults.sent}</li>` : ''}
+                        ${p2EmailSendingState.failedSent ? `<li><strong>Interview notification emails sent:</strong> ${failedResults.sent}</li>` : ''}
+                        <li><strong>Total P2 emails processed:</strong> ${totalSent}</li>
+                        ${totalErrors > 0 ? `<li style="color: #dc3545;"><strong>Total sending errors:</strong> ${totalErrors}</li>` : ''}
+                    </ul>
+                </div>
+            </div>
+            
+            <div style="background: linear-gradient(135deg, #fff3cd, #ffeaa7); padding: 20px; border-radius: 10px; margin: 20px 0; border-left: 5px solid #f39c12;">
+                <h4 style="color: #856404; margin-top: 0; display: flex; align-items: center;">
+                    <i class="fas fa-exclamation-triangle" style="margin-right: 10px;"></i>
+                    Final Step Required
+                </h4>
+                <p style="color: #856404; margin-bottom: 0; line-height: 1.6;">
+                    Click "Update P2 Database" below to finalize the P2 applicant statuses in your system. This will mark all passed and failed applicants accordingly.
+                </p>
+            </div>
+            
+            <div class="modal-buttons">
+                <button class="back-button" onclick="closeModal('p2DatabaseUpdateConfirmationModal')">
+                    <i class="fas fa-times" style="margin-right: 5px;"></i>Cancel
+                </button>
+                <button class="confirm-button" onclick="executeP2DatabaseUpdate()" 
+                        style="background: linear-gradient(135deg, #28a745, #20c997); font-size: 16px; padding: 12px 25px;">
+                    <i class="fas fa-database" style="margin-right: 8px;"></i>
+                    Update P2 Database
+                </button>
+            </div>
+        </div>
+    `;
+    
+    document.body.appendChild(updateModal);
+    console.log('📧 HR P2: P2 database update confirmation modal displayed');
+}
+
+
+
+function executeP2DatabaseUpdate() {
+    console.log('📧 [HR] Executing P2 database update using existing finalizeP2Review...');
+    
+    if (!p2EmailsToUpdate || (!p2EmailsToUpdate.passed.length && !p2EmailsToUpdate.failed.length)) {
+        alert('No P2 applicant status updates to process.');
+        return;
+    }
+    
+    const updateButton = event.target;
+    const originalText = updateButton.textContent;
+    updateButton.textContent = 'Updating P2 Database...';
+    updateButton.disabled = true;
+    
+    // Use your existing finalizeP2Review endpoint (without getEmailData flag)
+    fetch('/hr/finalizeP2Review', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+            passedApplicantIds: p2EmailsToUpdate.passed,
+            failedApplicantIds: p2EmailsToUpdate.failed
+        }),
+    })
+    .then(response => {
+        console.log(`📡 [HR] P2 Database update response status: ${response.status}`);
+        return response.json();
+    })
+    .then(data => {
+        console.log('📡 [HR] P2 Database update response data:', data);
+        
+        if (data.success) {
+            // Close modal
+            closeModal('p2DatabaseUpdateConfirmationModal');
+            
+            const passedResults = p2EmailSendingState.passedResults || { sent: 0 };
+            const failedResults = p2EmailSendingState.failedResults || { sent: 0 };
+            
+            alert(`P2 Process Complete!\n\nDatabase Updates:\n- ${data.passedCount || 0} passed applicants\n- ${data.failedCount || 0} failed applicants\n\nEmails Sent:\n- ${passedResults.sent} interview advancement emails\n- ${failedResults.sent} interview notification emails\n\nAll P2 applicants have been processed successfully!\n\nNote: Passed applicants received chatbot messages with Calendly scheduling links.`);
+            
+            // Reset state
+            p2EmailSendingState = {
+                phase: 'P2',
+                passedSent: false,
+                failedSent: false,
+                currentStep: 'initial',
+                passedResults: null,
+                failedResults: null
+            };
+            
+            // Clear data
+            currentP2PassedApplicants = [];
+            currentP2FailedApplicants = [];
+            p2EmailsToUpdate = { passed: [], failed: [] };
+            
+            // Reset global flag
+            p2EmailSendingInProgress = false;
+            
+            // Refresh view
+            setTimeout(() => {
+                const activeFilter = document.querySelector(".filter-button.active");
+                if (activeFilter) {
+                    activeFilter.click();
+                } else {
+                    document.getElementById("filter-all").click();
+                }
+            }, 500);
+        } else {
+            throw new Error(data.message || 'Failed to update P2 statuses');
+        }
+    })
+    .catch(error => {
+        console.error('❌ [HR] Error updating P2 statuses:', error);
+        alert('Error updating P2 applicant statuses: ' + error.message);
+        
+        updateButton.textContent = originalText;
+        updateButton.disabled = false;
+    });
+}
+
+
+// ============================
+// P2 GMAIL INTEGRATION FUNCTIONS
+// ============================
+
+function openGmailForP2Passed() {
+    console.log("🔗 HR P2: Opening Gmail for P2 passed applicants");
+    
+    const subjectElement = document.getElementById('p2PassedEmailSubject');
+    const templateElement = document.getElementById('p2PassedEmailTemplate');
+    
+    if (!subjectElement || !templateElement) {
+        console.error("❌ HR P2: Could not find subject or template elements for Gmail");
+        alert("Error: Could not find email template fields.");
+        return;
+    }
+    
+    const subject = subjectElement.value;
+    const template = templateElement.value;
+    
+    if (!subject || !template) {
         alert("Please fill in both subject and template fields.");
         return;
     }
     
     if (!confirm(`This will open Gmail with ${currentP2PassedApplicants.length} P2 passed applicants in the "To:" field. Continue?`)) {
-        console.log("📧 [P2 Gmail] User cancelled Gmail compose for passed applicants");
         return;
     }
     
     // Build Gmail compose URL
     const gmailUrl = buildP2GmailComposeUrl(currentP2PassedApplicants, subject, template);
     
-    console.log('🔗 [P2 Gmail] Opening Gmail for P2 passed applicants:', gmailUrl);
+    console.log('🔗 HR P2: Opening Gmail for P2 passed applicants:', gmailUrl);
     
     // Open Gmail in new tab
     const gmailWindow = window.open(gmailUrl, '_blank');
     
     if (!gmailWindow) {
-        console.error("❌ [P2 Gmail] Failed to open Gmail window - popup blocked");
         alert('Please allow pop-ups for this site to open Gmail compose window.');
         return;
     }
@@ -2765,47 +3894,50 @@ function openGmailForP2Passed() {
     
     // If there are also failed applicants, show their modal next
     if (currentP2FailedApplicants.length > 0) {
-        console.log("📧 [P2 Gmail] Scheduling failed email modal to show next");
         setTimeout(() => {
             showP2FailedEmailModal();
         }, 1000);
     } else {
         // Show status update modal if no failed applicants
-        console.log("📧 [P2 Gmail] No failed applicants, showing status update modal");
         setTimeout(() => {
             showP2StatusUpdateModal();
         }, 2000);
     }
 }
 
-// Open Gmail for P2 failed applicants
 function openGmailForP2Failed() {
-    console.log("📧 [P2 Gmail] Opening Gmail for P2 failed applicants");
+    console.log("🔗 HR P2: Opening Gmail for P2 failed applicants");
     
-    const subject = document.getElementById('p2FailedEmailSubject').value;
-    const template = document.getElementById('p2FailedEmailTemplate').value;
+    const subjectElement = document.getElementById('p2FailedEmailSubject');
+    const templateElement = document.getElementById('p2FailedEmailTemplate');
+    
+    if (!subjectElement || !templateElement) {
+        console.error("❌ HR P2: Could not find subject or template elements for Gmail");
+        alert("Error: Could not find email template fields.");
+        return;
+    }
+    
+    const subject = subjectElement.value;
+    const template = templateElement.value;
     
     if (!subject || !template) {
-        console.warn("⚠️ [P2 Gmail] Missing subject or template");
         alert("Please fill in both subject and template fields.");
         return;
     }
     
     if (!confirm(`This will open Gmail with ${currentP2FailedApplicants.length} P2 failed applicants in the "To:" field. Continue?`)) {
-        console.log("📧 [P2 Gmail] User cancelled Gmail compose for failed applicants");
         return;
     }
     
     // Build Gmail compose URL
     const gmailUrl = buildP2GmailComposeUrl(currentP2FailedApplicants, subject, template);
     
-    console.log('🔗 [P2 Gmail] Opening Gmail for P2 failed applicants:', gmailUrl);
+    console.log('🔗 HR P2: Opening Gmail for P2 failed applicants:', gmailUrl);
     
     // Open Gmail in new tab
     const gmailWindow = window.open(gmailUrl, '_blank');
     
     if (!gmailWindow) {
-        console.error("❌ [P2 Gmail] Failed to open Gmail window - popup blocked");
         alert('Please allow pop-ups for this site to open Gmail compose window.');
         return;
     }
@@ -2820,8 +3952,9 @@ function openGmailForP2Failed() {
 }
 
 // Build Gmail compose URL for P2 with pre-filled data
+
 function buildP2GmailComposeUrl(applicants, subject, template) {
-    console.log(`🔗 [P2 Gmail URL] Building Gmail URL for ${applicants.length} P2 applicants`);
+    console.log(`🔗 HR P2: Building Gmail URL for ${applicants.length} P2 applicants`);
     
     // Extract all email addresses
     const emailAddresses = applicants.map(applicant => applicant.email).join(',');
@@ -2833,25 +3966,22 @@ function buildP2GmailComposeUrl(applicants, subject, template) {
             processedTemplate = template
                 .replace(/\{applicantName\}/g, '[Recipient Name]')
                 .replace(/\{jobTitle\}/g, '[Position Applied]')
-                .replace(/\{companyName\}/g, 'Company ABC');
+                .replace(/\{companyName\}/g, 'Prime Infrastructure');
         } else {
             processedTemplate = template
                 .replace(/\{applicantName\}/g, applicants[0].name)
                 .replace(/\{jobTitle\}/g, applicants[0].jobTitle)
-                .replace(/\{companyName\}/g, 'Company ABC');
+                .replace(/\{companyName\}/g, 'Prime Infrastructure');
         }
     }
     
     const plainTextBody = htmlToPlainText(processedTemplate);
     
-    // Try multiple URL formats - Gmail can be finicky
-    const specificAccount = 'recruitmentprime7@gmail.com';
-    
     // Use account-specific subdomain approach
+    const specificAccount = 'recruitmentprime7@gmail.com';
     const gmailUrl = `https://mail.google.com/mail/u/0/?authuser=${encodeURIComponent(specificAccount)}&view=cm&to=${encodeURIComponent(emailAddresses)}&subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(plainTextBody)}`;
     
-    console.log('🔥 [P2 Gmail URL] P2 Gmail URL:', gmailUrl);
-    console.log('📧 [P2 Gmail URL] Target account:', specificAccount);
+    console.log('🔥 HR P2: P2 Gmail URL:', gmailUrl);
     
     return gmailUrl;
 }
@@ -2889,21 +4019,80 @@ function htmlToPlainText(html) {
 }
 
 // Show P2 status update modal
+
 function showP2StatusUpdateModal() {
-    console.log('📧 [P2 Status] Showing P2 status update modal');
-    document.getElementById('p2StatusUpdateModal').style.display = 'block';
+    console.log('📧 HR P2: Showing P2 status update modal');
+    
+    const statusModal = document.createElement('div');
+    statusModal.className = 'modal';
+    statusModal.style.display = 'block';
+    statusModal.id = 'p2StatusUpdateModal';
+    
+    statusModal.innerHTML = `
+        <div class="modal-content" style="width: 70%; max-width: 600px;">
+            <h2 style="text-align: center; color: #007bff;">
+                <i class="fab fa-google" style="color: #db4437; margin-right: 10px;"></i>
+                P2 Gmail Compose Opened
+            </h2>
+            
+            <div style="margin: 30px 0; text-align: center;">
+                <div style="font-size: 64px; color: #db4437; margin-bottom: 20px;">
+                    <i class="fab fa-google"></i>
+                </div>
+                <p style="font-size: 18px; margin-bottom: 20px;">Gmail compose window has been opened in a new tab with your P2 email pre-filled.</p>
+                
+                <div style="background-color: #e3f2fd; padding: 25px; border-radius: 10px; margin: 25px 0; border-left: 5px solid #2196f3;">
+                    <h4 style="color: #1976d2; margin-top: 0;">📋 Next Steps:</h4>
+                    <ol style="text-align: left; margin: 15px 0; color: #1976d2; line-height: 1.8;">
+                        <li><strong>Switch to Gmail tab</strong> - Check if Gmail opened correctly</li>
+                        <li><strong>Review recipient list</strong> - Verify all emails are in "To:" field</li>
+                        <li><strong>Check subject line</strong> - Modify if needed</li>
+                        <li><strong>Review email content</strong> - Make final adjustments</li>
+                        <li><strong>Send emails</strong> - Click Gmail's send button</li>
+                        <li><strong>Return here</strong> - Click "Update Database" below</li>
+                    </ol>
+                </div>
+            </div>
+            
+            <div style="background: linear-gradient(135deg, #fff3cd, #ffeaa7); padding: 20px; border-radius: 10px; margin: 20px 0; border-left: 5px solid #f39c12;">
+                <h4 style="color: #856404; margin-top: 0; display: flex; align-items: center;">
+                    <i class="fas fa-exclamation-triangle" style="margin-right: 10px;"></i>
+                    Important
+                </h4>
+                <p style="color: #856404; margin-bottom: 0; line-height: 1.6;">
+                    <strong>After sending emails in Gmail</strong>, return here and click "Update Database" to finalize the P2 applicant statuses in your system.
+                </p>
+            </div>
+            
+            <div class="modal-buttons">
+                <button class="back-button" onclick="closeModal('p2StatusUpdateModal')">
+                    <i class="fas fa-times" style="margin-right: 5px;"></i>Cancel Process
+                </button>
+                <button class="confirm-button" onclick="updateP2ApplicantStatuses()" 
+                        style="background: linear-gradient(135deg, #28a745, #20c997); font-size: 16px; padding: 12px 25px;">
+                    <i class="fas fa-database" style="margin-right: 8px;"></i>
+                    Update Database
+                </button>
+            </div>
+        </div>
+    `;
+    
+    document.body.appendChild(statusModal);
 }
 
+
 // Update P2 applicant statuses in database after emails are sent via Gmail
+
+
+
 function updateP2ApplicantStatuses() {
     if (!confirm('Have you successfully sent the P2 emails via Gmail? This will update the applicant statuses in the database.')) {
-        console.log("📧 [P2 Status] User cancelled P2 status update");
         return;
     }
     
-    console.log('📊 [P2 Status] Updating P2 applicant statuses in database...');
-    console.log('✅ [P2 Status] Passed applicantIds:', p2EmailsToUpdate.passed);
-    console.log('❌ [P2 Status] Failed applicantIds:', p2EmailsToUpdate.failed);
+    console.log('📊 [HR] Updating P2 applicant statuses using existing finalizeP2Review...');
+    console.log('✅ [HR] Passed applicantIds:', p2EmailsToUpdate.passed);
+    console.log('❌ [HR] Failed applicantIds:', p2EmailsToUpdate.failed);
     
     // Show loading state
     const updateButton = document.querySelector('#p2StatusUpdateModal .confirm-button');
@@ -2911,7 +4100,7 @@ function updateP2ApplicantStatuses() {
     updateButton.textContent = 'Updating Database...';
     updateButton.disabled = true;
     
-    // Make API call to update statuses
+    // Use your existing finalizeP2Review endpoint (without getEmailData flag)
     fetch('/hr/finalizeP2Review', {
         method: 'POST',
         headers: {
@@ -2923,14 +4112,14 @@ function updateP2ApplicantStatuses() {
         }),
     })
     .then(response => {
-        console.log(`📡 [P2 Status] API response status: ${response.status}`);
+        console.log(`📡 [HR] API response status: ${response.status}`);
         return response.json();
     })
     .then(data => {
-        console.log('📡 [P2 Status] API response data:', data);
+        console.log('📡 [HR] API response data:', data);
         
         if (data.success) {
-            alert(`P2 applicant statuses updated successfully!\n\nUpdated:\n- ${data.passedCount || 0} passed applicants\n- ${data.failedCount || 0} failed applicants`);
+            alert(`P2 applicant statuses updated successfully!\n\nUpdated:\n- ${data.passedCount || 0} passed applicants (with Calendly links)\n- ${data.failedCount || 0} failed applicants\n\nNote: Passed applicants received chatbot messages for final interview scheduling.`);
             
             // Close modal
             closeModal('p2StatusUpdateModal');
@@ -2940,7 +4129,7 @@ function updateP2ApplicantStatuses() {
             currentP2FailedApplicants = [];
             p2EmailsToUpdate = { passed: [], failed: [] };
             
-            console.log('✅ [P2 Status] P2 status update completed successfully');
+            console.log('✅ [HR] P2 status update completed successfully');
             
             // Refresh the view
             setTimeout(() => {
@@ -2956,7 +4145,7 @@ function updateP2ApplicantStatuses() {
         }
     })
     .catch(error => {
-        console.error('❌ [P2 Status] Error updating P2 statuses:', error);
+        console.error('❌ [HR] Error updating P2 statuses:', error);
         alert('Error updating P2 applicant statuses: ' + error.message);
         
         // Reset button state
@@ -2965,19 +4154,321 @@ function updateP2ApplicantStatuses() {
     });
 }
 
-// Check if all P2 applicants have been marked
+// ============================
+// P2 EMAIL PREVIEW FUNCTION
+// ============================
+function previewP2EmailTemplate(type) {
+    console.log(`📧 HR P2: Previewing P2 ${type} email template with formatting`);
+    
+    let subject, template, applicants;
+    let subjectId, templateId;
+    
+    if (type === 'passed') {
+        subjectId = 'p2PassedEmailSubject';
+        templateId = 'p2PassedEmailTemplate';
+        applicants = currentP2PassedApplicants;
+    } else if (type === 'failed') {
+        subjectId = 'p2FailedEmailSubject';
+        templateId = 'p2FailedEmailTemplate';
+        applicants = currentP2FailedApplicants;
+    }
+    
+    // Get elements with null checks
+    const subjectElement = document.getElementById(subjectId);
+    const templateElement = document.getElementById(templateId);
+    
+    if (!subjectElement || !templateElement) {
+        console.error(`Missing HR P2 elements: subject=${subjectId}, template=${templateId}`);
+        alert('Error: Could not find P2 email template fields. Please try refreshing the page.');
+        return;
+    }
+    
+    subject = subjectElement.value;
+    template = templateElement.value;
+    
+    if (!subject || !template) {
+        alert('Please fill in both subject and template fields.');
+        return;
+    }
+    
+    if (!applicants || applicants.length === 0) {
+        alert('No P2 applicants found for preview.');
+        return;
+    }
+    
+    // Use first applicant for preview
+    const sampleApplicant = applicants[0];
+    
+    // Process template while preserving formatting
+    const processedTemplate = processEmailTemplateWithFormatting(
+        template, 
+        sampleApplicant.name, 
+        sampleApplicant.jobTitle, 
+        'Prime Infrastructure'
+    );
+    
+    // Create preview modal
+    const previewModal = document.createElement('div');
+    previewModal.className = 'modal';
+    previewModal.style.display = 'block';
+    previewModal.innerHTML = `
+        <div class="modal-content" style="width: 90%; max-width: 800px;">
+            <span class="close-button" onclick="this.closest('.modal').remove()">&times;</span>
+            <h2>📧 P2 Email Preview - ${type.charAt(0).toUpperCase() + type.slice(1)}</h2>
+            
+            <div style="margin: 20px 0;">
+                <h4>Recipients: ${applicants.length} P2 applicant(s)</h4>
+                <p><strong>Subject:</strong> ${subject}</p>
+            </div>
+            
+            <div style="border: 2px solid #ddd; border-radius: 8px; padding: 20px; background-color: #f9f9f9; margin: 20px 0;">
+                <h4 style="margin-top: 0; color: #124A5C;">📝 P2 Email Content Preview (with formatting):</h4>
+                <div style="white-space: pre-wrap; font-family: Arial, sans-serif; line-height: 1.6; background: white; padding: 15px; border-radius: 4px; border: 1px solid #ddd;">
+${processedTemplate}
+                </div>
+            </div>
+            
+            <div style="background-color: #e8f5e8; padding: 15px; border-radius: 5px; margin: 20px 0;">
+                <h4 style="color: #2e7d32; margin-top: 0;">✅ P2 Formatting Preserved:</h4>
+                <ul style="color: #2e7d32; margin-bottom: 0;">
+                    <li>Line breaks and spacing will be maintained</li>
+                    <li>Paragraph structure will be preserved</li>
+                    <li>${applicants.length} P2 recipient(s) will receive this formatted email</li>
+                    <li>All placeholders have been replaced with actual data</li>
+                </ul>
+            </div>
+            
+            <div class="modal-buttons">
+                <button class="back-button" onclick="this.closest('.modal').remove()">
+                    <i class="fas fa-times" style="margin-right: 5px;"></i>Close Preview
+                </button>
+                <button class="confirm-button" onclick="this.closest('.modal').remove(); sendAutomatedP2Emails('${type}')" 
+                        style="background: linear-gradient(135deg, #28a745, #20c997);">
+                    <i class="fas fa-paper-plane" style="margin-right: 8px;"></i>Send P2 Emails Now
+                </button>
+            </div>
+        </div>
+    `;
+    
+    document.body.appendChild(previewModal);
+}
+
+
+// ============================
+// UTILITY FUNCTIONS
+// ============================
+function processEmailTemplateWithFormatting(template, applicantName, jobTitle, companyName) {
+    return template
+        .replace(/\{applicantName\}/g, applicantName)
+        .replace(/\{jobTitle\}/g, jobTitle)
+        .replace(/\{companyName\}/g, companyName);
+}
+
+function htmlToPlainText(html) {
+    // Create a temporary div to parse HTML
+    const tempDiv = document.createElement('div');
+    tempDiv.innerHTML = html;
+    
+    // Remove script and style elements
+    const scripts = tempDiv.querySelectorAll('script, style');
+    scripts.forEach(element => element.remove());
+    
+    // Get text content and clean it up
+    let plainText = tempDiv.textContent || tempDiv.innerText || '';
+    
+    // Clean up extra whitespace and line breaks
+    plainText = plainText
+        .replace(/\s+/g, ' ')           // Replace multiple spaces with single space
+        .replace(/\n\s*\n/g, '\n\n')   // Replace multiple line breaks with double line break
+        .trim();
+    
+    // Add some basic formatting for better readability in plain text
+    plainText = plainText
+        .replace(/Dear\s+/gi, '\nDear ')
+        .replace(/Best regards/gi, '\n\nBest regards')
+        .replace(/Thank you/gi, '\n\nThank you')
+        .replace(/Congratulations/gi, '\n\nCongratulations')
+        .replace(/What's Next\?/gi, '\n\nWhat\'s Next?')
+        .replace(/•/g, '\n• ')
+        .replace(/- /g, '\n- ');
+    
+    return plainText;
+}
+
+function cancelP2EmailProcess() {
+    if (confirm('Are you sure you want to cancel the P2 email process? Any emails that have been sent will remain sent, but the process will be stopped.')) {
+        console.log('📧 HR P2: Cancelling P2 email process...');
+        
+        // Reset state
+        p2EmailSendingState = {
+            phase: 'P2',
+            passedSent: false,
+            failedSent: false,
+            currentStep: 'initial',
+            passedResults: null,
+            failedResults: null
+        };
+        
+        // Reset global flag
+        p2EmailSendingInProgress = false;
+        
+        // Close all related modals
+        const modals = document.querySelectorAll('.modal');
+        modals.forEach(modal => {
+            if (modal.id.includes('P2') || 
+                modal.id.includes('p2') || 
+                modal.id.includes('Email')) {
+                modal.remove();
+                console.log(`📧 HR P2: Removed modal: ${modal.id}`);
+            }
+        });
+        
+        console.log('📧 HR P2: P2 email process cancelled by user');
+    }
+}
+// ============================
+// GLOBAL SCOPE ASSIGNMENTS
+// ============================
+// Make all P2 functions globally available
+window.startP2FinalizationProcess = startP2FinalizationProcess;
+window.startP2GmailIntegrationFlow = startP2GmailIntegrationFlow;
+window.executeP2Finalization = executeP2Finalization;
+window.fetchP2ApplicantDataForEmails = fetchP2ApplicantDataForEmails;
+window.fetchP2EmailTemplates = fetchP2EmailTemplates;
+window.showP2PassedEmailModal = showP2PassedEmailModal;
+window.showP2FailedEmailModal = showP2FailedEmailModal;
+window.createP2EmailModalDynamically = createP2EmailModalDynamically;
+window.sendAutomatedP2Emails = sendAutomatedP2Emails;
+window.showP2EmailSendingProgress = showP2EmailSendingProgress;
+window.sendP2EmailBatch = sendP2EmailBatch;
+window.showP2EmailSendingCompletion = showP2EmailSendingCompletion;
+window.createP2CompletionModalFromScratch = createP2CompletionModalFromScratch;
+window.proceedWithP2NextStep = proceedWithP2NextStep;
+window.showP2DatabaseUpdateConfirmationModal = showP2DatabaseUpdateConfirmationModal;
+window.executeP2DatabaseUpdate = executeP2DatabaseUpdate;
+window.cancelP2EmailProcess = cancelP2EmailProcess;
+window.openGmailForP2Passed = openGmailForP2Passed;
+window.openGmailForP2Failed = openGmailForP2Failed;
+window.buildP2GmailComposeUrl = buildP2GmailComposeUrl;
+window.showP2StatusUpdateModal = showP2StatusUpdateModal;
+window.updateP2ApplicantStatuses = updateP2ApplicantStatuses;
+window.previewP2EmailTemplate = previewP2EmailTemplate;
+
+console.log('✅ HR P2: All P2 finalization functions loaded and made globally available');
+
+document.addEventListener("DOMContentLoaded", function() {
+    // Set up P2 finalization button
+    setTimeout(() => {
+        console.log("🔧 HR P2: Setting up P2 finalization button...");
+        
+        // Set up P2 confirm button
+        const confirmButtonP2 = document.getElementById('confirmButtonP2');
+        if (confirmButtonP2) {
+            console.log("🔧 HR P2: Setting up P2 confirm button");
+            
+            // Remove existing event listeners
+            const newConfirmP2Button = confirmButtonP2.cloneNode(true);
+            confirmButtonP2.parentNode.replaceChild(newConfirmP2Button, confirmButtonP2);
+            
+            // Add event listener
+            newConfirmP2Button.addEventListener('click', function(e) {
+                e.preventDefault();
+                console.log("🚀 HR P2: P2 Gmail process starting...");
+                startP2GmailIntegrationFlow();
+            });
+            
+            console.log("✅ HR P2: P2 confirm button setup complete");
+        } else {
+            console.log("ℹ️ HR P2: P2 confirm button not found");
+        }
+        
+    }, 1000);
+});
+
+// ============================
+// UTILITY FUNCTION TO CLOSE MODALS
+// ============================
+function closeModal(modalId) {
+    const modal = document.getElementById(modalId);
+    if (modal) {
+        modal.style.display = 'none';
+        // Remove from DOM if it was dynamically created
+        if (modalId.includes('emailP2') || modalId.includes('p2')) {
+            modal.remove();
+        }
+    }
+}
+// document.addEventListener("DOMContentLoaded", function() {
+//     // Set up P2 finalization button
+//     setTimeout(() => {
+//         console.log("🔧 HR P2: Setting up P2 finalization button...");
+        
+//         const finalizeP2Button = document.getElementById('finalizeP2Button');
+//         if (finalizeP2Button) {
+//             console.log("✅ HR P2: Found P2 finalize button by ID");
+            
+//             // Remove any existing event listeners by cloning
+//             const newP2Button = finalizeP2Button.cloneNode(true);
+//             finalizeP2Button.parentNode.replaceChild(newP2Button, finalizeP2Button);
+            
+//             // Add the click event listener
+//             newP2Button.addEventListener('click', function(e) {
+//                 e.preventDefault();
+//                 console.log("🚀 HR P2: P2 Finalize button clicked!");
+                
+//                 if (checkAllP2ApplicantsMarked()) {
+//                     console.log("✅ HR P2: All P2 applicants marked - starting finalization process");
+//                     startP2FinalizationProcess();
+//                 } else {
+//                     console.log("⚠️ HR P2: Not all P2 applicants marked");
+//                     alert("Not all P2 applicants have been marked as passed or failed. Please make a decision for all applicants first.");
+//                 }
+//             });
+            
+//             console.log("✅ HR P2: P2 button event listener attached successfully");
+//         } else {
+//             console.log("ℹ️ HR P2: P2 finalize button not found (this is normal if no P2 data exists)");
+//         }
+        
+//         // Set up P2 confirm button
+//         const confirmButtonP2 = document.getElementById('confirmButtonP2');
+//         if (confirmButtonP2) {
+//             console.log("🔧 HR P2: Setting up P2 confirm button");
+            
+//             // Remove existing event listeners
+//             const newConfirmP2Button = confirmButtonP2.cloneNode(true);
+//             confirmButtonP2.parentNode.replaceChild(newConfirmP2Button, confirmButtonP2);
+            
+//             // Add event listener
+//             newConfirmP2Button.addEventListener('click', function(e) {
+//                 e.preventDefault();
+//                 console.log("🚀 HR P2: P2 Gmail process starting...");
+//                 startP2GmailIntegrationFlow();
+//             });
+            
+//             console.log("✅ HR P2: P2 confirm button setup complete");
+//         } else {
+//             console.log("ℹ️ HR P2: P2 confirm button not found");
+//         }
+        
+//     }, 1000);
+// });
+
+// ============================
+// CHECK P2 APPLICANTS MARKED FUNCTION
+// ============================
 function checkAllP2ApplicantsMarked() {
-    console.log("🔍 [P2 Check] Checking if all P2 applicants have been marked");
+    console.log("🔍 HR P2: Checking if all P2 applicants have been marked");
     
     const declaredResultsTable = document.getElementById("declaredResultsTable");
     if (!declaredResultsTable) {
-        console.log("📊 [P2 Check] No declared results table found, returning true");
+        console.log("📊 HR P2: No declared results table found, returning true");
         return true;
     }
     
     const rows = declaredResultsTable.querySelectorAll('tbody tr:not(.section-header-row)');
     if (rows.length === 0) {
-        console.log("📊 [P2 Check] No rows to check, returning true");
+        console.log("📊 HR P2: No rows to check, returning true");
         return true; // No rows to check
     }
     
@@ -2987,11 +4478,11 @@ function checkAllP2ApplicantsMarked() {
     });
     
     if (relevantRows.length === 0) {
-        console.log("📊 [P2 Check] No P2 rows found, returning true");
+        console.log("📊 HR P2: No P2 rows found, returning true");
         return true; // No P2 rows
     }
     
-    console.log(`📊 [P2 Check] Found ${relevantRows.length} P2 rows to check`);
+    console.log(`📊 HR P2: Found ${relevantRows.length} P2 rows to check`);
     
     // Check each P2 row for PASSED/FAILED status
     const allMarked = relevantRows.every(row => {
@@ -3007,28 +4498,25 @@ function checkAllP2ApplicantsMarked() {
         const isMarked = statusText.includes('PASSED') || statusText.includes('FAILED');
         
         if (!isMarked) {
-            console.log(`⚠️ [P2 Check] Found unmarked P2 row: ${statusText}`);
+            console.log(`⚠️ HR P2: Found unmarked P2 row: ${statusText}`);
         }
         
         return isMarked;
     });
     
-    console.log(`📊 [P2 Check] All P2 applicants marked: ${allMarked}`);
+    console.log(`📊 HR P2: All P2 applicants marked: ${allMarked}`);
     return allMarked;
 }
 
-// =========================
-// ENHANCED FILTER HANDLING FOR P2
-// =========================
-
-// Update the existing goToP2ReviewFilter function
+// ============================
+// FILTER HANDLING FOR P2
+// ============================
 function goToP2ReviewFilter() {
     console.log("🔄 [P2 Filter] Triggering P2 Review filter");
     // Trigger the "For Review" filter
     document.getElementById("filter-review").click();
 }
 
-// Update the existing handleP2ReviewFilter function to include finalize button
 function updateSectionHeaderButtonsP2() {
     console.log("🔧 [P2 Header] Updating section header buttons for P2");
     
@@ -3072,26 +4560,6 @@ function updateSectionHeaderButtonsP2() {
         if (checkAllP2ApplicantsMarked()) {
             console.log("✅ [P2 Button] All P2 applicants marked, showing modal");
             document.getElementById('notifyApplicantsModal').style.display = 'block';
-            
-            // Update modal for P2 Gmail integration
-            const modalTitle = document.querySelector('#notifyApplicantsModal h2');
-            if (modalTitle) {
-                modalTitle.textContent = "Confirm P2 Review Finalization";
-            }
-            
-            const modalParagraph = document.querySelector('#notifyApplicantsModal p');
-            if (modalParagraph) {
-                modalParagraph.textContent = "You are about to finalize the P2 review process using Gmail compose. This will prepare customizable email templates and open Gmail with pre-filled recipient information for both passed and failed applicants. Are you sure you want to proceed?";
-            }
-            
-            // Update confirm button for P2 Gmail flow
-            const confirmButton = document.getElementById('confirmP2Button');
-            if (confirmButton) {
-                const newConfirmButton = confirmButton.cloneNode(true);
-                confirmButton.parentNode.replaceChild(newConfirmButton, confirmButton);
-                newConfirmButton.addEventListener('click', startP2GmailIntegrationFlow);
-                console.log("🔧 [P2 Button] Updated confirm button for P2 flow");
-            }
         } else {
             console.warn("⚠️ [P2 Button] Not all P2 applicants marked");
             alert("Not all P2 applicants have been marked as passed or failed. Please make a decision for all applicants first.");

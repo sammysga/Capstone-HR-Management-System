@@ -756,6 +756,108 @@ function calculateSummaryMetrics(needsData, performanceData, effectivenessData, 
     };
 }
 
+
+    async function updateP2StatusesAfterEmails(passedApplicantIds, failedApplicantIds) {
+    const updatePromises = [];
+    
+    // Update passed applicants to P3 - Awaiting for Line Manager Evaluation
+    for (const applicantId of passedApplicantIds) {
+        // First get the userId from applicantId
+        const { data: applicantData } = await supabase
+            .from('applicants')
+            .select('userId')
+            .eq('applicantId', applicantId)
+            .single();
+            
+        if (applicantData && applicantData.userId) {
+            const userId = applicantData.userId;
+            
+            updatePromises.push(
+                supabase
+                    .from('applicants')
+                    .update({ applicantStatus: 'P3 - Awaiting for Line Manager Evaluation' })
+                    .eq('applicantId', applicantId)
+            );
+            
+            // Add chatbot message for passed applicants
+            updatePromises.push(
+                supabase
+                    .from('chatbot_history')
+                    .insert([{
+                        userId,
+                        message: JSON.stringify({ text: "Congratulations! You have successfully passed the HR interview and advanced to the final interview stage with our Line Manager." }),
+                        sender: 'bot',
+                        timestamp: new Date().toISOString(),
+                        applicantStage: 'P2 - PASSED'
+                    }])
+            );
+        }
+    }
+    
+    // Update failed applicants to P2 - FAILED
+    for (const applicantId of failedApplicantIds) {
+        // First get the userId from applicantId
+        const { data: applicantData } = await supabase
+            .from('applicants')
+            .select('userId')
+            .eq('applicantId', applicantId)
+            .single();
+            
+        if (applicantData && applicantData.userId) {
+            const userId = applicantData.userId;
+            
+            updatePromises.push(
+                supabase
+                    .from('applicants')
+                    .update({ applicantStatus: 'P2 - FAILED' })
+                    .eq('applicantId', applicantId)
+            );
+            
+            // Add chatbot message for failed applicants
+            updatePromises.push(
+                supabase
+                    .from('chatbot_history')
+                    .insert([{
+                        userId,
+                        message: JSON.stringify({ text: "Thank you for participating in our HR interview process. We regret to inform you that we will not be proceeding with your application at this time." }),
+                        sender: 'bot',
+                        timestamp: new Date().toISOString(),
+                        applicantStage: 'P2 - FAILED'
+                    }])
+            );
+        }
+    }
+    
+    await Promise.all(updatePromises);
+}
+
+// Send P2 email using your existing email templates
+async function sendP2EmailWithTemplate(email, templateType, applicantName, jobTitle) {
+    try {
+        console.log(`📧 HR P2: Sending ${templateType} email to: ${email}`);
+        
+        const template = emailTemplates[templateType];
+        if (!template) {
+            throw new Error(`P2 template '${templateType}' not found`);
+        }
+
+        // Use the getHtml function from your email templates
+        const htmlContent = template.getHtml(applicantName, jobTitle);
+        const subject = template.subject;
+
+        // Use your existing sendEmail function
+        const result = await sendEmail(email, subject, htmlContent);
+        
+        console.log(`✅ HR P2: Email sent successfully: ${templateType} to ${email}`);
+        return { success: true, messageId: result.messageId };
+
+    } catch (error) {
+        console.error(`❌ HR P2: Error sending email (${templateType}) to ${email}:`, error);
+        return { success: false, error: error.message };
+    }
+}
+
+
 const hrController = {
     getHRDashboard: async function(req, res) {
         if (!req.session.user) {
@@ -5548,6 +5650,159 @@ viewEvaluation: async function(req, res) {
         return res.redirect('/hr/applicant-tracker');
     }
 },
+
+
+getP2EmailTemplates: async function(req, res) {
+        try {
+            console.log('📧 [HR] Fetching P2 email templates from emailService.js...');
+            
+            // Import your email templates
+            const { emailTemplates } = require('../utils/emailService');
+            
+            // Extract P2 templates and convert to frontend format
+            const p2Templates = {
+                passed: {
+                    subject: emailTemplates['P2 - PASSED']?.subject || 'Great News! You\'ve Advanced to Final Interview - Prime Infrastructure',
+                    template: `Dear {applicantName},
+
+🎯 Great News!
+
+Congratulations! We are excited to inform you that you have successfully passed the HR interview stage for the {jobTitle} position at {companyName}.
+
+Your performance during the HR interview was impressive, and our team was particularly pleased with your responses, qualifications, and the enthusiasm you demonstrated for joining our organization.
+
+🎯 Final Interview Details:
+• Next Stage: Final interview with the Line Manager and senior team members
+• Focus Areas: Technical competencies, role-specific scenarios, and team fit assessment
+• Duration: Approximately 45-60 minutes
+• Format: In-person or virtual (details will be provided separately)
+
+📋 What to Expect:
+• Discussion about your technical skills and experience relevant to the role
+• Scenario-based questions related to the position
+• Opportunity to meet your potential direct supervisor
+• Q&A session about the role, team, and company culture
+• Discussion about career growth opportunities
+
+⏰ Next Steps:
+• Our scheduling team will contact you within 2-3 business days to arrange your final interview
+• Please keep your calendar flexible for the upcoming week
+• Check your applicant portal regularly for updates
+• Prepare questions about the role and our team dynamics
+
+💡 Interview Preparation Tips:
+• Review the job description and prepare specific examples from your experience
+• Research our recent projects and company developments
+• Think about how your skills align with our team's current goals
+• Prepare thoughtful questions about the role and team structure
+
+We're excited about the possibility of you joining our team and look forward to the final stage of our interview process.
+
+Best of luck with your preparation!
+
+Best regards,
+The {companyName} HR Team
+
+P.S. If you have any questions or concerns before your final interview, please don't hesitate to reach out to our HR team.`
+                },
+                failed: {
+                    subject: emailTemplates['P2 - FAILED']?.subject || 'Thank You for Your Interview - Prime Infrastructure',
+                    template: `Dear {applicantName},
+
+Thank you for taking the time to interview with us for the {jobTitle} position at {companyName}. We genuinely enjoyed learning more about your background, experience, and career aspirations during our HR interview process.
+
+After careful consideration and thorough discussion among our interview panel, we have decided to move forward with another candidate whose background and experience more closely align with our current requirements for this specific role.
+
+We want you to know that this was a difficult decision for our team. We were impressed with your qualifications, professionalism, and enthusiasm throughout the entire interview process, and you demonstrated many of the qualities we value highly at {companyName}.
+
+🙏 Our Sincere Appreciation:
+• Thank you for your time and effort in preparing for and participating in our comprehensive interview process
+• We value the opportunity to have met you and learned about your professional experience and goals
+• Your professionalism and enthusiasm were evident throughout all our interactions
+• We appreciate your interest in {companyName} and the energy you brought to the interview
+
+🚀 Moving Forward:
+• Your application and interview details will remain in our talent database for future opportunities
+• We may contact you if a suitable position becomes available that better matches your background and experience
+• Please feel free to apply for other positions with us that align with your skills and career interests
+• Follow our careers page and LinkedIn for new openings that might be a good fit for your profile
+
+🌟 Stay Connected:
+We encourage you to connect with us on LinkedIn and follow our company updates. The talent and experience you bring to the table are valuable, and we believe you'll find an excellent opportunity that's the right fit for your career goals.
+
+We recognize that job searching can be challenging, and we wish you continued success in your career endeavors. We hope our paths may cross again in the future, and we encourage you to stay connected with {companyName}.
+
+Thank you again for your interest in joining our team.
+
+Best regards,
+The {companyName} HR Team`
+                }
+            };
+            
+            res.json({
+                success: true,
+                templates: p2Templates
+            });
+            
+            console.log('✅ [HR] P2 email templates sent successfully');
+            
+        } catch (error) {
+            console.error('❌ [HR] Error fetching P2 email templates:', error);
+            res.status(500).json({
+                success: false,
+                message: 'Failed to fetch P2 email templates: ' + error.message
+            });
+        }
+    },
+
+
+    sendAutomatedEmail: async function(req, res) {
+        try {
+            const { email, subject, template, applicantName, jobTitle, phase, type } = req.body;
+            
+            console.log(`📧 [HR] Sending automated ${phase} ${type} email to: ${email}`);
+            
+            if (!email || !subject || !template || !applicantName || !jobTitle) {
+                return res.status(400).json({ 
+                    success: false, 
+                    message: "Missing required email parameters" 
+                });
+            }
+            
+            // Process the template with actual values (same as your Line Manager)
+            const processedTemplate = template
+                .replace(/\{applicantName\}/g, applicantName)
+                .replace(/\{jobTitle\}/g, jobTitle)
+                .replace(/\{companyName\}/g, 'Prime Infrastructure');
+            
+            // Use your existing sendEmail function from utils/emailService.js
+            const { sendEmail } = require('../utils/emailService');
+            const result = await sendEmail(email, subject, processedTemplate);
+            
+            if (result && result.messageId) {
+                console.log(`✅ [HR] P2 Email sent successfully to ${email}: ${result.messageId}`);
+                res.json({
+                    success: true,
+                    messageId: result.messageId,
+                    message: 'Email sent successfully'
+                });
+            } else {
+                console.error(`❌ [HR] Failed to send P2 email to ${email}`);
+                res.json({
+                    success: false,
+                    message: result?.error || 'Failed to send email'
+                });
+            }
+            
+        } catch (error) {
+            console.error('❌ [HR] Error in P2 send-automated-email:', error);
+            res.status(500).json({
+                success: false,
+                message: 'Server error: ' + error.message
+            });
+        }
+    },
+
     
     submitLeaveRequest: async function (req, res) {
         if (!req.session.user || !req.session.user.userId) {
