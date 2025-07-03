@@ -5992,205 +5992,172 @@ getApplicantTracker: async function(req, res) {
     }
 },
 
-    getApplicantTrackerByJobPositions: async function (req, res) {
-        if (req.session.user && req.session.user.userRole === 'Line Manager') {
-            try {
-                const { jobId, applicantId, userId } = req.query;
-                console.log('Received request with jobId:', jobId, 'and applicantId:', applicantId);
-                console.log('Received request with userId:', userId);
+getApplicantTrackerByJobPositions: async function (req, res) {
+    if (req.session.user && req.session.user.userRole === 'Line Manager') {
+        try {
+            const { jobId, applicantId, userId } = req.query;
+            console.log('Received request with jobId:', jobId, 'and applicantId:', applicantId);
+            console.log('Received request with userId:', userId);
 
-                const { data: applicants, error: applicantError } = await supabase
-                .from('applicantaccounts')
+            const { data: applicants, error: applicantError } = await supabase
+            .from('applicantaccounts')
+            .select(`
+                lastName, 
+                firstName, 
+                phoneNo,
+                userId,
+                jobId,
+                departmentId,
+                birthDate,
+                applicantStatus,
+                applicantId,
+                hrInterviewFormScore,
+                initialScreeningScore,
+                p2_Approved,
+                p2_hrevalscheduled
+            `)
+            .eq('jobId', jobId);
+        
+            if (applicantError) {
+                console.error('Error fetching applicants:', applicantError);
+                throw applicantError;
+            }
+            console.log('Fetched applicants:', applicants);
+        
+        // Fetch initial screening assessments separately
+        const { data: screeningAssessments, error: screeningError } = await supabase
+            .from('applicant_initialscreening_assessment')
+            .select(`
+                userId,
+                initialScreeningId,
+                degreeScore,
+                experienceScore,
+                certificationScore,
+                hardSkillsScore,
+                softSkillsScore,
+                workSetupScore,
+                availabilityScore,
+                totalScore,
+                totalScoreCalculatedAt,
+                degree_url,
+                cert_url,
+                resume_url,
+                isHRChosen,
+                isLineManagerChosen
+            `);
+        
+            if (screeningError) {
+                console.error('Error fetching screening assessments:', screeningError);
+                throw screeningError;
+            }
+            console.log('Fetched screening assessments:', screeningAssessments);
+
+            // NEW: Fetch P3 panel screening assessments
+            const { data: panelAssessments, error: panelError } = await supabase
+                .from('applicant_panelscreening_assessment')
                 .select(`
-                    lastName, 
-                    firstName, 
-                    phoneNo,
-                    userId,
-                    jobId,
-                    departmentId,
-                    birthDate,
-                    applicantStatus,
-                    applicantId,
-                    hrInterviewFormScore,
-                    initialScreeningScore,
-                    p2_Approved,
-                    p2_hrevalscheduled
-                `)
-                .eq('jobId', jobId);
-            
-                if (applicantError) {
-                    console.error('Error fetching applicants:', applicantError);
-                    throw applicantError;
-                }
-                console.log('Fetched applicants:', applicants);
-            
-            // Fetch initial screening assessments separately
-            const { data: screeningAssessments, error: screeningError } = await supabase
-                .from('applicant_initialscreening_assessment')
-                .select(`
-                    userId,
-                    initialScreeningId,
-                    degreeScore,
-                    experienceScore,
-                    certificationScore,
-                    hardSkillsScore,
-                    softSkillsScore,
-                    workSetupScore,
-                    availabilityScore,
-                    totalScore,
-                    totalScoreCalculatedAt,
-                    degree_url,
-                    cert_url,
-                    resume_url,
-                    isHRChosen,
-                    isLineManagerChosen
+                    applicantUserId,
+                    totalAssessmentRating,
+                    conclusion
                 `);
             
-                if (screeningError) {
-                    console.error('Error fetching screening assessments:', screeningError);
-                    throw screeningError;
-                }
-                console.log('Fetched screening assessments:', screeningAssessments);
-            
-    
-                // Fetch user emails using userId
-                const { data: userAccounts, error: userError } = await supabase
-                    .from('useraccounts')
-                    .select('userId, userEmail');
-    
-                if (userError) throw userError;
-    
-                // Fetch job titles and department names
-                const { data: jobTitles, error: jobError } = await supabase
-                    .from('jobpositions')
-                    .select('jobId, jobTitle');
-    
-                if (jobError) throw jobError;
-    
-                const { data: departments, error: departmentError } = await supabase
-                .from('departments')
-                .select('departmentId, deptName');
-
-                if (departmentError) {
-                    console.error('Error fetching departments:', departmentError);
-                    throw departmentError;
-                }
-                console.log('Fetched departments:', departments);
-
-for (const applicant of applicants) {
-    console.log(`Processing applicant: ${applicant.firstName} ${applicant.lastName}`);
-
-    applicant.jobTitle = jobTitles.find(job => job.jobId === applicant.jobId)?.jobTitle || 'N/A';
-    applicant.deptName = departments.find(dept => dept.departmentId === applicant.departmentId)?.deptName || 'N/A';
-    applicant.userEmail = userAccounts.find(user => user.userId === applicant.userId)?.userEmail || 'N/A';
-    applicant.birthDate = userAccounts.find(user => user.userId === applicant.userId)?.birthDate || 'N/A';
-
-    // Match `userId` to fetch the corresponding initial screening assessment
-    const screeningData = screeningAssessments.find(assessment => assessment.userId === applicant.userId) || {};
-
-    // FIXED: Proper boolean handling for Work Setup and Availability
-    const workSetupScore = screeningData.workSetupScore;
-    const availabilityScore = screeningData.availabilityScore;
-    
-    // Convert to proper boolean values
-    const workSetupPassed = (workSetupScore === true || workSetupScore === 'true' || workSetupScore === '1' || workSetupScore === 1);
-    const availabilityPassed = (availabilityScore === true || availabilityScore === 'true' || availabilityScore === '1' || availabilityScore === 1);
-    
-    console.log(`UserId ${applicant.userId} Work Setup Logic:`);
-    console.log(`  workSetupScore: ${workSetupScore} (${typeof workSetupScore}) -> ${workSetupPassed}`);
-    console.log(`  availabilityScore: ${availabilityScore} (${typeof availabilityScore}) -> ${availabilityPassed}`);
-    console.log(`  Both passed: ${workSetupPassed && availabilityPassed}`);
-
-    // Merge the screening assessment data into the applicant object
-    applicant.initialScreeningAssessment = {
-        degreeScore: screeningData.degreeScore || 'N/A',
-        experienceScore: screeningData.experienceScore || 'N/A',
-        certificationScore: screeningData.certificationScore || 'N/A',
-        hardSkillsScore: screeningData.hardSkillsScore || 'N/A',
-        softSkillsScore: screeningData.softSkillsScore || 'N/A',
-        workSetupScore: workSetupPassed, // Send as boolean
-        availabilityScore: availabilityPassed, // Send as boolean
-        totalScore: screeningData.totalScore || 'N/A',
-        degree_url: screeningData.degree_url || '#',
-        cert_url: screeningData.cert_url || '#',
-        resume_url: screeningData.resume_url || '#',
-    };
-
-    console.log('Updated applicant details:', applicant);
-}
-
-console.log('Final applicants list:', applicants);
-    
-//                 // Merge jobTitle, deptName, userEmail, and scores with applicants data
-//                 const applicantsWithDetails = applicants.map(applicant => {
-//                     const jobTitle = jobTitles.find(job => job.jobId === applicant.jobId)?.jobTitle || 'N/A';
-//                     const deptName = departments.find(dept => dept.departmentId === applicant.departmentId)?.deptName || 'N/A';
-//                     const userEmail = userAccounts.find(user => user.userId === applicant.userId)?.userEmail || 'N/A';
-                
-//                     let formattedStatus = applicant.applicantStatus;
-
-// // If Line Manager has approved, set status to "P1: PASSED"
-// if (applicant.lineManagerApproved) {
-//     formattedStatus = 'P1 - PASSED';
-// } else {
-//     // Check Initial Screening Score
-//     if (applicant.initialScreeningScore === null || applicant.initialScreeningScore === undefined) {
-//         formattedStatus = 'P1 - Initial Screening';
-//     } else if (applicant.initialScreeningScore < 50) {
-//         formattedStatus = 'P1 - FAILED';
-//     } else {
-//         formattedStatus = `P1 - Awaiting for HR Action; Initial Screening Score: ${applicant.initialScreeningScore}`;
-//     }
-
-//     // Check HR Interview Score
-//     if (applicant.hrInterviewFormScore !== null && applicant.hrInterviewFormScore !== undefined) {
-//         if (applicant.hrInterviewFormScore < 50) {
-//             formattedStatus = 'P1 - FAILED';
-//         } else if (applicant.hrInterviewFormScore > 45 && applicant.isChosen1) {
-//             formattedStatus = 'P1 - Awaiting for Line Manager Action; HR PASSED';
-//         } else if (formattedStatus.startsWith('P1 - Awaiting for HR Action')) {
-//             formattedStatus += `; HR Interview Score: ${applicant.hrInterviewFormScore}`;
-//         }
-//     }
-// }
-                
-// // Log for debugging
-// console.log("Applicant:", applicant.firstName, applicant.lastName, 
-//     "Initial Screening Score:", applicant.initialScreeningScore, 
-//     "HR Interview Score:", applicant.hrInterviewFormScore, 
-//     "isChosen1:", applicant.isChosen1, 
-//     "lineManagerApproved:", applicant.lineManagerApproved,
-//     "LM_notified:", applicant.LM_notified,
-//     "=> Status:", formattedStatus);
-                
-//                     // Return the updated applicant object with the formatted status
-//                     return {
-//                         ...applicant,
-//                         jobTitle,
-//                         deptName,
-//                         userEmail,
-//                         applicantStatus: formattedStatus, // Return the updated status
-//                     };
-//                 });
-                
-                // // Render the EJS template with applicants data
-                // res.render('staffpages/linemanager_pages/linemanagerapplicanttracking-jobposition', {
-                //     applicants: applicantsWithDetails,
-                // });
-
-                // Render the page with updated applicants
-                res.render('staffpages/linemanager_pages/linemanagerapplicanttracking-jobposition', { 
-                    applicants,
-                    applicantsJSON: JSON.stringify(applicants) // Make data accessible in script
-                });           } catch (error) {
-                console.error('Error fetching applicants:', error);
-                res.status(500).json({ error: 'Error fetching applicants' });
+            if (panelError) {
+                console.error('Error fetching panel assessments:', panelError);
+                throw panelError;
             }
-        } else {
-            req.flash('errors', { authError: 'Unauthorized access. Line Manager role required.' });
-            res.redirect('/staff/login');
+            console.log('Fetched panel assessments:', panelAssessments);
+
+            // Fetch user emails using userId
+            const { data: userAccounts, error: userError } = await supabase
+                .from('useraccounts')
+                .select('userId, userEmail');
+
+            if (userError) throw userError;
+
+            // Fetch job titles and department names
+            const { data: jobTitles, error: jobError } = await supabase
+                .from('jobpositions')
+                .select('jobId, jobTitle');
+
+            if (jobError) throw jobError;
+
+            const { data: departments, error: departmentError } = await supabase
+            .from('departments')
+            .select('departmentId, deptName');
+
+            if (departmentError) {
+                console.error('Error fetching departments:', departmentError);
+                throw departmentError;
+            }
+            console.log('Fetched departments:', departments);
+
+            for (const applicant of applicants) {
+                console.log(`Processing applicant: ${applicant.firstName} ${applicant.lastName}`);
+
+                applicant.jobTitle = jobTitles.find(job => job.jobId === applicant.jobId)?.jobTitle || 'N/A';
+                applicant.deptName = departments.find(dept => dept.departmentId === applicant.departmentId)?.deptName || 'N/A';
+                applicant.userEmail = userAccounts.find(user => user.userId === applicant.userId)?.userEmail || 'N/A';
+                applicant.birthDate = userAccounts.find(user => user.userId === applicant.userId)?.birthDate || 'N/A';
+
+                // Match `userId` to fetch the corresponding initial screening assessment
+                const screeningData = screeningAssessments.find(assessment => assessment.userId === applicant.userId) || {};
+
+                // NEW: Match `userId` to fetch the corresponding panel assessment
+                const panelData = panelAssessments.find(assessment => assessment.applicantUserId === applicant.userId) || {};
+
+                // FIXED: Proper boolean handling for Work Setup and Availability
+                const workSetupScore = screeningData.workSetupScore;
+                const availabilityScore = screeningData.availabilityScore;
+                
+                // Convert to proper boolean values
+                const workSetupPassed = (workSetupScore === true || workSetupScore === 'true' || workSetupScore === '1' || workSetupScore === 1);
+                const availabilityPassed = (availabilityScore === true || availabilityScore === 'true' || availabilityScore === '1' || availabilityScore === 1);
+                
+                console.log(`UserId ${applicant.userId} Work Setup Logic:`);
+                console.log(`  workSetupScore: ${workSetupScore} (${typeof workSetupScore}) -> ${workSetupPassed}`);
+                console.log(`  availabilityScore: ${availabilityScore} (${typeof availabilityScore}) -> ${availabilityPassed}`);
+                console.log(`  Both passed: ${workSetupPassed && availabilityPassed}`);
+
+                // Merge the screening assessment data into the applicant object
+                applicant.initialScreeningAssessment = {
+                    degreeScore: screeningData.degreeScore || 'N/A',
+                    experienceScore: screeningData.experienceScore || 'N/A',
+                    certificationScore: screeningData.certificationScore || 'N/A',
+                    hardSkillsScore: screeningData.hardSkillsScore || 'N/A',
+                    softSkillsScore: screeningData.softSkillsScore || 'N/A',
+                    workSetupScore: workSetupPassed, // Send as boolean
+                    availabilityScore: availabilityPassed, // Send as boolean
+                    totalScore: screeningData.totalScore || 'N/A',
+                    degree_url: screeningData.degree_url || '#',
+                    cert_url: screeningData.cert_url || '#',
+                    resume_url: screeningData.resume_url || '#',
+                };
+
+                // NEW: Merge the panel assessment data into the applicant object
+                applicant.panelAssessment = {
+                    totalAssessmentRating: panelData.totalAssessmentRating || 'N/A',
+                    conclusion: panelData.conclusion || 'N/A'
+                };
+
+                console.log('Updated applicant details:', applicant);
+            }
+
+            console.log('Final applicants list:', applicants);
+        
+
+            res.render('staffpages/linemanager_pages/linemanagerapplicanttracking-jobposition', { 
+                applicants,
+                applicantsJSON: JSON.stringify(applicants) // Make data accessible in script
+            });           
+        } catch (error) {
+            console.error('Error fetching applicants:', error);
+            res.status(500).json({ error: 'Error fetching applicants' });
         }
-    },
+    } else {
+        req.flash('errors', { authError: 'Unauthorized access. Line Manager role required.' });
+        res.redirect('/staff/login');
+    }
+},
 
     getApplicantAssessment: async function(req, res) {
     try {
@@ -6412,189 +6379,173 @@ console.log('Final applicants list:', applicants);
         }
     },
 
-    updateP1Statuses: async function(req, res) {
-        try {
-            console.log('✅ [LineManager] Updating P1 statuses after Gmail emails sent');
-            
-            const { passedUserIds, failedUserIds } = req.body;
-            
-            if (!passedUserIds || !failedUserIds) {
-                return res.status(400).json({ success: false, message: "Missing user IDs" });
-            }
-            
-            console.log(`✅ [LineManager] P1 Status Update: ${passedUserIds.length} passed, ${failedUserIds.length} failed`);
-            
-            let updateResults = {
-                passed: { updated: 0, errors: [] },
-                failed: { updated: 0, errors: [] }
-            };
-            
-            // Update passed applicants
-            for (const userId of passedUserIds) {
-                try {
-                    console.log(`✅ [LineManager] Updating P1 PASSED status for userId: ${userId}`);
+   updateP1Statuses: async function(req, res) {
+    try {
+        console.log('✅ [LineManager] Updating P1 statuses after Gmail emails sent');
+        
+        const { passedUserIds, failedUserIds } = req.body;
+        
+        if (!passedUserIds || !failedUserIds) {
+            return res.status(400).json({ success: false, message: "Missing user IDs" });
+        }
+        
+        console.log(`✅ [LineManager] P1 Status Update: ${passedUserIds.length} passed, ${failedUserIds.length} failed`);
+        
+        let updateResults = {
+            passed: { updated: 0, errors: [] },
+            failed: { updated: 0, errors: [] }
+        };
+        
+        // Update passed applicants
+        for (const userId of passedUserIds) {
+            try {
+                console.log(`✅ [LineManager] Updating P1 PASSED status for userId: ${userId}`);
+                
+                // Update applicant status in the database
+                const { data: updateData, error: updateError } = await supabase
+                    .from('applicantaccounts')
+                    .update({ applicantStatus: 'P1 - PASSED' })
+                    .eq('userId', userId);
                     
-                    // Update applicant status in the database
-                    const { data: updateData, error: updateError } = await supabase
-                        .from('applicantaccounts')
-                        .update({ applicantStatus: 'P1 - PASSED' })
-                        .eq('userId', userId);
-                        
-                    if (updateError) {
-                        console.error(`❌ [LineManager] Error updating status for ${userId}:`, updateError);
-                        updateResults.passed.errors.push(`${userId}: ${updateError.message}`);
-                        continue;
-                    }
-                    
-                    updateResults.passed.updated++;
-                    
-                    // 🔹 First chatbot message - congratulations
-const { error: messageError1 } = await supabase
-    .from('chatbot_history')
-    .insert([{
-        userId,
-        message: JSON.stringify({ 
-            text: "Congratulations! You have successfully passed the initial screening process. We look forward to proceeding with the next interview stage with the HR." 
-        }),
-        sender: 'bot',
-        timestamp: new Date().toISOString(),
-        applicantStage: 'P1 - PASSED'
-    }]);
-
-if (messageError1) {
-    console.error(`❌ [LineManager] Error adding P1 congratulatory message for ${userId}:`, messageError1);
-} else {
-    console.log(`💬 [LineManager] Sent congratulations to ${userId}`);
-}
-
-// 🔹 Second chatbot message - scheduling link
-const { error: messageError2 } = await supabase
-    .from('chatbot_history')
-    .insert([{
-        userId,
-        message: JSON.stringify({ 
-            text: "Please click the button below to schedule your next interview:",
-            buttons: [
-                {
-                    text: "Schedule Interview",
-                    value: "schedule_p1_interview",
-                    url: "/applicant/schedule-interview?stage=P1"
+                if (updateError) {
+                    console.error(`❌ [LineManager] Error updating status for ${userId}:`, updateError);
+                    updateResults.passed.errors.push(`${userId}: ${updateError.message}`);
+                    continue;
                 }
-            ]
-        }),
-        sender: 'bot',
-        timestamp: new Date(Date.now() + 1000).toISOString(),
-        applicantStage: 'P1 - PASSED'
-    }]);
+                
+                updateResults.passed.updated++;
+                
+                // 🔹 First chatbot message - congratulations
+                const { error: messageError1 } = await supabase
+                    .from('chatbot_history')
+                    .insert([{
+                        userId,
+                        message: JSON.stringify({ 
+                            text: "Congratulations! You have successfully passed the initial screening process. We look forward to proceeding with the next interview stage with the HR." 
+                        }),
+                        sender: 'bot',
+                        timestamp: new Date().toISOString(),
+                        applicantStage: 'P1 - PASSED'
+                    }]);
 
-if (messageError2) {
-    console.error(`❌ [LineManager] Error adding P1 scheduling button for ${userId}:`, messageError2);
-} else {
-    console.log(`💬 [LineManager] Sent scheduling button to ${userId}`);
-}
+                if (messageError1) {
+                    console.error(`❌ [LineManager] Error adding P1 congratulatory message for ${userId}:`, messageError1);
+                } else {
+                    console.log(`💬 [LineManager] Sent congratulations to ${userId}`);
+                }
 
-                        
-                    if (chatError) {
-                        console.error(`❌ [LineManager] Error adding chat message for ${userId}:`, chatError);
-                    }
+                // 🔹 Second chatbot message - scheduling link
+                const { error: messageError2 } = await supabase
+                    .from('chatbot_history')
+                    .insert([{
+                        userId,
+                        message: JSON.stringify({ 
+                            text: "Please click the button below to schedule your next interview:",
+                            buttons: [
+                                {
+                                    text: "Schedule Interview",
+                                    value: "schedule_p1_interview",
+                                    url: "/applicant/schedule-interview?stage=P1"
+                                }
+                            ]
+                        }),
+                        sender: 'bot',
+                        timestamp: new Date(Date.now() + 1000).toISOString(),
+                        applicantStage: 'P1 - PASSED'
+                    }]);
+
+                if (messageError2) {
+                    console.error(`❌ [LineManager] Error adding P1 scheduling button for ${userId}:`, messageError2);
+                } else {
+                    console.log(`💬 [LineManager] Sent scheduling button to ${userId}`);
+                }
+                
+            } catch (error) {
+                console.error(`❌ [LineManager] Error processing passed applicant ${userId}:`, error);
+                updateResults.passed.errors.push(`${userId}: ${error.message}`);
+            }
+        }
+        
+        // Update failed applicants
+        for (const userId of failedUserIds) {
+            try {
+                console.log(`✅ [LineManager] Updating P1 FAILED status for userId: ${userId}`);
+                
+                // Update applicant status in the database to FAILED
+                const { data: updateData, error: updateError } = await supabase
+                    .from('applicantaccounts')
+                    .update({ applicantStatus: 'P1 - FAILED' })
+                    .eq('userId', userId);
                     
-                } catch (error) {
-                    console.error(`❌ [LineManager] Error processing passed applicant ${userId}:`, error);
-                    updateResults.passed.errors.push(`${userId}: ${error.message}`);
+                if (updateError) {
+                    console.error(`❌ [LineManager] Error updating status for ${userId}:`, updateError);
+                    updateResults.failed.errors.push(`${userId}: ${updateError.message}`);
+                    continue;
                 }
-            }
-            
-            // Update failed applicants
-            for (const userId of failedUserIds) {
-                try {
-                    console.log(`✅ [LineManager] Updating P1 FAILED status for userId: ${userId}`);
-                    
-                   // 🔹 First chatbot message - congratulations
-const { error: messageError1 } = await supabase
-    .from('chatbot_history')
-    .insert([{
-        userId,
-        message: JSON.stringify({ 
-            text: "Congratulations! You have successfully passed the initial screening process. We look forward to proceeding with the next interview stage with the HR." 
-        }),
-        sender: 'bot',
-        timestamp: new Date().toISOString(),
-        applicantStage: 'P1 - PASSED'
-    }]);
+                
+                updateResults.failed.updated++;
+                
+                // 🔹 Send rejection message
+                const rejectionMessage = {
+                    text: "We regret to inform you that you have not been chosen as a candidate for this position. Thank you for your interest in applying at Company ABC, and we wish you the best in your future endeavors."
+                };
+                
+                const { error: messageError } = await supabase
+                    .from('chatbot_history')
+                    .insert([{
+                        userId,
+                        message: JSON.stringify(rejectionMessage),
+                        sender: 'bot',
+                        timestamp: new Date().toISOString(),
+                        applicantStage: 'P1 - FAILED'
+                    }]);
 
-if (messageError1) {
-    console.error(`❌ [LineManager] Error adding P1 congratulatory message for ${userId}:`, messageError1);
-} else {
-    console.log(`💬 [LineManager] Sent congratulations to ${userId}`);
-}
-
-// 🔹 Second chatbot message - scheduling link
-const { error: messageError2 } = await supabase
-    .from('chatbot_history')
-    .insert([{
-        userId,
-        message: JSON.stringify({ 
-            text: "Please click the button below to schedule your next interview:",
-            buttons: [
-                {
-                    text: "Schedule Interview",
-                    value: "schedule_p1_interview",
-                    url: "/applicant/schedule-interview?stage=P1"
+                if (messageError) {
+                    console.error(`❌ [LineManager] Error adding P1 rejection message for ${userId}:`, messageError);
+                } else {
+                    console.log(`💬 [LineManager] Sent rejection message to ${userId}`);
                 }
-            ]
-        }),
-        sender: 'bot',
-        timestamp: new Date(Date.now() + 1000).toISOString(),
-        applicantStage: 'P1 - PASSED'
-    }]);
-
-if (messageError2) {
-    console.error(`❌ [LineManager] Error adding P1 scheduling button for ${userId}:`, messageError2);
-} else {
-    console.log(`💬 [LineManager] Sent scheduling button to ${userId}`);
-}
-
-                } catch (error) {
-                    console.error(`❌ [LineManager] Error processing failed applicant ${userId}:`, error);
-                    updateResults.failed.errors.push(`${userId}: ${error.message}`);
-                }
+                
+            } catch (error) {
+                console.error(`❌ [LineManager] Error processing failed applicant ${userId}:`, error);
+                updateResults.failed.errors.push(`${userId}: ${error.message}`);
             }
-            
-            // Prepare response
-            const totalUpdated = updateResults.passed.updated + updateResults.failed.updated;
-            const totalErrors = updateResults.passed.errors.length + updateResults.failed.errors.length;
-            
-            if (totalErrors > 0) {
-                console.warn(`⚠️ [LineManager] P1 status update completed with ${totalErrors} errors`);
-                return res.status(207).json({ // 207 Multi-Status for partial success
-                    success: true,
-                    message: `P1 statuses updated with some errors. ${totalUpdated} successful, ${totalErrors} failed.`,
-                    updateResults: updateResults,
-                    passedUpdated: updateResults.passed.updated,
-                    failedUpdated: updateResults.failed.updated,
-                    totalErrors: totalErrors
-                });
-            } else {
-                console.log(`✅ [LineManager] P1 status update completed successfully`);
-                return res.status(200).json({ 
-                    success: true, 
-                    message: "P1 statuses updated successfully. All applicants have been processed.",
-                    updateResults: updateResults,
-                    passedUpdated: updateResults.passed.updated,
-                    failedUpdated: updateResults.failed.updated,
-                    totalUpdated: totalUpdated
-                });
-            }
-            
-        } catch (error) {
-            console.error('❌ [LineManager] Error updating P1 statuses:', error);
-            return res.status(500).json({ 
-                success: false, 
-                message: "Error updating P1 statuses: " + error.message 
+        }
+        
+        // Prepare response
+        const totalUpdated = updateResults.passed.updated + updateResults.failed.updated;
+        const totalErrors = updateResults.passed.errors.length + updateResults.failed.errors.length;
+        
+        if (totalErrors > 0) {
+            console.warn(`⚠️ [LineManager] P1 status update completed with ${totalErrors} errors`);
+            return res.status(207).json({ // 207 Multi-Status for partial success
+                success: true,
+                message: `P1 statuses updated with some errors. ${totalUpdated} successful, ${totalErrors} failed.`,
+                updateResults: updateResults,
+                passedUpdated: updateResults.passed.updated,
+                failedUpdated: updateResults.failed.updated,
+                totalErrors: totalErrors
+            });
+        } else {
+            console.log(`✅ [LineManager] P1 status update completed successfully`);
+            return res.status(200).json({ 
+                success: true, 
+                message: "P1 statuses updated successfully. All applicants have been processed.",
+                updateResults: updateResults,
+                passedUpdated: updateResults.passed.updated,
+                failedUpdated: updateResults.failed.updated,
+                totalUpdated: totalUpdated
             });
         }
-    },
-
+        
+    } catch (error) {
+        console.error('❌ [LineManager] Error updating P1 statuses:', error);
+        return res.status(500).json({ 
+            success: false, 
+            message: "Error updating P1 statuses: " + error.message 
+        });
+    }
+},
     markAsP1Passed: async function(req, res) {
         try {
             const { userId } = req.body;
@@ -7419,138 +7370,61 @@ getP3Assessment: async function(req, res) {
     try {
         const { userId } = req.params;
         
-        console.log('Fetching P3 assessment for userId:', userId);
+        console.log(`Fetching P3 assessment for userId: ${userId}`);
         
-        if (!userId) {
-            return res.status(400).json({ 
-                success: false, 
-                message: 'User ID is required' 
-            });
-        }
-        
-        // Fetch the P3 panel screening assessment data
-        const { data: assessment, error: assessmentError } = await supabase
+        // Fetch from applicant_panelscreening_assessment table
+        const { data: panelAssessment, error } = await supabase
             .from('applicant_panelscreening_assessment')
             .select(`
-                userId,
                 totalAssessmentRating,
                 conclusion,
-                interviewDate,
-                recommendationReason
+                panelFormData,
+                strengthsRapport,
+                longTermGoalsRapport,
+                equipmentToolsSoftware,
+                remarks,
+                interviewDate
             `)
-            .eq('userId', userId)
+            .eq('applicantUserId', userId)
             .single();
-            
-        if (assessmentError) {
-            console.error('Error fetching P3 assessment:', assessmentError);
-            return res.status(404).json({ 
-                success: false, 
+        
+        if (error) {
+            console.error('Error fetching P3 assessment:', error);
+            return res.status(404).json({
+                success: false,
                 message: 'P3 assessment not found',
-                error: assessmentError.message 
+                error: error.message
             });
         }
         
-        // Fetch applicant basic info for context
-        const { data: applicant, error: applicantError } = await supabase
-            .from('applicantaccounts')
-            .select('firstName, lastName, applicantStatus')
-            .eq('userId', userId)
-            .single();
+        if (!panelAssessment) {
+            return res.status(404).json({
+                success: false,
+                message: 'No P3 assessment found for this user'
+            });
+        }
         
-        const responseData = {
+        console.log(`Successfully fetched P3 assessment for userId: ${userId}`);
+        
+        res.json({
             success: true,
             assessmentData: {
-                userId: userId,
-                firstName: applicant?.firstName || 'N/A',
-                lastName: applicant?.lastName || 'N/A',
-                status: applicant?.applicantStatus || 'N/A',
-                totalAssessmentRating: assessment?.totalAssessmentRating || 'N/A',
-                conclusion: assessment?.conclusion || 'N/A',
-                interviewDate: assessment?.interviewDate || 'N/A',
-                recommendationReason: assessment?.recommendationReason || 'N/A'
+                totalAssessmentRating: panelAssessment.totalAssessmentRating || 'N/A',
+                conclusion: panelAssessment.conclusion || 'N/A',
+                panelFormData: panelAssessment.panelFormData || {},
+                strengthsRapport: panelAssessment.strengthsRapport || '',
+                longTermGoalsRapport: panelAssessment.longTermGoalsRapport || '',
+                equipmentToolsSoftware: panelAssessment.equipmentToolsSoftware || '',
+                remarks: panelAssessment.remarks || '',
+                interviewDate: panelAssessment.interviewDate || null
             }
-        };
-        
-        console.log('Returning P3 assessment data:', responseData);
-        
-        return res.json(responseData);
-        
-    } catch (error) {
-        console.error('Error in getP3Assessment:', error);
-        return res.status(500).json({
-            success: false,
-            message: 'Error fetching P3 assessment data',
-            error: error.message
         });
-    }
-},
-
-
-getP3Assessment: async function(req, res) {
-    try {
-        const { userId } = req.params;
-        
-        console.log('Fetching P3 assessment for userId:', userId);
-        
-        if (!userId) {
-            return res.status(400).json({ 
-                success: false, 
-                message: 'User ID is required' 
-            });
-        }
-        
-        // Fetch the P3 panel screening assessment data
-        const { data: assessment, error: assessmentError } = await supabase
-            .from('applicant_panelscreening_assessment')
-            .select(`
-                userId,
-                totalAssessmentRating,
-                conclusion,
-                interviewDate,
-                recommendationReason
-            `)
-            .eq('userId', userId)
-            .single();
-            
-        if (assessmentError) {
-            console.error('Error fetching P3 assessment:', assessmentError);
-            return res.status(404).json({ 
-                success: false, 
-                message: 'P3 assessment not found',
-                error: assessmentError.message 
-            });
-        }
-        
-        // Fetch applicant basic info for context
-        const { data: applicant, error: applicantError } = await supabase
-            .from('applicantaccounts')
-            .select('firstName, lastName, applicantStatus')
-            .eq('userId', userId)
-            .single();
-        
-        const responseData = {
-            success: true,
-            assessmentData: {
-                userId: userId,
-                firstName: applicant?.firstName || 'N/A',
-                lastName: applicant?.lastName || 'N/A',
-                status: applicant?.applicantStatus || 'N/A',
-                totalAssessmentRating: assessment?.totalAssessmentRating || 'N/A',
-                conclusion: assessment?.conclusion || 'N/A',
-                interviewDate: assessment?.interviewDate || 'N/A',
-                recommendationReason: assessment?.recommendationReason || 'N/A'
-            }
-        };
-        
-        console.log('Returning P3 assessment data:', responseData);
-        
-        return res.json(responseData);
         
     } catch (error) {
-        console.error('Error in getP3Assessment:', error);
-        return res.status(500).json({
+        console.error('Error in get-p3-assessment route:', error);
+        res.status(500).json({
             success: false,
-            message: 'Error fetching P3 assessment data',
+            message: 'Internal server error',
             error: error.message
         });
     }

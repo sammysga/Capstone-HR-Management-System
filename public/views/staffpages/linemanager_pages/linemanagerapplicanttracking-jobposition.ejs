@@ -950,14 +950,15 @@ table.tracking-table tbody:empty::after {
             </tbody>
         </table>
     </div>
-<!-- P3 Review Section -->
-<div id="p3ReviewSection">
-    <h3>List of Applicants on P3 Review</h3>
-<div class="right-section" id="p3FinalizeButtonContainer" style="display: none;">
-    <button id="finalizeP3Button" class="set-finalize-review-button">Finalize P3 Review</button>
-</div>
 
     
+    <!-- P3 Review Section -->
+<div id="p3ReviewSection">
+    <h3>List of Applicants on P3 Review</h3>
+    <div class="right-section" id="p3FinalizeButtonContainer" style="display: none;">
+        <button id="finalizeP3Button" class="set-finalize-review-button">Finalize P3 Review</button>
+    </div>
+
     <h4>Awaiting for Action - P3</h4>
     <table class="tracking-table" id="p3AwaitingActionTable">
         <thead>
@@ -966,6 +967,8 @@ table.tracking-table tbody:empty::after {
                 <th>Last Name, First Name</th>
                 <th>Department</th>
                 <th>Position Applied</th>
+                <th>Total Assessment Rating</th>
+                <th>Evaluation Conclusion</th>
                 <th>Applicant Status</th>
             </tr>
         </thead>
@@ -982,6 +985,8 @@ table.tracking-table tbody:empty::after {
                 <th>Last Name, First Name</th>
                 <th>Department</th>
                 <th>Position Applied</th>
+                <th>Total Assessment Rating</th>
+                <th>Evaluation Conclusion</th>
                 <th>Applicant Status</th>
                 <th>Actions</th>
             </tr>
@@ -1109,40 +1114,20 @@ table.tracking-table tbody:empty::after {
 
     <h2 class="header-section" id="onboardingHeader" style="margin-top: 30px; margin-bottom: 10px;">Onboarding</h2>
 
-    <table class="tracking-table" id="onboardingTable" style="width: 100%; border-collapse: collapse;">
-        <thead>
-            <tr>
-                <th>Application No.</th>
-                <th>Last Name, First Name</th>
-                <th>Department</th>
-                <th>Position Applied</th>
-                <th>Application Status & Actions</th>
-            </tr>
-        </thead>
-        <tbody>
-            <tr>
-                <td>APP00018</td>
-                <td>William Scott<br>williamscott@gmail.com</td>
-                <td>IT</td>
-                <td>Data Analyst</td>
-                <td>First Day Checklist Sent</td>
-            </tr>
-            <tr class="status-for-onboarding">
-                <td>APP00019</td>
-                <td>Grace Taylor<br>gracetaylor@gmail.com</td>
-                <td>IT</td>
-                <td>Data Analyst</td>
-                <td>Checklist Accomplished <button class="btn-onboarding" onclick="openModal('accountSetupReminderModal')">For Onboarding</button></td>
-            </tr>
-            <tr>
-                <td>APP00020</td>
-                <td>Ella Martinez<br>ellamartinez@gmail.com</td>
-                <td>IT</td>
-                <td>Data Analyst</td>
-                <td>Account Created</td>
-            </tr>
-        </tbody>
-    </table>
+<table class="tracking-table" id="onboardingTable" style="width: 100%; border-collapse: collapse;">
+    <thead>
+        <tr>
+            <th>Application No.</th>
+            <th>Last Name, First Name</th>
+            <th>Department</th>
+            <th>Position Applied</th>
+            <th>Application Status & Actions</th>
+        </tr>
+    </thead>
+    <tbody>
+        <!-- Dynamic rows will be inserted here -->
+    </tbody>
+</table>
 
     <button class="set-interview-button" onclick="setInterviewAvailabilities()">Set Interview Availabilities on Calendly</button>
 
@@ -7169,160 +7154,300 @@ function filterRowsByStatus(status) {
 // ============================
 // REVIEW FILTER - FIXED VERSION
 // ============================
-
 function handleReviewFilter(mainTable, applicantStatusSection, allMainRows) {
   console.log("=== ENHANCED P1/P3 REVIEW FILTER - FIXED VERSION ===");
+    
+    hideEvaluationSection();
+    
+    // Remove old sort section first
+    removeOldSortSection();
+    
+    const onboardingHeader = document.getElementById('onboardingHeader');
+    const onboardingTable = document.getElementById('onboardingTable');
+    
+    if (onboardingHeader) onboardingHeader.style.display = 'none';
+    if (onboardingTable) onboardingTable.style.display = 'none';
+    if (mainTable) mainTable.style.display = 'none';
+    if (applicantStatusSection) applicantStatusSection.style.display = 'block';
+    
+    captureApplicantsDataEnhanced();
+    
+    const p1AwaitingRows = [];
+    const p1DeclaredRows = [];
+    const p3AwaitingRows = [];
+    const p3DeclaredRows = [];
+    
+    console.log(`Analyzing ${allMainRows.length} rows for P1/P3 statuses...`);
+    
+    // Enhanced row processing with comprehensive status detection
+    allMainRows.forEach((row, index) => {
+        const statusCell = row.querySelector('td:nth-child(5)');
+        if (!statusCell) return;
+        
+        // Extract status from multiple sources
+        let statusText = '';
+        
+        // Method 1: Check span element
+        const statusSpan = statusCell.querySelector('span');
+        if (statusSpan) {
+            statusText = statusSpan.textContent.replace(/Status:\s*/g, '').trim();
+        }
+        
+        // Method 2: Check data attributes
+        if (!statusText) {
+            statusText = row.getAttribute('data-status') || '';
+        }
+        
+        // Method 3: Parse from cell text
+        if (!statusText) {
+            const cellText = statusCell.textContent.replace(/Status:\s*/g, '').trim();
+            const statusMatch = cellText.match(/^([^]*?)(?:\s*(?:For Review|For Evaluation|Send Job Offer|Approve))/);
+            statusText = statusMatch ? statusMatch[1].trim() : cellText.split('\n')[0].trim();
+        }
+        
+        console.log(`Row ${index + 1}: Detected status = "${statusText}"`);
+        
+        const rowData = extractRowDataEnhanced(row, index);
+        if (!rowData) return;
+        
+        // Ensure userId is set
+        if (rowData.userId) {
+            row.setAttribute('data-userid', rowData.userId);
+        }
+        
+        // FIXED: Comprehensive status categorization including P3 statuses
+        
+        // P1 - Awaiting for Line Manager Action (with HR PASSED)
+        if (statusText.includes('P1') && statusText.includes('Awaiting for Line Manager Action') && statusText.includes('HR PASSED')) {
+            p1AwaitingRows.push(rowData);
+            console.log(`✅ Added to P1 Awaiting: ${rowData.name} (${statusText})`);
+        }
+        // P1 - PASSED (Pending Finalization) - FIXED DETECTION
+        else if (statusText.includes('P1') && statusText.includes('PASSED') && statusText.includes('Pending Finalization')) {
+            p1DeclaredRows.push(rowData);
+            console.log(`✅ Added to P1 Declared PASSED: ${rowData.name} (${statusText})`);
+        }
+        // P1 - FAILED (Pending Finalization) - FIXED DETECTION  
+        else if (statusText.includes('P1') && statusText.includes('FAILED') && statusText.includes('Pending Finalization')) {
+            p1DeclaredRows.push(rowData);
+            console.log(`✅ Added to P1 Declared FAILED: ${rowData.name} (${statusText})`);
+        }
+        // P1 - PASSED (without "Pending") - Additional catch
+        else if (statusText.includes('P1') && statusText.includes('PASSED') && !statusText.includes('Awaiting')) {
+            p1DeclaredRows.push(rowData);
+            console.log(`✅ Added to P1 Declared PASSED (Final): ${rowData.name} (${statusText})`);
+        }
+        // P1 - FAILED (without "Pending") - Additional catch
+        else if (statusText.includes('P1') && statusText.includes('FAILED') && !statusText.includes('Awaiting')) {
+            p1DeclaredRows.push(rowData);
+            console.log(`✅ Added to P1 Declared FAILED (Final): ${rowData.name} (${statusText})`);
+        }
+        // FIXED: P3 - Line Manager Evaluation Accomplished (NEW - for P3 Awaiting)
+        else if (statusText.includes('P3') && statusText.includes('Line Manager Evaluation Accomplished')) {
+            p3AwaitingRows.push(rowData);
+            console.log(`✅ Added to P3 Awaiting: ${rowData.name} (${statusText})`);
+        }
+        // ALTERNATIVE P3 Detection: Check for exact match
+        else if (statusText === 'P3 - Line Manager Evaluation Accomplished') {
+            p3AwaitingRows.push(rowData);
+            console.log(`✅ Added to P3 Awaiting (exact match): ${rowData.name} (${statusText})`);
+        }
+        // FIXED: P3 - PASSED (Pending Finalization) (NEW - for P3 Declared)
+        else if (statusText.includes('P3') && statusText.includes('PASSED') && statusText.includes('Pending Finalization')) {
+            p3DeclaredRows.push(rowData);
+            console.log(`✅ Added to P3 Declared PASSED: ${rowData.name} (${statusText})`);
+        }
+        // FIXED: P3 - FAILED (Pending Finalization) (NEW - for P3 Declared)
+        else if (statusText.includes('P3') && statusText.includes('FAILED') && statusText.includes('Pending Finalization')) {
+            p3DeclaredRows.push(rowData);
+            console.log(`✅ Added to P3 Declared FAILED: ${rowData.name} (${statusText})`);
+        }
+        // P3 - PASSED (without "Pending") - Additional catch
+        else if (statusText.includes('P3') && statusText.includes('PASSED') && !statusText.includes('Awaiting')) {
+            p3DeclaredRows.push(rowData);
+            console.log(`✅ Added to P3 Declared PASSED (Final): ${rowData.name} (${statusText})`);
+        }
+        // P3 - FAILED (without "Pending") - Additional catch
+        else if (statusText.includes('P3') && statusText.includes('FAILED') && !statusText.includes('Awaiting')) {
+            p3DeclaredRows.push(rowData);
+            console.log(`✅ Added to P3 Declared FAILED (Final): ${rowData.name} (${statusText})`);
+        }
+        else {
+            console.log(`❌ Row ${index + 1} not categorized: "${statusText}"`);
+        }
+    });
+
+    console.log(`\n=== CATEGORIZATION RESULTS ===`);
+    console.log(`P1 Awaiting: ${p1AwaitingRows.length}`);
+    console.log(`P1 Declared: ${p1DeclaredRows.length}`);
+    console.log(`P3 Awaiting: ${p3AwaitingRows.length}`);
+    console.log(`P3 Declared: ${p3DeclaredRows.length}`);
+
+    // CRITICAL FIX: Use the ENHANCED functions for P3 tables that include assessment data
+    populateP1AwaitingActionTableEnhanced(p1AwaitingRows);
+    populateP1DeclaredResultsTableEnhanced(p1DeclaredRows);
+    
+    // FIXED: Use the enhanced P3 functions that include assessment columns
+    populateP3AwaitingActionTableEnhanced(p3AwaitingRows); 
+    populateP3DeclaredResultsTableEnhanced(p3DeclaredRows); 
+    
+    // Update section visibilities
+    updateP1P3SectionsVisibility(
+        p1AwaitingRows.length > 0, 
+        p1DeclaredRows.length > 0, 
+        p3AwaitingRows.length > 0, 
+        p3DeclaredRows.length > 0
+    );
+    
+    // FIXED: Update headers to show correct text
+    updateSectionHeaders(p1DeclaredRows.length > 0, p3DeclaredRows.length > 0);
+    
+    // Fix scores and buttons
+    setTimeout(() => {
+        fixAllTableScores();
+        fixChangeStatusButtons();
+    }, 300);
+    
+    // FIXED: Set up enhanced P3 filters after tables are populated (prevent duplicates)
+    setTimeout(() => {
+        if (p3AwaitingRows.length > 0 || p3DeclaredRows.length > 0) {
+            createP3FilterControls();
+        }
+    }, 500);
+    
+    // FIXED: Update finalize button visibility
+    setTimeout(() => {
+        updateSectionHeaderButtons();
+    }, 800);
+    
+    highlightActiveFilter('forreview');
+}
+
+
+
+// CRITICAL DEBUG FUNCTION: Check what data is available
+async function debugP3AssessmentData() {
+  console.log("=== DEBUGGING P3 ASSESSMENT DATA ===");
   
-  hideEvaluationSection();
+  // Check if applicantsData has panelAssessment
+  if (window.applicantsData && window.applicantsData.length > 0) {
+    console.log(`Found ${window.applicantsData.length} applicants in global data`);
+    
+    window.applicantsData.forEach((applicant, index) => {
+      console.log(`\nApplicant ${index + 1}:`);
+      console.log(`  userId: ${applicant.userId}`);
+      console.log(`  name: ${applicant.firstName} ${applicant.lastName}`);
+      console.log(`  status: ${applicant.applicantStatus}`);
+      
+      if (applicant.panelAssessment) {
+        console.log(`  ✅ HAS panelAssessment:`);
+        console.log(`    totalAssessmentRating: ${applicant.panelAssessment.totalAssessmentRating}`);
+        console.log(`    conclusion: ${applicant.panelAssessment.conclusion}`);
+      } else {
+        console.log(`  ❌ NO panelAssessment data`);
+      }
+      
+      // Check if this is a P3 status
+      if (applicant.applicantStatus && applicant.applicantStatus.includes('P3')) {
+        console.log(`  🎯 This is a P3 applicant!`);
+      }
+    });
+  } else {
+    console.log("❌ No applicantsData found in window");
+  }
   
-  const onboardingHeader = document.getElementById('onboardingHeader');
-  const onboardingTable = document.getElementById('onboardingTable');
+  // Test API endpoint for P3 assessment
+  const testUserId = '46'; // Use one of the userIds from your logs
+  try {
+    console.log(`\n=== TESTING API ENDPOINT FOR userId: ${testUserId} ===`);
+    const response = await fetch(`/linemanager/get-p3-assessment/${testUserId}`);
+    const data = await response.json();
+    
+    console.log('API Response:', data);
+    
+    if (data.success) {
+      console.log('✅ API working correctly');
+      console.log('Assessment data:', data.assessmentData);
+    } else {
+      console.log('❌ API returned error:', data.message);
+    }
+  } catch (error) {
+    console.log('❌ API call failed:', error);
+  }
+}
+
+
+// MANUAL FIX FUNCTION: Force populate P3 tables with debug
+async function manualFixP3Tables() {
+  console.log("🔧 MANUAL FIX: Forcing P3 table population with debug");
   
-  if (onboardingHeader) onboardingHeader.style.display = 'none';
-  if (onboardingTable) onboardingTable.style.display = 'none';
-  if (mainTable) mainTable.style.display = 'none';
-  if (applicantStatusSection) applicantStatusSection.style.display = 'block';
+  // Find P3 rows manually
+  const mainTable = document.getElementById('mainApplicantTable');
+  if (!mainTable) {
+    console.log("❌ Main table not found");
+    return;
+  }
   
-  captureApplicantsDataEnhanced();
-  
-  const p1AwaitingRows = [];
-  const p1DeclaredRows = [];
+  const rows = Array.from(mainTable.querySelectorAll('tbody tr'));
   const p3AwaitingRows = [];
   const p3DeclaredRows = [];
   
-  console.log(`Analyzing ${allMainRows.length} rows for P1/P3 statuses...`);
+  console.log(`Scanning ${rows.length} rows for P3 statuses...`);
   
-  // FIXED: Enhanced row processing with comprehensive status detection
-  allMainRows.forEach((row, index) => {
+  rows.forEach((row, index) => {
     const statusCell = row.querySelector('td:nth-child(5)');
     if (!statusCell) return;
     
-    // Extract status from multiple sources
-    let statusText = '';
-    
-    // Method 1: Check span element
     const statusSpan = statusCell.querySelector('span');
-    if (statusSpan) {
-      statusText = statusSpan.textContent.replace(/Status:\s*/g, '').trim();
-    }
+    const statusText = statusSpan ? statusSpan.textContent.replace(/Status:\s*/g, '').trim() : '';
     
-    // Method 2: Check data attributes
-    if (!statusText) {
-      statusText = row.getAttribute('data-status') || '';
-    }
+    console.log(`Row ${index + 1}: "${statusText}"`);
     
-    // Method 3: Parse from cell text
-    if (!statusText) {
-      const cellText = statusCell.textContent.replace(/Status:\s*/g, '').trim();
-      const statusMatch = cellText.match(/^([^]*?)(?:\s*(?:For Review|For Evaluation|Send Job Offer|Approve))/);
-      statusText = statusMatch ? statusMatch[1].trim() : cellText.split('\n')[0].trim();
-    }
-    
-    console.log(`Row ${index + 1}: Detected status = "${statusText}"`);
-    
-    const rowData = extractRowDataEnhanced(row, index);
-    if (!rowData) return;
-    
-    // Ensure userId is set
-    if (rowData.userId) {
-      row.setAttribute('data-userid', rowData.userId);
-    }
-    
-    // FIXED: Comprehensive status categorization including P3 statuses
-    
-    // P1 - Awaiting for Line Manager Action (with HR PASSED)
-    if (statusText.includes('P1') && statusText.includes('Awaiting for Line Manager Action') && statusText.includes('HR PASSED')) {
-      p1AwaitingRows.push(rowData);
-      console.log(`✅ Added to P1 Awaiting: ${rowData.name} (${statusText})`);
-    }
-    // P1 - PASSED (Pending Finalization) - FIXED DETECTION
-    else if (statusText.includes('P1') && statusText.includes('PASSED') && statusText.includes('Pending Finalization')) {
-      p1DeclaredRows.push(rowData);
-      console.log(`✅ Added to P1 Declared PASSED: ${rowData.name} (${statusText})`);
-    }
-    // P1 - FAILED (Pending Finalization) - FIXED DETECTION  
-    else if (statusText.includes('P1') && statusText.includes('FAILED') && statusText.includes('Pending Finalization')) {
-      p1DeclaredRows.push(rowData);
-      console.log(`✅ Added to P1 Declared FAILED: ${rowData.name} (${statusText})`);
-    }
-    // P1 - PASSED (without "Pending") - Additional catch
-    else if (statusText.includes('P1') && statusText.includes('PASSED') && !statusText.includes('Awaiting')) {
-      p1DeclaredRows.push(rowData);
-      console.log(`✅ Added to P1 Declared PASSED (Final): ${rowData.name} (${statusText})`);
-    }
-    // P1 - FAILED (without "Pending") - Additional catch
-    else if (statusText.includes('P1') && statusText.includes('FAILED') && !statusText.includes('Awaiting')) {
-      p1DeclaredRows.push(rowData);
-      console.log(`✅ Added to P1 Declared FAILED (Final): ${rowData.name} (${statusText})`);
-    }
-    // FIXED: P3 - Line Manager Evaluation Accomplished (NEW - for P3 Awaiting)
-    else if (statusText.includes('P3') && statusText.includes('Line Manager Evaluation Accomplished')) {
-      p3AwaitingRows.push(rowData);
-      console.log(`✅ Added to P3 Awaiting: ${rowData.name} (${statusText})`);
-    }
-    // ALTERNATIVE P3 Detection: Check for exact match
-    else if (statusText === 'P3 - Line Manager Evaluation Accomplished') {
-      p3AwaitingRows.push(rowData);
-      console.log(`✅ Added to P3 Awaiting (exact match): ${rowData.name} (${statusText})`);
-    }
-    // FIXED: P3 - PASSED (Pending Finalization) (NEW - for P3 Declared)
-    else if (statusText.includes('P3') && statusText.includes('PASSED') && statusText.includes('Pending Finalization')) {
-      p3DeclaredRows.push(rowData);
-      console.log(`✅ Added to P3 Declared PASSED: ${rowData.name} (${statusText})`);
-    }
-    // FIXED: P3 - FAILED (Pending Finalization) (NEW - for P3 Declared)
-    else if (statusText.includes('P3') && statusText.includes('FAILED') && statusText.includes('Pending Finalization')) {
-      p3DeclaredRows.push(rowData);
-      console.log(`✅ Added to P3 Declared FAILED: ${rowData.name} (${statusText})`);
-    }
-    // P3 - PASSED (without "Pending") - Additional catch
-    else if (statusText.includes('P3') && statusText.includes('PASSED') && !statusText.includes('Awaiting')) {
-      p3DeclaredRows.push(rowData);
-      console.log(`✅ Added to P3 Declared PASSED (Final): ${rowData.name} (${statusText})`);
-    }
-    // P3 - FAILED (without "Pending") - Additional catch
-    else if (statusText.includes('P3') && statusText.includes('FAILED') && !statusText.includes('Awaiting')) {
-      p3DeclaredRows.push(rowData);
-      console.log(`✅ Added to P3 Declared FAILED (Final): ${rowData.name} (${statusText})`);
-    }
-    else {
-      console.log(`❌ Row ${index + 1} not categorized: "${statusText}"`);
+    if (statusText.includes('P3')) {
+      console.log(`  🎯 Found P3 status!`);
+      
+      const rowData = extractRowDataEnhanced(row, index);
+      if (rowData) {
+        console.log(`  ✅ Extracted row data:`, {
+          name: rowData.name,
+          userId: rowData.userId,
+          status: rowData.status
+        });
+        
+        if (statusText.includes('Line Manager Evaluation Accomplished')) {
+          p3AwaitingRows.push(rowData);
+          console.log(`  📝 Added to P3 Awaiting`);
+        } else if (statusText.includes('PASSED') || statusText.includes('FAILED')) {
+          p3DeclaredRows.push(rowData);
+          console.log(`  📝 Added to P3 Declared`);
+        }
+      }
     }
   });
-
-  console.log(`\n=== CATEGORIZATION RESULTS ===`);
-  console.log(`P1 Awaiting: ${p1AwaitingRows.length}`);
-  console.log(`P1 Declared: ${p1DeclaredRows.length}`);
-  console.log(`P3 Awaiting: ${p3AwaitingRows.length}`);
-  console.log(`P3 Declared: ${p3DeclaredRows.length}`);
-
-  // FIXED: Populate tables with corrected headers
-  populateP1AwaitingActionTableEnhanced(p1AwaitingRows);
-  populateP1DeclaredResultsTableEnhanced(p1DeclaredRows);
-  populateP3AwaitingActionTableFixed(p3AwaitingRows); // FIXED FUNCTION
-  populateP3DeclaredResultsTableFixed(p3DeclaredRows); // FIXED FUNCTION
   
-  // Update section visibilities
-  updateP1P3SectionsVisibility(
-    p1AwaitingRows.length > 0, 
-    p1DeclaredRows.length > 0, 
-    p3AwaitingRows.length > 0, 
-    p3DeclaredRows.length > 0
-  );
+  console.log(`\nFound ${p3AwaitingRows.length} P3 awaiting and ${p3DeclaredRows.length} P3 declared rows`);
   
-  // FIXED: Update headers to show correct text
-  updateSectionHeaders(p1DeclaredRows.length > 0, p3DeclaredRows.length > 0);
+  if (p3AwaitingRows.length > 0) {
+    console.log("🔧 Manually populating P3 awaiting table...");
+    await populateP3AwaitingActionTableEnhanced(p3AwaitingRows);
+  }
   
-  // Fix scores and buttons
-  setTimeout(() => {
-    fixAllTableScores();
-    fixChangeStatusButtons();
-  }, 300);
-  
-  highlightActiveFilter('forreview');
-  updateSectionHeaderButtons();
+  if (p3DeclaredRows.length > 0) {
+    console.log("🔧 Manually populating P3 declared table...");
+    await populateP3DeclaredResultsTableEnhanced(p3DeclaredRows);
+  }
 }
 
+// Make functions globally available for debugging
+window.debugP3AssessmentData = debugP3AssessmentData;
+window.manualFixP3Tables = manualFixP3Tables;
+window.handleReviewFilter = handleReviewFilter;
+window.updateSectionHeaderButtons = updateSectionHeaderButtons;
+window.removeOldSortSection = removeOldSortSection;
+
+console.log("🔧 DEBUG FUNCTIONS LOADED:");
+console.log("  - debugP3AssessmentData() - Check if assessment data is available");
+console.log("  - manualFixP3Tables() - Force populate P3 tables with debug info");
 // FIXED: Update section headers with correct text
 function updateSectionHeaders(hasP1Declared, hasP3Declared) {
   console.log("=== UPDATING SECTION HEADERS (FIXED) ===");
@@ -7739,163 +7864,188 @@ function setupP1TableFilters() {
   // Create filter controls for P1 Declared Results Table
   createP1DeclaredFilterControls();
 }
-
-
 function createP1AwaitingFilterControls() {
-  const p1AwaitingTable = document.getElementById('p1AwaitingActionTable');
-  if (!p1AwaitingTable) return;
-  
-  // Find the parent section
-  const p1Section = document.getElementById('p1ReviewSection');
-  if (!p1Section) return;
-  
-  // Find the "Awaiting for Action - P1" header
-  const headers = p1Section.querySelectorAll('h4');
-  let awaitingHeader = null;
-  
-  headers.forEach(header => {
-    if (header.textContent.includes('Awaiting for Action - P1')) {
-      awaitingHeader = header;
-    }
-  });
-  
-  if (!awaitingHeader) return;
-  
-  // Create filter controls container
-  const filterContainer = document.createElement('div');
-  filterContainer.id = 'p1AwaitingFilterControls';
-  filterContainer.style.cssText = `
-    margin: 15px 0;
-    padding: 15px;
-    background-color: #f8f9fa;
-    border-radius: 5px;
-    border: 1px solid #dee2e6;
-  `;
-  
-  filterContainer.innerHTML = `
-    <div style="display: flex; align-items: center; gap: 15px; flex-wrap: wrap;">
-      <div style="display: flex; align-items: center; gap: 10px;">
-        <label for="p1AwaitingSortBy" style="font-weight: bold; color: #124A5C;">Sort By:</label>
-        <select id="p1AwaitingSortBy" style="padding: 8px; border: 1px solid #ddd; border-radius: 4px; background-color: white; min-width: 200px;">
-          <option value="score-desc">Total Score (Highest First)</option>
-          <option value="score-asc">Total Score (Lowest First)</option>
-          <option value="worksetup-desc">Work Setup/Availability (Passed First)</option>
-          <option value="worksetup-asc">Work Setup/Availability (Failed First)</option>
-          <option value="name-asc">Name (A-Z)</option>
-          <option value="name-desc">Name (Z-A)</option>
-        </select>
-      </div>
-      <div style="display: flex; align-items: center; gap: 10px;">
-        <label for="p1AwaitingFilterBy" style="font-weight: bold; color: #124A5C;">Filter By:</label>
-        <select id="p1AwaitingFilterBy" style="padding: 8px; border: 1px solid #ddd; border-radius: 4px; background-color: white; min-width: 180px;">
-          <option value="all">All Applicants</option>
-          <option value="worksetup-passed">Work Setup/Availability Passed</option>
-          <option value="worksetup-failed">Work Setup/Availability Failed</option>
-          <option value="score-high">High Score (≥85)</option>
-          <option value="score-medium">Medium Score (75-84)</option>
-          <option value="score-low">Low Score (<75)</option>
-        </select>
-      </div>
-      <button id="p1AwaitingApplyFilters" style="padding: 10px 20px; background-color: #124A5C; color: white; border: none; border-radius: 4px; cursor: pointer; font-weight: bold;">
-        Apply
-      </button>
-      <button id="p1AwaitingClearFilters" style="padding: 10px 20px; background-color: #6c757d; color: white; border: none; border-radius: 4px; cursor: pointer;">
-        Clear
-      </button>
-    </div>
-  `;
-  
-  // Insert filter container after the awaiting header
-  awaitingHeader.insertAdjacentElement('afterend', filterContainer);
-  
-  // Set up event listeners
-  document.getElementById('p1AwaitingApplyFilters').addEventListener('click', () => {
-    applyP1AwaitingFilters();
-  });
-  
-  document.getElementById('p1AwaitingClearFilters').addEventListener('click', () => {
-    clearP1AwaitingFilters();
-  });
-}
-function createP1DeclaredFilterControls() {
-  const p1DeclaredTable = document.getElementById('p1DeclaredResultsTable');
-  if (!p1DeclaredTable) return;
-  
-  // Find the parent section
-  const p1Section = document.getElementById('p1ReviewSection');
-  if (!p1Section) return;
-  
-  // Find the "List of P1 Applicants on Review - Declared Results" header
-  const headers = p1Section.querySelectorAll('h4');
-  let declaredHeader = null;
-  
-  headers.forEach(header => {
-    if (header.textContent.includes('Declared Results') || header.id === 'p1DeclaredResultsHeader') {
-      declaredHeader = header;
-    }
-  });
-  
-  if (!declaredHeader) return;
-  
-  // Create filter controls container
-  const filterContainer = document.createElement('div');
-  filterContainer.id = 'p1DeclaredFilterControls';
-  filterContainer.style.cssText = `
-    margin: 15px 0;
-    padding: 15px;
-    background-color: #f8f9fa;
-    border-radius: 5px;
-    border: 1px solid #dee2e6;
-  `;
-  
-  filterContainer.innerHTML = `
-    <div style="display: flex; align-items: center; gap: 15px; flex-wrap: wrap;">
-      <div style="display: flex; align-items: center; gap: 10px;">
-        <label for="p1DeclaredSortBy" style="font-weight: bold; color: #124A5C;">Sort By:</label>
-        <select id="p1DeclaredSortBy" style="padding: 8px; border: 1px solid #ddd; border-radius: 4px; background-color: white; min-width: 200px;">
-          <option value="score-desc">Total Score (Highest First)</option>
-          <option value="score-asc">Total Score (Lowest First)</option>
-          <option value="worksetup-desc">Work Setup/Availability (Passed First)</option>
-          <option value="worksetup-asc">Work Setup/Availability (Failed First)</option>
-          <option value="name-asc">Name (A-Z)</option>
-          <option value="name-desc">Name (Z-A)</option>
-        </select>
-      </div>
-      <div style="display: flex; align-items: center; gap: 10px;">
-        <label for="p1DeclaredFilterBy" style="font-weight: bold; color: #124A5C;">Filter By:</label>
-        <select id="p1DeclaredFilterBy" style="padding: 8px; border: 1px solid #ddd; border-radius: 4px; background-color: white; min-width: 180px;">
-          <option value="all">All Applicants</option>
-          <option value="status-passed">Status: PASSED</option>
-          <option value="status-failed">Status: FAILED</option>
-          <option value="worksetup-passed">Work Setup/Availability Passed</option>
-          <option value="worksetup-failed">Work Setup/Availability Failed</option>
-          <option value="score-high">High Score (≥85)</option>
-          <option value="score-medium">Medium Score (75-84)</option>
-          <option value="score-low">Low Score (<75)</option>
-        </select>
-      </div>
-      <button id="p1DeclaredApplyFilters" style="padding: 10px 20px; background-color: #124A5C; color: white; border: none; border-radius: 4px; cursor: pointer; font-weight: bold;">
-        Apply
-      </button>
-      <button id="p1DeclaredClearFilters" style="padding: 10px 20px; background-color: #6c757d; color: white; border: none; border-radius: 4px; cursor: pointer;">
-        Clear
-      </button>
-    </div>
-  `;
-  
-  // Insert filter container after the declared header
-  declaredHeader.insertAdjacentElement('afterend', filterContainer);
-  
-  // Set up event listeners
-  document.getElementById('p1DeclaredApplyFilters').addEventListener('click', () => {
-    applyP1DeclaredFilters();
-  });
-  
-  document.getElementById('p1DeclaredClearFilters').addEventListener('click', () => {
-    clearP1DeclaredFilters();
-  });
+    const p1AwaitingTable = document.getElementById('p1AwaitingActionTable');
+    if (!p1AwaitingTable) return;
+    
+    // Find the parent section
+    const p1Section = document.getElementById('p1ReviewSection');
+    if (!p1Section) return;
+    
+    // Find the "Awaiting for Action - P1" header
+    const headers = p1Section.querySelectorAll('h4');
+    let awaitingHeader = null;
+    
+    headers.forEach(header => {
+        if (header.textContent.includes('Awaiting for Action - P1')) {
+            awaitingHeader = header;
+        }
+    });
+    
+    if (!awaitingHeader) return;
+    
+    // Create filter controls container - REMOVED Filter By
+    const filterContainer = document.createElement('div');
+    filterContainer.id = 'p1AwaitingFilterControls';
+    filterContainer.style.cssText = `
+        margin: 15px 0;
+        padding: 15px;
+        background-color: #f8f9fa;
+        border-radius: 5px;
+        border: 1px solid #dee2e6;
+    `;
+    
+    filterContainer.innerHTML = `
+        <div style="display: flex; align-items: center; gap: 15px; flex-wrap: wrap;">
+            <div style="display: flex; align-items: center; gap: 10px;">
+                <label for="p1AwaitingSortBy" style="font-weight: bold; color: #124A5C;">Sort By:</label>
+                <select id="p1AwaitingSortBy" style="padding: 8px; border: 1px solid #ddd; border-radius: 4px; background-color: white; min-width: 200px;">
+                    <option value="score-desc">Total Score (Highest First)</option>
+                    <option value="score-asc">Total Score (Lowest First)</option>
+                    <option value="worksetup-desc">Work Setup/Availability (Passed First)</option>
+                    <option value="worksetup-asc">Work Setup/Availability (Failed First)</option>
+                    <option value="name-asc">Name (A-Z)</option>
+                    <option value="name-desc">Name (Z-A)</option>
+                </select>
+            </div>
+            <button id="p1AwaitingApplySort" style="padding: 10px 20px; background-color: #124A5C; color: white; border: none; border-radius: 4px; cursor: pointer; font-weight: bold;">
+                Apply Sort
+            </button>
+        </div>
+    `;
+    
+    // Insert filter container after the awaiting header
+    awaitingHeader.insertAdjacentElement('afterend', filterContainer);
+    
+    // Set up event listeners - ONLY SORT NOW
+    document.getElementById('p1AwaitingApplySort').addEventListener('click', () => {
+        const sortBy = document.getElementById('p1AwaitingSortBy').value;
+        applyP1AwaitingSort(sortBy);
+    });
 }
 
+// UPDATED: Apply sort for P1 Awaiting Action table (removed filtering)
+async function applyP1AwaitingSort(sortBy) {
+    console.log("Applying P1 Awaiting sort...");
+    
+    const table = document.getElementById('p1AwaitingActionTable');
+    if (!table) return;
+    
+    const tbody = table.querySelector('tbody');
+    const rows = Array.from(tbody.querySelectorAll('tr')).filter(row => 
+        !row.querySelector('td[colspan]') && !row.classList.contains('section-header-row')
+    );
+    
+    console.log(`Processing ${rows.length} P1 awaiting rows`);
+    
+    // Enhance row data with work setup/availability info
+    for (const row of rows) {
+        await enhanceRowWithWorkSetupDataFixed(row);
+    }
+    
+    // Sort rows
+    rows.sort((a, b) => {
+        return compareP1Rows(a, b, sortBy);
+    });
+    
+    // Clear and repopulate table
+    tbody.innerHTML = '';
+    rows.forEach(row => tbody.appendChild(row));
+    
+    console.log(`P1 Awaiting sort applied: ${rows.length} rows displayed`);
+}
+
+function createP1DeclaredFilterControls() {
+    const p1DeclaredTable = document.getElementById('p1DeclaredResultsTable');
+    if (!p1DeclaredTable) return;
+    
+    // Find the parent section
+    const p1Section = document.getElementById('p1ReviewSection');
+    if (!p1Section) return;
+    
+    // Find the "List of P1 Applicants on Review - Declared Results" header
+    const headers = p1Section.querySelectorAll('h4');
+    let declaredHeader = null;
+    
+    headers.forEach(header => {
+        if (header.textContent.includes('Declared Results') || header.id === 'p1DeclaredResultsHeader') {
+            declaredHeader = header;
+        }
+    });
+    
+    if (!declaredHeader) return;
+    
+    // Create filter controls container - REMOVED Filter By
+    const filterContainer = document.createElement('div');
+    filterContainer.id = 'p1DeclaredFilterControls';
+    filterContainer.style.cssText = `
+        margin: 15px 0;
+        padding: 15px;
+        background-color: #f8f9fa;
+        border-radius: 5px;
+        border: 1px solid #dee2e6;
+    `;
+    
+    filterContainer.innerHTML = `
+        <div style="display: flex; align-items: center; gap: 15px; flex-wrap: wrap;">
+            <div style="display: flex; align-items: center; gap: 10px;">
+                <label for="p1DeclaredSortBy" style="font-weight: bold; color: #124A5C;">Sort By:</label>
+                <select id="p1DeclaredSortBy" style="padding: 8px; border: 1px solid #ddd; border-radius: 4px; background-color: white; min-width: 200px;">
+                    <option value="score-desc">Total Score (Highest First)</option>
+                    <option value="score-asc">Total Score (Lowest First)</option>
+                    <option value="worksetup-desc">Work Setup/Availability (Passed First)</option>
+                    <option value="worksetup-asc">Work Setup/Availability (Failed First)</option>
+                    <option value="name-asc">Name (A-Z)</option>
+                    <option value="name-desc">Name (Z-A)</option>
+                </select>
+            </div>
+            <button id="p1DeclaredApplySort" style="padding: 10px 20px; background-color: #124A5C; color: white; border: none; border-radius: 4px; cursor: pointer; font-weight: bold;">
+                Apply Sort
+            </button>
+        </div>
+    `;
+    
+    // Insert filter container after the declared header
+    declaredHeader.insertAdjacentElement('afterend', filterContainer);
+    
+    // Set up event listeners - ONLY SORT NOW
+    document.getElementById('p1DeclaredApplySort').addEventListener('click', () => {
+        const sortBy = document.getElementById('p1DeclaredSortBy').value;
+        applyP1DeclaredSort(sortBy);
+    });
+}
+
+
+// UPDATED: Apply sort for P1 Declared Results table (removed filtering)
+async function applyP1DeclaredSort(sortBy) {
+    console.log("Applying P1 Declared sort...");
+    
+    const table = document.getElementById('p1DeclaredResultsTable');
+    if (!table) return;
+    
+    const tbody = table.querySelector('tbody');
+    const rows = Array.from(tbody.querySelectorAll('tr')).filter(row => 
+        !row.querySelector('td[colspan]') && !row.classList.contains('section-header-row')
+    );
+    
+    console.log(`Processing ${rows.length} P1 declared rows`);
+    
+    // Enhance row data with work setup/availability info
+    for (const row of rows) {
+        await enhanceRowWithWorkSetupDataFixed(row);
+    }
+    
+    // Sort rows
+    rows.sort((a, b) => {
+        return compareP1Rows(a, b, sortBy);
+    });
+    
+    // Clear and repopulate table
+    tbody.innerHTML = '';
+    rows.forEach(row => tbody.appendChild(row));
+    
+    console.log(`P1 Declared sort applied: ${rows.length} rows displayed`);
+}
 
 // ENHANCED: Apply filters for P1 Awaiting Action table
 async function applyP1AwaitingFilters() {
@@ -8225,11 +8375,23 @@ function testWorkSetupLogic() {
     console.log(`  Expected: ${testCase.expected}, Got: ${resultText} ${isCorrect ? '✅' : '❌'}`);
   });
 }
-
-// Function to fetch P3 assessment data
 async function fetchP3AssessmentData(userId) {
     try {
         console.log(`Fetching P3 assessment for userId: ${userId}`);
+        
+        // First try to get from global applicantsData if available
+        if (window.applicantsData && window.applicantsData.length > 0) {
+            const applicantData = window.applicantsData.find(a => a.userId == userId);
+            if (applicantData && applicantData.panelAssessment) {
+                console.log(`Found P3 assessment in local data for userId: ${userId}`, applicantData.panelAssessment);
+                return {
+                    totalAssessmentRating: applicantData.panelAssessment.totalAssessmentRating || 'N/A',
+                    conclusion: applicantData.panelAssessment.conclusion || 'N/A'
+                };
+            }
+        }
+        
+        // Fallback to API call
         const response = await fetch(`/linemanager/get-p3-assessment/${userId}`);
         if (response.ok) {
             const data = await response.json();
@@ -9002,7 +9164,7 @@ async function populateP3AwaitingActionTableEnhanced(awaitingRowsP3) {
                 <th>Department</th>
                 <th>Position Applied</th>
                 <th>Total Assessment Rating</th>
-                <th>Conclusion Statement</th>
+                <th>Evaluation Conclusion</th>
                 <th>Applicant Status</th>
             </tr>
         `;
@@ -9038,7 +9200,7 @@ async function populateP3AwaitingActionTableEnhanced(awaitingRowsP3) {
         
         console.log(`✅ Successfully populated enhanced P3 awaiting action table with ${awaitingRowsP3.length} rows`);
     } else {
-        // FIXED: Show "No data" message when no rows
+        // Show "No data" message when no rows
         const messageRow = document.createElement('tr');
         const messageCell = document.createElement('td');
         messageCell.setAttribute('colspan', '7'); // 7 columns now
@@ -9051,20 +9213,14 @@ async function populateP3AwaitingActionTableEnhanced(awaitingRowsP3) {
             font-size: 16px;
             border-left: 4px solid #007bff;
         `;
-        messageCell.textContent = 'No P3 applicants with declared review results found.';
+        messageCell.textContent = 'No P3 applicants awaiting for action found.';
         messageRow.appendChild(messageCell);
-        declaredTbody.appendChild(messageRow);
+        awaitingTbody.appendChild(messageRow);
         
-        // Hide the table and its header
-        declaredResultsTable.style.display = 'none';
-        const p3Header = document.getElementById('p3DeclaredResultsHeader');
-        if (p3Header) {
-            p3Header.style.display = 'none';
-        }
-        
-        console.log("❌ No P3 declared rows - added no data message");
+        console.log("❌ No P3 awaiting rows - added no data message");
     }
 }
+
 
 // ENHANCED: P3 Declared Results Table with new columns
 function populateP3DeclaredResultsTableEnhanced(declaredRowsP3) {
@@ -9086,7 +9242,7 @@ function populateP3DeclaredResultsTableEnhanced(declaredRowsP3) {
                 <th>Department</th>
                 <th>Position Applied</th>
                 <th>Total Assessment Rating</th>
-                <th>Conclusion Statement</th>
+                <th>Evaluation Conclusion</th>
                 <th>Applicant Status</th>
                 <th>Actions</th>
             </tr>
@@ -9156,6 +9312,8 @@ async function createP3AwaitingRowEnhanced(rowData, assessmentData) {
     
     if (rowData.userId) {
         newRow.setAttribute('data-userid', rowData.userId);
+        newRow.setAttribute('data-assessment-rating', assessmentData.totalAssessmentRating || '0');
+        newRow.setAttribute('data-conclusion', assessmentData.conclusion || '');
     }
     
     // Enhanced applicantId extraction
@@ -9169,8 +9327,8 @@ async function createP3AwaitingRowEnhanced(rowData, assessmentData) {
         rowData.cells[1] || 'Unknown Applicant',      // Name
         rowData.cells[2] || 'Unknown Department',     // Department  
         rowData.cells[3] || 'Unknown Position',       // Position
-        assessmentData.totalAssessmentRating,         // Total Assessment Rating
-        assessmentData.conclusion,                     // Conclusion Statement
+        assessmentData.totalAssessmentRating || 'N/A', // Total Assessment Rating
+        assessmentData.conclusion || 'N/A',           // Conclusion Statement
         createP3AwaitingStatusCellWithApplicantId(rowData, applicantId) // Status & Actions
     ];
     
@@ -9192,7 +9350,7 @@ async function createP3AwaitingRowEnhanced(rowData, assessmentData) {
 
 
 // ENHANCED: Create P3 declared row with assessment data
-async function createP3DeclaredRowEnhanced(rowData, assessmentData) {
+async function createP3DeclaredRowEnhanced(rowData) {
     console.log("Creating enhanced P3 declared row for:", rowData.name);
     
     const newRow = document.createElement('tr');
@@ -9200,6 +9358,13 @@ async function createP3DeclaredRowEnhanced(rowData, assessmentData) {
     if (rowData.userId) {
         newRow.setAttribute('data-userid', rowData.userId);
     }
+    
+    // Fetch assessment data for this user
+    const assessmentData = await fetchP3AssessmentData(rowData.userId);
+    
+    // Set data attributes for filtering
+    newRow.setAttribute('data-assessment-rating', assessmentData.totalAssessmentRating || '0');
+    newRow.setAttribute('data-conclusion', assessmentData.conclusion || '');
     
     // Extract and clean up the status for P3
     let statusText = '';
@@ -9242,8 +9407,8 @@ async function createP3DeclaredRowEnhanced(rowData, assessmentData) {
         rowData.cells[1] || 'Unknown Applicant',      // Name
         rowData.cells[2] || 'Unknown Department',     // Department
         rowData.cells[3] || 'Unknown Position',       // Position
-        assessmentData.totalAssessmentRating,         // Total Assessment Rating
-        assessmentData.conclusion,                     // Conclusion Statement
+        assessmentData.totalAssessmentRating || 'N/A', // Total Assessment Rating
+        assessmentData.conclusion || 'N/A',           // Conclusion Statement
         `<span><strong>Status:</strong> ${statusText}</span>` // Status
     ];
     
@@ -9272,7 +9437,6 @@ async function createP3DeclaredRowEnhanced(rowData, assessmentData) {
     return newRow;
 }
 
-// Enhanced sorting function for P3 tables
 function sortP3TablesByAssessment(sortBy) {
     const tables = ['p3AwaitingActionTable', 'p3DeclaredResultsTable'];
     
@@ -9291,18 +9455,18 @@ function sortP3TablesByAssessment(sortBy) {
         rows.sort((rowA, rowB) => {
             switch (sortBy) {
                 case 'rating-desc':
-                    const ratingA = parseFloat(rowA.querySelector('td:nth-child(5)')?.textContent) || 0;
-                    const ratingB = parseFloat(rowB.querySelector('td:nth-child(5)')?.textContent) || 0;
+                    const ratingA = parseFloat(rowA.getAttribute('data-assessment-rating')) || 0;
+                    const ratingB = parseFloat(rowB.getAttribute('data-assessment-rating')) || 0;
                     return ratingB - ratingA; // Highest first
                     
                 case 'rating-asc':
-                    const ratingA2 = parseFloat(rowA.querySelector('td:nth-child(5)')?.textContent) || 0;
-                    const ratingB2 = parseFloat(rowB.querySelector('td:nth-child(5)')?.textContent) || 0;
+                    const ratingA2 = parseFloat(rowA.getAttribute('data-assessment-rating')) || 0;
+                    const ratingB2 = parseFloat(rowB.getAttribute('data-assessment-rating')) || 0;
                     return ratingA2 - ratingB2; // Lowest first
                     
                 case 'conclusion-recommend':
-                    const conclusionA = rowA.querySelector('td:nth-child(6)')?.textContent || '';
-                    const conclusionB = rowB.querySelector('td:nth-child(6)')?.textContent || '';
+                    const conclusionA = rowA.getAttribute('data-conclusion') || '';
+                    const conclusionB = rowB.getAttribute('data-conclusion') || '';
                     
                     // Priority order: Strongly Recommend > Recommend > Recommend with Reservations > Do Not Recommend
                     const getPriority = (conclusion) => {
@@ -9460,19 +9624,48 @@ function filterP3TablesByAssessment(filterBy) {
 
 // Add P3 filter controls
 function createP3FilterControls() {
+    console.log("=== CREATING P3 FILTER CONTROLS (PREVENTING DUPLICATES) ===");
+    
+    // Check if controls already exist and remove them first
+    const existingP3AwaitingControls = document.getElementById('p3AwaitingFilterControls');
+    const existingP3DeclaredControls = document.getElementById('p3DeclaredFilterControls');
+    
+    if (existingP3AwaitingControls) {
+        console.log("Removing existing P3 awaiting filter controls");
+        existingP3AwaitingControls.remove();
+    }
+    
+    if (existingP3DeclaredControls) {
+        console.log("Removing existing P3 declared filter controls");
+        existingP3DeclaredControls.remove();
+    }
+    
     // Create filter controls for P3 Awaiting Action Table
     createP3AwaitingFilterControls();
     
     // Create filter controls for P3 Declared Results Table
     createP3DeclaredFilterControls();
 }
-
 function createP3AwaitingFilterControls() {
+    console.log("=== CREATING P3 AWAITING FILTER CONTROLS ===");
+    
     const p3AwaitingTable = document.getElementById('p3AwaitingActionTable');
-    if (!p3AwaitingTable) return;
+    if (!p3AwaitingTable) {
+        console.log("❌ P3 awaiting table not found");
+        return;
+    }
+    
+    // Check if controls already exist
+    if (document.getElementById('p3AwaitingFilterControls')) {
+        console.log("⚠️ P3 awaiting filter controls already exist - skipping creation");
+        return;
+    }
     
     const p3Section = document.getElementById('p3ReviewSection');
-    if (!p3Section) return;
+    if (!p3Section) {
+        console.log("❌ P3 section not found");
+        return;
+    }
     
     // Find the "Awaiting for Action - P3" header
     const headers = p3Section.querySelectorAll('h4');
@@ -9484,7 +9677,12 @@ function createP3AwaitingFilterControls() {
         }
     });
     
-    if (!awaitingHeader) return;
+    if (!awaitingHeader) {
+        console.log("❌ P3 awaiting header not found");
+        return;
+    }
+    
+    console.log("✅ Creating P3 awaiting filter controls");
     
     // Create filter controls container
     const filterContainer = document.createElement('div');
@@ -9509,24 +9707,8 @@ function createP3AwaitingFilterControls() {
                     <option value="name-desc">Name (Z-A)</option>
                 </select>
             </div>
-            <div style="display: flex; align-items: center; gap: 10px;">
-                <label for="p3AwaitingFilterBy" style="font-weight: bold; color: #124A5C;">Filter By:</label>
-                <select id="p3AwaitingFilterBy" style="padding: 8px; border: 1px solid #ddd; border-radius: 4px; background-color: white; min-width: 180px;">
-                    <option value="all">All Applicants</option>
-                    <option value="strongly-recommend">Strongly Recommend</option>
-                    <option value="recommend">Recommend</option>
-                    <option value="recommend-reservations">Recommend with Reservations</option>
-                    <option value="do-not-recommend">Do Not Recommend</option>
-                    <option value="rating-high">High Rating (≥4.0)</option>
-                    <option value="rating-medium">Medium Rating (3.0-3.9)</option>
-                    <option value="rating-low">Low Rating (<3.0)</option>
-                </select>
-            </div>
-            <button id="p3AwaitingApplyFilters" style="padding: 10px 20px; background-color: #124A5C; color: white; border: none; border-radius: 4px; cursor: pointer; font-weight: bold;">
-                Apply
-            </button>
-            <button id="p3AwaitingClearFilters" style="padding: 10px 20px; background-color: #6c757d; color: white; border: none; border-radius: 4px; cursor: pointer;">
-                Clear
+            <button id="p3AwaitingApplySort" style="padding: 10px 20px; background-color: #124A5C; color: white; border: none; border-radius: 4px; cursor: pointer; font-weight: bold;">
+                Apply Sort
             </button>
         </div>
     `;
@@ -9535,28 +9717,33 @@ function createP3AwaitingFilterControls() {
     awaitingHeader.insertAdjacentElement('afterend', filterContainer);
     
     // Set up event listeners
-    document.getElementById('p3AwaitingApplyFilters').addEventListener('click', () => {
+    document.getElementById('p3AwaitingApplySort').addEventListener('click', () => {
         const sortBy = document.getElementById('p3AwaitingSortBy').value;
-        const filterBy = document.getElementById('p3AwaitingFilterBy').value;
-        
-        filterP3TablesByAssessment(filterBy);
         sortP3TablesByAssessment(sortBy);
     });
     
-    document.getElementById('p3AwaitingClearFilters').addEventListener('click', () => {
-        document.getElementById('p3AwaitingSortBy').value = 'rating-desc';
-        document.getElementById('p3AwaitingFilterBy').value = 'all';
-        filterP3TablesByAssessment('all');
-        sortP3TablesByAssessment('rating-desc');
-    });
+    console.log("✅ P3 awaiting filter controls created successfully");
 }
-
 function createP3DeclaredFilterControls() {
+    console.log("=== CREATING P3 DECLARED FILTER CONTROLS ===");
+    
     const p3DeclaredTable = document.getElementById('p3DeclaredResultsTable');
-    if (!p3DeclaredTable) return;
+    if (!p3DeclaredTable) {
+        console.log("❌ P3 declared table not found");
+        return;
+    }
+    
+    // Check if controls already exist
+    if (document.getElementById('p3DeclaredFilterControls')) {
+        console.log("⚠️ P3 declared filter controls already exist - skipping creation");
+        return;
+    }
     
     const p3Section = document.getElementById('p3ReviewSection');
-    if (!p3Section) return;
+    if (!p3Section) {
+        console.log("❌ P3 section not found");
+        return;
+    }
     
     // Find the "List of P3 Applicants on Review - Declared Results" header
     const headers = p3Section.querySelectorAll('h4');
@@ -9568,7 +9755,12 @@ function createP3DeclaredFilterControls() {
         }
     });
     
-    if (!declaredHeader) return;
+    if (!declaredHeader) {
+        console.log("❌ P3 declared header not found");
+        return;
+    }
+    
+    console.log("✅ Creating P3 declared filter controls");
     
     // Create filter controls container
     const filterContainer = document.createElement('div');
@@ -9593,26 +9785,8 @@ function createP3DeclaredFilterControls() {
                     <option value="name-desc">Name (Z-A)</option>
                 </select>
             </div>
-            <div style="display: flex; align-items: center; gap: 10px;">
-                <label for="p3DeclaredFilterBy" style="font-weight: bold; color: #124A5C;">Filter By:</label>
-                <select id="p3DeclaredFilterBy" style="padding: 8px; border: 1px solid #ddd; border-radius: 4px; background-color: white; min-width: 180px;">
-                    <option value="all">All Applicants</option>
-                    <option value="status-passed">Status: PASSED</option>
-                    <option value="status-failed">Status: FAILED</option>
-                    <option value="strongly-recommend">Strongly Recommend</option>
-                    <option value="recommend">Recommend</option>
-                    <option value="recommend-reservations">Recommend with Reservations</option>
-                    <option value="do-not-recommend">Do Not Recommend</option>
-                    <option value="rating-high">High Rating (≥4.0)</option>
-                    <option value="rating-medium">Medium Rating (3.0-3.9)</option>
-                    <option value="rating-low">Low Rating (<3.0)</option>
-                </select>
-            </div>
-            <button id="p3DeclaredApplyFilters" style="padding: 10px 20px; background-color: #124A5C; color: white; border: none; border-radius: 4px; cursor: pointer; font-weight: bold;">
-                Apply
-            </button>
-            <button id="p3DeclaredClearFilters" style="padding: 10px 20px; background-color: #6c757d; color: white; border: none; border-radius: 4px; cursor: pointer;">
-                Clear
+            <button id="p3DeclaredApplySort" style="padding: 10px 20px; background-color: #124A5C; color: white; border: none; border-radius: 4px; cursor: pointer; font-weight: bold;">
+                Apply Sort
             </button>
         </div>
     `;
@@ -9621,20 +9795,12 @@ function createP3DeclaredFilterControls() {
     declaredHeader.insertAdjacentElement('afterend', filterContainer);
     
     // Set up event listeners
-    document.getElementById('p3DeclaredApplyFilters').addEventListener('click', () => {
+    document.getElementById('p3DeclaredApplySort').addEventListener('click', () => {
         const sortBy = document.getElementById('p3DeclaredSortBy').value;
-        const filterBy = document.getElementById('p3DeclaredFilterBy').value;
-        
-        filterP3TablesByAssessment(filterBy);
         sortP3TablesByAssessment(sortBy);
     });
     
-    document.getElementById('p3DeclaredClearFilters').addEventListener('click', () => {
-        document.getElementById('p3DeclaredSortBy').value = 'rating-desc';
-        document.getElementById('p3DeclaredFilterBy').value = 'all';
-        filterP3TablesByAssessment('all');
-        sortP3TablesByAssessment('rating-desc');
-    });
+    console.log("✅ P3 declared filter controls created successfully");
 }
 
 // Make functions globally available
@@ -9646,6 +9812,16 @@ window.fetchP3AssessmentData = fetchP3AssessmentData;
 window.sortP3TablesByAssessment = sortP3TablesByAssessment;
 window.filterP3TablesByAssessment = filterP3TablesByAssessment;
 window.createP3FilterControls = createP3FilterControls;
+window.createP3AwaitingFilterControls = createP3AwaitingFilterControls;
+window.createP3DeclaredFilterControls = createP3DeclaredFilterControls;
+window.createP1AwaitingFilterControls = createP1AwaitingFilterControls;
+window.createP1DeclaredFilterControls = createP1DeclaredFilterControls;
+window.applyP1AwaitingSort = applyP1AwaitingSort;
+window.applyP1DeclaredSort = applyP1DeclaredSort;
+
+console.log('✅ UPDATED: P3 Assessment Columns with Total Assessment Rating and Evaluation Conclusion');
+console.log('✅ UPDATED: Removed Filter By options - All applicants shown by default');
+console.log('✅ UPDATED: Sort functionality works for both P1 and P3 tables');
 
 function extractApplicantIdForP3(rowData) {
     let applicantId = rowData.applicantId || rowData.userId;
@@ -10051,28 +10227,8 @@ function finalizeP3Review() {
     alert("Error preparing P3 email composition: " + error.message);
   });
 }
-// Function to fetch P3 assessment data
-async function fetchP3AssessmentData(userId) {
-    try {
-        const response = await fetch(`/linemanager/get-p3-assessment/${userId}`);
-        if (response.ok) {
-            const data = await response.json();
-            if (data.success && data.assessmentData) {
-                return {
-                    totalAssessmentRating: data.assessmentData.totalAssessmentRating || 'N/A',
-                    conclusion: data.assessmentData.conclusion || 'N/A'
-                };
-            }
-        }
-    } catch (error) {
-        console.error(`Error fetching P3 assessment for userId ${userId}:`, error);
-    }
-    
-    return {
-        totalAssessmentRating: 'N/A',
-        conclusion: 'N/A'
-    };
-}
+
+
 
 // Fetch P3 Applicant Data for Emails
 async function fetchP3ApplicantDataForEmails(passedUserIds, failedUserIds) {
@@ -12407,15 +12563,34 @@ function checkAllApplicantsMarked(phase = null) {
 }
 
 function updateSectionHeaderButtons() {
-  console.log("=== FIXED: Updating section header buttons based on data ===");
+    console.log("=== FIXED: Updating section header buttons based on data ===");
 
-  const hasP1Declared = checkForP1DeclaredResultsFixed();
-  const hasP3Declared = checkForP3DeclaredResultsFixed();
-  
-  console.log(`P1 Declared: ${hasP1Declared}, P3 Declared: ${hasP3Declared}`);
-  
-  updateFinalizeButtonVisibility('p1FinalizeButtonContainer', hasP1Declared);
-  updateFinalizeButtonVisibility('p3FinalizeButtonContainer', hasP3Declared);
+    const hasP1Declared = checkForP1DeclaredResultsFixed();
+    const hasP3Declared = checkForP3DeclaredResultsFixed();
+    
+    console.log(`P1 Declared: ${hasP1Declared}, P3 Declared: ${hasP3Declared}`);
+    
+    updateFinalizeButtonVisibility('p1FinalizeButtonContainer', hasP1Declared);
+    updateFinalizeButtonVisibility('p3FinalizeButtonContainer', hasP3Declared);
+}
+
+
+// FIXED: Remove the old sort section at the bottom
+function removeOldSortSection() {
+    console.log("=== REMOVING OLD SORT SECTION ===");
+    
+    const sortSection = document.querySelector('.sort-section');
+    if (sortSection) {
+        console.log("Found old sort section - removing it");
+        sortSection.remove();
+    }
+    
+    // Also remove any standalone sort dropdowns
+    const sortOptions = document.getElementById('sortOptions');
+    if (sortOptions && sortOptions.parentElement) {
+        console.log("Found old sort options - removing parent");
+        sortOptions.parentElement.remove();
+    }
 }
 
 
@@ -12433,20 +12608,50 @@ function checkForP1DeclaredResultsFixed() {
     );
   });
 }
-
 function checkForP3DeclaredResultsFixed() {
-  const p3DeclaredTable = document.getElementById('p3DeclaredResultsTable');
-  if (!p3DeclaredTable) return false;
-  
-  const p3Rows = p3DeclaredTable.querySelectorAll('tbody tr:not(.section-header-row)');
-  return Array.from(p3Rows).some(row => {
-    if (row.querySelector('td[colspan]')) return false;
-    const statusCell = row.querySelector('td:nth-child(5)'); // P3 has 5 columns + actions
-    return statusCell && (
-      statusCell.textContent.includes('P3 - PASSED (Pending Finalization)') ||
-      statusCell.textContent.includes('P3 - FAILED (Pending Finalization)')
-    );
-  });
+    console.log("=== CHECKING FOR P3 DECLARED RESULTS (FIXED) ===");
+    
+    const p3DeclaredTable = document.getElementById('p3DeclaredResultsTable');
+    if (!p3DeclaredTable) {
+        console.log("❌ P3 declared table not found");
+        return false;
+    }
+    
+    const p3Rows = p3DeclaredTable.querySelectorAll('tbody tr:not(.section-header-row)');
+    console.log(`Found ${p3Rows.length} rows in P3 declared table`);
+    
+    let hasP3PendingFinalization = false;
+    
+    Array.from(p3Rows).forEach((row, index) => {
+        if (row.querySelector('td[colspan]')) {
+            console.log(`Row ${index + 1}: No data message - skipping`);
+            return;
+        }
+        
+        // Check all cells for P3 status (could be in different columns)
+        const cells = row.querySelectorAll('td');
+        let statusText = '';
+        
+        for (let i = 0; i < cells.length; i++) {
+            const cellText = cells[i].textContent;
+            if (cellText.includes('P3') && (cellText.includes('PASSED') || cellText.includes('FAILED'))) {
+                statusText = cellText;
+                break;
+            }
+        }
+        
+        console.log(`Row ${index + 1}: Status = "${statusText}"`);
+        
+        if (statusText.includes('P3') && 
+            (statusText.includes('PASSED (Pending Finalization)') || 
+             statusText.includes('FAILED (Pending Finalization)'))) {
+            hasP3PendingFinalization = true;
+            console.log(`✅ Row ${index + 1}: Found P3 pending finalization status`);
+        }
+    });
+    
+    console.log(`P3 declared results with pending finalization: ${hasP3PendingFinalization}`);
+    return hasP3PendingFinalization;
 }
 
 function updateFinalizeButtonVisibility(buttonContainerId, shouldShow) {
