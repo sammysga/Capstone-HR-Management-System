@@ -4,7 +4,6 @@ require('dotenv').config(); // To load environment variables
 const bcrypt = require('bcrypt');
 const { parse } = require('dotenv');
 const flash = require('connect-flash/lib/flash');
-const { getUserAccount, getPersInfoCareerProg } = require('./employeeController');
 const applicantController = require('../controllers/applicantController');
 const { check } = require('express-validator');
 const { getEmailTemplateData } = require('../utils/emailService');
@@ -3230,7 +3229,7 @@ getApplicantOnboardingData: async function(req, res) {
             if (error || staffError) {
                 console.error('Error fetching user or staff details:', error || staffError);
                 req.flash('errors', { dbError: 'Error fetching user data.' });
-                return res.redirect('/staff/employee/dashboard');
+                return res.redirect('/hr/dashboard');
             }
     
             // Fetch offboarding requests for this user
@@ -3260,7 +3259,7 @@ getApplicantOnboardingData: async function(req, res) {
         } catch (err) {
             console.error('Error in getUserAccount controller:', err);
             req.flash('errors', { dbError: 'An error occurred while loading the account page.' });
-            res.redirect('/staff/employee/dashboard');
+            res.redirect('/hr/dashboard');
         }
     },
     
