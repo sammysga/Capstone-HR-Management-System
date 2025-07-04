@@ -1327,149 +1327,17 @@ getTrainingDevelopmentTracker: async function (req, res) {
         console.log('🚀 Loading Training Development Tracker...');
         console.log('User:', req.session?.user?.userId);
         
-        // Fetch training records first
-        const { data: trainingRecords, error: trainingError } = await supabase
-            .from('training_records')
-            .select(`
-                trainingRecordId,
-                userId,
-                setStartDate,
-                setEndDate,
-                isApproved,
-                dateRequested,
-                jobId,
-                created_at,
-                trainingName,
-                trainingDesc,
-                cost,
-                totalDuration,
-                isOnlineArrangement,
-                address,
-                country,
-                status,
-                lmDecisionDate,
-                lmDecisionRemarks,
-                hrDecisionDate,
-                hrDecisionRemarks,
-                useraccounts!userId (
-                    userEmail
-                ),
-                jobpositions!jobId (
-                    jobTitle,
-                    departmentId,
-                    departments!departmentId (
-                        deptName
-                    )
-                )
-            `)
-            .eq('status', 'For Line Manager Endorsement')
-            .order('dateRequested', { ascending: false });
-
-        if (trainingError) {
-            console.error('❌ Error fetching training records:', trainingError);
-            throw trainingError;
-        }
-
-        console.log('📋 Training records fetched:', trainingRecords?.length || 0);
-        console.log('📋 Sample training record:', JSON.stringify(trainingRecords?.[0], null, 2));
-
-        // Get unique userIds from training records
-        const userIds = trainingRecords ? [...new Set(trainingRecords.map(record => record.userId))] : [];
-        console.log('👥 User IDs from training records:', userIds);
-
-        // Debug: Check what's in useraccounts for these userIds
-        const { data: userAccountsCheck, error: userAccountsError } = await supabase
-            .from('useraccounts')
-            .select('userId, userEmail')
-            .in('userId', userIds);
-
-        if (userAccountsError) {
-            console.error('❌ Error checking useraccounts:', userAccountsError);
-        } else {
-            console.log('👥 UserAccounts found:', JSON.stringify(userAccountsCheck, null, 2));
-        }
-
-        // Debug: Check what's in staffaccounts for these userIds
-        const { data: staffAccountsCheck, error: staffAccountsError } = await supabase
-            .from('staffaccounts')
-            .select('userId, firstName, lastName')
-            .in('userId', userIds);
-
-        if (staffAccountsError) {
-            console.error('❌ Error checking staffaccounts:', staffAccountsError);
-        } else {
-            console.log('👤 StaffAccounts found:', JSON.stringify(staffAccountsCheck, null, 2));
-        }
-
-        // Fetch staff names using the userIds
-        let staffNames = [];
-        if (userIds.length > 0) {
-            const { data: staffData, error: staffError } = await supabase
-                .from('staffaccounts')
-                .select('userId, firstName, lastName')
-                .in('userId', userIds);
-
-            if (staffError) {
-                console.error('❌ Error fetching staff names:', staffError);
-            } else {
-                staffNames = staffData || [];
-                console.log('📝 Staff names fetched:', staffNames?.length);
-                console.log('📝 All staff names:', JSON.stringify(staffNames, null, 2));
-            }
-        }
-
-        // Create lookup map
-        const nameMap = {};
-        staffNames.forEach(staff => {
-            if (staff?.userId) {
-                nameMap[staff.userId] = staff;
-                console.log(`🗺️ Added to map: userId ${staff.userId} = ${staff.firstName} ${staff.lastName}`);
-            }
-        });
-
-        console.log('🗺️ Name map keys:', Object.keys(nameMap));
-        console.log('🗺️ Complete name map:', JSON.stringify(nameMap, null, 2));
-
-        // Merge names with training records
-        const trainingRecordsWithNames = trainingRecords ? trainingRecords.map(record => {
-            const nameData = nameMap[record.userId];
-            console.log(`🔗 Looking up userId ${record.userId}:`);
-            console.log(`   - Found in map:`, nameData);
-            
-            const fullName = nameData ? 
-                `${nameData.firstName || ''} ${nameData.lastName || ''}`.trim() : 
-                'Name not found';
-            
-            console.log(`   - Final name: "${fullName}"`);
-            
-            return {
-                ...record,
-                staffaccounts: nameData || null,
-                fullName: fullName
-            };
-        }) : [];
-
-        console.log('📊 Final records with names:', trainingRecordsWithNames?.length);
-
-        // Show first few records for debugging
-        trainingRecordsWithNames.slice(0, 3).forEach((record, index) => {
-            console.log(`📝 Record ${index + 1}:`);
-            console.log(`   - Training ID: ${record.trainingRecordId}`);
-            console.log(`   - User ID: ${record.userId}`);
-            console.log(`   - Full Name: "${record.fullName}"`);
-            console.log(`   - Has applicant data: ${!!record.applicantaccounts}`);
-        });
-
-        // ========================================
-        // FETCH EMPLOYEES FROM SAME DEPARTMENT AS CURRENT LINE MANAGER
-        // ========================================
-        console.log('👥 Fetching employees from same department as line manager...');
-        
         const currentUserId = req.session?.user?.userId;
-        console.log('🔍 Current Line Manager ID from session:', currentUserId);
-        console.log('🔍 Full session user data:', JSON.stringify(req.session?.user, null, 2));
         
-        // First, get the current line manager's department
+        if (!currentUserId) {
+            return res.status(401).send('Unauthorized - Please log in');
+        }
+
+        // ========================================
+        // STEP 1: GET LINE MANAGER'S DEPARTMENT
+        // ========================================
+        console.log('🔍 Getting line manager department info...');
+        
         const { data: currentManagerInfo, error: currentManagerError } = await supabase
             .from('staffaccounts')
             .select(`
@@ -1488,28 +1356,178 @@ getTrainingDevelopmentTracker: async function (req, res) {
             .eq('userId', currentUserId)
             .single();
 
-        if (currentManagerError) {
+        if (currentManagerError || !currentManagerInfo) {
             console.error('❌ Error fetching current line manager info:', currentManagerError);
-        } else {
-            console.log('👤 Current line manager info:', JSON.stringify(currentManagerInfo, null, 2));
+            return res.status(500).send('Error: Unable to determine your department');
         }
 
-        // Get the line manager's department ID
         const managerDepartmentId = currentManagerInfo?.jobpositions?.departmentId;
         const managerDepartmentName = currentManagerInfo?.jobpositions?.departments?.deptName;
         
-        console.log('🏢 Line manager department ID:', managerDepartmentId);
-        console.log('🏢 Line manager department name:', managerDepartmentName);
+        console.log('🏢 Line manager department:', {
+            id: managerDepartmentId,
+            name: managerDepartmentName
+        });
 
-        let employees = [];
-        let employeesError = null;
+        if (!managerDepartmentId) {
+            return res.status(400).send('Error: Your position is not assigned to a department');
+        }
 
-        if (managerDepartmentId) {
-            console.log(`📋 Fetching employees from department: ${managerDepartmentName} (ID: ${managerDepartmentId})`);
+        // ========================================
+        // STEP 2: GET ALL JOB IDS FROM SAME DEPARTMENT
+        // ========================================
+        console.log(`🏢 Fetching all job positions from department: ${managerDepartmentName}...`);
+        
+        const { data: departmentJobs, error: deptJobsError } = await supabase
+            .from('jobpositions')
+            .select('jobId')
+            .eq('departmentId', managerDepartmentId);
+
+        if (deptJobsError) {
+            console.error('❌ Error fetching department jobs:', deptJobsError);
+            return res.status(500).send('Error: Unable to fetch department positions');
+        }
+
+        const departmentJobIds = departmentJobs?.map(job => job.jobId) || [];
+        console.log(`🏢 Found ${departmentJobIds.length} positions in department: ${managerDepartmentName}`);
+        console.log('🏢 Department job IDs:', departmentJobIds);
+
+        // ========================================
+        // STEP 3: GET ALL EMPLOYEES FROM DEPARTMENT JOBS
+        // ========================================
+        console.log(`👥 Fetching employees from department positions...`);
+        
+        let departmentEmployees = [];
+        if (departmentJobIds.length > 0) {
+            const { data: employees, error: deptEmployeesError } = await supabase
+                .from('staffaccounts')
+                .select('userId')
+                .in('jobId', departmentJobIds)
+                .neq('userId', currentUserId); // Exclude the line manager
+
+            if (deptEmployeesError) {
+                console.error('❌ Error fetching department employees:', deptEmployeesError);
+                return res.status(500).send('Error: Unable to fetch department employees');
+            }
+
+            departmentEmployees = employees || [];
+        }
+
+        const departmentUserIds = departmentEmployees?.map(emp => emp.userId) || [];
+        console.log(`👥 Found ${departmentUserIds.length} employees in department: ${managerDepartmentName}`);
+        console.log('👥 Department employee IDs:', departmentUserIds);
+
+        // ========================================
+        // STEP 4: FETCH TRAINING RECORDS (DEPARTMENT FILTERED)
+        // ========================================
+        console.log('📋 Fetching training records for department employees only...');
+        
+        let trainingRecords = [];
+        if (departmentUserIds.length > 0) {
+            const { data: records, error: trainingError } = await supabase
+                .from('training_records')
+                .select(`
+                    trainingRecordId,
+                    userId,
+                    setStartDate,
+                    setEndDate,
+                    isApproved,
+                    dateRequested,
+                    jobId,
+                    created_at,
+                    trainingName,
+                    trainingDesc,
+                    cost,
+                    totalDuration,
+                    isOnlineArrangement,
+                    address,
+                    country,
+                    status,
+                    lmDecisionDate,
+                    lmDecisionRemarks,
+                    hrDecisionDate,
+                    hrDecisionRemarks,
+                    useraccounts!userId (
+                        userEmail
+                    ),
+                    jobpositions!jobId (
+                        jobTitle,
+                        departmentId,
+                        departments!departmentId (
+                            deptName
+                        )
+                    )
+                `)
+                .eq('status', 'For Line Manager Endorsement')
+                .in('userId', departmentUserIds) // ✅ FILTER BY DEPARTMENT EMPLOYEES ONLY
+                .order('dateRequested', { ascending: false });
+
+            if (trainingError) {
+                console.error('❌ Error fetching training records:', trainingError);
+                throw trainingError;
+            }
+
+            trainingRecords = records || [];
+        }
+
+        console.log(`📋 Training records found: ${trainingRecords.length} (filtered by department: ${managerDepartmentName})`);
+
+        // ========================================
+        // STEP 5: GET STAFF NAMES FOR TRAINING RECORDS
+        // ========================================
+        const trainingUserIds = trainingRecords ? [...new Set(trainingRecords.map(record => record.userId))] : [];
+        console.log('👥 User IDs from training records:', trainingUserIds);
+
+        let staffNames = [];
+        if (trainingUserIds.length > 0) {
+            const { data: staffData, error: staffError } = await supabase
+                .from('staffaccounts')
+                .select('userId, firstName, lastName')
+                .in('userId', trainingUserIds);
+
+            if (staffError) {
+                console.error('❌ Error fetching staff names:', staffError);
+            } else {
+                staffNames = staffData || [];
+                console.log('📝 Staff names fetched:', staffNames?.length);
+            }
+        }
+
+        // Create lookup map for names
+        const nameMap = {};
+        staffNames.forEach(staff => {
+            if (staff?.userId) {
+                nameMap[staff.userId] = staff;
+                console.log(`🗺️ Added to map: userId ${staff.userId} = ${staff.firstName} ${staff.lastName}`);
+            }
+        });
+
+        // Merge names with training records
+        const trainingRecordsWithNames = trainingRecords ? trainingRecords.map(record => {
+            const nameData = nameMap[record.userId];
+            console.log(`🔗 Looking up userId ${record.userId}:`, nameData);
             
-            // Fetch all employees from the SAME DEPARTMENT as the line manager
-            // ONLY show employees who have a position AND department assigned
-            const result = await supabase
+            const fullName = nameData ? 
+                `${nameData.firstName || ''} ${nameData.lastName || ''}`.trim() : 
+                'Name not found';
+            
+            return {
+                ...record,
+                staffaccounts: nameData || null,
+                fullName: fullName
+            };
+        }) : [];
+
+        console.log('📊 Training records with names:', trainingRecordsWithNames?.length);
+
+        // ========================================
+        // STEP 6: FETCH DETAILED EMPLOYEE INFO FROM DEPARTMENT
+        // ========================================
+        console.log(`👥 Fetching detailed employee info from department: ${managerDepartmentName}...`);
+        
+        let employees = [];
+        if (departmentJobIds.length > 0) {
+            const { data: employeeData, error: employeesError } = await supabase
                 .from('staffaccounts')
                 .select(`
                     userId,
@@ -1528,145 +1546,99 @@ getTrainingDevelopmentTracker: async function (req, res) {
                         )
                     )
                 `)
-                .not('jobId', 'is', null) // Employee must have a job/position assigned
-                .eq('jobpositions.departmentId', managerDepartmentId) // Same department as line manager
-                .not('jobpositions.departmentId', 'is', null) // Position must have a department
-                .neq('userId', currentUserId) // Exclude the line manager from the employee list
+                .in('jobId', departmentJobIds) // ✅ FILTER BY DEPARTMENT JOB IDS
+                .neq('userId', currentUserId) // Exclude the line manager
                 .order('firstName', { ascending: true });
-            
-            employees = result.data;
-            employeesError = result.error;
-            
-            console.log(`👥 Found ${employees?.length || 0} employees in department ${managerDepartmentName}`);
-        } else {
-            console.log('⚠️ Could not determine line manager\'s department');
-            employees = [];
-            employeesError = { message: 'Could not determine line manager department' };
+
+            if (employeesError) {
+                console.error('❌ Error fetching detailed employees:', employeesError);
+            } else {
+                employees = employeeData || [];
+            }
         }
 
-        // Alternative query if you don't have lineManagerId field (also removed isActive):
-        // 
-        // OPTION 2: If you have a specific way to determine line manager relationships
-        // You might need to use a junction table or different logic here
-        // 
-        // OPTION 3: If line managers are determined by job roles/titles
-        // const { data: employees, error: employeesError } = await supabase
-        //     .from('staffaccounts')
-        //     .select(`
-        //         userId,
-        //         firstName,
-        //         lastName,
-        //         hireDate,
-        //         jobId,
-        //         useraccounts!userId (
-        //             userEmail
-        //         ),
-        //         jobpositions!jobId (
-        //             jobTitle,
-        //             departmentId,
-        //             departments!departmentId (
-        //                 deptName
-        //             )
-        //         )
-        //     `)
-        //     .eq('jobpositions.jobTitle', 'Employee') // Example: if you want to show only employees, not managers
-        //     .order('firstName', { ascending: true });
-
-        if (employeesError) {
-            console.error('❌ Error fetching employees:', employeesError);
-            // Don't throw error here, just log it and continue with empty employees array
-        }
-
-        // Process employees data - only include those with complete position/department info
-        // AND fetch their latest training status
-        const processedEmployees = employees ? await Promise.all(
-            employees.filter(employee => {
-                // Filter out employees without proper job/department data
-                const hasJobTitle = employee.jobpositions?.jobTitle;
-                const hasDepartment = employee.jobpositions?.departments?.deptName;
-                const hasJobId = employee.jobId;
-                
-                if (!hasJobTitle || !hasDepartment || !hasJobId) {
-                    console.log(`⚠️ Excluding employee ${employee.firstName} ${employee.lastName} - missing position/department data`);
-                    return false;
-                }
-                
-                return true;
-            }).map(async (employee) => {
-                // Fetch the latest training record for this employee
-                const { data: latestTraining, error: trainingError } = await supabase
-                    .from('training_records')
-                    .select('status, dateRequested, trainingName')
-                    .eq('userId', employee.userId)
-                    .order('dateRequested', { ascending: false })
-                    .limit(1);
-
-                if (trainingError) {
-                    console.error(`❌ Error fetching training for user ${employee.userId}:`, trainingError);
-                }
-
-                // Determine employee status based on latest training record
-                let employeeStatus = 'No Training';
-                let statusClass = 'status-no-training';
-                let latestTrainingInfo = null;
-
-                if (latestTraining && latestTraining.length > 0) {
-                    const training = latestTraining[0];
-                    employeeStatus = training.status;
-                    latestTrainingInfo = {
-                        trainingName: training.trainingName,
-                        dateRequested: training.dateRequested
-                    };
-
-                    // Set CSS class based on status
-                    switch (training.status) {
-                        case 'For Line Manager Endorsement':
-                            statusClass = 'status-pending-lm';
-                            break;
-                        case 'For HR Approval':
-                            statusClass = 'status-pending-hr';
-                            break;
-                        case 'Cancelled':
-                            statusClass = 'status-cancelled';
-                            break;
-                        case 'Not Started':
-                            statusClass = 'status-not-started';
-                            break;
-                        case 'In Progress':
-                            statusClass = 'status-in-progress';
-                            break;
-                        case 'Completed':
-                            statusClass = 'status-completed';
-                            break;
-                        default:
-                            statusClass = 'status-unknown';
-                    }
-                }
-
-                console.log(`👤 Employee ${employee.firstName} ${employee.lastName} - Training Status: ${employeeStatus}`);
-
-                return {
-                    userId: employee.userId,
-                    firstName: employee.firstName,
-                    lastName: employee.lastName,
-                    userEmail: employee.useraccounts?.userEmail,
-                    jobTitle: employee.jobpositions?.jobTitle,
-                    departmentId: employee.jobpositions?.departmentId,
-                    department: employee.jobpositions?.departments?.deptName,
-                    hireDate: employee.hireDate,
-                    trainingStatus: employeeStatus,
-                    statusClass: statusClass,
-                    latestTraining: latestTrainingInfo,
-                    isActive: true // Keep this for UI compatibility
-                };
-            })
-        ) : [];
-
-        console.log('👥 Employees fetched:', processedEmployees?.length || 0);
-        console.log('👥 Sample employee:', JSON.stringify(processedEmployees?.[0], null, 2));
+        console.log(`👥 Found ${employees?.length || 0} detailed employees in department: ${managerDepartmentName}`);
 
         // ========================================
-        // CALCULATE STATISTICS (Including Training Status Stats)
+        // STEP 7: PROCESS EMPLOYEES WITH TRAINING STATUS
+        // ========================================
+        const processedEmployees = employees ? await Promise.all(
+            employees
+                .filter(employee => {
+                    // Validate employee data
+                    const hasValidDepartment = employee.jobpositions?.departmentId === managerDepartmentId;
+                    const hasJobTitle = employee.jobpositions?.jobTitle;
+                    const hasDepartmentName = employee.jobpositions?.departments?.deptName;
+                    const hasValidUserData = employee.firstName && employee.lastName;
+                    
+                    if (!hasValidDepartment || !hasJobTitle || !hasDepartmentName || !hasValidUserData) {
+                        console.log(`⚠️ Excluding employee ${employee.firstName} ${employee.lastName} - missing required data`);
+                        return false;
+                    }
+                    
+                    console.log(`✅ Including employee ${employee.firstName} ${employee.lastName} from ${hasDepartmentName}`);
+                    return true;
+                })
+                .map(async (employee) => {
+                    // Get latest training status for this employee
+                    const { data: latestTraining, error: trainingError } = await supabase
+                        .from('training_records')
+                        .select('status, dateRequested, trainingName')
+                        .eq('userId', employee.userId)
+                        .order('dateRequested', { ascending: false })
+                        .limit(1);
+
+                    if (trainingError) {
+                        console.error(`❌ Error fetching training for user ${employee.userId}:`, trainingError);
+                    }
+
+                    // Determine status
+                    let employeeStatus = 'No Training';
+                    let statusClass = 'status-no-training';
+                    let latestTrainingInfo = null;
+
+                    if (latestTraining && latestTraining.length > 0) {
+                        const training = latestTraining[0];
+                        employeeStatus = training.status;
+                        latestTrainingInfo = {
+                            trainingName: training.trainingName,
+                            dateRequested: training.dateRequested
+                        };
+
+                        // Set CSS class based on status
+                        const statusClassMap = {
+                            'For Line Manager Endorsement': 'status-pending-lm',
+                            'For HR Approval': 'status-pending-hr',
+                            'Cancelled': 'status-cancelled',
+                            'Not Started': 'status-not-started',
+                            'In Progress': 'status-in-progress',
+                            'Completed': 'status-completed'
+                        };
+                        statusClass = statusClassMap[training.status] || 'status-unknown';
+                    }
+
+                    console.log(`👤 Employee ${employee.firstName} ${employee.lastName} - Status: ${employeeStatus}`);
+
+                    return {
+                        userId: employee.userId,
+                        firstName: employee.firstName,
+                        lastName: employee.lastName,
+                        userEmail: employee.useraccounts?.userEmail,
+                        jobTitle: employee.jobpositions?.jobTitle,
+                        departmentId: employee.jobpositions?.departmentId,
+                        department: employee.jobpositions?.departments?.deptName,
+                        hireDate: employee.hireDate,
+                        trainingStatus: employeeStatus,
+                        statusClass: statusClass,
+                        latestTraining: latestTrainingInfo
+                    };
+                })
+        ) : [];
+
+        console.log(`👥 Processed employees: ${processedEmployees?.length || 0}`);
+
+        // ========================================
+        // STEP 8: CALCULATE DEPARTMENT-SPECIFIC STATISTICS
         // ========================================
         const totalPendingEndorsements = trainingRecordsWithNames?.length || 0;
         
@@ -1678,7 +1650,7 @@ getTrainingDevelopmentTracker: async function (req, res) {
             onsiteTrainings: 0
         };
 
-        // NEW: Training Status Statistics
+        // Training Status Statistics (Department-specific)
         const statusStats = {
             forLineManagerEndorsement: 0,
             forHRApproval: 0,
@@ -1689,6 +1661,7 @@ getTrainingDevelopmentTracker: async function (req, res) {
             noTraining: 0
         };
 
+        // Process training records for statistics
         if (trainingRecordsWithNames) {
             trainingRecordsWithNames.forEach(record => {
                 if (!trainingByType[record.trainingName]) {
@@ -1707,7 +1680,7 @@ getTrainingDevelopmentTracker: async function (req, res) {
             });
         }
 
-        // Count status from processed employees (this includes all statuses)
+        // Count status from department employees only
         if (processedEmployees) {
             processedEmployees.forEach(employee => {
                 switch (employee.trainingStatus) {
@@ -1740,14 +1713,25 @@ getTrainingDevelopmentTracker: async function (req, res) {
             ? (costSummary.totalCost / totalPendingEndorsements).toFixed(2)
             : 0;
 
+        // Monthly trends (department-specific)
         const sixMonthsAgo = new Date();
         sixMonthsAgo.setMonth(sixMonthsAgo.getMonth() - 6);
 
-        const { data: monthlyRequests, error: monthlyError } = await supabase
-            .from('training_records')
-            .select('dateRequested')
-            .eq('status', 'For Line Manager Endorsement')
-            .gte('dateRequested', sixMonthsAgo.toISOString());
+        let monthlyRequests = [];
+        if (departmentUserIds.length > 0) {
+            const { data: monthlyData, error: monthlyError } = await supabase
+                .from('training_records')
+                .select('dateRequested')
+                .eq('status', 'For Line Manager Endorsement')
+                .in('userId', departmentUserIds) // ✅ FILTER BY DEPARTMENT
+                .gte('dateRequested', sixMonthsAgo.toISOString());
+
+            if (monthlyError) {
+                console.error('❌ Error fetching monthly trends:', monthlyError);
+            } else {
+                monthlyRequests = monthlyData || [];
+            }
+        }
 
         const monthlyTrends = {};
         if (monthlyRequests) {
@@ -1765,29 +1749,35 @@ getTrainingDevelopmentTracker: async function (req, res) {
             totalPendingEndorsements,
             trainingByType,
             costSummary,
-            statusStats, // NEW: Add status statistics
+            statusStats,
             monthlyTrends: monthlyTrendsArray,
-            totalEmployees: processedEmployees?.length || 0 // NEW: Total employees count
+            totalEmployees: processedEmployees?.length || 0,
+            departmentName: managerDepartmentName,
+            departmentId: managerDepartmentId
         };
 
-        console.log('📊 Statistics calculated:', statistics);
+        console.log('📊 Department-specific Statistics:', statistics);
 
         // ========================================
-        // RENDER PAGE WITH ALL DATA
+        // STEP 9: RENDER PAGE
         // ========================================
         res.render('staffpages/linemanager_pages/trainingdevelopmenttracker', {
-            title: 'Employee Training & Development Tracker',
+            title: `Training & Development - ${managerDepartmentName}`,
             user: req.session?.user || null,
             trainingRecords: trainingRecordsWithNames || [],
-            employees: processedEmployees || [], // Add employees data
+            employees: processedEmployees || [],
             statistics: statistics
         });
         
         console.log('✅ Page rendered successfully');
-        console.log(`📋 Final data summary:`);
-        console.log(`   - Training Records: ${trainingRecordsWithNames?.length || 0}`);
-        console.log(`   - Employees: ${processedEmployees?.length || 0}`);
+        console.log(`📋 Department Summary for ${managerDepartmentName}:`);
+        console.log(`   - Department ID: ${managerDepartmentId}`);
+        console.log(`   - Department Job IDs: ${departmentJobIds.length}`);
+        console.log(`   - Department Employee IDs: ${departmentUserIds.length}`);
+        console.log(`   - Training Records (Pending): ${trainingRecordsWithNames?.length || 0}`);
+        console.log(`   - Total Department Employees: ${processedEmployees?.length || 0}`);
         console.log(`   - Pending Endorsements: ${totalPendingEndorsements}`);
+        console.log(`   - Status Breakdown:`, statusStats);
         
     } catch (error) {
         console.error('💥 ERROR in getTrainingDevelopmentTracker:', error);
