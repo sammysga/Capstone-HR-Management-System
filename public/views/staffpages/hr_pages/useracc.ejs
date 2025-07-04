@@ -1,0 +1,1073 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <script src="https://cdn.jsdelivr.net/npm/signature_pad@4.0.0/dist/signature_pad.umd.min.js"></script>
+    <title>Employee User Account</title>
+    <link rel="stylesheet" href="/css/sidebar.css">
+    <link rel="stylesheet" href="/css/hr_pages.css">
+    <style>
+        /* Existing styles from your user account page */
+        .profile-container { 
+            display: flex; 
+            align-items: center; 
+            justify-content: space-between; 
+            margin-bottom: 20px; 
+        }
+        .profile-pic { 
+            width: 80px; 
+            height: 80px; 
+            border-radius: 50%; 
+            object-fit: cover; 
+            margin-right: 15px; 
+        }
+        .profile-info { 
+            display: flex; 
+            flex-direction: column; 
+            flex-grow: 1; 
+            margin-right: 20px;
+        }
+        .form-text { 
+            font-size: 20px; 
+            color: #09191F; 
+        }
+        #display-role { 
+            font-size: 1.2rem; 
+            font-style: italic; 
+            margin-top: 5px; 
+        }
+        .password-reset-container { 
+            margin-top: 30px; 
+            border-top: 1px solid #ccc; 
+            padding-top: 20px; 
+        }
+        .password-reset-container input { 
+            width: 100%; 
+            padding: 10px; 
+            margin: 10px 0; 
+            border-radius: 5px; 
+            border: 1px solid #ccc; 
+        }
+        .update-password-btn, .offboarding-btn, .action-btn { 
+            background-color: #124A5C; 
+            color: white; 
+            border: none; 
+            padding: 10px 20px; 
+            border-radius: 5px; 
+            font-size: 1rem; 
+            cursor: pointer; 
+            transition: background-color 0.3s ease; 
+            text-decoration: none;
+            display: inline-block;
+        }
+        .update-password-btn:hover, .offboarding-btn:hover, .action-btn:hover { 
+            background-color: #059ca4; 
+        }
+        .secondary-btn {
+            background-color: #f5f5f5;
+            color: #333;
+            border: 1px solid #ddd;
+            padding: 10px 20px;
+            border-radius: 5px;
+            font-size: 1rem;
+            cursor: pointer;
+            transition: background-color 0.3s ease;
+            margin-right: 10px;
+            text-decoration: none;
+            display: inline-block;
+        }
+        .secondary-btn:hover {
+            background-color: #e0e0e0;
+        }
+        .edit-btn, .save-btn { 
+            background-color: #124A5C; 
+            color: white; 
+            border: none; 
+            padding: 10px 20px; 
+            border-radius: 5px; 
+            font-size: 1rem; 
+            cursor: pointer; 
+            margin-left: 15px;
+            transition: background-color 0.3s ease; 
+        }
+        .edit-btn:hover, .save-btn:hover { 
+            background-color: #059ca4; 
+        }
+        .form-input { 
+            width: 100%; 
+            padding: 15px; 
+            margin: 10px 0; 
+            border-radius: 5px; 
+            border: 1px solid #ccc; 
+            font-size: 16px; 
+            transition: border-color 0.3s ease, box-shadow 0.3s ease; 
+            background-color: #f9f9f9;
+            display: none; 
+        }
+        .form-input:focus { 
+            border-color: #059ca4;
+            box-shadow: 0 0 5px rgba(5, 156, 164, 0.5);
+            background-color: #ffffff;
+        }
+        .form-input::placeholder { 
+            color: #aaa;
+            opacity: 1;
+        }
+        .account-info-header { 
+            margin-top: 40px; 
+            font-size: 1.5rem; 
+            font-weight: bold; 
+            color: #059ca4; 
+        }
+        .sub-header { 
+            margin-top: 20px; 
+            font-size: 1.2rem; 
+            font-weight: bold; 
+        }
+        .offboarding-btn-container { 
+            margin-top: 30px; 
+        }
+        .password-reset-info {
+            margin-top: 40px; 
+            font-size: 1.5rem; 
+            font-weight: bold; 
+            color: #059ca4; 
+        }
+
+        /* New styles for offboarding section */
+        .offboarding-section {
+            margin-top: 40px;
+            padding-top: 20px;
+            border-top: 1px solid #eee;
+        }
+        .offboarding-header {
+            font-size: 1.5rem;
+            font-weight: bold;
+            color: #059ca4;
+            margin-bottom: 20px;
+        }
+        .offboarding-status {
+            background-color: white;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            padding: 20px;
+            margin-bottom: 20px;
+        }
+        .status-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 15px 0;
+            border-bottom: 1px solid #eee;
+        }
+        .status-row:last-child {
+            border-bottom: none;
+        }
+        .status-label {
+            font-weight: bold;
+            color: #333;
+        }
+        .status-info {
+            flex: 1;
+            padding: 0 20px;
+        }
+        .status-badge {
+            display: inline-block;
+            padding: 5px 10px;
+            border-radius: 20px;
+            font-size: 0.9rem;
+            font-weight: bold;
+        }
+        .status-pending {
+            background-color: #FFC107;
+            color: #333;
+        }
+        .status-approved {
+            background-color: #4CAF50;
+            color: white;
+        }
+        .status-awaiting {
+            background-color: #2196F3;
+            color: white;
+        }
+        .status-rejected {
+            background-color: #F44336;
+            color: white;
+        }
+        .status-actions {
+            text-align: right;
+        }
+        .no-requests {
+            text-align: center;
+            padding: 20px;
+            color: #666;
+            font-style: italic;
+        }
+        
+        .clearance-container {
+            background-color: white;
+            border-radius: 10px;
+            padding: 20px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            margin-top: 20px;
+            display: none; /* Hidden by default */
+            position: relative;
+            z-index: 100; /* Ensure it appears above other elements */
+        }
+
+        /* Make sure the form is clearly visible when displayed */
+        .clearance-container.visible {
+            display: block;
+        }
+
+        /* Add some space for better readability */
+        .clearance-list {
+            margin-bottom: 30px;
+            max-height: 400px;
+            overflow-y: auto; /* Scrollable if many items */
+        }
+
+        /* Make checkboxes more prominent */
+        .clearance-checkbox {
+            margin-right: 15px;
+            transform: scale(1.5);
+            cursor: pointer;
+        }
+
+        /* Make the signature canvas more obvious */
+        .signature-pad {
+            width: 100%;
+            height: 150px;
+            border: 1px solid #ccc;
+            background-color: #f9f9f9;
+            margin-bottom: 10px;
+            cursor: crosshair;
+        }
+
+        /* Modal Styles */
+        .modal-overlay {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.5);
+            z-index: 1000;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .modal-container {
+            background-color: white;
+            border-radius: 10px;
+            width: 90%;
+            max-width: 900px;
+            max-height: 90vh;
+            overflow-y: auto;
+            padding: 30px;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+            position: relative;
+        }
+
+        .modal-close {
+            position: absolute;
+            top: 15px;
+            right: 15px;
+            font-size: 24px;
+            cursor: pointer;
+            color: #666;
+        }
+
+        .modal-header {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+
+        .modal-header h2 {
+            color: #124A5C;
+            margin-bottom: 10px;
+        }
+
+        .modal-header p {
+            color: #666;
+        }
+
+        /* Clearance checklist table */
+        .clearance-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 20px;
+            background-color: white;
+        }
+
+        .clearance-table th,
+        .clearance-table td {
+            padding: 15px;
+            text-align: left;
+            border-bottom: 1px solid #eee;
+        }
+
+        .clearance-table th {
+            background-color: #124A5C;
+            color: white;
+            font-weight: bold;
+        }
+
+        /* Signature container styles */
+        .signature-container {
+            display: none;
+            margin-top: 10px;
+        }
+
+        .signature-canvas {
+            border: 1px solid #ccc;
+            background-color: #f9f9f9;
+        }
+
+        .signature-preview {
+            margin-top: 10px;
+            min-height: 40px;
+        }
+
+        .signature-preview img {
+            max-width: 100%;
+            max-height: 80px;
+            border: 1px solid #eee;
+        }
+
+        .action-buttons {
+            display: flex;
+            gap: 10px;
+            margin-top: 10px;
+        }
+
+        .btn-sign {
+            background-color: #124A5C;
+            color: white;
+            border: none;
+            padding: 5px 10px;
+            border-radius: 3px;
+            cursor: pointer;
+            font-size: 12px;
+        }
+
+        .btn-submit-signature, 
+        .btn-clear-signature, 
+        .btn-cancel-signature {
+            background-color: #f0f0f0;
+            border: 1px solid #ddd;
+            padding: 5px 10px;
+            border-radius: 3px;
+            font-size: 12px;
+            cursor: pointer;
+        }
+
+        .btn-submit-signature {
+            background-color: #124A5C;
+            color: white;
+            border: none;
+        }
+
+        /* Modal footer */
+        .modal-footer {
+            margin-top: 30px;
+            display: flex;
+            justify-content: flex-end;
+            gap: 15px;
+        }
+
+        .btn-modal-cancel,
+        .btn-modal-submit {
+            padding: 10px 20px;
+            border-radius: 5px;
+            font-size: 16px;
+            cursor: pointer;
+        }
+
+        .btn-modal-cancel {
+            background-color: #f0f0f0;
+            border: 1px solid #ddd;
+            color: #333;
+        }
+
+        .btn-modal-submit {
+            background-color: #124A5C;
+            color: white;
+            border: none;
+        }
+
+        /* For the "verified" checkbox */
+        .verification-checkbox {
+            margin-top: 20px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .verification-checkbox input[type="checkbox"] {
+            transform: scale(1.5);
+        }
+
+        .verification-checkbox span {
+            font-weight: bold;
+            color: #333;
+        }
+
+        .status-approved {
+            background-color: #4CAF50;
+            color: white;
+        }
+
+        .offboarding-complete-message {
+            color: #4CAF50;
+            font-weight: bold;
+            font-style: italic;
+}
+    </style>
+</head>
+<body>
+    <%- include('../../partials/hr_partials') %>
+   <!-- Main content -->
+   <div class="main-content">
+    <!-- Profile section -->
+    <div class="profile-container">
+        <img src="/images/profile.png" alt="Profile Picture" class="profile-pic">
+        <div class="profile-info">
+            <form id="edit-user-info" action="/employee/update-info" method="POST">
+                <span id="display-firstname" class="form-text" style="font-weight: bold; font-size: 25px;"><%= user.firstName %> <%= user.lastName %></span>
+                <input type="text" class="form-input" name="firstName" value="<%= user.firstName %>" required>
+                <input type="text" class="form-input" name="lastName" value="<%= user.lastName %>" required>
+                
+                <span id="display-role" class="form-text" style="margin-top: 5px;"><%= user.userRole %></span>
+                <input type="text" class="form-input" name="userRole" value="<%= user.userRole %>" required>
+                
+            </form>
+        </div>
+        <div>
+            <button type="button" class="edit-btn" id="edit-info-btn" style="margin-right: 5rem;">Edit Information</button>
+            <button type="submit" class="save-btn" id="save-info-btn" style="display: none;">Save Changes</button>
+        </div>
+    </div>
+
+    <div>
+        <div class="sub-header">Department:</div>
+        <span class="form-text"><%= user.deptName %></span>
+    </div>
+    <div>
+        <div class="sub-header">Job Title:</div>
+        <span class="form-text"><%= user.jobTitle %></span>
+    </div>
+    
+    
+    <div class="account-info-header">User Account Information</div>
+    <div>
+        <div class="sub-header">Email:</div>
+        <span class="form-text"><%= user.userEmail %></span>
+    </div>
+    <div>
+        <div class="sub-header">User Role:</div>
+        <span class="form-text"><%= user.userRole %></span>
+    </div>
+
+    <!-- Offboarding section -->
+    <div class="offboarding-section">
+        <div class="offboarding-header">Offboarding Status</div>
+        
+        <% if (offboardingRequests && offboardingRequests.length > 0) { %>
+            <% offboardingRequests.forEach(request => { %>
+                <div class="offboarding-status">
+                    <div class="status-row">
+                        <div class="status-label">Request Type:</div>
+                        <div class="status-info"><%= request.offboardingType %></div>
+                    </div>
+                    <div class="status-row">
+                        <div class="status-label">Submitted On:</div>
+                        <div class="status-info"><%= new Date(request.created_at).toLocaleDateString() %></div>
+                    </div>
+                    <div class="status-row">
+                        <div class="status-label">Last Working Day:</div>
+                        <div class="status-info"><%= new Date(request.last_day).toLocaleDateString() %></div>
+                    </div>
+                    <div class="status-row">
+                        <div class="status-label">Status:</div>
+                        <div class="status-info">
+                            <span class="status-badge 
+                                <%= request.status === 'Pending Line Manager' ? 'status-pending' : 
+                                   request.status === 'Sent to Employee' ? 'status-awaiting' : 
+                                   request.status === 'Completed by Employee' ? 'status-completed-employee' : 
+                                   request.status === 'Completed' ? 'status-approved' : 
+                                   request.status === 'Rejected' ? 'status-rejected' : 'status-pending' %>">
+                                <%= request.status %>
+                            </span>
+                        </div>
+                    </div>
+                    <div class="status-row">
+                        <div class="status-label">Actions:</div>
+                        <div class="status-actions">
+                            <% if (request.status === 'Pending Line Manager' || request.status === 'Pending HR') { %>
+                                <button class="secondary-btn cancel-request-btn" data-request-id="<%= request.requestId %>">Cancel Request</button>
+                            <% } else if (request.status === 'Sent to Employee') { %>
+                                <button class="action-btn view-clearance-btn" data-request-id="<%= request.requestId %>">Complete Clearance</button>
+                            <% } else if (request.status === 'Completed by Employee') { %>
+                                <span>Awaiting HR Final Approval</span>
+                            <% } else if (request.status === 'Completed') { %>
+                                <span class="offboarding-complete-message">Your offboarding process has been completed! We wish you all the best.</span>
+                            <% } %>
+                        </div>
+                    </div>                    
+                </div>
+            <% }) %>
+        <% } else { %>
+            <div class="offboarding-status">
+                <div class="no-requests">No active offboarding requests.</div>
+                <div class="offboarding-btn-container" style="text-align: center; margin-top: 20px;">
+                    <a href="/employee/employeeoffboarding" class="offboarding-btn">Request for Offboarding</a>
+                </div>
+            </div>
+        <% } %>
+        
+        <!-- Clearance form (hidden by default, shown when "Complete Clearance" is clicked) -->
+        <div id="clearanceForm" class="clearance-container">
+            <div class="clearance-header">
+                <h2>Employee Clearance Form</h2>
+                <p>Please complete all items below before your last working day</p>
+            </div>
+
+            <form id="inlineClearanceForm">
+                <input type="hidden" id="modalRequestId" name="requestId" value="">
+                
+                <div class="clearance-list" id="clearanceChecklist">
+                    <!-- Clearance items will be loaded dynamically here -->
+                </div>
+
+                <div class="signature-section">
+                    <div class="signature-container">
+                        <label for="signatureCanvas">Your Signature:</label>
+                        <canvas id="signatureCanvas" class="signature-pad" width="600" height="150"></canvas>
+                        <div class="signature-actions">
+                            <button type="button" class="secondary-btn" id="clearSignature">Clear</button>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="clearance-actions">
+                    <button type="button" class="secondary-btn" id="cancelInlineClearance">Cancel</button>
+                    <button type="submit" class="action-btn">Submit Clearance</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+<div class="password-reset-container">
+    <h4 class="password-reset-info">Reset Password</h4>
+    <form id="reset-password-form">
+        <label for="new-password">New Password:</label>
+        <input type="password" name="newPassword" id="new-password" 
+               placeholder="Enter new password (minimum 6 characters)" required>
+        
+        <label for="confirm-password">Confirm New Password:</label>
+        <input type="password" name="confirmPassword" id="confirm-password" 
+               placeholder="Re-enter new password" required>
+        
+        <button type="submit" class="update-password-btn">Update Password</button>
+    </form>
+    
+    <div class="password-requirements" style="margin-top: 10px; font-size: 0.9em; color: #666;">
+        <p><strong>Password Requirements:</strong></p>
+        <ul style="margin: 5px 0; padding-left: 20px;">
+            <li>Minimum 6 characters</li>
+            <li>Both fields must match</li>
+        </ul>
+    </div>
+</div>
+
+
+
+   <!-- Clearance Modal -->
+<div id="clearanceModal" class="modal-overlay">
+    <div class="modal-container">
+        <span class="modal-close" id="closeModal">&times;</span>
+        
+        <div class="modal-header">
+            <h2>Employee Clearance Form</h2>
+            <p>Please complete all items below before your last working day</p>
+            <p id="lastDayDisplay"></p>
+        </div>
+        
+        <form id="modalClearanceForm">
+            <input type="hidden" id="requestId" name="requestId" value="">
+            
+            <table class="clearance-table">
+                <thead>
+                    <tr>
+                        <th>Tasks</th>
+                        <th>Contact Person</th>
+                        <th>Signature Verification</th>
+                    </tr>
+                </thead>
+                <tbody id="clearanceTableBody">
+                    <!-- Clearance items will be added here dynamically -->
+                </tbody>
+            </table>
+            
+            <div class="verification-checkbox">
+                <input type="checkbox" id="employeeVerifyCheckbox" class="employee-verify">
+                <span>I verify that I have completed all clearance items above</span>
+            </div>
+            
+            <div class="modal-footer">
+                <button type="button" class="btn-modal-cancel" id="cancelClearance">Cancel</button>
+                <button type="submit" class="btn-modal-submit">Submit Clearance</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<script>
+    // Toggle active class for sidebar links
+    document.querySelectorAll('.sidebar ul li a').forEach(link => {
+        link.addEventListener('click', function() {
+            document.querySelectorAll('.sidebar ul li a').forEach(link => link.classList.remove('active'));
+            this.classList.add('active');
+        });
+    });
+
+    // Toggle collapsible content
+    document.querySelectorAll('.collapsible-header').forEach(header => {
+        header.addEventListener('click', function() {
+            var content = this.nextElementSibling;
+            if (content.style.display === 'block') {
+                content.style.display = 'none';
+            } else {
+                // Hide all other collapsible contents
+                document.querySelectorAll('.collapsible-content').forEach(item => {
+                    if (item !== content) {
+                        item.style.display = 'none';
+                    }
+                });
+                content.style.display = 'block';
+            }
+        });
+    });
+
+    // Handle navigation for Performance Management links
+    document.querySelectorAll('.collapsible-content a').forEach(link => {
+        link.addEventListener('click', function(event) {
+            event.preventDefault(); // Prevent default link behavior
+            
+            // Perform the desired action or navigation
+            const targetUrl = this.getAttribute('href');
+            window.location.href = targetUrl; // Navigate to the target URL
+        });
+    });
+    
+    document.addEventListener("DOMContentLoaded", function() {
+        // Toggle editing for user info
+        const editBtn = document.getElementById('edit-info-btn');
+        const saveBtn = document.getElementById('save-info-btn');
+        const displayFirstName = document.getElementById('display-firstname');
+        const displayRole = document.getElementById('display-role');
+        const formInputs = document.querySelectorAll('.form-input');
+
+        if (editBtn && saveBtn) {
+            editBtn.addEventListener('click', function() {
+                displayFirstName.style.display = 'none';
+                displayRole.style.display = 'none';
+                formInputs.forEach(input => {
+                    input.style.display = 'block';
+                });
+                editBtn.style.display = 'none';
+                saveBtn.style.display = 'inline-block';
+            });
+
+            saveBtn.addEventListener('click', function() {
+                document.getElementById('edit-user-info').submit();
+            });
+        }
+
+        // Handle password reset validation
+       const resetPasswordForm = document.getElementById('reset-password-form');
+if (resetPasswordForm) {
+    resetPasswordForm.addEventListener('submit', async function(event) {
+        event.preventDefault(); // Prevent default form submission
+        
+        const newPassword = document.getElementById('new-password').value;
+        const confirmPassword = document.getElementById('confirm-password').value;
+        const submitButton = this.querySelector('.update-password-btn');
+        
+        // Client-side validation
+        if (!newPassword || !confirmPassword) {
+            alert('Please fill in both password fields.');
+            return;
+        }
+        
+        if (newPassword !== confirmPassword) {
+            alert('Passwords do not match!');
+            return;
+        }
+        
+        if (newPassword.length < 6) {
+            alert('Password must be at least 6 characters long.');
+            return;
+        }
+        
+        // Disable submit button and show loading state
+        submitButton.disabled = true;
+        submitButton.textContent = 'Updating...';
+        
+        try {
+            // Send password reset request
+            const response = await fetch('/employee/reset-password', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({
+                    newPassword: newPassword,
+                    confirmPassword: confirmPassword
+                })
+            });
+            
+            const data = await response.json();
+            
+            if (response.ok && data.success) {
+                alert('Password has been successfully updated!');
+                // Clear the form
+                document.getElementById('new-password').value = '';
+                document.getElementById('confirm-password').value = '';
+            } else {
+                alert('Error: ' + (data.error || 'Failed to update password'));
+            }
+            
+        } catch (error) {
+            console.error('Error:', error);
+            alert('An error occurred while updating password. Please try again.');
+        } finally {
+            // Re-enable submit button
+            submitButton.disabled = false;
+            submitButton.textContent = 'Update Password';
+        }
+    });
+}
+        
+        // Cancel offboarding request
+        document.querySelectorAll('.cancel-request-btn').forEach(button => {
+            button.addEventListener('click', function() {
+                const requestId = this.getAttribute('data-request-id');
+                console.log("Cancel button clicked for request ID:", requestId);
+                
+                if (confirm('Are you sure you want to cancel this offboarding request?')) {
+                    fetch('/employee/cancel-offboarding', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json'
+                        },
+                        body: JSON.stringify({ requestId })
+                    })
+                    .then(response => response.json())
+                    .then(data => {
+                        if (data.success) {
+                            alert('Offboarding request cancelled successfully.');
+                            window.location.reload();
+                        } else {
+                            alert('Failed to cancel request: ' + data.error);
+                        }
+                    })
+                    .catch(error => {
+                        console.error('Error:', error);
+                        alert('An error occurred. Please try again.');
+                    });
+                }
+            });
+        });
+        
+        // Initialize a object to store signature pads
+        window.signaturePads = {};
+
+        // Function to initialize a signature pad on a canvas element if not already done
+        function initSignaturePad(canvas) {
+        if (!window.signaturePads[canvas.id]) {
+            window.signaturePads[canvas.id] = new SignaturePad(canvas, {
+                backgroundColor: 'rgba(255, 255, 255, 0)',
+                penColor: 'black'
+            });
+        }
+    }
+
+        // View clearance form buttons (opens the modal)
+        document.querySelectorAll('.view-clearance-btn').forEach(button => {
+            button.addEventListener('click', async function() {
+                const requestId = this.getAttribute('data-request-id');
+                console.log("Clearance button clicked for request ID:", requestId);
+
+                document.getElementById('modalRequestId').value = requestId;
+                document.getElementById('requestId').value = requestId;
+                
+                try {
+                    const response = await fetch(`/employee/get-clearance-items/${requestId}`);
+                    console.log("Response status:", response.status);
+                    
+                    if (!response.ok) {
+                        throw new Error(`HTTP error! Status: ${response.status}`);
+                    }
+                    
+                    const data = await response.json();
+                    console.log("Received data:", data);
+                    
+                    if (data.success) {
+                        // Display last working day
+                        const lastDay = new Date(data.lastDay).toLocaleDateString();
+                        document.getElementById('lastDayDisplay').textContent = `Last Working Day: ${lastDay}`;
+                        
+                        // Clear and populate the table body
+                        const tableBody = document.getElementById('clearanceTableBody');
+                        tableBody.innerHTML = '';
+                        
+                        if (data.checklist && data.checklist.length > 0) {
+                            // Create a row for each checklist item
+                            data.checklist.forEach((item, index) => {
+                                const row = document.createElement('tr');
+                                
+                                row.innerHTML = `
+                                    <td>
+                                        <label>
+                                            <input type="checkbox" class="table-checkbox" data-index="${index}" />
+                                            <span>${item.task}</span>
+                                        </label>
+                                    </td>
+                                    <td>${item.contactPerson}</td>
+                                    <td>
+                                        <button type="button" class="btn-sign" data-target="signature-container-${index}">Sign Here</button>
+                                        <div id="signature-container-${index}" class="signature-container">
+                                            <canvas id="signature-canvas-${index}" class="signature-canvas" width="300" height="100"></canvas>
+                                            <div class="action-buttons">
+                                                <button type="button" class="btn-submit-signature" data-canvas="signature-canvas-${index}" data-container="signature-container-${index}">
+                                                    Submit Signature
+                                                </button>
+                                                <button type="button" class="btn-clear-signature" data-canvas="signature-canvas-${index}">Clear</button>
+                                                <button type="button" class="btn-cancel-signature" data-container="signature-container-${index}">Cancel</button>
+                                            </div>
+                                        </div>
+                                        <div id="signature-preview-${index}" class="signature-preview"></div>
+                                    </td>
+                                `;
+                                
+                                tableBody.appendChild(row);
+                            });
+                            
+                            // Show the modal
+                            document.getElementById('clearanceModal').style.display = 'flex';
+                            
+                            // Set up event listeners for the signature buttons
+                            setupSignatureButtons();
+                            
+                        } else {
+                            alert('No clearance items found. Please contact HR.');
+                        }
+                    } else {
+                        alert('Error loading clearance items: ' + (data.error || 'Unknown error'));
+                    }
+                } catch (error) {
+                    console.error('Error:', error);
+                    alert('An error occurred while loading clearance items: ' + error.message);
+                }
+            });
+        });
+
+            // Set up signature buttons event listeners
+        function setupSignatureButtons() {
+            // Show signature container on "Sign Here" click
+            document.querySelectorAll('.btn-sign').forEach((button) => {
+                button.addEventListener('click', function() {
+                    const target = this.getAttribute('data-target');
+                    const container = document.getElementById(target);
+                    container.style.display = 'block';
+                    const canvas = container.querySelector('canvas');
+                    initSignaturePad(canvas);
+                });
+            });
+
+            // Submit signature: capture and preview the signature image, then hide container
+            document.querySelectorAll('.btn-submit-signature').forEach((button) => {
+                button.addEventListener('click', function() {
+                    const canvasId = this.getAttribute('data-canvas');
+                    const containerId = this.getAttribute('data-container');
+                    const canvas = document.getElementById(canvasId);
+                    const container = document.getElementById(containerId);
+                    
+                    if (window.signaturePads[canvasId].isEmpty()) {
+                        alert('Please provide a signature before submitting.');
+                        return;
+                    }
+                    
+                    const signatureImage = window.signaturePads[canvasId].toDataURL();
+                    const index = canvasId.split('-')[2];
+                    const previewId = `signature-preview-${index}`;
+                    
+                    const previewContainer = document.getElementById(previewId);
+                    previewContainer.innerHTML = '<img src="' + signatureImage + '" alt="Signature Preview" />';
+                    container.style.display = 'none';
+                });
+            });
+
+            // Clear signature pad
+            document.querySelectorAll('.btn-clear-signature').forEach((button) => {
+                button.addEventListener('click', function() {
+                    const canvasId = this.getAttribute('data-canvas');
+                    window.signaturePads[canvasId].clear();
+                });
+            });
+
+            // Cancel signature: hide container without saving
+            document.querySelectorAll('.btn-cancel-signature').forEach((button) => {
+                button.addEventListener('click', function() {
+                    const containerId = this.getAttribute('data-container');
+                    document.getElementById(containerId).style.display = 'none';
+                });
+            });
+        }
+
+        // Close modal button
+        document.getElementById('closeModal').addEventListener('click', function() {
+            document.getElementById('clearanceModal').style.display = 'none';
+        });
+
+        // Cancel clearance button
+        document.getElementById('cancelInlineClearance').addEventListener('click', function() {
+            document.getElementById('clearanceModal').style.display = 'none';
+        });
+
+        // Submit clearance form
+        document.getElementById('modalClearanceForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+            console.log("Form submit triggered");
+            
+            // Validate: check if all items are checked
+            const checkboxes = document.querySelectorAll('.table-checkbox');
+            console.log("Found checkboxes:", checkboxes.length);
+            
+            const allChecked = Array.from(checkboxes).every(checkbox => checkbox.checked);
+            console.log("All items checked:", allChecked);
+            
+            if (!allChecked) {
+                alert('Please check all clearance items before submitting.');
+                return;
+            }
+            
+            // Validate: check if all signature previews have content
+            const signaturePreviews = document.querySelectorAll('.signature-preview');
+            console.log("Found signature previews:", signaturePreviews.length);
+
+            const allSigned = Array.from(signaturePreviews).every(preview => {
+                const hasSig = preview.innerHTML.trim() !== '';
+                console.log("Preview content:", preview.innerHTML.trim() ? "Has content" : "Empty");
+                return hasSig;
+            });
+            console.log("All items signed:", allSigned);
+            
+            if (!allSigned) {
+                alert('Please provide all required signatures before submitting.');
+                return;
+            }
+            
+            // Validate: check if employee verified checkbox is checked
+            const verifyChecked = document.getElementById('employeeVerifyCheckbox').checked;
+            console.log("Verification checkbox checked:", verifyChecked);
+            
+            if (!verifyChecked) {
+                alert('Please verify that you have completed all clearance items.');
+                return;
+            }
+            
+            // Collect all signatures
+            const allSignatures = {};
+            
+            // Get all signature previews and extract the image source
+            document.querySelectorAll('.signature-preview img').forEach((img, index) => {
+                if (img.src) {
+                    allSignatures[index] = img.src;
+                    console.log(`Added signature for index ${index} from preview`);
+                }
+            });
+
+            console.log("Total signatures collected:", Object.keys(allSignatures).length);
+            
+            // IMPORTANT: Try both request ID elements to ensure we get the value
+            let requestId = document.getElementById('requestId').value;
+            if (!requestId) {
+                requestId = document.getElementById('modalRequestId').value;
+                console.log("Using modalRequestId instead:", requestId);
+            }
+            
+            console.log("Final Request ID being used:", requestId);
+
+            if (!requestId) {
+                alert('Error: Request ID not found. Please reload the page and try again.');
+                return;
+            }
+
+            // Display loading state or disable submit button
+            const submitButton = document.querySelector('.btn-modal-submit');
+            if (submitButton) {
+                submitButton.disabled = true;
+                submitButton.textContent = 'Submitting...';
+            }
+
+            // Send data to server
+            console.log("Sending data to server:", {
+                requestId,
+                signaturesCount: Object.keys(allSignatures).length,
+                completed: true
+            });
+            
+            // Send data to server
+            fetch('/employee/submit-clearance', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({
+                    requestId: requestId,
+                    signatures: allSignatures,
+                    completed: true
+                })
+            })
+            .then(response => {
+                console.log("Response status:", response.status);
+                if (!response.ok) {
+                    throw new Error(`HTTP error! Status: ${response.status}`);
+                }
+                return response.json();
+            })
+            .then(data => {
+                console.log("Response data:", data);
+                if (data.success) {
+                    alert('Clearance submitted successfully!');
+                    document.getElementById('clearanceModal').style.display = 'none';
+                    window.location.reload();
+                } else {
+                    alert('Error: ' + (data.error || 'Unknown error occurred'));
+                    // Re-enable submit button
+                    if (submitButton) {
+                        submitButton.disabled = false;
+                        submitButton.textContent = 'Submit Clearance';
+                    }
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                alert('An error occurred. Please try again: ' + error.message);
+                // Re-enable submit button
+                if (submitButton) {
+                    submitButton.disabled = false;
+                    submitButton.textContent = 'Submit Clearance';
+                }
+            });
+        });
+    });
+        
+    </script>
+</body>
+</html>
