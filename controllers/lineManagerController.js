@@ -578,6 +578,377 @@ async function updateP3StatusesAfterEmails(passedUserIds, failedUserIds) {
     await Promise.all(updatePromises);
 }
 
+// Helper function to combine Q1 and Q2 data
+function combineMidYearData(q1Data, q2Data, employee, year) {
+    console.log('🔄 Combining Mid-Year data...');
+    
+    const hasQ1 = q1Data.success && q1Data.data;
+    const hasQ2 = q2Data.success && q2Data.data;
+    
+    // Combine objectives
+    const combinedObjectives = [];
+    const objectivesMap = new Map();
+    
+    // Process Q1 objectives
+    if (hasQ1 && q1Data.data.objectives) {
+        q1Data.data.objectives.forEach(obj => {
+            objectivesMap.set(obj.objectiveId || obj.objective, {
+                ...obj,
+                q1Rating: obj.averageRating,
+                q2Rating: null,
+                combinedRating: obj.averageRating
+            });
+        });
+    }
+    
+    // Process Q2 objectives and combine
+    if (hasQ2 && q2Data.data.objectives) {
+        q2Data.data.objectives.forEach(obj => {
+            const key = obj.objectiveId || obj.objective;
+            if (objectivesMap.has(key)) {
+                const existing = objectivesMap.get(key);
+                existing.q2Rating = obj.averageRating;
+                existing.combinedRating = ((existing.q1Rating || 0) + (obj.averageRating || 0)) / 2;
+                existing.averageRating = existing.combinedRating.toFixed(2);
+            } else {
+                objectivesMap.set(key, {
+                    ...obj,
+                    q1Rating: null,
+                    q2Rating: obj.averageRating,
+                    combinedRating: obj.averageRating,
+                    averageRating: obj.averageRating
+                });
+            }
+        });
+    }
+    
+    combinedObjectives.push(...objectivesMap.values());
+    
+    // Combine skills (similar logic)
+    const combinedHardSkills = combineSkillsData(
+        hasQ1 ? q1Data.data.hardSkills : [],
+        hasQ2 ? q2Data.data.hardSkills : []
+    );
+    
+    const combinedSoftSkills = combineSkillsData(
+        hasQ1 ? q1Data.data.softSkills : [],
+        hasQ2 ? q2Data.data.softSkills : []
+    );
+    
+    // Calculate combined summary
+    const summary = calculateCombinedSummary(combinedObjectives, combinedHardSkills, combinedSoftSkills);
+    
+    return {
+        employee: employee,
+        year: year,
+        reportType: 'midyear',
+        period: 'Q1 + Q2 (Mid-Year)',
+        quarters: ['Q1', 'Q2'],
+        hasQ1: hasQ1,
+        hasQ2: hasQ2,
+        objectives: combinedObjectives,
+        hardSkills: combinedHardSkills,
+        softSkills: combinedSoftSkills,
+        summary: summary,
+        q1Summary: hasQ1 ? q1Data.data.summary : null,
+        q2Summary: hasQ2 ? q2Data.data.summary : null
+    };
+}
+
+// Helper function to combine skills data
+function combineSkillsData(q1Skills, q2Skills) {
+    const skillsMap = new Map();
+    
+    // Process Q1 skills
+    q1Skills.forEach(skill => {
+        skillsMap.set(skill.skillName, {
+            ...skill,
+            q1Rating: skill.averageRating,
+            q2Rating: null,
+            combinedRating: skill.averageRating
+        });
+    });
+    
+    // Process Q2 skills and combine
+    q2Skills.forEach(skill => {
+        if (skillsMap.has(skill.skillName)) {
+            const existing = skillsMap.get(skill.skillName);
+            existing.q2Rating = skill.averageRating;
+            existing.combinedRating = ((existing.q1Rating || 0) + (skill.averageRating || 0)) / 2;
+            existing.averageRating = existing.combinedRating.toFixed(2);
+        } else {
+            skillsMap.set(skill.skillName, {
+                ...skill,
+                q1Rating: null,
+                q2Rating: skill.averageRating,
+                combinedRating: skill.averageRating,
+                averageRating: skill.averageRating
+            });
+        }
+    });
+    
+    return Array.from(skillsMap.values());
+}
+
+// Helper function to calculate combined summary
+function calculateCombinedSummary(objectives, hardSkills, softSkills) {
+    const objectivesCount = objectives.length;
+    const averageObjectiveRating = objectivesCount > 0 
+        ? objectives.reduce((sum, obj) => sum + parseFloat(obj.averageRating || 0), 0) / objectivesCount 
+        : 0;
+
+    const hardSkillsCount = hardSkills.length;
+    const averageHardSkillRating = hardSkillsCount > 0 
+        ? hardSkills.reduce((sum, skill) => sum + parseFloat(skill.averageRating || 0), 0) / hardSkillsCount 
+        : 0;
+    
+    const softSkillsCount = softSkills.length;
+    const averageSoftSkillRating = softSkillsCount > 0 
+        ? softSkills.reduce((sum, skill) => sum + parseFloat(skill.averageRating || 0), 0) / softSkillsCount 
+        : 0;
+    
+    // Calculate overall performance score
+    let overallPerformanceScore = 0;
+    let totalComponents = 0;
+    
+    if (objectivesCount > 0) {
+        overallPerformanceScore += averageObjectiveRating * 0.5;
+        totalComponents += 0.5;
+    }
+    
+    if (hardSkillsCount > 0) {
+        overallPerformanceScore += averageHardSkillRating * 0.3;
+        totalComponents += 0.3;
+    }
+    
+    if (softSkillsCount > 0) {
+        overallPerformanceScore += averageSoftSkillRating * 0.2;
+        totalComponents += 0.2;
+    }
+    
+    if (totalComponents > 0) {
+        overallPerformanceScore = overallPerformanceScore / totalComponents;
+    }
+    
+    return {
+        objectivesCount,
+        averageObjectiveRating: parseFloat(averageObjectiveRating.toFixed(2)),
+        hardSkillsCount,
+        averageHardSkillRating: parseFloat(averageHardSkillRating.toFixed(2)),
+        softSkillsCount,
+        averageSoftSkillRating: parseFloat(averageSoftSkillRating.toFixed(2)),
+        overallPerformanceScore: parseFloat(overallPerformanceScore.toFixed(2))
+    };
+}
+
+// Helper function to combine Q3 and Q4 data
+function combineFinalYearData(q3Data, q4Data, employee, year) {
+    console.log('🔄 Combining Final-Year data...');
+    
+    const hasQ3 = q3Data.success && q3Data.data;
+    const hasQ4 = q4Data.success && q4Data.data;
+    
+    // Combine objectives
+    const combinedObjectives = [];
+    const objectivesMap = new Map();
+    
+    // Process Q3 objectives
+    if (hasQ3 && q3Data.data.objectives) {
+        q3Data.data.objectives.forEach(obj => {
+            objectivesMap.set(obj.objectiveId || obj.objective, {
+                ...obj,
+                q3Rating: obj.averageRating,
+                q4Rating: null,
+                combinedRating: obj.averageRating
+            });
+        });
+    }
+    
+    // Process Q4 objectives and combine
+    if (hasQ4 && q4Data.data.objectives) {
+        q4Data.data.objectives.forEach(obj => {
+            const key = obj.objectiveId || obj.objective;
+            if (objectivesMap.has(key)) {
+                const existing = objectivesMap.get(key);
+                existing.q4Rating = obj.averageRating;
+                existing.combinedRating = ((existing.q3Rating || 0) + (obj.averageRating || 0)) / 2;
+                existing.averageRating = existing.combinedRating.toFixed(2);
+            } else {
+                objectivesMap.set(key, {
+                    ...obj,
+                    q3Rating: null,
+                    q4Rating: obj.averageRating,
+                    combinedRating: obj.averageRating,
+                    averageRating: obj.averageRating
+                });
+            }
+        });
+    }
+    
+    combinedObjectives.push(...objectivesMap.values());
+    
+    // Combine skills
+    const combinedHardSkills = combineFinalYearSkillsData(
+        hasQ3 ? q3Data.data.hardSkills : [],
+        hasQ4 ? q4Data.data.hardSkills : []
+    );
+    
+    const combinedSoftSkills = combineFinalYearSkillsData(
+        hasQ3 ? q3Data.data.softSkills : [],
+        hasQ4 ? q4Data.data.softSkills : []
+    );
+    
+    // Calculate combined summary
+    const summary = calculateCombinedSummary(combinedObjectives, combinedHardSkills, combinedSoftSkills);
+    
+    return {
+        employee: employee,
+        year: year,
+        reportType: 'finalyear',
+        period: 'Q3 + Q4 (Final-Year)',
+        quarters: ['Q3', 'Q4'],
+        hasQ3: hasQ3,
+        hasQ4: hasQ4,
+        objectives: combinedObjectives,
+        hardSkills: combinedHardSkills,
+        softSkills: combinedSoftSkills,
+        summary: summary,
+        q3Summary: hasQ3 ? q3Data.data.summary : null,
+        q4Summary: hasQ4 ? q4Data.data.summary : null
+    };
+}
+
+// Helper function to combine skills data for final year
+function combineFinalYearSkillsData(q3Skills, q4Skills) {
+    const skillsMap = new Map();
+    
+    // Process Q3 skills
+    q3Skills.forEach(skill => {
+        skillsMap.set(skill.skillName, {
+            ...skill,
+            q3Rating: skill.averageRating,
+            q4Rating: null,
+            combinedRating: skill.averageRating
+        });
+    });
+    
+    // Process Q4 skills and combine
+    q4Skills.forEach(skill => {
+        if (skillsMap.has(skill.skillName)) {
+            const existing = skillsMap.get(skill.skillName);
+            existing.q4Rating = skill.averageRating;
+            existing.combinedRating = ((existing.q3Rating || 0) + (skill.averageRating || 0)) / 2;
+            existing.averageRating = existing.combinedRating.toFixed(2);
+        } else {
+            skillsMap.set(skill.skillName, {
+                ...skill,
+                q3Rating: null,
+                q4Rating: skill.averageRating,
+                combinedRating: skill.averageRating,
+                averageRating: skill.averageRating
+            });
+        }
+    });
+    
+    return Array.from(skillsMap.values());
+}
+
+// Helper function to generate comparison data
+function generateComparisonData(midYearData, finalYearData, employee, year) {
+    console.log('🔄 Generating comparison data...');
+    
+    return {
+        employee: employee,
+        year: year,
+        reportType: 'comparison',
+        period: 'Mid-Year vs Final-Year Comparison',
+        midYearData: midYearData,
+        finalYearData: finalYearData,
+        midYearSummary: midYearData.summary,
+        finalYearSummary: finalYearData.summary,
+        
+        // Combined view for tables (showing both periods)
+        objectives: combineObjectivesForComparison(midYearData.objectives, finalYearData.objectives),
+        hardSkills: combineSkillsForComparison(midYearData.hardSkills, finalYearData.hardSkills),
+        softSkills: combineSkillsForComparison(midYearData.softSkills, finalYearData.softSkills),
+        
+        // Performance trends
+        trends: calculatePerformanceTrends(midYearData.summary, finalYearData.summary)
+    };
+}
+
+// Helper function to combine objectives for comparison
+function combineObjectivesForComparison(midYearObjectives, finalYearObjectives) {
+    const objectivesMap = new Map();
+    
+    // Add mid-year objectives
+    midYearObjectives.forEach(obj => {
+        objectivesMap.set(obj.objective, {
+            ...obj,
+            midYearRating: obj.averageRating,
+            finalYearRating: null
+        });
+    });
+    
+    // Add final-year objectives
+    finalYearObjectives.forEach(obj => {
+        if (objectivesMap.has(obj.objective)) {
+            objectivesMap.get(obj.objective).finalYearRating = obj.averageRating;
+        } else {
+            objectivesMap.set(obj.objective, {
+                ...obj,
+                midYearRating: null,
+                finalYearRating: obj.averageRating
+            });
+        }
+    });
+    
+    return Array.from(objectivesMap.values());
+}
+
+// Helper function to combine skills for comparison
+function combineSkillsForComparison(midYearSkills, finalYearSkills) {
+    const skillsMap = new Map();
+    
+    // Add mid-year skills
+    midYearSkills.forEach(skill => {
+        skillsMap.set(skill.skillName, {
+            ...skill,
+            midYearRating: skill.averageRating,
+            finalYearRating: null
+        });
+    });
+    
+    // Add final-year skills
+    finalYearSkills.forEach(skill => {
+        if (skillsMap.has(skill.skillName)) {
+            skillsMap.get(skill.skillName).finalYearRating = skill.averageRating;
+        } else {
+            skillsMap.set(skill.skillName, {
+                ...skill,
+                midYearRating: null,
+                finalYearRating: skill.averageRating
+            });
+        }
+    });
+    
+    return Array.from(skillsMap.values());
+}
+
+// Helper function to calculate performance trends
+function calculatePerformanceTrends(midYearSummary, finalYearSummary) {
+    const objectivesTrend = (finalYearSummary.averageObjectiveRating || 0) - (midYearSummary.averageObjectiveRating || 0);
+    const hardSkillsTrend = (finalYearSummary.averageHardSkillRating || 0) - (midYearSummary.averageHardSkillRating || 0);
+    const softSkillsTrend = (finalYearSummary.averageSoftSkillRating || 0) - (midYearSummary.averageSoftSkillRating || 0);
+    const overallTrend = (finalYearSummary.overallPerformanceScore || 0) - (midYearSummary.overallPerformanceScore || 0);
+    
+    return {
+        objectivesTrend: parseFloat(objectivesTrend.toFixed(2)),
+        hardSkillsTrend: parseFloat(hardSkillsTrend.toFixed(2)),
+        softSkillsTrend: parseFloat(softSkillsTrend.toFixed(2)),
+        overallTrend: parseFloat(overallTrend.toFixed(2))
+    };
+}
 
 const lineManagerController = {
     
@@ -17943,817 +18314,136 @@ getDepartmentEmployeesForFeedbackReports: async function(req, res) {
     }
 },
 generateQuarterlyFeedbackReport: async function(req, res) {
-        try {
-            const { userId } = req.params;
-            const { quarter, year = new Date().getFullYear() } = req.query;
+    try {
+        const { employeeId: userId } = req.query;
+        const { quarter, year = new Date().getFullYear()} = req.query;
+        
+        console.log(`🎯 Generating quarterly feedback report for user ${userId}, ${quarter} ${year}`);
+        
+        // Validation
+        if (!userId) {
+            return res.status(400).json({
+                success: false,
+                message: "User ID is required."
+            });
+        }
+        
+        if (!quarter) {
+            return res.status(400).json({
+                success: false,
+                message: "Quarter parameter is required."
+            });
+        }
+        
+        if (!['Q1', 'Q2', 'Q3', 'Q4'].includes(quarter)) {
+            return res.status(400).json({
+                success: false,
+                message: "Quarter must be Q1, Q2, Q3, or Q4."
+            });
+        }
+        
+        const yearNum = parseInt(year);
+        if (isNaN(yearNum) || yearNum < 2020 || yearNum > 2030) {
+            return res.status(400).json({
+                success: false,
+                message: "Invalid year provided."
+            });
+        }
+        
+        // Get employee data
+        const { data: employeeData, error: employeeError } = await supabase
+            .from('staffaccounts')
+            .select(`
+                firstName,
+                lastName,
+                jobId,
+                departmentId,
+                hireDate,
+                jobpositions!inner (jobTitle),
+                departments!inner (deptName),
+                useraccounts!inner (userEmail)
+            `)
+            .eq('userId', userId)
+            .single();
             
-            console.log(`🎯 Generating quarterly feedback report for user ${userId}, ${quarter} ${year}`);
-            console.log('📋 Request params:', req.params);
-            console.log('📋 Request query:', req.query);
-            
-            // Validation
-            if (!userId) {
-                console.error('❌ Missing userId parameter');
-                return res.status(400).json({
-                    success: false,
-                    message: "User ID is required."
-                });
-            }
-            
-            if (!quarter) {
-                console.error('❌ Missing quarter parameter');
-                return res.status(400).json({
-                    success: false,
-                    message: "Quarter parameter is required."
-                });
-            }
-            
-            if (!['Q1', 'Q2', 'Q3', 'Q4'].includes(quarter)) {
-                console.error('❌ Invalid quarter format:', quarter);
-                return res.status(400).json({
-                    success: false,
-                    message: "Quarter must be Q1, Q2, Q3, or Q4."
-                });
-            }
-            
-            const yearNum = parseInt(year);
-            if (isNaN(yearNum) || yearNum < 2020 || yearNum > 2030) {
-                console.error('❌ Invalid year:', year);
-                return res.status(400).json({
-                    success: false,
-                    message: "Invalid year provided."
-                });
-            }
-            
-            // Get employee data
-            console.log('📊 Fetching employee data for userId:', userId);
-            const { data: employeeData, error: employeeError } = await supabase
+        if (employeeError || !employeeData) {
+            return res.status(404).json({
+                success: false,
+                message: "Employee not found."
+            });
+        }
+        
+        // Get line manager data
+        let lineManagerData = null;
+        if (req.session?.user?.userId) {
+            const { data: lmData } = await supabase
                 .from('staffaccounts')
                 .select(`
                     firstName,
                     lastName,
-                    jobId,
-                    departmentId,
-                    hireDate,
-                    jobpositions!inner (jobTitle),
-                    departments!inner (deptName),
-                    useraccounts!inner (userEmail)
+                    jobpositions!inner (jobTitle)
                 `)
-                .eq('userId', userId)
+                .eq('userId', req.session.user.userId)
                 .single();
-                
-            if (employeeError) {
-                console.error('❌ Employee data fetch error:', employeeError);
-                return res.status(404).json({
-                    success: false,
-                    message: "Employee not found.",
-                    error: employeeError.message
-                });
+            
+            if (lmData) {
+                lineManagerData = lmData;
             }
-            
-            if (!employeeData) {
-                console.error('❌ No employee data found for userId:', userId);
-                return res.status(404).json({
-                    success: false,
-                    message: "Employee not found."
-                });
-            }
-            
-            console.log('✅ Employee data found:', employeeData.firstName, employeeData.lastName);
-            
-            // Get line manager data (optional)
-            let lineManagerData = null;
-            if (req.session?.user?.userId) {
-                const { data: lmData } = await supabase
-                    .from('staffaccounts')
-                    .select(`
-                        firstName,
-                        lastName,
-                        jobpositions!inner (jobTitle)
-                    `)
-                    .eq('userId', req.session.user.userId)
-                    .single();
-                
-                if (lmData) {
-                    lineManagerData = lmData;
-                    console.log('✅ Line manager data found:', lineManagerData.firstName, lineManagerData.lastName);
-                }
-            }
-            
-            // Get feedback data
-            const feedbackIdField = `feedback${quarter.toLowerCase()}_Id`;
-            const feedbackTable = `feedbacks_${quarter}`;
-            
-            console.log('📊 Looking for feedback in table:', feedbackTable, 'with field:', feedbackIdField);
-            
-            const { data: feedbackRecord, error: feedbackError } = await supabase
-                .from(feedbackTable)
-                .select(`
-                    ${feedbackIdField},
-                    setStartDate,
-                    setEndDate,
-                    year
-                `)
-                .eq('userId', userId)
-                .eq('year', yearNum)
-                .single();
-                
-            if (feedbackError) {
-                console.error('❌ Feedback record fetch error:', feedbackError);
-                return res.status(404).json({
-                    success: false,
-                    message: `No ${quarter} feedback found for ${year}.`,
-                    error: feedbackError.message
-                });
-            }
-            
-            if (!feedbackRecord) {
-                console.log('❌ No feedback record found for:', { userId, quarter, year: yearNum });
-                return res.status(404).json({
-                    success: false,
-                    message: `No ${quarter} feedback record found for ${year}.`
-                });
-            }
-            
-            const feedbackId = feedbackRecord[feedbackIdField];
-            console.log('✅ Feedback ID found:', feedbackId);
-            
-            // Get objectives and skills data
-            console.log('📊 Fetching objectives and skills data...');
-            
-            // Simple objectives data fetch
-            let objectivesData = [];
-            try {
-                const { data: objData } = await supabase
-                    .from('feedbacks_answers')
-                    .select('objectiveAnswers')
-                    .eq(feedbackIdField, feedbackId)
-                    .not('objectiveAnswers', 'is', null);
-                
-                if (objData && objData.length > 0) {
-                    const objectivesMap = new Map();
-                    
-                    objData.forEach(response => {
-                        if (response.objectiveAnswers && Array.isArray(response.objectiveAnswers)) {
-                            response.objectiveAnswers.forEach(obj => {
-                                if (obj.objectiveId) {
-                                    const key = obj.objectiveId;
-                                    
-                                    if (!objectivesMap.has(key)) {
-                                        objectivesMap.set(key, {
-                                            objective: obj.objectiveName || obj.objectiveDescrpt || 'Unknown Objective',
-                                            kpi: obj.objectiveKPI || 'N/A',
-                                            target: obj.objectiveTarget || 'N/A',
-                                            weight: obj.objectiveWeight || 0,
-                                            ratings: []
-                                        });
-                                    }
-                                    
-                                    if (obj.rating && obj.rating > 0) {
-                                        objectivesMap.get(key).ratings.push(obj.rating);
-                                    }
-                                }
-                            });
-                        }
-                    });
-                    
-                    objectivesData = Array.from(objectivesMap.values()).map(obj => ({
-                        ...obj,
-                        averageRating: obj.ratings.length > 0 
-                            ? parseFloat((obj.ratings.reduce((sum, r) => sum + r, 0) / obj.ratings.length).toFixed(2))
-                            : 0
-                    }));
-                }
-                
-                console.log('✅ Processed objectives:', objectivesData.length);
-            } catch (objError) {
-                console.error('⚠️ Error fetching objectives:', objError);
-            }
-            
-            // Simple skills data fetch
-            let skillsData = { hardSkills: [], softSkills: [] };
-            try {
-                const { data: skillData } = await supabase
-                    .from('feedbacks_answers')
-                    .select('skillRatings')
-                    .eq(feedbackIdField, feedbackId)
-                    .not('skillRatings', 'is', null);
-                
-                if (skillData && skillData.length > 0) {
-                    const skillsMap = new Map();
-                    
-                    skillData.forEach(response => {
-                        if (response.skillRatings && typeof response.skillRatings === 'object') {
-                            Object.entries(response.skillRatings).forEach(([skillName, skillInfo]) => {
-                                if (skillInfo && skillInfo.rating) {
-                                    if (!skillsMap.has(skillName)) {
-                                        skillsMap.set(skillName, {
-                                            skillName: skillName,
-                                            skillType: skillInfo.skillType || 'Soft',
-                                            ratings: []
-                                        });
-                                    }
-                                    
-                                    skillsMap.get(skillName).ratings.push(skillInfo.rating);
-                                }
-                            });
-                        }
-                    });
-                    
-                    skillsMap.forEach(skill => {
-                        const averageRating = skill.ratings.length > 0 
-                            ? parseFloat((skill.ratings.reduce((sum, r) => sum + r, 0) / skill.ratings.length).toFixed(2))
-                            : 0;
-                        
-                        const processedSkill = {
-                            skillName: skill.skillName,
-                            averageRating: averageRating
-                        };
-                        
-                        if (skill.skillType === 'Hard') {
-                            skillsData.hardSkills.push(processedSkill);
-                        } else {
-                            skillsData.softSkills.push(processedSkill);
-                        }
-                    });
-                }
-                
-                console.log('✅ Processed skills:', {
-                    hardSkills: skillsData.hardSkills.length,
-                    softSkills: skillsData.softSkills.length
-                });
-            } catch (skillError) {
-                console.error('⚠️ Error fetching skills:', skillError);
-            }
-            
-            // Calculate summary
-            const objectivesCount = objectivesData.length;
-            const averageObjectiveRating = objectivesCount > 0 
-                ? objectivesData.reduce((sum, obj) => sum + obj.averageRating, 0) / objectivesCount 
-                : 0;
-            
-            const hardSkillsCount = skillsData.hardSkills.length;
-            const averageHardSkillRating = hardSkillsCount > 0 
-                ? skillsData.hardSkills.reduce((sum, skill) => sum + skill.averageRating, 0) / hardSkillsCount 
-                : 0;
-            
-            const softSkillsCount = skillsData.softSkills.length;
-            const averageSoftSkillRating = softSkillsCount > 0 
-                ? skillsData.softSkills.reduce((sum, skill) => sum + skill.averageRating, 0) / softSkillsCount 
-                : 0;
-            
-            // Simple overall score calculation
-            let overallScore = 0;
-            let components = 0;
-            
-            if (objectivesCount > 0) {
-                overallScore += averageObjectiveRating * 0.5;
-                components += 0.5;
-            }
-            if (hardSkillsCount > 0) {
-                overallScore += averageHardSkillRating * 0.3;
-                components += 0.3;
-            }
-            if (softSkillsCount > 0) {
-                overallScore += averageSoftSkillRating * 0.2;
-                components += 0.2;
-            }
-            
-            if (components > 0) {
-                overallScore = overallScore / components;
-            }
-            
-            const summary = {
-                objectivesCount,
-                averageObjectiveRating: parseFloat(averageObjectiveRating.toFixed(2)),
-                hardSkillsCount,
-                averageHardSkillRating: parseFloat(averageHardSkillRating.toFixed(2)),
-                softSkillsCount,
-                averageSoftSkillRating: parseFloat(averageSoftSkillRating.toFixed(2)),
-                overallPerformanceScore: parseFloat(overallScore.toFixed(2))
-            };
-            
-            // Prepare report data
-            const reportData = {
-                employee: employeeData,
-                lineManager: lineManagerData,
+        }
+        
+        // Get feedback data using helper functions
+        const feedbackData = await lineManagerController.getQuarterlyFeedbackData(userId, quarter, yearNum);
+        
+        if (!feedbackData.success) {
+            return res.status(404).json({
+                success: false,
+                message: `No ${quarter} feedback found for ${year}.`
+            });
+        }
+        
+        // Get respondent counts
+        const respondentCounts = await lineManagerController.getRespondentCounts(userId, yearNum);
+        
+        // Prepare report data
+        const reportData = {
+            employee: {
+                ...employeeData,
+                fullName: `${employeeData.firstName} ${employeeData.lastName}`
+            },
+            lineManager: lineManagerData ? {
+                ...lineManagerData,
+                fullName: `${lineManagerData.firstName} ${lineManagerData.lastName}`
+            } : null,
+            reportingPeriod: {
                 quarter,
                 year: yearNum,
-                reportingPeriod: {
-                    start: feedbackRecord.setStartDate,
-                    end: feedbackRecord.setEndDate
-                },
-                objectives: objectivesData,
-                skills: skillsData,
-                summary: summary,
-                respondentCounts: { Q1: 0, Q2: 0, Q3: 0, Q4: 0, total: 0 } // Simplified for now
-            };
-            
-            console.log('📄 Generating PDF...');
-            
-            // Generate PDF
-            const pdfBuffer = await this.generateSimplePDF(reportData);
-            
-            if (!pdfBuffer || pdfBuffer.length === 0) {
-                console.error('❌ PDF generation failed - empty buffer');
-                return res.status(500).json({
-                    success: false,
-                    message: "Failed to generate PDF report."
-                });
-            }
-            
-            console.log('✅ PDF generated successfully, size:', pdfBuffer.length, 'bytes');
-            
-            // Send PDF response
-            const fileName = `Quarterly_Feedback_Report_${employeeData.firstName}_${employeeData.lastName}_${quarter}_${year}.pdf`;
-            
-            res.setHeader('Content-Type', 'application/pdf');
-            res.setHeader('Content-Disposition', `attachment; filename="${fileName}"`);
-            res.setHeader('Content-Length', pdfBuffer.length);
-            res.setHeader('Cache-Control', 'no-cache, no-store, must-revalidate');
-            res.setHeader('Pragma', 'no-cache');
-            res.setHeader('Expires', '0');
-            
-            console.log('📤 Sending PDF response...');
-            return res.end(pdfBuffer);
-            
-        } catch (error) {
-            console.error('❌ Error in generateQuarterlyFeedbackReport:', error);
-            return res.status(500).json({
-                success: false,
-                message: "An error occurred while generating the report.",
-                error: error.message
-            });
-        }
-    },
-
-    // Simple PDF generation function
-    generateSimplePDF: function(data) {
-        return new Promise((resolve, reject) => {
-            try {
-                console.log('📄 Starting PDF generation...');
-                
-                const doc = new PDFDocument({
-                    margin: 50,
-                    size: 'A4'
-                });
-                
-                const buffers = [];
-                doc.on('data', buffers.push.bind(buffers));
-                doc.on('end', () => {
-                    try {
-                        const pdfBuffer = Buffer.concat(buffers);
-                        console.log('✅ PDF buffer created, size:', pdfBuffer.length);
-                        resolve(pdfBuffer);
-                    } catch (bufferError) {
-                        console.error('❌ Error creating PDF buffer:', bufferError);
-                        reject(bufferError);
-                    }
-                });
-                doc.on('error', (error) => {
-                    console.error('❌ PDF generation error:', error);
-                    reject(error);
-                });
-                
-                // Add content to PDF
-                this.addSimplePDFContent(doc, data);
-                
-                doc.end();
-                
-            } catch (error) {
-                console.error('❌ Error in PDF generation setup:', error);
-                reject(error);
-            }
-        });
-    },
-// ===== COMPLETE addSimplePDFContent FUNCTION =====
-addSimplePDFContent: function(doc, data) {
-    try {
-        console.log('📄 Adding PDF content...');
-        
-        // Title
-        doc.fontSize(20)
-           .font('Helvetica-Bold')
-           .fillColor('#2c3e50')
-           .text('Quarterly 360° Feedback Report', 50, 50, { align: 'center' });
-        
-        doc.moveDown(2);
-        
-        // Employee Information Section
-        doc.fontSize(16)
-           .font('Helvetica-Bold')
-           .fillColor('#34495e')
-           .text('Employee Information', 50, doc.y);
-        
-        doc.moveDown(0.5);
-        
-        // Employee details
-        doc.fontSize(12)
-           .font('Helvetica')
-           .fillColor('#2c3e50')
-           .text(`Name: ${data.employee.firstName} ${data.employee.lastName}`, 70, doc.y)
-           .text(`Position: ${data.employee.jobpositions?.jobTitle || 'N/A'}`, 70, doc.y + 20)
-           .text(`Department: ${data.employee.departments?.deptName || 'N/A'}`, 70, doc.y + 40)
-           .text(`Email: ${data.employee.useraccounts?.userEmail || 'N/A'}`, 70, doc.y + 60)
-           .text(`Report Period: ${data.quarter} ${data.year}`, 70, doc.y + 80);
-        
-        // Add reporting period dates if available
-        if (data.reportingPeriod && data.reportingPeriod.start && data.reportingPeriod.end) {
-            const startDate = new Date(data.reportingPeriod.start).toLocaleDateString();
-            const endDate = new Date(data.reportingPeriod.end).toLocaleDateString();
-            doc.text(`Period: ${startDate} - ${endDate}`, 70, doc.y + 100);
-            doc.y += 120;
-        } else {
-            doc.y += 100;
-        }
-        
-        doc.moveDown(1.5);
-        
-        // Objectives Assessment Section
-        if (doc.y > 650) {
-            doc.addPage();
-            doc.y = 50;
-        }
-        
-        doc.fontSize(16)
-           .font('Helvetica-Bold')
-           .fillColor('#34495e')
-           .text('Objectives Assessment', 50, doc.y);
-        
-        doc.moveDown(0.5);
-        
-        if (!data.objectives || data.objectives.length === 0) {
-            doc.fontSize(12)
-               .font('Helvetica')
-               .fillColor('#7f8c8d')
-               .text('No objectives data available for this reporting period.', 70, doc.y);
-            doc.moveDown(1);
-        } else {
-            doc.fontSize(11)
-               .font('Helvetica')
-               .fillColor('#2c3e50')
-               .text(`Total Objectives Evaluated: ${data.objectives.length}`, 70, doc.y);
-            
-            doc.moveDown(0.5);
-            
-            data.objectives.forEach((objective, index) => {
-                // Check if we need a new page
-                if (doc.y > 700) {
-                    doc.addPage();
-                    doc.y = 50;
-                }
-                
-                doc.fontSize(11)
-                   .font('Helvetica-Bold')
-                   .fillColor('#2c3e50')
-                   .text(`${index + 1}. ${objective.objective}`, 70, doc.y);
-                
-                doc.fontSize(10)
-                   .font('Helvetica')
-                   .fillColor('#34495e')
-                   .text(`KPI: ${objective.kpi}`, 90, doc.y + 15)
-                   .text(`Target: ${objective.target}`, 90, doc.y + 28)
-                   .text(`Weight: ${(objective.weight * 100).toFixed(1)}%`, 90, doc.y + 41)
-                   .text(`Average Rating: ${objective.averageRating}/5.0`, 90, doc.y + 54);
-                
-                doc.y += 75;
-            });
-        }
-        
-        doc.moveDown(1);
-        
-        // Skills Assessment Section
-        if (doc.y > 600) {
-            doc.addPage();
-            doc.y = 50;
-        }
-        
-        doc.fontSize(16)
-           .font('Helvetica-Bold')
-           .fillColor('#34495e')
-           .text('Skills Assessment', 50, doc.y);
-        
-        doc.moveDown(0.5);
-        
-        // Hard Skills Subsection
-        doc.fontSize(14)
-           .font('Helvetica-Bold')
-           .fillColor('#e67e22')
-           .text('Hard Skills', 70, doc.y);
-        
-        doc.moveDown(0.3);
-        
-        if (!data.skills.hardSkills || data.skills.hardSkills.length === 0) {
-            doc.fontSize(11)
-               .font('Helvetica')
-               .fillColor('#7f8c8d')
-               .text('No hard skills data available.', 90, doc.y);
-        } else {
-            data.skills.hardSkills.forEach((skill, index) => {
-                if (doc.y > 720) {
-                    doc.addPage();
-                    doc.y = 50;
-                }
-                
-                doc.fontSize(10)
-                   .font('Helvetica')
-                   .fillColor('#2c3e50')
-                   .text(`• ${skill.skillName}: ${skill.averageRating}/5.0`, 90, doc.y);
-                doc.y += 15;
-            });
-        }
-        
-        doc.moveDown(0.8);
-        
-        // Soft Skills Subsection
-        if (doc.y > 650) {
-            doc.addPage();
-            doc.y = 50;
-        }
-        
-        doc.fontSize(14)
-           .font('Helvetica-Bold')
-           .fillColor('#9b59b6')
-           .text('Soft Skills', 70, doc.y);
-        
-        doc.moveDown(0.3);
-        
-        if (!data.skills.softSkills || data.skills.softSkills.length === 0) {
-            doc.fontSize(11)
-               .font('Helvetica')
-               .fillColor('#7f8c8d')
-               .text('No soft skills data available.', 90, doc.y);
-        } else {
-            data.skills.softSkills.forEach((skill, index) => {
-                if (doc.y > 720) {
-                    doc.addPage();
-                    doc.y = 50;
-                }
-                
-                doc.fontSize(10)
-                   .font('Helvetica')
-                   .fillColor('#2c3e50')
-                   .text(`• ${skill.skillName}: ${skill.averageRating}/5.0`, 90, doc.y);
-                doc.y += 15;
-            });
-        }
-        
-        doc.moveDown(1.5);
-        
-        // Performance Summary Section
-        if (doc.y > 600) {
-            doc.addPage();
-            doc.y = 50;
-        }
-        
-        doc.fontSize(16)
-           .font('Helvetica-Bold')
-           .fillColor('#34495e')
-           .text('Performance Summary', 50, doc.y);
-        
-        doc.moveDown(0.8);
-        
-        const summary = data.summary;
-        
-        // Create a summary box
-        const boxY = doc.y;
-        const boxHeight = 140;
-        const boxWidth = doc.page.width - 100;
-        
-        // Draw background box
-        doc.rect(50, boxY, boxWidth, boxHeight)
-           .fillColor('#f8f9fa')
-           .fill()
-           .rect(50, boxY, boxWidth, boxHeight)
-           .strokeColor('#dee2e6')
-           .lineWidth(1)
-           .stroke();
-        
-        // Add summary content
-        doc.fontSize(12)
-           .font('Helvetica')
-           .fillColor('#2c3e50')
-           .text(`Objectives Evaluated: ${summary.objectivesCount}`, 70, boxY + 20)
-           .text(`Average Objective Rating: ${summary.averageObjectiveRating}/5.0`, 300, boxY + 20)
-           
-           .text(`Hard Skills Evaluated: ${summary.hardSkillsCount}`, 70, boxY + 40)
-           .text(`Average Hard Skills Rating: ${summary.averageHardSkillRating}/5.0`, 300, boxY + 40)
-           
-           .text(`Soft Skills Evaluated: ${summary.softSkillsCount}`, 70, boxY + 60)
-           .text(`Average Soft Skills Rating: ${summary.averageSoftSkillRating}/5.0`, 300, boxY + 60);
-        
-        // Overall Performance Score - highlighted
-        doc.fontSize(16)
-           .font('Helvetica-Bold')
-           .fillColor('#e74c3c')
-           .text(`Overall Performance Score: ${summary.overallPerformanceScore}/5.0`, 70, boxY + 95);
-        
-        doc.y = boxY + boxHeight + 30;
-        
-        // Line Manager Information (if available)
-        if (data.lineManager) {
-            doc.moveDown(1);
-            
-            doc.fontSize(14)
-               .font('Helvetica-Bold')
-               .fillColor('#34495e')
-               .text('Reviewed By', 50, doc.y);
-            
-            doc.moveDown(0.5);
-            
-            doc.fontSize(12)
-               .font('Helvetica')
-               .fillColor('#2c3e50')
-               .text(`Line Manager: ${data.lineManager.firstName} ${data.lineManager.lastName}`, 70, doc.y)
-               .text(`Position: ${data.lineManager.jobpositions?.jobTitle || 'N/A'}`, 70, doc.y + 20);
-            
-            doc.y += 50;
-        }
-        
-        // Footer
-        const footerY = doc.page.height - 80;
-        
-        // Add separator line
-        doc.moveTo(50, footerY)
-           .lineTo(doc.page.width - 50, footerY)
-           .strokeColor('#bdc3c7')
-           .lineWidth(1)
-           .stroke();
-        
-        // Footer content
-        doc.fontSize(9)
-           .font('Helvetica')
-           .fillColor('#6c757d')
-           .text(`Report Generated: ${new Date().toLocaleString()}`, 50, footerY + 15)
-           .text(`Performance Management System`, 50, footerY + 30)
-           .text(`Page 1`, doc.page.width - 100, footerY + 15, { align: 'right' });
-        
-        console.log('✅ PDF content added successfully');
-        
-    } catch (error) {
-        console.error('❌ Error adding PDF content:', error);
-        throw error;
-    }
-},
-
-// Generate mid-year feedback report (Q1 + Q2)
-generateMidYearFeedbackReport: async function(req, res) {
-    try {
-        console.log('🔄 [Line Manager] Generating mid-year feedback report...');
-        
-        const { employeeId, year, format } = req.query;
-        const lineManagerId = req.session.user?.userId;
-
-        // Validate required parameters
-        if (!employeeId || !year) {
-            return res.status(400).json({
-                success: false,
-                message: 'Employee ID and year are required'
-            });
-        }
-
-        // Verify employee is in line manager's department
-        const isAuthorized = await lineManagerController.verifyEmployeeInDepartment(lineManagerId, employeeId);
-        if (!isAuthorized) {
-            return res.status(403).json({
-                success: false,
-                message: 'You can only generate reports for employees in your department'
-            });
-        }
-
-        // Get combined Q1 + Q2 data
-        const midYearData = await lineManagerController.getCombinedQuarterData(employeeId, ['Q1', 'Q2'], year);
-        
-        if (!midYearData.success) {
-            return res.status(404).json({
-                success: false,
-                message: 'Insufficient feedback data for mid-year report'
-            });
-        }
-
-        // Get employee and line manager info
-        const employeeInfo = await lineManagerController.getEmployeeBasicInfo(employeeId);
-        const lineManagerInfo = await lineManagerController.getEmployeeBasicInfo(lineManagerId);
-
-        const reportData = {
-            employee: employeeInfo.data,
-            lineManager: lineManagerInfo.data,
-            reportingPeriod: {
-                type: 'mid-year',
-                year: parseInt(year),
-                quarters: ['Q1', 'Q2'],
-                q1Period: midYearData.data.q1Period,
-                q2Period: midYearData.data.q2Period
+                startDate: feedbackData.data.startDate,
+                endDate: feedbackData.data.endDate
             },
-            objectives: midYearData.data.objectives,
-            hardSkills: midYearData.data.hardSkills,
-            softSkills: midYearData.data.softSkills,
-            summary: midYearData.data.summary,
-            generatedDate: new Date().toISOString(),
-            generatedBy: `${lineManagerInfo.data.firstName} ${lineManagerInfo.data.lastName}`
+            objectives: feedbackData.data.objectives,
+            hardSkills: feedbackData.data.hardSkills,
+            softSkills: feedbackData.data.softSkills,
+            summary: feedbackData.data.summary,
+            respondentCounts: respondentCounts
         };
-
-        if (format === 'pdf') {
-            return res.json({
-                success: true,
-                data: reportData,
-                generatePDF: true,
-                filename: `Mid_Year_360_Report_${employeeInfo.data.firstName}_${employeeInfo.data.lastName}_${year}.pdf`
-            });
-        } else {
-            return res.json({
-                success: true,
-                data: reportData
-            });
-        }
-
+        
+        // Always return JSON data (PDF generation handled by frontend)
+        return res.json({
+            success: true,
+            data: reportData,
+            filename: `Quarterly_Feedback_Report_${employeeData.firstName}_${employeeData.lastName}_${quarter}_${year}.pdf`
+        });
+        
     } catch (error) {
-        console.error('❌ [Line Manager] Error generating mid-year report:', error);
+        console.error('❌ Error in generateQuarterlyFeedbackReport:', error);
         return res.status(500).json({
             success: false,
-            message: 'Failed to generate mid-year report: ' + error.message
+            message: "An error occurred while generating the report.",
+            error: error.message
         });
     }
 },
 
-// Generate final-year feedback report (Q3 + Q4)
-generateFinalYearFeedbackReport: async function(req, res) {
-    try {
-        console.log('🔄 [Line Manager] Generating final-year feedback report...');
-        
-        const { employeeId, year, format } = req.query;
-        const lineManagerId = req.session.user?.userId;
-
-        if (!employeeId || !year) {
-            return res.status(400).json({
-                success: false,
-                message: 'Employee ID and year are required'
-            });
-        }
-
-        const isAuthorized = await lineManagerController.verifyEmployeeInDepartment(lineManagerId, employeeId);
-        if (!isAuthorized) {
-            return res.status(403).json({
-                success: false,
-                message: 'You can only generate reports for employees in your department'
-            });
-        }
-
-        // Get combined Q3 + Q4 data
-        const finalYearData = await lineManagerController.getCombinedQuarterData(employeeId, ['Q3', 'Q4'], year);
-        
-        if (!finalYearData.success) {
-            return res.status(404).json({
-                success: false,
-                message: 'Insufficient feedback data for final-year report'
-            });
-        }
-
-        const employeeInfo = await lineManagerController.getEmployeeBasicInfo(employeeId);
-        const lineManagerInfo = await lineManagerController.getEmployeeBasicInfo(lineManagerId);
-
-        const reportData = {
-            employee: employeeInfo.data,
-            lineManager: lineManagerInfo.data,
-            reportingPeriod: {
-                type: 'final-year',
-                year: parseInt(year),
-                quarters: ['Q3', 'Q4'],
-                q3Period: finalYearData.data.q3Period,
-                q4Period: finalYearData.data.q4Period
-            },
-            objectives: finalYearData.data.objectives,
-            hardSkills: finalYearData.data.hardSkills,
-            softSkills: finalYearData.data.softSkills,
-            summary: finalYearData.data.summary,
-            generatedDate: new Date().toISOString(),
-            generatedBy: `${lineManagerInfo.data.firstName} ${lineManagerInfo.data.lastName}`
-        };
-
-        if (format === 'pdf') {
-            return res.json({
-                success: true,
-                data: reportData,
-                generatePDF: true,
-                filename: `Final_Year_360_Report_${employeeInfo.data.firstName}_${employeeInfo.data.lastName}_${year}.pdf`
-            });
-        } else {
-            return res.json({
-                success: true,
-                data: reportData
-            });
-        }
-
-    } catch (error) {
-        console.error('❌ [Line Manager] Error generating final-year report:', error);
-        return res.status(500).json({
-            success: false,
-            message: 'Failed to generate final-year report: ' + error.message
-        });
-    }
-},
-
-// Helper function: Get department feedback statistics
 getDepartmentFeedbackStats: async function(departmentId) {
     try {
         console.log('📊 Getting department feedback stats for department:', departmentId);
@@ -18766,7 +18456,7 @@ getDepartmentFeedbackStats: async function(departmentId) {
 
         if (empError) {
             console.error('Error fetching department employees:', empError);
-            return { totalEmployees: 0, employeesWithFeedback: 0, completedQuarters: [] };
+            return { totalEmployees: 0, employeesWithFeedback: 0, completedQuarters: [], currentYear: new Date().getFullYear() };
         }
 
         console.log('📊 Found employees in department:', employees?.length || 0);
@@ -18775,7 +18465,7 @@ getDepartmentFeedbackStats: async function(departmentId) {
         const currentYear = new Date().getFullYear();
         const quarters = ['Q1', 'Q2', 'Q3', 'Q4'];
         
-        let totalEmployeesWithFeedback = new Set(); // Use Set to avoid duplicates
+        let totalEmployeesWithFeedback = new Set();
         const completedQuarters = [];
 
         // Check each quarter for feedback completion
@@ -18805,10 +18495,7 @@ getDepartmentFeedbackStats: async function(departmentId) {
                         employeeCount: quarterFeedback.length
                     });
                     
-                    // Add unique employee IDs to our set
                     quarterFeedback.forEach(fb => totalEmployeesWithFeedback.add(fb.userId));
-                } else {
-                    console.log(`📝 No feedback found for ${quarter} ${currentYear}`);
                 }
             } catch (tableError) {
                 console.log(`❌ Table ${feedbackTable} might not exist:`, tableError.message);
@@ -18827,7 +18514,7 @@ getDepartmentFeedbackStats: async function(departmentId) {
 
     } catch (error) {
         console.error('❌ Error getting department feedback stats:', error);
-        return { totalEmployees: 0, employeesWithFeedback: 0, completedQuarters: [] };
+        return { totalEmployees: 0, employeesWithFeedback: 0, completedQuarters: [], currentYear: new Date().getFullYear() };
     }
 },
 
@@ -18925,7 +18612,6 @@ checkEmployeeFeedbackAvailability: async function(userId) {
                 .from(feedbackTable)
                 .select('quarter')
                 .eq('userId', userId)
-                .eq('quarter', quarter)
                 .eq('year', currentYear)
                 .limit(1);
 
@@ -18938,7 +18624,7 @@ checkEmployeeFeedbackAvailability: async function(userId) {
                 console.log(`📋 ${quarter}: ${hasData ? 'Available' : 'Not available'}`);
             }
         } catch (tableError) {
-            console.log(`❌ Table ${feedbackTable} error:`, tableError.message);
+            console.log(`❌ Table feedbacks_${quarter} error:`, tableError.message);
             availability[quarter] = false;
         }
     }
@@ -19084,7 +18770,7 @@ getQuarterlyFeedbackData: async function(userId, quarter, year) {
         console.log(`🔄 Fetching feedback data for user ${userId}, ${quarter} ${year}`);
 
         const feedbackTable = `feedbacks_${quarter}`;
-        const feedbackIdField = `feedbackq${quarter.substring(1)}_Id`;
+        const feedbackIdField = `feedback${quarter.toLowerCase()}_Id`;
 
         // Get the feedback record
         const { data: feedbackRecord, error: feedbackError } = await supabase
@@ -19134,455 +18820,454 @@ getQuarterlyFeedbackData: async function(userId, quarter, year) {
     }
 },
 
-// Helper function: Get combined quarter data for mid-year/final-year reports
-getCombinedQuarterData: async function(userId, quarters, year) {
+getObjectivesReportData: async function(feedbackId, feedbackIdField) {
     try {
-        console.log(`🔄 Fetching combined data for user ${userId}, quarters ${quarters.join(', ')}, year ${year}`);
-
-        const quarterData = {};
-        let allObjectives = [];
-        let allHardSkills = [];
-        let allSoftSkills = [];
-
-        // Get data for each quarter
-        for (const quarter of quarters) {
-            const singleQuarterData = await lineManagerController.getQuarterlyFeedbackData(userId, quarter, year);
-            
-            if (singleQuarterData.success) {
-                quarterData[quarter.toLowerCase()] = {
-                    startDate: singleQuarterData.data.startDate,
-                    endDate: singleQuarterData.data.endDate,
-                    objectives: singleQuarterData.data.objectives,
-                    hardSkills: singleQuarterData.data.hardSkills,
-                    softSkills: singleQuarterData.data.softSkills
-                };
-            }
-        }
-
-        // Check if we have data for both quarters
-        if (Object.keys(quarterData).length < 2) {
-            return { success: false, message: 'Insufficient data for both quarters' };
-        }
-
-        // Combine objectives data
-        const objectivesMap = new Map();
+        console.log('Getting objectives data for feedbackId:', feedbackId, 'field:', feedbackIdField);
         
-        quarters.forEach(quarter => {
-            const qData = quarterData[quarter.toLowerCase()];
-            if (qData && qData.objectives) {
-                qData.objectives.forEach(obj => {
-                    const key = obj.objective;
-                    if (!objectivesMap.has(key)) {
-                        objectivesMap.set(key, {
-                            objective: obj.objective,
-                            kpi: obj.kpi,
-                            target: obj.target,
-                            uom: obj.uom,
-                            assignedWeight: obj.assignedWeight,
-                            quarterData: {}
-                        });
-                    }
-                    objectivesMap.get(key).quarterData[quarter] = {
-                        averageRating: parseFloat(obj.averageRating),
-                        weightedScore: parseFloat(obj.weightedScore)
-                    };
-                });
+        // First get the objectives questions for this feedback
+        const { data: objectiveQuestions, error: questionsError } = await supabase
+            .from('feedbacks_questions-objectives')
+            .select(`
+                feedback_qObjectivesId,
+                objectiveId,
+                objectiveQualiQuestion,
+                objectivesettings_objectives!inner(
+                    objectiveDescrpt,
+                    objectiveKPI,
+                    objectiveTarget,
+                    objectiveUOM,
+                    objectiveAssignedWeight
+                )
+            `)
+            .eq(feedbackIdField, feedbackId);
+
+        if (questionsError) {
+            console.error('Error fetching objective questions:', questionsError);
+            return [];
+        }
+
+        if (!objectiveQuestions || objectiveQuestions.length === 0) {
+            console.log('No objective questions found');
+            return [];
+        }
+
+        console.log('Found objective questions:', objectiveQuestions.length);
+
+        // Now get the answers for these questions
+        const processedObjectives = [];
+        
+        for (const question of objectiveQuestions) {
+            const { data: answers, error: answersError } = await supabase
+                .from('feedbacks_answers-objectives')
+                .select(`
+                    objectiveQuantInput,
+                    objectiveQualInput
+                `)
+                .eq('feedback_qObjectivesId', question.feedback_qObjectivesId);
+
+            if (answersError) {
+                console.error('Error fetching answers for objective:', question.objectiveId, answersError);
+                continue;
             }
-        });
 
-        // Calculate combined averages for objectives
-        objectivesMap.forEach((obj, key) => {
-            const ratings = Object.values(obj.quarterData).map(q => q.averageRating).filter(r => r > 0);
-            const weightedScores = Object.values(obj.quarterData).map(q => q.weightedScore).filter(s => s > 0);
-            
-            obj.combinedAverageRating = ratings.length > 0 ? (ratings.reduce((a, b) => a + b, 0) / ratings.length) : 0;
-            obj.combinedWeightedScore = weightedScores.length > 0 ? (weightedScores.reduce((a, b) => a + b, 0) / weightedScores.length) : 0;
-        });
+            // Calculate average rating
+            const ratings = answers?.map(a => a.objectiveQuantInput).filter(r => r && r > 0) || [];
+            const averageRating = ratings.length > 0 
+                ? ratings.reduce((sum, rating) => sum + rating, 0) / ratings.length 
+                : 0;
 
-        allObjectives = Array.from(objectivesMap.values());
+            const objective = question.objectivesettings_objectives;
+            const assignedWeight = objective.objectiveAssignedWeight || 0;
+            const weightedScore = (averageRating * (assignedWeight / 100));
 
-        // Combine skills data (similar process for hard and soft skills)
-        [allHardSkills, allSoftSkills] = lineManagerController.combineSkillsData(quarterData, quarters);
+            processedObjectives.push({
+                objectiveId: question.objectiveId,
+                objective: objective.objectiveDescrpt || 'Unknown Objective',
+                kpi: objective.objectiveKPI || 'N/A',
+                target: objective.objectiveTarget || 'N/A',
+                uom: objective.objectiveUOM || '',
+                assignedWeight: assignedWeight,
+                averageRating: parseFloat(averageRating.toFixed(2)),
+                weightedScore: parseFloat(weightedScore.toFixed(2)),
+                responseCount: ratings.length,
+                qualitativeFeedback: answers?.map(a => a.objectiveQualInput).filter(Boolean).join('; ') || 'No comments'
+            });
+        }
 
-        // Calculate combined summary
-        const combinedSummary = lineManagerController.calculateCombinedSummary(allObjectives, allHardSkills, allSoftSkills);
-
-        return {
-            success: true,
-            data: {
-                [`${quarters[0].toLowerCase()}Period`]: quarterData[quarters[0].toLowerCase()],
-                [`${quarters[1].toLowerCase()}Period`]: quarterData[quarters[1].toLowerCase()],
-                objectives: allObjectives,
-                hardSkills: allHardSkills,
-                softSkills: allSoftSkills,
-                summary: combinedSummary
-            }
-        };
-
+        console.log('Processed objectives count:', processedObjectives.length);
+        return processedObjectives;
+        
     } catch (error) {
-        console.error('Error getting combined quarter data:', error);
-        return { success: false, message: 'Error fetching combined quarter data' };
+        console.error('Error in getObjectivesReportData:', error);
+        return [];
+    }
+},
+    getSkillsReportData: async function(feedbackId, feedbackIdField, jobId) {
+    try {
+        console.log('Getting skills data for feedbackId:', feedbackId, 'jobId:', jobId);
+        
+        // First get the skills questions for this feedback
+        const { data: skillQuestions, error: questionsError } = await supabase
+            .from('feedbacks_questions-skills')
+            .select(`
+                feedback_qSkillsId,
+                jobReqSkillId,
+                jobreqskills!inner(
+                    jobReqSkillName,
+                    jobReqSkillType
+                )
+            `)
+            .eq(feedbackIdField, feedbackId);
+
+        if (questionsError) {
+            console.error('Error fetching skill questions:', questionsError);
+            return { hardSkills: [], softSkills: [] };
+        }
+
+        if (!skillQuestions || skillQuestions.length === 0) {
+            console.log('No skill questions found');
+            return { hardSkills: [], softSkills: [] };
+        }
+
+        console.log('Found skill questions:', skillQuestions.length);
+
+        const hardSkills = [];
+        const softSkills = [];
+
+        // Get answers for each skill question
+        for (const question of skillQuestions) {
+            const { data: answers, error: answersError } = await supabase
+                .from('feedbacks_answers-skills')
+                .select(`
+                    skillsQuantInput,
+                    skillsQualInput
+                `)
+                .eq('feedback_qSkillsId', question.feedback_qSkillsId);
+
+            if (answersError) {
+                console.error('Error fetching answers for skill:', question.jobReqSkillId, answersError);
+                continue;
+            }
+
+            // Calculate average rating
+            const ratings = answers?.map(a => a.skillsQuantInput).filter(r => r && r > 0) || [];
+            const averageRating = ratings.length > 0 
+                ? ratings.reduce((sum, rating) => sum + rating, 0) / ratings.length 
+                : 0;
+
+            const skill = question.jobreqskills;
+            const skillData = {
+                skillName: skill.jobReqSkillName || 'Unknown Skill',
+                skillType: skill.jobReqSkillType || 'Soft',
+                averageRating: parseFloat(averageRating.toFixed(2)),
+                responseCount: ratings.length,
+                qualitativeFeedback: answers?.map(a => a.skillsQualInput).filter(Boolean).join('; ') || 'No comments'
+            };
+
+            if (skill.jobReqSkillType === 'Hard') {
+                hardSkills.push(skillData);
+            } else {
+                softSkills.push(skillData);
+            }
+        }
+
+        console.log('Processed skills:', { hardSkills: hardSkills.length, softSkills: softSkills.length });
+        return { hardSkills, softSkills };
+        
+    } catch (error) {
+        console.error('Error in getSkillsReportData:', error);
+        return { hardSkills: [], softSkills: [] };
+    }
+},
+calculateFeedbackSummary: function(objectivesData, skillsData) {
+    try {
+        console.log('Calculating feedback summary...');
+        
+        const objectivesCount = objectivesData.length;
+        const averageObjectiveRating = objectivesCount > 0 
+            ? objectivesData.reduce((sum, obj) => sum + obj.averageRating, 0) / objectivesCount 
+            : 0;
+
+        // Calculate total weighted score
+        const totalWeightedScore = objectivesData.reduce((sum, obj) => sum + obj.weightedScore, 0);
+        const totalWeight = objectivesData.reduce((sum, obj) => sum + obj.assignedWeight, 0);
+        
+        const hardSkillsCount = skillsData.hardSkills.length;
+        const averageHardSkillRating = hardSkillsCount > 0 
+            ? skillsData.hardSkills.reduce((sum, skill) => sum + skill.averageRating, 0) / hardSkillsCount 
+            : 0;
+        
+        const softSkillsCount = skillsData.softSkills.length;
+        const averageSoftSkillRating = softSkillsCount > 0 
+            ? skillsData.softSkills.reduce((sum, skill) => sum + skill.averageRating, 0) / softSkillsCount 
+            : 0;
+        
+        // Calculate overall performance score (weighted average)
+        let overallPerformanceScore = 0;
+        let totalComponents = 0;
+        
+        if (objectivesCount > 0) {
+            overallPerformanceScore += averageObjectiveRating * 0.5; // 50% weight for objectives
+            totalComponents += 0.5;
+        }
+        
+        if (hardSkillsCount > 0) {
+            overallPerformanceScore += averageHardSkillRating * 0.3; // 30% weight for hard skills
+            totalComponents += 0.3;
+        }
+        
+        if (softSkillsCount > 0) {
+            overallPerformanceScore += averageSoftSkillRating * 0.2; // 20% weight for soft skills
+            totalComponents += 0.2;
+        }
+        
+        // Normalize the score if we have any components
+        if (totalComponents > 0) {
+            overallPerformanceScore = overallPerformanceScore / totalComponents;
+        }
+        
+        const summary = {
+            objectivesCount,
+            averageObjectiveRating: parseFloat(averageObjectiveRating.toFixed(2)),
+            hardSkillsCount,
+            averageHardSkillRating: parseFloat(averageHardSkillRating.toFixed(2)),
+            softSkillsCount,
+            averageSoftSkillRating: parseFloat(averageSoftSkillRating.toFixed(2)),
+            totalWeightedScore: parseFloat(totalWeightedScore.toFixed(2)),
+            totalWeight: parseFloat(totalWeight.toFixed(2)),
+            overallPerformanceScore: parseFloat(overallPerformanceScore.toFixed(2))
+        };
+        
+        console.log('Calculated summary:', summary);
+        return summary;
+        
+    } catch (error) {
+        console.error('Error calculating feedback summary:', error);
+        return {
+            objectivesCount: 0,
+            averageObjectiveRating: 0,
+            hardSkillsCount: 0,
+            averageHardSkillRating: 0,
+            softSkillsCount: 0,
+            averageSoftSkillRating: 0,
+            totalWeightedScore: 0,
+            totalWeight: 0,
+            overallPerformanceScore: 0
+        };
     }
 },
 
-// Helper function: Combine skills data from multiple quarters
-combineSkillsData: function(quarterData, quarters) {
-    const hardSkillsMap = new Map();
-    const softSkillsMap = new Map();
-
-    quarters.forEach(quarter => {
-        const qData = quarterData[quarter.toLowerCase()];
-        if (qData) {
-            // Process hard skills
-            if (qData.hardSkills) {
-                qData.hardSkills.forEach(skill => {
-                    const key = skill.skillName;
-                    if (!hardSkillsMap.has(key)) {
-                        hardSkillsMap.set(key, {
-                            skillName: skill.skillName,
-                            quarterData: {}
-                        });
-                    }
-                    hardSkillsMap.get(key).quarterData[quarter] = {
-                        averageRating: parseFloat(skill.averageRating)
-                    };
-                });
-            }
-
-            // Process soft skills
-            if (qData.softSkills) {
-                qData.softSkills.forEach(skill => {
-                    const key = skill.skillName;
-                    if (!softSkillsMap.has(key)) {
-                        softSkillsMap.set(key, {
-                            skillName: skill.skillName,
-                            quarterData: {}
-                        });
-                    }
-                    softSkillsMap.get(key).quarterData[quarter] = {
-                        averageRating: parseFloat(skill.averageRating)
-                    };
-                });
-            }
+// Mid-Year Feedback Report (Q1 + Q2)
+getMidYearFeedbackReport: async function(req, res) {
+    try {
+        const { employeeId, year = new Date().getFullYear() } = req.query;
+        
+        console.log(`🔄 Generating Mid-Year report for employee ${employeeId}, year ${year}`);
+        
+        if (!employeeId) {
+            return res.status(400).json({
+                success: false,
+                message: "Employee ID is required."
+            });
         }
-    });
-
-    // Calculate combined averages
-    hardSkillsMap.forEach((skill, key) => {
-        const ratings = Object.values(skill.quarterData).map(q => q.averageRating).filter(r => r > 0);
-        skill.combinedAverageRating = ratings.length > 0 ? (ratings.reduce((a, b) => a + b, 0) / ratings.length) : 0;
-    });
-
-    softSkillsMap.forEach((skill, key) => {
-        const ratings = Object.values(skill.quarterData).map(q => q.averageRating).filter(r => r > 0);
-        skill.combinedAverageRating = ratings.length > 0 ? (ratings.reduce((a, b) => a + b, 0) / ratings.length) : 0;
-    });
-
-    return [Array.from(hardSkillsMap.values()), Array.from(softSkillsMap.values())];
+        
+        // Get employee basic info
+        const employeeInfo = await lineManagerController.getEmployeeBasicInfo(employeeId);
+        if (!employeeInfo.success) {
+            return res.status(404).json({
+                success: false,
+                message: "Employee not found."
+            });
+        }
+        
+        // Get Q1 and Q2 feedback data
+        const q1Data = await lineManagerController.getQuarterlyFeedbackData(employeeId, 'Q1', year);
+        const q2Data = await lineManagerController.getQuarterlyFeedbackData(employeeId, 'Q2', year);
+        
+        console.log(`Q1 Data Success: ${q1Data.success}, Q2 Data Success: ${q2Data.success}`);
+        
+        if (!q1Data.success && !q2Data.success) {
+            return res.status(404).json({
+                success: false,
+                message: `No Q1 or Q2 feedback data found for ${year}.`
+            });
+        }
+        
+        // Combine Q1 and Q2 data
+        const combinedData = combineMidYearData(q1Data, q2Data, employeeInfo.data, year);
+        
+        return res.json({
+            success: true,
+            data: combinedData
+        });
+        
+    } catch (error) {
+        console.error('❌ Error in getMidYearFeedbackReport:', error);
+        return res.status(500).json({
+            success: false,
+            message: "An error occurred while generating the mid-year report.",
+            error: error.message
+        });
+    }
 },
 
-// Helper function: Calculate combined summary statistics
-calculateCombinedSummary: function(objectives, hardSkills, softSkills) {
-    const objectiveRatings = objectives.map(obj => obj.combinedAverageRating).filter(r => r > 0);
-    const hardSkillRatings = hardSkills.map(skill => skill.combinedAverageRating).filter(r => r > 0);
-    const softSkillRatings = softSkills.map(skill => skill.combinedAverageRating).filter(r => r > 0);
 
-    const totalWeightedScore = objectives.reduce((sum, obj) => sum + obj.combinedWeightedScore, 0);
-    const totalWeight = objectives.reduce((sum, obj) => sum + obj.assignedWeight, 0);
-
-    return {
-        objectivesCount: objectives.length,
-        hardSkillsCount: hardSkills.length,
-        softSkillsCount: softSkills.length,
-        averageObjectiveRating: objectiveRatings.length > 0 
-            ? (objectiveRatings.reduce((a, b) => a + b, 0) / objectiveRatings.length).toFixed(1)
-            : '0.0',
-        averageHardSkillRating: hardSkillRatings.length > 0 
-            ? (hardSkillRatings.reduce((a, b) => a + b, 0) / hardSkillRatings.length).toFixed(1)
-            : '0.0',
-        averageSoftSkillRating: softSkillRatings.length > 0 
-            ? (softSkillRatings.reduce((a, b) => a + b, 0) / softSkillRatings.length).toFixed(1)
-            : '0.0',
-        totalWeightedScore: totalWeightedScore.toFixed(2),
-        totalWeight: totalWeight,
-        overallPerformanceScore: totalWeight > 0 ? (totalWeightedScore / totalWeight).toFixed(1) : '0.0'
-    };
+// Final-Year Feedback Report (Q3 + Q4)
+getFinalYearFeedbackReport: async function(req, res) {
+    try {
+        const { employeeId, year = new Date().getFullYear() } = req.query;
+        
+        console.log(`🔄 Generating Final-Year report for employee ${employeeId}, year ${year}`);
+        
+        if (!employeeId) {
+            return res.status(400).json({
+                success: false,
+                message: "Employee ID is required."
+            });
+        }
+        
+        // Get employee basic info
+        const employeeInfo = await lineManagerController.getEmployeeBasicInfo(employeeId);
+        if (!employeeInfo.success) {
+            return res.status(404).json({
+                success: false,
+                message: "Employee not found."
+            });
+        }
+        
+        // Get Q3 and Q4 feedback data
+        const q3Data = await lineManagerController.getQuarterlyFeedbackData(employeeId, 'Q3', year);
+        const q4Data = await lineManagerController.getQuarterlyFeedbackData(employeeId, 'Q4', year);
+        
+        console.log(`Q3 Data Success: ${q3Data.success}, Q4 Data Success: ${q4Data.success}`);
+        
+        if (!q3Data.success && !q4Data.success) {
+            return res.status(404).json({
+                success: false,
+                message: `No Q3 or Q4 feedback data found for ${year}.`
+            });
+        }
+        
+        // Combine Q3 and Q4 data
+        const combinedData = combineFinalYearData(q3Data, q4Data, employeeInfo.data, year);
+        
+        return res.json({
+            success: true,
+            data: combinedData
+        });
+        
+    } catch (error) {
+        console.error('❌ Error in getFinalYearFeedbackReport:', error);
+        return res.status(500).json({
+            success: false,
+            message: "An error occurred while generating the final-year report.",
+            error: error.message
+        });
+    }
 },
 
-// Helper function: Get objectives report data
- getObjectivesReportData: async function(feedbackId, feedbackIdField) {
-        try {
-            console.log('Getting objectives data for feedbackId:', feedbackId);
-            
-            const { data: objectivesData, error } = await supabase
-                .from('feedbacks_answers')
-                .select(`
-                    objectiveAnswers,
-                    reviewerUserId,
-                    submittedDate
-                `)
-                .eq(feedbackIdField, feedbackId)
-                .not('objectiveAnswers', 'is', null);
-            
-            if (error) {
-                console.error('Error fetching objectives data:', error);
-                return [];
-            }
-            
-            if (!objectivesData || objectivesData.length === 0) {
-                console.log('No objectives data found');
-                return [];
-            }
-            
-            console.log('Raw objectives data count:', objectivesData.length);
-            
-            // Process and aggregate objectives data
-            const objectivesMap = new Map();
-            
-            objectivesData.forEach(response => {
-                if (response.objectiveAnswers && Array.isArray(response.objectiveAnswers)) {
-                    response.objectiveAnswers.forEach(obj => {
-                        if (obj.objectiveId) {
-                            const key = obj.objectiveId;
-                            
-                            if (!objectivesMap.has(key)) {
-                                objectivesMap.set(key, {
-                                    objectiveId: obj.objectiveId,
-                                    objective: obj.objectiveName || obj.objectiveDescrpt || 'Unknown Objective',
-                                    kpi: obj.objectiveKPI || 'N/A',
-                                    target: obj.objectiveTarget || 'N/A',
-                                    uom: obj.objectiveUOM || '',
-                                    assignedWeight: obj.objectiveWeight || 0,
-                                    ratings: [],
-                                    comments: []
-                                });
-                            }
-                            
-                            const objectiveData = objectivesMap.get(key);
-                            
-                            if (obj.rating && obj.rating > 0) {
-                                objectiveData.ratings.push(obj.rating);
-                            }
-                            
-                            if (obj.comment) {
-                                objectiveData.comments.push(obj.comment);
-                            }
-                        }
-                    });
-                }
+// Comparison Feedback Report (Mid-Year vs Final-Year) - OPTIMIZED
+getComparisonFeedbackReport: async function(req, res) {
+    try {
+        const { employeeId, year = new Date().getFullYear() } = req.query;
+        
+        console.log(`🔄 Generating Comparison report for employee ${employeeId}, year ${year}`);
+        
+        if (!employeeId) {
+            return res.status(400).json({
+                success: false,
+                message: "Employee ID is required."
             });
-            
-            // Calculate averages and scores
-            const processedObjectives = Array.from(objectivesMap.values()).map(obj => {
-                const averageRating = obj.ratings.length > 0 
-                    ? obj.ratings.reduce((sum, rating) => sum + rating, 0) / obj.ratings.length 
-                    : 0;
-                
-                const weightedScore = (averageRating * obj.assignedWeight).toFixed(2);
-                
-                return {
-                    ...obj,
-                    averageRating: parseFloat(averageRating.toFixed(2)),
-                    weightedScore: parseFloat(weightedScore),
-                    responseCount: obj.ratings.length
-                };
-            });
-            
-            console.log('Processed objectives count:', processedObjectives.length);
-            return processedObjectives;
-            
-        } catch (error) {
-            console.error('Error in getObjectivesReportData:', error);
-            return [];
         }
-    },
-    getSkillsReportData: async function(feedbackId, feedbackIdField, jobId) {
-        try {
-            console.log('Getting skills data for feedbackId:', feedbackId, 'jobId:', jobId);
-            
-            const { data: skillsData, error } = await supabase
-                .from('feedbacks_answers')
-                .select(`
-                    skillRatings,
-                    skillComments,
-                    reviewerUserId,
-                    submittedDate
-                `)
-                .eq(feedbackIdField, feedbackId)
-                .not('skillRatings', 'is', null);
-            
-            if (error) {
-                console.error('Error fetching skills data:', error);
-                return { hardSkills: [], softSkills: [] };
-            }
-            
-            if (!skillsData || skillsData.length === 0) {
-                console.log('No skills data found');
-                return { hardSkills: [], softSkills: [] };
-            }
-            
-            console.log('Raw skills data count:', skillsData.length);
-            
-            // Get job skills information
-            const { data: jobSkills, error: jobSkillsError } = await supabase
-                .from('jobrequiredskills')
-                .select(`
-                    jobReqSkillId,
-                    jobReqSkillName,
-                    jobReqSkillType
-                `)
-                .eq('jobId', jobId);
-            
-            if (jobSkillsError) {
-                console.error('Error fetching job skills:', jobSkillsError);
-            }
-            
-            const jobSkillsMap = new Map();
-            if (jobSkills) {
-                jobSkills.forEach(skill => {
-                    jobSkillsMap.set(skill.jobReqSkillId, skill);
-                });
-            }
-            
-            // Process skills data
-            const skillsMap = new Map();
-            
-            skillsData.forEach(response => {
-                if (response.skillRatings && typeof response.skillRatings === 'object') {
-                    Object.entries(response.skillRatings).forEach(([skillName, skillData]) => {
-                        if (skillData && skillData.rating) {
-                            if (!skillsMap.has(skillName)) {
-                                // Try to find skill info from job skills
-                                const jobSkill = Array.from(jobSkillsMap.values())
-                                    .find(js => js.jobReqSkillName === skillName);
-                                
-                                skillsMap.set(skillName, {
-                                    skillName: skillName,
-                                    skillType: jobSkill?.jobReqSkillType || skillData.skillType || 'Unknown',
-                                    ratings: [],
-                                    comments: []
-                                });
-                            }
-                            
-                            const skill = skillsMap.get(skillName);
-                            skill.ratings.push(skillData.rating);
-                            
-                            // Add comment if available
-                            if (response.skillComments && response.skillComments[skillName]) {
-                                skill.comments.push(response.skillComments[skillName].comment || response.skillComments[skillName]);
-                            }
-                        }
-                    });
-                }
+        
+        // Get employee basic info
+        const employeeInfo = await lineManagerController.getEmployeeBasicInfo(employeeId);
+        if (!employeeInfo.success) {
+            return res.status(404).json({
+                success: false,
+                message: "Employee not found."
             });
-            
-            // Calculate averages and separate by skill type
-            const hardSkills = [];
-            const softSkills = [];
-            
-            skillsMap.forEach(skill => {
-                const averageRating = skill.ratings.length > 0 
-                    ? skill.ratings.reduce((sum, rating) => sum + rating, 0) / skill.ratings.length 
-                    : 0;
-                
-                const processedSkill = {
-                    ...skill,
-                    averageRating: parseFloat(averageRating.toFixed(2)),
-                    responseCount: skill.ratings.length
-                };
-                
-                if (skill.skillType === 'Hard') {
-                    hardSkills.push(processedSkill);
-                } else if (skill.skillType === 'Soft') {
-                    softSkills.push(processedSkill);
-                } else {
-                    // Default to soft skills if type is unknown
-                    softSkills.push(processedSkill);
-                }
-            });
-            
-            console.log('Processed skills:', {
-                hardSkills: hardSkills.length,
-                softSkills: softSkills.length
-            });
-            
-            return { hardSkills, softSkills };
-            
-        } catch (error) {
-            console.error('Error in getSkillsReportData:', error);
-            return { hardSkills: [], softSkills: [] };
         }
-    },
-calculateFeedbackSummary: function(objectivesData, skillsData) {
-        try {
-            console.log('Calculating feedback summary...');
-            
-            const objectivesCount = objectivesData.length;
-            const averageObjectiveRating = objectivesCount > 0 
-                ? objectivesData.reduce((sum, obj) => sum + obj.averageRating, 0) / objectivesCount 
-                : 0;
-            
-            const hardSkillsCount = skillsData.hardSkills.length;
-            const averageHardSkillRating = hardSkillsCount > 0 
-                ? skillsData.hardSkills.reduce((sum, skill) => sum + skill.averageRating, 0) / hardSkillsCount 
-                : 0;
-            
-            const softSkillsCount = skillsData.softSkills.length;
-            const averageSoftSkillRating = softSkillsCount > 0 
-                ? skillsData.softSkills.reduce((sum, skill) => sum + skill.averageRating, 0) / softSkillsCount 
-                : 0;
-            
-            // Calculate overall performance score (weighted average)
-            let overallPerformanceScore = 0;
-            let totalComponents = 0;
-            
-            if (objectivesCount > 0) {
-                overallPerformanceScore += averageObjectiveRating * 0.5; // 50% weight for objectives
-                totalComponents += 0.5;
-            }
-            
-            if (hardSkillsCount > 0) {
-                overallPerformanceScore += averageHardSkillRating * 0.3; // 30% weight for hard skills
-                totalComponents += 0.3;
-            }
-            
-            if (softSkillsCount > 0) {
-                overallPerformanceScore += averageSoftSkillRating * 0.2; // 20% weight for soft skills
-                totalComponents += 0.2;
-            }
-            
-            // Normalize the score if we have any components
-            if (totalComponents > 0) {
-                overallPerformanceScore = overallPerformanceScore / totalComponents;
-            }
-            
-            const summary = {
-                objectivesCount,
-                averageObjectiveRating: parseFloat(averageObjectiveRating.toFixed(2)),
-                hardSkillsCount,
-                averageHardSkillRating: parseFloat(averageHardSkillRating.toFixed(2)),
-                softSkillsCount,
-                averageSoftSkillRating: parseFloat(averageSoftSkillRating.toFixed(2)),
-                overallPerformanceScore: parseFloat(overallPerformanceScore.toFixed(2))
-            };
-            
-            console.log('Calculated summary:', summary);
-            return summary;
-            
-        } catch (error) {
-            console.error('Error calculating feedback summary:', error);
-            return {
-                objectivesCount: 0,
-                averageObjectiveRating: 0,
-                hardSkillsCount: 0,
-                averageHardSkillRating: 0,
-                softSkillsCount: 0,
-                averageSoftSkillRating: 0,
-                overallPerformanceScore: 0
-            };
+        
+        // OPTIMIZATION 1: Use Promise.all to fetch quarterly data in parallel instead of sequentially
+        console.log('🚀 Fetching all quarterly data in parallel...');
+        
+        const [q1Data, q2Data, q3Data, q4Data] = await Promise.all([
+            lineManagerController.getQuarterlyFeedbackData(employeeId, 'Q1', year),
+            lineManagerController.getQuarterlyFeedbackData(employeeId, 'Q2', year),
+            lineManagerController.getQuarterlyFeedbackData(employeeId, 'Q3', year),
+            lineManagerController.getQuarterlyFeedbackData(employeeId, 'Q4', year)
+        ]);
+        
+        console.log(`✅ Parallel fetch completed - Q1: ${q1Data.success}, Q2: ${q2Data.success}, Q3: ${q3Data.success}, Q4: ${q4Data.success}`);
+        
+        // OPTIMIZATION 2: Early return if no data at all
+        const hasAnyData = q1Data.success || q2Data.success || q3Data.success || q4Data.success;
+        if (!hasAnyData) {
+            return res.status(404).json({
+                success: false,
+                message: `No feedback data found for comparison in ${year}.`
+            });
         }
-    },
-
+        
+        // OPTIMIZATION 3: Process mid-year and final-year in parallel
+        console.log('📊 Processing comparison data...');
+        
+        const [midYearData, finalYearData] = await Promise.all([
+            // Process mid-year data (Q1 + Q2)
+            new Promise((resolve) => {
+                try {
+                    const result = combineMidYearData(q1Data, q2Data, employeeInfo.data, year);
+                    resolve(result);
+                } catch (error) {
+                    console.error('Error combining mid-year data:', error);
+                    resolve(null);
+                }
+            }),
+            
+            // Process final-year data (Q3 + Q4)
+            new Promise((resolve) => {
+                try {
+                    const result = combineFinalYearData(q3Data, q4Data, employeeInfo.data, year);
+                    resolve(result);
+                } catch (error) {
+                    console.error('Error combining final-year data:', error);
+                    resolve(null);
+                }
+            })
+        ]);
+        
+        // Check if we have at least some processed data
+        const hasMidYear = midYearData && (q1Data.success || q2Data.success);
+        const hasFinalYear = finalYearData && (q3Data.success || q4Data.success);
+        
+        if (!hasMidYear && !hasFinalYear) {
+            return res.status(404).json({
+                success: false,
+                message: `No processable feedback data found for comparison in ${year}.`
+            });
+        }
+        
+        // Generate comparison data
+        console.log('🔄 Generating final comparison...');
+        const comparisonData = generateComparisonData(midYearData, finalYearData, employeeInfo.data, year);
+        
+        console.log('✅ Comparison report completed successfully');
+        
+        return res.json({
+            success: true,
+            data: comparisonData
+        });
+        
+    } catch (error) {
+        console.error('❌ Error in getComparisonFeedbackReport:', error);
+        return res.status(500).json({
+            success: false,
+            message: "An error occurred while generating the comparison report.",
+            error: error.message
+        });
+    }
+},
 
     getRespondentCounts: async function(userId, year) {
         const counts = {
@@ -19658,62 +19343,6 @@ calculateFeedbackSummary: function(objectivesData, skillsData) {
             return counts;
         }
     },
-// DEBUGGING ENDPOINT - Add this to test your database
-testDatabaseConnection: async function(req, res) {
-    try {
-        console.log('🔍 TESTING DATABASE CONNECTION...');
-        
-        // Test basic tables
-        const { data: departments } = await supabase.from('departments').select('*').limit(5);
-        const { data: staffaccounts } = await supabase.from('staffaccounts').select('*').limit(5);
-        const { data: useraccounts } = await supabase.from('useraccounts').select('*').limit(5);
-        
-        // Test feedback tables
-        const quarters = ['Q1', 'Q2', 'Q3', 'Q4'];
-        const feedbackData = {};
-        
-        for (const quarter of quarters) {
-            try {
-                const { data } = await supabase.from(`feedbacks_${quarter}`).select('*').limit(5);
-                feedbackData[quarter] = data || [];
-            } catch (error) {
-                feedbackData[quarter] = `Error: ${error.message}`;
-            }
-        }
-        
-        // Test line manager's data specifically
-        const lineManagerId = req.session.user?.userId;
-        let lineManagerData = null;
-        if (lineManagerId) {
-            const { data: lmData } = await supabase
-                .from('staffaccounts')
-                .select(`
-                    *,
-                    departments(*),
-                    jobpositions(*)
-                `)
-                .eq('userId', lineManagerId)
-                .single();
-            lineManagerData = lmData;
-        }
-        
-        res.json({
-            success: true,
-            departments: departments?.length || 0,
-            staffaccounts: staffaccounts?.length || 0,
-            useraccounts: useraccounts?.length || 0,
-            feedbackData,
-            lineManagerData,
-            timestamp: new Date().toISOString()
-        });
-    } catch (error) {
-        res.status(500).json({ 
-            success: false,
-            error: error.message,
-            timestamp: new Date().toISOString()
-        });
-    }
-},
 
 // Line Manager Training Functions
 // 1. Training Needs vs Completion Report

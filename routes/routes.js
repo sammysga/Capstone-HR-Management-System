@@ -565,9 +565,13 @@ router.get('/linemanager/reports/leave-requests', lineManagerController.getDepar
 router.get('/linemanager/reports/feedback-dashboard', lineManagerController.getQuarterlyFeedbackReportsDashboard);
 router.get('/linemanager/reports/feedback-employees', lineManagerController.getDepartmentEmployeesForFeedbackReports);
 router.get('/linemanager/reports/quarterly-feedback', lineManagerController.generateQuarterlyFeedbackReport);
-router.get('/linemanager/reports/mid-year-feedback', lineManagerController.generateMidYearFeedbackReport);
-router.get('/linemanager/reports/final-year-feedback', lineManagerController.generateFinalYearFeedbackReport);
-router.get('/debug/test-database', lineManagerController.testDatabaseConnection);
-
+router.get('/linemanager/reports/mid-year-feedback', lineManagerController.getMidYearFeedbackReport);
+router.get('/linemanager/reports/final-year-feedback', lineManagerController.getFinalYearFeedbackReport);
+router.get('/linemanager/reports/comparison-feedback', lineManagerController.getComparisonFeedbackReport);
+router.get('/hr/reports/company-wide-employees', hrController.getCompanyWideEmployeesForFeedbackReports);
+router.get('/hr/reports/quarterly-feedback', hrController.generateQuarterlyFeedbackReport);
+router.get('/hr/reports/mid-year-feedback', hrController.getMidYearFeedbackReport);
+router.get('/hr/reports/final-year-feedback', hrController.getFinalYearFeedbackReport);
+router.get('/hr/reports/comparison-feedback', hrController.getComparisonFeedbackReport);
 module.exports = router; 
 

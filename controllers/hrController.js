@@ -9302,6 +9302,443 @@ The {companyName} HR Team`
         }
     },
 
+    // Get all company employees for feedback reports dropdown
+    getCompanyWideEmployeesForFeedbackReports: async function(req, res) {
+        try {
+            console.log('🔄 [HR] Fetching company-wide employees for feedback reports...');
+            
+            const hrUserId = req.session.user?.userId;
+            if (!hrUserId) {
+                console.error('❌ HR user not authenticated');
+                return res.status(401).json({
+                    success: false,
+                    message: 'HR user not authenticated'
+                });
+            }
+
+            console.log('👤 HR User ID:', hrUserId);
+
+            // Get all employees across all departments (excluding HR users)
+            const { data: employees, error: employeeError } = await supabase
+                .from('staffaccounts')
+                .select(`
+                    userId,
+                    firstName,
+                    lastName,
+                    departmentId,
+                    hireDate,
+                    jobpositions!staffaccounts_jobId_fkey(jobTitle),
+                    departments!staffaccounts_departmentId_fkey(deptName)
+                `)
+                .neq('userRole', 'HR') // Exclude HR users
+                .order('departments.deptName', { ascending: true })
+                .order('firstName', { ascending: true });
+
+            console.log('👥 Employee Query Result:', employees?.length || 0);
+            if (employeeError) console.log('❌ Employee Query Error:', employeeError);
+
+            if (employeeError) {
+                return res.status(500).json({
+                    success: false,
+                    message: 'Failed to fetch company employees: ' + employeeError.message
+                });
+            }
+
+            // Check which employees have feedback data for each quarter
+            const enrichedEmployees = [];
+            
+            for (const employee of employees || []) {
+                console.log(`🔍 Checking feedback availability for: ${employee.firstName} ${employee.lastName} (ID: ${employee.userId})`);
+                
+                const feedbackAvailability = await hrController.checkEmployeeFeedbackAvailability(employee.userId);
+                
+                enrichedEmployees.push({
+                    userId: employee.userId,
+                    firstName: employee.firstName,
+                    lastName: employee.lastName,
+                    fullName: `${employee.firstName} ${employee.lastName}`,
+                    jobTitle: employee.jobpositions?.jobTitle || 'Unknown',
+                    department: employee.departments?.deptName || 'Unknown',
+                    departmentId: employee.departmentId,
+                    hireDate: employee.hireDate,
+                    feedbackAvailability: feedbackAvailability
+                });
+            }
+
+            // Group employees by department for better organization
+            const departmentStats = {};
+            enrichedEmployees.forEach(employee => {
+                const deptName = employee.department;
+                if (!departmentStats[deptName]) {
+                    departmentStats[deptName] = {
+                        departmentId: employee.departmentId,
+                        employeeCount: 0,
+                        employeesWithFeedback: 0
+                    };
+                }
+                departmentStats[deptName].employeeCount++;
+                
+                // Check if employee has any feedback
+                const hasFeedback = Object.values(employee.feedbackAvailability).some(available => available);
+                if (hasFeedback) {
+                    departmentStats[deptName].employeesWithFeedback++;
+                }
+            });
+
+            console.log('✅ Enriched employees:', enrichedEmployees.length);
+            console.log('📊 Department stats:', departmentStats);
+
+            return res.json({
+                success: true,
+                employees: enrichedEmployees,
+                departmentStats: departmentStats,
+                companyStats: {
+                    totalEmployees: enrichedEmployees.length,
+                    totalDepartments: Object.keys(departmentStats).length,
+                    employeesWithFeedback: enrichedEmployees.filter(emp => 
+                        Object.values(emp.feedbackAvailability).some(available => available)
+                    ).length
+                }
+            });
+
+        } catch (error) {
+            console.error('❌ [HR] Error fetching company-wide employees:', error);
+            return res.status(500).json({
+                success: false,
+                message: 'Failed to fetch company employees: ' + error.message
+            });
+        }
+    },
+
+    // Generate quarterly feedback report (same as line manager, no department check)
+    generateQuarterlyFeedbackReport: async function(req, res) {
+        try {
+            const { employeeId: userId } = req.query;
+            const { quarter, year = new Date().getFullYear()} = req.query;
+            
+            console.log(`🎯 [HR] Generating quarterly feedback report for user ${userId}, ${quarter} ${year}`);
+            
+            // Validation
+            if (!userId) {
+                return res.status(400).json({
+                    success: false,
+                    message: "User ID is required."
+                });
+            }
+            
+            if (!quarter || !['Q1', 'Q2', 'Q3', 'Q4'].includes(quarter)) {
+                return res.status(400).json({
+                    success: false,
+                    message: "Valid quarter (Q1, Q2, Q3, Q4) is required."
+                });
+            }
+            
+            const yearNum = parseInt(year);
+            if (isNaN(yearNum) || yearNum < 2020 || yearNum > 2030) {
+                return res.status(400).json({
+                    success: false,
+                    message: "Invalid year provided."
+                });
+            }
+            
+            // Get employee data (no department verification for HR)
+            const { data: employeeData, error: employeeError } = await supabase
+                .from('staffaccounts')
+                .select(`
+                    firstName,
+                    lastName,
+                    jobId,
+                    departmentId,
+                    hireDate,
+                    jobpositions!inner (jobTitle),
+                    departments!inner (deptName),
+                    useraccounts!inner (userEmail)
+                `)
+                .eq('userId', userId)
+                .single();
+                
+            if (employeeError || !employeeData) {
+                return res.status(404).json({
+                    success: false,
+                    message: "Employee not found."
+                });
+            }
+            
+            // Get HR user data
+            let hrUserData = null;
+            if (req.session?.user?.userId) {
+                const { data: hrData } = await supabase
+                    .from('staffaccounts')
+                    .select(`
+                        firstName,
+                        lastName,
+                        jobpositions!inner (jobTitle)
+                    `)
+                    .eq('userId', req.session.user.userId)
+                    .single();
+                
+                if (hrData) {
+                    hrUserData = hrData;
+                }
+            }
+            
+            // Get feedback data using the same helper functions from line manager
+            const feedbackData = await hrController.getQuarterlyFeedbackData(userId, quarter, yearNum);
+            
+            if (!feedbackData.success) {
+                return res.status(404).json({
+                    success: false,
+                    message: `No ${quarter} feedback found for ${year}.`
+                });
+            }
+            
+            // Get respondent counts
+            const respondentCounts = await hrController.getRespondentCounts(userId, yearNum);
+            
+            // Prepare report data
+            const reportData = {
+                employee: {
+                    ...employeeData,
+                    fullName: `${employeeData.firstName} ${employeeData.lastName}`
+                },
+                hrUser: hrUserData ? {
+                    ...hrUserData,
+                    fullName: `${hrUserData.firstName} ${hrUserData.lastName}`
+                } : null,
+                reportingPeriod: {
+                    quarter,
+                    year: yearNum,
+                    startDate: feedbackData.data.startDate,
+                    endDate: feedbackData.data.endDate
+                },
+                objectives: feedbackData.data.objectives,
+                hardSkills: feedbackData.data.hardSkills,
+                softSkills: feedbackData.data.softSkills,
+                summary: feedbackData.data.summary,
+                respondentCounts: respondentCounts
+            };
+            
+            return res.json({
+                success: true,
+                data: reportData,
+                filename: `HR_Quarterly_Feedback_Report_${employeeData.firstName}_${employeeData.lastName}_${quarter}_${year}.pdf`
+            });
+            
+        } catch (error) {
+            console.error('❌ [HR] Error in generateQuarterlyFeedbackReport:', error);
+            return res.status(500).json({
+                success: false,
+                message: "An error occurred while generating the report.",
+                error: error.message
+            });
+        }
+    },
+
+    // Mid-Year Report (same as line manager, no department check)
+    getMidYearFeedbackReport: async function(req, res) {
+        try {
+            const { employeeId, year = new Date().getFullYear() } = req.query;
+            
+            console.log(`🔄 [HR] Generating Mid-Year report for employee ${employeeId}, year ${year}`);
+            
+            if (!employeeId) {
+                return res.status(400).json({
+                    success: false,
+                    message: "Employee ID is required."
+                });
+            }
+            
+            // Get employee basic info (no department verification)
+            const employeeInfo = await hrController.getEmployeeBasicInfo(employeeId);
+            if (!employeeInfo.success) {
+                return res.status(404).json({
+                    success: false,
+                    message: "Employee not found."
+                });
+            }
+            
+            // Get Q1 and Q2 feedback data
+            const q1Data = await hrController.getQuarterlyFeedbackData(employeeId, 'Q1', year);
+            const q2Data = await hrController.getQuarterlyFeedbackData(employeeId, 'Q2', year);
+            
+            console.log(`Q1 Data Success: ${q1Data.success}, Q2 Data Success: ${q2Data.success}`);
+            
+            if (!q1Data.success && !q2Data.success) {
+                return res.status(404).json({
+                    success: false,
+                    message: `No Q1 or Q2 feedback data found for ${year}.`
+                });
+            }
+            
+            // Use the same combineMidYearData function from line manager
+            const combinedData = hrController.combineMidYearData(q1Data, q2Data, employeeInfo.data, year);
+            
+            return res.json({
+                success: true,
+                data: combinedData
+            });
+            
+        } catch (error) {
+            console.error('❌ [HR] Error in getMidYearFeedbackReport:', error);
+            return res.status(500).json({
+                success: false,
+                message: "An error occurred while generating the mid-year report.",
+                error: error.message
+            });
+        }
+    },
+
+    // Final-Year Report (same as line manager, no department check)
+    getFinalYearFeedbackReport: async function(req, res) {
+        try {
+            const { employeeId, year = new Date().getFullYear() } = req.query;
+            
+            console.log(`🔄 [HR] Generating Final-Year report for employee ${employeeId}, year ${year}`);
+            
+            if (!employeeId) {
+                return res.status(400).json({
+                    success: false,
+                    message: "Employee ID is required."
+                });
+            }
+            
+            // Get employee basic info (no department verification)
+            const employeeInfo = await hrController.getEmployeeBasicInfo(employeeId);
+            if (!employeeInfo.success) {
+                return res.status(404).json({
+                    success: false,
+                    message: "Employee not found."
+                });
+            }
+            
+            // Get Q3 and Q4 feedback data
+            const q3Data = await hrController.getQuarterlyFeedbackData(employeeId, 'Q3', year);
+            const q4Data = await hrController.getQuarterlyFeedbackData(employeeId, 'Q4', year);
+            
+            console.log(`Q3 Data Success: ${q3Data.success}, Q4 Data Success: ${q4Data.success}`);
+            
+            if (!q3Data.success && !q4Data.success) {
+                return res.status(404).json({
+                    success: false,
+                    message: `No Q3 or Q4 feedback data found for ${year}.`
+                });
+            }
+            
+            // Use the same combineFinalYearData function from line manager
+            const combinedData = hrController.combineFinalYearData(q3Data, q4Data, employeeInfo.data, year);
+            
+            return res.json({
+                success: true,
+                data: combinedData
+            });
+            
+        } catch (error) {
+            console.error('❌ [HR] Error in getFinalYearFeedbackReport:', error);
+            return res.status(500).json({
+                success: false,
+                message: "An error occurred while generating the final-year report.",
+                error: error.message
+            });
+        }
+    },
+
+    // Comparison Report (same as line manager, no department check)
+    getComparisonFeedbackReport: async function(req, res) {
+        try {
+            const { employeeId, year = new Date().getFullYear() } = req.query;
+            
+            console.log(`🔄 [HR] Generating Comparison report for employee ${employeeId}, year ${year}`);
+            
+            if (!employeeId) {
+                return res.status(400).json({
+                    success: false,
+                    message: "Employee ID is required."
+                });
+            }
+            
+            // Get employee basic info (no department verification)
+            const employeeInfo = await hrController.getEmployeeBasicInfo(employeeId);
+            if (!employeeInfo.success) {
+                return res.status(404).json({
+                    success: false,
+                    message: "Employee not found."
+                });
+            }
+            
+            // Fetch all quarterly data in parallel
+            console.log('🚀 Fetching all quarterly data in parallel...');
+            
+            const [q1Data, q2Data, q3Data, q4Data] = await Promise.all([
+                hrController.getQuarterlyFeedbackData(employeeId, 'Q1', year),
+                hrController.getQuarterlyFeedbackData(employeeId, 'Q2', year),
+                hrController.getQuarterlyFeedbackData(employeeId, 'Q3', year),
+                hrController.getQuarterlyFeedbackData(employeeId, 'Q4', year)
+            ]);
+            
+            console.log(`✅ Parallel fetch completed - Q1: ${q1Data.success}, Q2: ${q2Data.success}, Q3: ${q3Data.success}, Q4: ${q4Data.success}`);
+            
+            // Early return if no data at all
+            const hasAnyData = q1Data.success || q2Data.success || q3Data.success || q4Data.success;
+            if (!hasAnyData) {
+                return res.status(404).json({
+                    success: false,
+                    message: `No feedback data found for comparison in ${year}.`
+                });
+            }
+            
+            // Process comparison data
+            const [midYearData, finalYearData] = await Promise.all([
+                new Promise((resolve) => {
+                    try {
+                        const result = hrController.combineMidYearData(q1Data, q2Data, employeeInfo.data, year);
+                        resolve(result);
+                    } catch (error) {
+                        console.error('Error combining mid-year data:', error);
+                        resolve(null);
+                    }
+                }),
+                new Promise((resolve) => {
+                    try {
+                        const result = hrController.combineFinalYearData(q3Data, q4Data, employeeInfo.data, year);
+                        resolve(result);
+                    } catch (error) {
+                        console.error('Error combining final-year data:', error);
+                        resolve(null);
+                    }
+                })
+            ]);
+            
+            // Check if we have processable data
+            const hasMidYear = midYearData && (q1Data.success || q2Data.success);
+            const hasFinalYear = finalYearData && (q3Data.success || q4Data.success);
+            
+            if (!hasMidYear && !hasFinalYear) {
+                return res.status(404).json({
+                    success: false,
+                    message: `No processable feedback data found for comparison in ${year}.`
+                });
+            }
+            
+            // Generate comparison data
+            const comparisonData = hrController.generateComparisonData(midYearData, finalYearData, employeeInfo.data, year);
+            
+            console.log('✅ [HR] Comparison report completed successfully');
+            
+            return res.json({
+                success: true,
+                data: comparisonData
+            });
+            
+        } catch (error) {
+            console.error('❌ [HR] Error in getComparisonFeedbackReport:', error);
+            return res.status(500).json({
+                success: false,
+                message: "An error occurred while generating the comparison report.",
+                error: error.message
+            });
+        }
+    },
+
 };
 
 
