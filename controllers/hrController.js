@@ -3253,7 +3253,7 @@ getApplicantOnboardingData: async function(req, res) {
                 jobTitle: staff.jobpositions.jobTitle
             };
     
-            res.render('staffpages/employee_pages/useracc', { 
+            res.render('staffpages/hr_pages/useracc', { 
                 user: userData,
                 offboardingRequests: offboardingRequests || [] // Pass empty array if null
             });
