@@ -127,6 +127,7 @@ router.get('/hr/recruitment/reports/hirees', hrController.getHireesReport);
 router.get('/hr/recruitment/reports/applicant-status', hrController.getApplicantStatusReport);
 router.get('/hr/recruitment/reports/timeline', hrController.getTimelineReport);
 router.get('/hr/recruitment/reports/search-applicants', hrController.getSearchApplicants);
+router.get('/hr/recruitment/reports/mrf-efficiency', hrController.getMRFEfficiencyReport);
 
 router.get('/logout', hrController.getLogoutButton);
 router.get('/logout', lineManagerController.getLogoutButton);
@@ -549,6 +550,7 @@ router.get('/hr/training-efficiency', hrController.getTrainingEfficiency);
 router.get('/hr/offboarding-dashboard-stats', hrController.getOffboardingDashboardStats);
 router.get('/hr/offboarding-reports', hrController.getOffboardingReports);
 
+
 router.get('/hr/reports/employees', hrController.getEmployeesForReports);
 router.get('/hr/reports/daily-attendance', hrController.getDailyAttendanceReport);
 router.get('/hr/reports/employee-attendance', hrController.getEmployeeAttendanceReport);
@@ -557,6 +559,7 @@ router.get('/linemanager/reports/employees', lineManagerController.getDepartment
 router.get('/linemanager/reports/daily-attendance', lineManagerController.getDepartmentDailyAttendanceReport);
 router.get('/linemanager/reports/employee-attendance', lineManagerController.getDepartmentEmployeeAttendanceReport);
 router.get('/linemanager/reports/leave-requests', lineManagerController.getDepartmentLeaveRequestsReport);
+
 
 // ============================
 // 360 FEEDBACK REPORTS MODULE - ROUTES

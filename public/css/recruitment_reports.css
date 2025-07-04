@@ -691,3 +691,262 @@
         margin-left: 0 !important;
     }
 }
+/* New report icon styles */
+.report-icon.efficiency {
+    background: linear-gradient(135deg, #2196F3, #1976D2);
+}
+
+.report-icon.performance {
+    background: linear-gradient(135deg, #9C27B0, #7B1FA2);
+}
+
+/* Intelligence indicators */
+.intelligence-section {
+    background: #f8f9fa;
+    border-left: 4px solid #2196F3;
+    padding: 15px;
+    margin: 15px 0;
+    border-radius: 0 8px 8px 0;
+}
+
+.intelligence-section h4 {
+    color: #2196F3;
+    margin: 0 0 10px 0;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.intelligence-section h4 i {
+    font-size: 16px;
+}
+
+.alert-badge {
+    display: inline-block;
+    padding: 4px 8px;
+    border-radius: 4px;
+    font-size: 12px;
+    font-weight: bold;
+    text-transform: uppercase;
+}
+
+.alert-critical {
+    background: #ffebee;
+    color: #c62828;
+    border: 1px solid #ffcdd2;
+}
+
+.alert-warning {
+    background: #fff8e1;
+    color: #f57c00;
+    border: 1px solid #ffecb3;
+}
+
+.alert-success {
+    background: #e8f5e8;
+    color: #2e7d32;
+    border: 1px solid #c8e6c9;
+}
+
+.alert-info {
+    background: #e3f2fd;
+    color: #1976d2;
+    border: 1px solid #bbdefb;
+}
+
+/* Issue flags */
+.issue-flag {
+    display: inline-block;
+    padding: 3px 8px;
+    border-radius: 12px;
+    font-size: 11px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.issue-flag.critical {
+    background: #ffcdd2;
+    color: #c62828;
+}
+
+.issue-flag.at-risk {
+    background: #ffecb3;
+    color: #f57c00;
+}
+
+.issue-flag.slow {
+    background: #ffe0b2;
+    color: #ef6c00;
+}
+
+.issue-flag.completed {
+    background: #c8e6c9;
+    color: #2e7d32;
+}
+
+.issue-flag.on-track {
+    background: #bbdefb;
+    color: #1976d2;
+}
+
+.issue-flag.good {
+    background: #c8e6c9;
+    color: #2e7d32;
+}
+
+.issue-flag.poor {
+    background: #ffcdd2;
+    color: #c62828;
+}
+
+/* Recommendation boxes */
+.recommendation-box {
+    background: #f3e5f5;
+    border: 1px solid #ce93d8;
+    border-radius: 6px;
+    padding: 10px;
+    margin: 8px 0;
+    font-size: 13px;
+    line-height: 1.4;
+}
+
+.recommendation-box::before {
+    content: "💡 ";
+    font-weight: bold;
+}
+
+/* Performance metrics */
+.performance-metric {
+    display: inline-block;
+    margin: 4px 8px 4px 0;
+    padding: 4px 8px;
+    background: #f5f5f5;
+    border-radius: 4px;
+    font-size: 12px;
+}
+
+.performance-metric.good {
+    background: #e8f5e8;
+    color: #2e7d32;
+}
+
+.performance-metric.average {
+    background: #fff8e1;
+    color: #f57c00;
+}
+
+.performance-metric.poor {
+    background: #ffebee;
+    color: #c62828;
+}
+
+/* Department insights table */
+.insights-table {
+    margin-top: 20px;
+}
+
+.insights-table th {
+    background: #2196F3;
+    color: white;
+    padding: 12px 8px;
+    font-size: 13px;
+}
+
+.insights-table td {
+    padding: 10px 8px;
+    border-bottom: 1px solid #eee;
+    font-size: 13px;
+    vertical-align: top;
+}
+
+.insights-table .recommendation-cell {
+    max-width: 200px;
+    word-wrap: break-word;
+}
+
+/* Summary cards for intelligent reports */
+.intelligent-summary {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 15px;
+    margin: 20px 0;
+}
+
+.intelligence-card {
+    background: white;
+    border: 1px solid #e0e0e0;
+    border-radius: 8px;
+    padding: 15px;
+    text-align: center;
+    position: relative;
+}
+
+.intelligence-card.alert {
+    border-left: 4px solid #f44336;
+    background: #fafafa;
+}
+
+.intelligence-card.warning {
+    border-left: 4px solid #ff9800;
+    background: #fafafa;
+}
+
+.intelligence-card.success {
+    border-left: 4px solid #4caf50;
+    background: #fafafa;
+}
+
+.intelligence-card h4 {
+    margin: 0 0 8px 0;
+    font-size: 14px;
+    color: #666;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.intelligence-card .value {
+    font-size: 24px;
+    font-weight: bold;
+    color: #333;
+    margin: 5px 0;
+}
+
+.intelligence-card .insight {
+    font-size: 11px;
+    color: #666;
+    margin-top: 5px;
+    font-style: italic;
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+    .intelligent-summary {
+        grid-template-columns: 1fr;
+    }
+    
+    .insights-table {
+        font-size: 12px;
+    }
+    
+    .insights-table th,
+    .insights-table td {
+        padding: 8px 4px;
+    }
+}
+
+.data-section {
+    margin: 25px 0;
+    padding: 20px;
+    border: 1px solid #e0e0e0;
+    border-radius: 8px;
+    background: white;
+}
+
+.data-section h4 {
+    margin: 0 0 15px 0;
+    color: #333;
+    font-size: 16px;
+    border-bottom: 2px solid #2196F3;
+    padding-bottom: 5px;
+}

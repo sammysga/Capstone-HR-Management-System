@@ -114,10 +114,20 @@
                     <form class="report-form" id="applicants-form">
                         <div class="form-row">
                             <div class="form-group">
+                                <label for="applicants-filter-type">Filter Type</label>
+                                <select id="applicants-filter-type" name="filterType" onchange="toggleDateInputs('applicants')">
+                                    <option value="month">This Month</option>
+                                    <option value="last-month">Last Month</option>
+                                    <option value="quarter">This Quarter</option>
+                                    <option value="year">This Year</option>
+                                    <option value="custom">Custom Date Range</option>
+                                </select>
+                            </div>
+                            <div class="form-group custom-dates" id="applicants-custom-dates" style="display: none;">
                                 <label for="applicants-start">Start Date</label>
                                 <input type="date" id="applicants-start" name="startDate">
                             </div>
-                            <div class="form-group">
+                            <div class="form-group custom-dates" id="applicants-custom-dates-end" style="display: none;">
                                 <label for="applicants-end">End Date</label>
                                 <input type="date" id="applicants-end" name="endDate">
                             </div>
@@ -150,10 +160,20 @@
                     <form class="report-form" id="hirees-form">
                         <div class="form-row">
                             <div class="form-group">
+                                <label for="hirees-filter-type">Filter Type</label>
+                                <select id="hirees-filter-type" name="filterType" onchange="toggleDateInputs('hirees')">
+                                    <option value="month">This Month</option>
+                                    <option value="last-month">Last Month</option>
+                                    <option value="quarter">This Quarter</option>
+                                    <option value="year">This Year</option>
+                                    <option value="custom">Custom Date Range</option>
+                                </select>
+                            </div>
+                            <div class="form-group custom-dates" id="hirees-custom-dates" style="display: none;">
                                 <label for="hirees-start">Start Date</label>
                                 <input type="date" id="hirees-start" name="startDate">
                             </div>
-                            <div class="form-group">
+                            <div class="form-group custom-dates" id="hirees-custom-dates-end" style="display: none;">
                                 <label for="hirees-end">End Date</label>
                                 <input type="date" id="hirees-end" name="endDate">
                             </div>
@@ -167,7 +187,6 @@
                             </div>
                         </div>
                     </form>
-                    
                     <div class="report-results" id="hirees-results"></div>
                 </div>
                 
@@ -229,10 +248,20 @@
                     <form class="report-form" id="timeline-form">
                         <div class="form-row">
                             <div class="form-group">
+                                <label for="timeline-filter-type">Filter Type</label>
+                                <select id="timeline-filter-type" name="filterType" onchange="toggleDateInputs('timeline')">
+                                    <option value="month">This Month</option>
+                                    <option value="last-month">Last Month</option>
+                                    <option value="quarter">This Quarter</option>
+                                    <option value="year">This Year</option>
+                                    <option value="custom">Custom Date Range</option>
+                                </select>
+                            </div>
+                            <div class="form-group custom-dates" id="timeline-custom-dates" style="display: none;">
                                 <label for="timeline-start">Start Date</label>
                                 <input type="date" id="timeline-start" name="startDate">
                             </div>
-                            <div class="form-group">
+                            <div class="form-group custom-dates" id="timeline-custom-dates-end" style="display: none;">
                                 <label for="timeline-end">End Date</label>
                                 <input type="date" id="timeline-end" name="endDate">
                             </div>
@@ -248,6 +277,52 @@
                     </form>
                     
                     <div class="report-results" id="timeline-results"></div>
+                </div>
+
+                <!-- 5. MRF Efficiency Report -->
+                <div class="report-card">
+                    <div class="report-card-header">
+                        <div class="report-icon efficiency">
+                            <i class="fas fa-chart-bar"></i>
+                        </div>
+                        <div>
+                            <h3 class="report-title">MRF Efficiency Analysis</h3>
+                            <p class="report-description">Track manpower requisition fulfillment rates with intelligent analysis of department performance, bottlenecks, and actionable recommendations for improvement</p>
+                        </div>
+                    </div>
+                    
+                    <form class="report-form" id="mrf-efficiency-form">
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label for="mrf-efficiency-filter-type">Filter Type</label>
+                                <select id="mrf-efficiency-filter-type" name="filterType" onchange="toggleDateInputs('mrf-efficiency')">
+                                    <option value="month">This Month</option>
+                                    <option value="last-month">Last Month</option>
+                                    <option value="quarter">This Quarter</option>
+                                    <option value="year">This Year</option>
+                                    <option value="custom">Custom Date Range</option>
+                                </select>
+                            </div>
+                            <div class="form-group custom-dates" id="mrf-efficiency-custom-dates" style="display: none;">
+                                <label for="mrf-efficiency-start">Start Date</label>
+                                <input type="date" id="mrf-efficiency-start" name="startDate">
+                            </div>
+                            <div class="form-group custom-dates" id="mrf-efficiency-custom-dates-end" style="display: none;">
+                                <label for="mrf-efficiency-end">End Date</label>
+                                <input type="date" id="mrf-efficiency-end" name="endDate">
+                            </div>
+                            <div class="btn-group">
+                                <button type="button" class="btn btn-primary" onclick="generateReport('mrf-efficiency', 'view')">
+                                    <i class="fas fa-eye"></i> View Analysis
+                                </button>
+                                <button type="button" class="btn btn-outline" onclick="generateReport('mrf-efficiency', 'pdf')">
+                                    <i class="fas fa-file-pdf"></i> Download PDF
+                                </button>
+                            </div>
+                        </div>
+                    </form>
+                    
+                    <div class="report-results" id="mrf-efficiency-results"></div>
                 </div>
             </div>
         </div>
@@ -568,8 +643,22 @@
                 if (reportType === 'status' && applicantDropdown?.getSelectedApplicant()) {
                     params.append('applicantName', applicantDropdown.getSelectedApplicant().name);
                 } else {
-                    for (let [key, value] of formData.entries()) {
-                        if (value) params.append(key, value);
+                    // Handle smart date filtering
+                    const filterType = document.getElementById(`${reportType}-filter-type`)?.value;
+                    
+                    if (filterType && filterType !== 'custom') {
+                        // Use preset date range
+                        const dateRange = calculateDateRange(filterType);
+                        if (dateRange) {
+                            params.append('startDate', dateRange.startDate);
+                            params.append('endDate', dateRange.endDate);
+                            params.append('filterType', filterType); // For display purposes
+                        }
+                    } else {
+                        // Use custom dates from form
+                        for (let [key, value] of formData.entries()) {
+                            if (value) params.append(key, value);
+                        }
                     }
                 }
                 
@@ -591,6 +680,10 @@
                         break;
                     case 'timeline':
                         endpoint = '/hr/recruitment/reports/timeline';
+                        break;
+                    // ADD THESE NEW CASES:
+                    case 'mrf-efficiency':
+                        endpoint = '/hr/recruitment/reports/mrf-efficiency';
                         break;
                     default:
                         throw new Error('Unknown report type: ' + reportType);
@@ -642,7 +735,8 @@
                             'applicants': 'Applicants Report',
                             'hirees': 'Hirees Report',
                             'status': 'Individual Applicant Status Report',
-                            'timeline': 'MRF to Onboarding Timeline Report'
+                            'timeline': 'MRF to Onboarding Timeline Report',
+                            'mrf-efficiency': 'MRF Efficiency Analysis Report'
                         };
                         doc.text(reportTitles[reportType], 20, 35);
                         
@@ -808,7 +902,13 @@
                             // Add generation date and filters
                             doc.setFontSize(10);
                             doc.setTextColor(100, 100, 100);
-                            doc.text(`Generated on: ${data.generatedOn || new Date().toLocaleDateString()}`, 20, 45);
+
+                            const generationDate = new Date().toLocaleDateString('en-US', { 
+                                year: 'numeric', 
+                                month: 'long', 
+                                day: 'numeric'
+                            });
+                            doc.text(`Generated on: ${generationDate}`, 20, 45);
                             
                             if (data.filters && (data.filters.startDate || data.filters.endDate)) {
                                 const dateFilter = `Date Range: ${data.filters.startDate || 'Start'} to ${data.filters.endDate || 'End'}`;
@@ -976,6 +1076,311 @@
                                     margin: { left: 10, right: 10 }
                                 });
                             }
+
+                            else if (reportType === 'mrf-efficiency') {
+                                // Enhanced MRF Efficiency Analysis Report
+                                doc.setFontSize(18);
+                                doc.setTextColor(0, 0, 0);
+                                doc.text('MRF Efficiency Analysis Report', 20, 35);
+
+                                // Add generation date and filters
+                                doc.setFontSize(10);
+                                doc.setTextColor(100, 100, 100);
+                                const generationDate = new Date().toLocaleDateString('en-US', { 
+                                    year: 'numeric', 
+                                    month: 'long', 
+                                    day: 'numeric'
+                                });
+                                doc.text(`Generated on: ${generationDate}`, 20, 45);
+                                
+                                // Add generation date and filters
+                                doc.setFontSize(10);
+                                doc.setTextColor(100, 100, 100);
+                                doc.text(`Generated on: ${data.generatedOn || new Date().toLocaleDateString()}`, 20, 45);
+                                
+                                if (data.filters && (data.filters.startDate || data.filters.endDate)) {
+                                    const dateFilter = `Date Range: ${data.filters.startDate || 'Start'} to ${data.filters.endDate || 'End'}`;
+                                    doc.text(dateFilter, 20, 52);
+                                }
+                                
+                                let yPosition = 65;
+                                
+                                // Executive Summary
+                                if (data.summary) {
+                                    doc.setFontSize(14);
+                                    doc.setTextColor(0, 0, 0);
+                                    doc.text('Executive Summary', 20, yPosition);
+                                    yPosition += 10;
+                                    
+                                    const summaryData = [
+                                        ['Total MRFs', data.summary.totalMRFs],
+                                        ['Personnel Required', data.summary.totalRequired],
+                                        ['Personnel Hired', data.summary.totalHired],
+                                        ['Overall Fill Rate', `${data.summary.overallFillRate}%`],
+                                        ['Overdue MRFs', data.summary.overdueMRFs],
+                                        ['Average Days Open', `${data.summary.avgDaysOpen} days`]
+                                    ];
+                                    
+                                    doc.autoTable({
+                                        startY: yPosition,
+                                        body: summaryData,
+                                        styles: { 
+                                            fontSize: 10,
+                                            cellPadding: 4
+                                        },
+                                        columnStyles: { 
+                                            0: { fontStyle: 'bold', fillColor: [240, 240, 240], cellWidth: 70 },
+                                            1: { cellWidth: 40, halign: 'center', fontStyle: 'bold' }
+                                        },
+                                        margin: { left: 20, right: 20 }
+                                    });
+                                    
+                                    yPosition = doc.lastAutoTable.finalY + 20;
+                                }
+                                
+                                // Department Performance Analysis
+                                if (data.departmentComparison && data.departmentComparison.length > 0) {
+                                    // Check if we need a new page
+                                    if (yPosition > 150) {
+                                        doc.addPage();
+                                        yPosition = 20;
+                                    }
+                                    
+                                    doc.setFontSize(14);
+                                    doc.setTextColor(0, 0, 0);
+                                    doc.text('Department Performance Analysis', 20, yPosition);
+                                    yPosition += 10;
+                                    
+                                    const deptTableData = data.departmentComparison.map(dept => [
+                                        dept.department,
+                                        dept.totalMRFs,
+                                        dept.totalRequired,
+                                        dept.totalHired,
+                                        `${dept.fillRate}%`,
+                                        `${dept.completionRate}%`,
+                                        `${dept.avgDaysOpen} days`,
+                                        dept.overdueMRFs
+                                    ]);
+                                    
+                                    doc.autoTable({
+                                        startY: yPosition,
+                                        head: [['Department', 'MRFs', 'Required', 'Hired', 'Fill Rate', 'Completion', 'Avg Days', 'Overdue']],
+                                        body: deptTableData,
+                                        styles: { 
+                                            fontSize: 8,
+                                            cellPadding: 2
+                                        },
+                                        headStyles: { 
+                                            fillColor: [35, 133, 176],
+                                            textColor: [255, 255, 255],
+                                            fontStyle: 'bold',
+                                            fontSize: 8
+                                        },
+                                        columnStyles: {
+                                            0: { cellWidth: 25 },
+                                            1: { cellWidth: 15, halign: 'center' },
+                                            2: { cellWidth: 20, halign: 'center' },
+                                            3: { cellWidth: 15, halign: 'center' },
+                                            4: { cellWidth: 20, halign: 'center', fontStyle: 'bold' },
+                                            5: { cellWidth: 20, halign: 'center' },
+                                            6: { cellWidth: 20, halign: 'center' },
+                                            7: { cellWidth: 15, halign: 'center' }
+                                        },
+                                        margin: { left: 15, right: 15 }
+                                    });
+                                    
+                                    yPosition = doc.lastAutoTable.finalY + 20;
+                                }
+                                
+                                // Line Manager Performance Analysis
+                                if (data.lineManagerComparison && data.lineManagerComparison.length > 0) {
+                                    // Check if we need a new page
+                                    if (yPosition > 120) {
+                                        doc.addPage();
+                                        yPosition = 20;
+                                    }
+                                    
+                                    doc.setFontSize(14);
+                                    doc.setTextColor(0, 0, 0);
+                                    doc.text('Line Manager Performance Analysis', 20, yPosition);
+                                    yPosition += 10;
+                                    
+                                    const managerTableData = data.lineManagerComparison.map(manager => [
+                                        manager.lineManager,
+                                        manager.totalMRFs,
+                                        manager.totalRequired,
+                                        manager.totalHired,
+                                        `${manager.fillRate}%`,
+                                        `${manager.avgDaysOpen} days`,
+                                        manager.overdueMRFs
+                                    ]);
+                                    
+                                    doc.autoTable({
+                                        startY: yPosition,
+                                        head: [['Line Manager', 'MRFs', 'Required', 'Hired', 'Fill Rate', 'Avg Days', 'Overdue']],
+                                        body: managerTableData,
+                                        styles: { 
+                                            fontSize: 8,
+                                            cellPadding: 2
+                                        },
+                                        headStyles: { 
+                                            fillColor: [35, 133, 176],
+                                            textColor: [255, 255, 255],
+                                            fontStyle: 'bold',
+                                            fontSize: 8
+                                        },
+                                        columnStyles: {
+                                            0: { cellWidth: 35 },
+                                            1: { cellWidth: 15, halign: 'center' },
+                                            2: { cellWidth: 20, halign: 'center' },
+                                            3: { cellWidth: 15, halign: 'center' },
+                                            4: { cellWidth: 20, halign: 'center', fontStyle: 'bold' },
+                                            5: { cellWidth: 20, halign: 'center' },
+                                            6: { cellWidth: 15, halign: 'center' }
+                                        },
+                                        margin: { left: 15, right: 15 }
+                                    });
+                                    
+                                    yPosition = doc.lastAutoTable.finalY + 20;
+                                }
+                                
+                                // Monthly Trends Analysis
+                                if (data.monthlyData && data.monthlyData.length > 0) {
+                                    // Check if we need a new page
+                                    if (yPosition > 150) {
+                                        doc.addPage();
+                                        yPosition = 20;
+                                    }
+                                    
+                                    doc.setFontSize(14);
+                                    doc.setTextColor(0, 0, 0);
+                                    doc.text('Monthly Trends Analysis', 20, yPosition);
+                                    yPosition += 10;
+                                    
+                                    const monthlyTableData = data.monthlyData.map(month => {
+                                        const monthlyFillRate = month.personnelRequired > 0 ? 
+                                            Math.round((month.personnelHired / month.personnelRequired) * 100) : 0;
+                                        
+                                        return [
+                                            month.month,
+                                            month.mrfsCreated,
+                                            month.personnelRequired,
+                                            month.personnelHired,
+                                            `${monthlyFillRate}%`
+                                        ];
+                                    });
+                                    
+                                    doc.autoTable({
+                                        startY: yPosition,
+                                        head: [['Month', 'MRFs Created', 'Personnel Required', 'Personnel Hired', 'Fill Rate']],
+                                        body: monthlyTableData,
+                                        styles: { 
+                                            fontSize: 9,
+                                            cellPadding: 3
+                                        },
+                                        headStyles: { 
+                                            fillColor: [35, 133, 176],
+                                            textColor: [255, 255, 255],
+                                            fontStyle: 'bold'
+                                        },
+                                        columnStyles: {
+                                            0: { cellWidth: 40 },
+                                            1: { cellWidth: 30, halign: 'center' },
+                                            2: { cellWidth: 35, halign: 'center' },
+                                            3: { cellWidth: 30, halign: 'center' },
+                                            4: { cellWidth: 25, halign: 'center', fontStyle: 'bold' }
+                                        },
+                                        margin: { left: 20, right: 20 }
+                                    });
+                                    
+                                    yPosition = doc.lastAutoTable.finalY + 20;
+                                }
+                                
+                                // Individual MRF Details (show top 20 most critical)
+                                if (data.mrfData && data.mrfData.length > 0) {
+                                    // Check if we need a new page
+                                    if (yPosition > 100) {
+                                        doc.addPage();
+                                        yPosition = 20;
+                                    }
+                                    
+                                    doc.setFontSize(14);
+                                    doc.setTextColor(0, 0, 0);
+                                    doc.text('Critical MRF Details (Top Issues)', 20, yPosition);
+                                    yPosition += 10;
+                                    
+                                    // Sort by overdue days descending and take top 20
+                                    const criticalMRFs = data.mrfData
+                                        .sort((a, b) => (b.daysOverdue || 0) - (a.daysOverdue || 0))
+                                        .slice(0, 20);
+                                    
+                                    const mrfTableData = criticalMRFs.map(mrf => [
+                                        mrf.mrfId,
+                                        mrf.positionTitle.length > 15 ? mrf.positionTitle.substring(0, 15) + '...' : mrf.positionTitle,
+                                        mrf.department,
+                                        mrf.lineManager.length > 12 ? mrf.lineManager.substring(0, 12) + '...' : mrf.lineManager,
+                                        mrf.personnelRequired,
+                                        mrf.personnelHired,
+                                        `${mrf.fillRate}%`,
+                                        `${mrf.daysOpen}d`,
+                                        mrf.daysOverdue > 0 ? `${mrf.daysOverdue}d` : '-',
+                                        mrf.status.length > 8 ? mrf.status.substring(0, 8) + '...' : mrf.status
+                                    ]);
+                                    
+                                    doc.autoTable({
+                                        startY: yPosition,
+                                        head: [['MRF ID', 'Position', 'Dept', 'Line Mgr', 'Req', 'Hired', 'Fill%', 'Days', 'Over', 'Status']],
+                                        body: mrfTableData,
+                                        styles: { 
+                                            fontSize: 7,
+                                            cellPadding: 1.5,
+                                            overflow: 'linebreak'
+                                        },
+                                        headStyles: { 
+                                            fillColor: [35, 133, 176],
+                                            textColor: [255, 255, 255],
+                                            fontStyle: 'bold',
+                                            fontSize: 7
+                                        },
+                                        columnStyles: {
+                                            0: { cellWidth: 15, fontStyle: 'bold' },
+                                            1: { cellWidth: 20 },
+                                            2: { cellWidth: 15 },
+                                            3: { cellWidth: 18 },
+                                            4: { cellWidth: 12, halign: 'center' },
+                                            5: { cellWidth: 12, halign: 'center' },
+                                            6: { cellWidth: 12, halign: 'center', fontStyle: 'bold' },
+                                            7: { cellWidth: 12, halign: 'center' },
+                                            8: { cellWidth: 12, halign: 'center' },
+                                            9: { cellWidth: 15 }
+                                        },
+                                        margin: { left: 10, right: 10 }
+                                    });
+                                    
+                                    // Add note if there are more MRFs
+                                    if (data.mrfData.length > 20) {
+                                        yPosition = doc.lastAutoTable.finalY + 10;
+                                        doc.setFontSize(8);
+                                        doc.setTextColor(100, 100, 100);
+                                        doc.text(`Note: Showing top 20 critical MRFs. Total MRFs in report: ${data.mrfData.length}`, 20, yPosition);
+                                    }
+                                }
+                                
+                                // Add footer with page numbers and recommendations
+                                const pageCount = doc.internal.getNumberOfPages();
+                                for (let i = 1; i <= pageCount; i++) {
+                                    doc.setPage(i);
+                                    doc.setFontSize(8);
+                                    doc.setTextColor(128, 128, 128);
+                                    doc.text(`Page ${i} of ${pageCount}`, doc.internal.pageSize.width - 30, doc.internal.pageSize.height - 10);
+                                    doc.text('MRF Efficiency Analysis Report - Confidential', 20, doc.internal.pageSize.height - 10);
+                                    
+                                    // Add key insights on first page footer
+                                    if (i === 1 && data.summary) {
+                                        doc.text(`Overall Fill Rate: ${data.summary.overallFillRate}% | Overdue MRFs: ${data.summary.overdueMRFs}`, 20, doc.internal.pageSize.height - 20);
+                                    }
+                                }
+                            }
                             
                             // Add footer with page numbers and additional info
                             const pageCount = doc.internal.getNumberOfPages();
@@ -1059,6 +1464,45 @@
         
         // Add data table based on report type
         if (reportType === 'applicants' && data.data && data.data.length > 0) {
+            
+            // Add Department Performance Summary (NEW)
+            if (data.departmentAnalysis) {
+                html += `
+                    <div class="department-summary" style="background: #f8f9fa; padding: 15px; border-radius: 5px; margin-bottom: 20px;">
+                        <h4 style="margin-bottom: 10px;">Department Performance Summary</h4>
+                        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 10px;">
+                `;
+                
+                data.departmentAnalysis.forEach(dept => {
+                    const successRate = dept.totalApplicants > 0 ? Math.round((dept.hired / dept.totalApplicants) * 100) : 0;
+                    const rateColor = successRate >= 70 ? '#28a745' : successRate >= 50 ? '#ffc107' : '#dc3545';
+                    
+                    html += `
+                        <div style="background: white; padding: 10px; border-radius: 3px; border-left: 3px solid ${rateColor};">
+                            <strong>${dept.department}</strong><br>
+                            <small>${dept.totalApplicants} applicants → ${dept.hired} hired</small><br>
+                            <span style="color: ${rateColor}; font-weight: bold;">${successRate}% success rate</span>
+                        </div>
+                    `;
+                });
+                
+                html += '</div></div>';
+            }
+
+            // Add Month-over-Month Comparison (NEW)
+            if (data.trendComparison) {
+                html += `
+                    <div style="background: #e9ecef; padding: 10px; border-radius: 3px; margin-bottom: 15px;">
+                        <strong>📈 Trend Analysis:</strong> 
+                        ${data.trendComparison.currentMonth} applicants this period vs ${data.trendComparison.previousMonth} last period 
+                        (<span style="color: ${data.trendComparison.change >= 0 ? '#28a745' : '#dc3545'};">
+                            ${data.trendComparison.change >= 0 ? '+' : ''}${data.trendComparison.change}%
+                        </span>)
+                    </div>
+                `;
+            }
+
+            // Regular data table (keep existing)
             html += `
                 <div class="data-table-container">
                     <table class="data-table">
@@ -1106,9 +1550,47 @@
             });
             
             html += '</tbody></table></div>';
+            
+            // Add Actionable Insights (NEW)
+            if (data.insights && data.insights.length > 0) {
+                html += `
+                    <div style="background: #d1ecf1; padding: 10px; border-radius: 3px; margin-top: 15px;">
+                        <strong>💡 Key Insights & Recommendations:</strong>
+                        <ul style="margin: 5px 0 0 20px;">
+                `;
+                
+                data.insights.forEach(insight => {
+                    html += `<li>${insight}</li>`;
+                });
+                
+                html += '</ul></div>';
+            }
         }
         
         else if (reportType === 'hirees' && data.data && data.data.length > 0) {
+            
+            // Add Department Hiring Summary (NEW)
+            if (data.departmentBreakdown) {
+                html += `
+                    <div style="background: #f8f9fa; padding: 15px; border-radius: 5px; margin-bottom: 20px;">
+                        <h4 style="margin-bottom: 10px;">Hiring by Department</h4>
+                        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 10px;">
+                `;
+                
+                data.departmentBreakdown.forEach(dept => {
+                    html += `
+                        <div style="background: white; padding: 8px; border-radius: 3px; text-align: center;">
+                            <strong>${dept.department}</strong><br>
+                            <span style="font-size: 1.5em; color: #28a745;">${dept.hires}</span><br>
+                            <small>new hires</small>
+                        </div>
+                    `;
+                });
+                
+                html += '</div></div>';
+            }
+
+            // Regular data table (keep existing)
             html += `
                 <div class="data-table-container">
                     <table class="data-table">
@@ -1366,6 +1848,203 @@
                 html += '</tbody></table></div></div>';
             }
         }
+
+        else if (reportType === 'mrf-efficiency') {
+            // Clean summary
+            if (data.summary) {
+                html += '<div class="results-summary">';
+                
+                html += `
+                    <div class="summary-item">
+                        <div class="summary-value">${data.summary.totalMRFs}</div>
+                        <div class="summary-label">Total MRFs</div>
+                    </div>
+                    <div class="summary-item">
+                        <div class="summary-value">${data.summary.totalRequired}</div>
+                        <div class="summary-label">Personnel Required</div>
+                    </div>
+                    <div class="summary-item">
+                        <div class="summary-value">${data.summary.totalHired}</div>
+                        <div class="summary-label">Personnel Hired</div>
+                    </div>
+                    <div class="summary-item">
+                        <div class="summary-value">${data.summary.overallFillRate}%</div>
+                        <div class="summary-label">Overall Fill Rate</div>
+                    </div>
+                    <div class="summary-item">
+                        <div class="summary-value">${data.summary.overdueMRFs}</div>
+                        <div class="summary-label">Overdue MRFs</div>
+                    </div>
+                    <div class="summary-item">
+                        <div class="summary-value">${data.summary.avgDaysOpen}</div>
+                        <div class="summary-label">Avg Days Open</div>
+                    </div>
+                `;
+                
+                html += '</div>';
+            }
+
+            // Department Comparison (let them see differences)
+            if (data.departmentComparison && data.departmentComparison.length > 0) {
+                html += `
+                    <div class="data-section">
+                        <h4>Department Comparison</h4>
+                        <div class="data-table-container">
+                            <table class="data-table">
+                                <thead>
+                                    <tr>
+                                        <th>Department</th>
+                                        <th>Total MRFs</th>
+                                        <th>Required</th>
+                                        <th>Hired</th>
+                                        <th>Fill Rate</th>
+                                        <th>Completion Rate</th>
+                                        <th>Avg Days</th>
+                                        <th>Overdue</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                `;
+                
+                data.departmentComparison.forEach(dept => {
+                    html += `
+                        <tr>
+                            <td><strong>${dept.department}</strong></td>
+                            <td>${dept.totalMRFs}</td>
+                            <td>${dept.totalRequired}</td>
+                            <td>${dept.totalHired}</td>
+                            <td><strong>${dept.fillRate}%</strong></td>
+                            <td>${dept.completionRate}%</td>
+                            <td>${dept.avgDaysOpen} days</td>
+                            <td>${dept.overdueMRFs}</td>
+                        </tr>
+                    `;
+                });
+                
+                html += '</tbody></table></div></div>';
+            }
+
+            // Line Manager Comparison (let them see who's fast/slow)
+            if (data.lineManagerComparison && data.lineManagerComparison.length > 0) {
+                html += `
+                    <div class="data-section">
+                        <h4>Line Manager Performance</h4>
+                        <div class="data-table-container">
+                            <table class="data-table">
+                                <thead>
+                                    <tr>
+                                        <th>Line Manager</th>
+                                        <th>Total MRFs</th>
+                                        <th>Required</th>
+                                        <th>Hired</th>
+                                        <th>Fill Rate</th>
+                                        <th>Avg Days</th>
+                                        <th>Overdue</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                `;
+                
+                data.lineManagerComparison.forEach(manager => {
+                    html += `
+                        <tr>
+                            <td>${manager.lineManager}</td>
+                            <td>${manager.totalMRFs}</td>
+                            <td>${manager.totalRequired}</td>
+                            <td>${manager.totalHired}</td>
+                            <td><strong>${manager.fillRate}%</strong></td>
+                            <td>${manager.avgDaysOpen} days</td>
+                            <td>${manager.overdueMRFs}</td>
+                        </tr>
+                    `;
+                });
+                
+                html += '</tbody></table></div></div>';
+            }
+
+            // Monthly Trends (let them see changes)
+            if (data.monthlyData && data.monthlyData.length > 0) {
+                html += `
+                    <div class="data-section">
+                        <h4>Monthly Trends</h4>
+                        <div class="data-table-container">
+                            <table class="data-table">
+                                <thead>
+                                    <tr>
+                                        <th>Month</th>
+                                        <th>MRFs Created</th>
+                                        <th>Personnel Required</th>
+                                        <th>Personnel Hired</th>
+                                        <th>Monthly Fill Rate</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                `;
+                
+                data.monthlyData.forEach(month => {
+                    const monthlyFillRate = month.personnelRequired > 0 ? 
+                        Math.round((month.personnelHired / month.personnelRequired) * 100) : 0;
+                    
+                    html += `
+                        <tr>
+                            <td><strong>${month.month}</strong></td>
+                            <td>${month.mrfsCreated}</td>
+                            <td>${month.personnelRequired}</td>
+                            <td>${month.personnelHired}</td>
+                            <td><strong>${monthlyFillRate}%</strong></td>
+                        </tr>
+                    `;
+                });
+                
+                html += '</tbody></table></div></div>';
+            }
+
+            // Individual MRF Details
+            if (data.mrfData && data.mrfData.length > 0) {
+                html += `
+                    <div class="data-section">
+                        <h4>Individual MRF Details</h4>
+                        <div class="data-table-container">
+                            <table class="data-table">
+                                <thead>
+                                    <tr>
+                                        <th>MRF ID</th>
+                                        <th>Position</th>
+                                        <th>Department</th>
+                                        <th>Line Manager</th>
+                                        <th>Required</th>
+                                        <th>Hired</th>
+                                        <th>Fill Rate</th>
+                                        <th>Days Open</th>
+                                        <th>Days Overdue</th>
+                                        <th>Status</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                `;
+                
+                data.mrfData.forEach(mrf => {
+                    const overdueClass = mrf.isOverdue ? 'style="background-color: #ffebee;"' : '';
+                    
+                    html += `
+                        <tr ${overdueClass}>
+                            <td><strong>${mrf.mrfId}</strong></td>
+                            <td>${mrf.positionTitle}</td>
+                            <td>${mrf.department}</td>
+                            <td>${mrf.lineManager}</td>
+                            <td>${mrf.personnelRequired}</td>
+                            <td>${mrf.personnelHired}</td>
+                            <td><strong>${mrf.fillRate}%</strong></td>
+                            <td>${mrf.daysOpen} days</td>
+                            <td>${mrf.daysOverdue > 0 ? mrf.daysOverdue + ' days' : '-'}</td>
+                            <td>${mrf.status}</td>
+                        </tr>
+                    `;
+                });
+                
+                html += '</tbody></table></div></div>';
+            }
+        }
         
         resultsDiv.innerHTML = html;
     }
@@ -1390,7 +2069,7 @@
             const firstDay = new Date(today.getFullYear(), today.getMonth(), 1);
             const lastDay = new Date(today.getFullYear(), today.getMonth() + 1, 0);
             
-            // Set default date ranges for forms
+            // REPLACE your existing code with this:
             const startDateInputs = document.querySelectorAll('input[name="startDate"]');
             const endDateInputs = document.querySelectorAll('input[name="endDate"]');
             
@@ -1401,6 +2080,71 @@
             endDateInputs.forEach(input => {
                 input.value = lastDay.toISOString().split('T')[0];
             });
+        }
+
+        function toggleDateInputs(reportType) {
+            const filterType = document.getElementById(`${reportType}-filter-type`).value;
+            const customDatesStart = document.getElementById(`${reportType}-custom-dates`);
+            const customDatesEnd = document.getElementById(`${reportType}-custom-dates-end`);
+            
+            if (filterType === 'custom') {
+                customDatesStart.style.display = 'block';
+                customDatesEnd.style.display = 'block';
+            } else {
+                customDatesStart.style.display = 'none';
+                customDatesEnd.style.display = 'none';
+            }
+        }
+
+        function calculateDateRange(filterType) {
+            const today = new Date();
+            let startDate, endDate;
+            
+            switch (filterType) {
+                case 'month':
+                    startDate = new Date(today.getFullYear(), today.getMonth(), 1);
+                    endDate = new Date(today.getFullYear(), today.getMonth() + 1, 0);
+                    break;
+                case 'last-month':
+                    startDate = new Date(today.getFullYear(), today.getMonth() - 1, 1);
+                    endDate = new Date(today.getFullYear(), today.getMonth(), 0);
+                    break;
+                case 'quarter':
+                    const currentQuarter = Math.floor(today.getMonth() / 3);
+                    startDate = new Date(today.getFullYear(), currentQuarter * 3, 1);
+                    endDate = new Date(today.getFullYear(), (currentQuarter + 1) * 3, 0);
+                    break;
+                case 'year':
+                    startDate = new Date(today.getFullYear(), 0, 1);
+                    endDate = new Date(today.getFullYear(), 11, 31);
+                    break;
+                default:
+                    return null;
+            }
+            
+            return {
+                startDate: startDate.toISOString().split('T')[0],
+                endDate: endDate.toISOString().split('T')[0]
+            };
+        }
+
+        function getMonthName(filterType) {
+            const today = new Date();
+            
+            switch (filterType) {
+                case 'month':
+                    return today.toLocaleDateString('en-US', { month: 'long', year: 'numeric' });
+                case 'last-month':
+                    const lastMonth = new Date(today.getFullYear(), today.getMonth() - 1, 1);
+                    return lastMonth.toLocaleDateString('en-US', { month: 'long', year: 'numeric' });
+                case 'quarter':
+                    const quarter = Math.floor(today.getMonth() / 3) + 1;
+                    return `Q${quarter} ${today.getFullYear()}`;
+                case 'year':
+                    return today.getFullYear().toString();
+                default:
+                    return 'Custom Range';
+            }
         }
 
         // Searchable Dropdown Class

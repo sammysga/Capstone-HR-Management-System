@@ -7132,6 +7132,115 @@ The {companyName} HR Team`
 
             console.log(`✅ [Applicants Report] Found ${applicants.length} applicants`);
 
+            // NEW: Calculate department analysis
+            const departmentAnalysis = [];
+            const departmentGroups = {};
+
+            // Group applicants by department
+            applicants.forEach(applicant => {
+                const deptName = applicant.departments?.deptName || 'Unknown';
+                if (!departmentGroups[deptName]) {
+                    departmentGroups[deptName] = {
+                        department: deptName,
+                        totalApplicants: 0,
+                        hired: 0
+                    };
+                }
+                departmentGroups[deptName].totalApplicants++;
+                
+                // Check if hired
+                const status = applicant.applicantStatus || '';
+                if (status.toLowerCase().includes('hired') || status.toLowerCase().includes('onboarding')) {
+                    departmentGroups[deptName].hired++;
+                }
+            });
+
+            // Convert to array and calculate success rates
+            Object.values(departmentGroups).forEach(dept => {
+                const successRate = dept.totalApplicants > 0 ? 
+                    Math.round((dept.hired / dept.totalApplicants) * 100) : 0;
+                departmentAnalysis.push({
+                    ...dept,
+                    successRate
+                });
+            });
+
+            // Sort by success rate descending
+            departmentAnalysis.sort((a, b) => b.successRate - a.successRate);
+
+            console.log('📊 [Applicants Report] Department analysis:', departmentAnalysis);
+
+            // NEW: Calculate trend comparison (if date filters provided)
+            let trendComparison = null;
+            if (startDate && endDate) {
+                try {
+                    const currentStart = new Date(startDate);
+                    const currentEnd = new Date(endDate);
+                    const periodLength = currentEnd - currentStart;
+                    
+                    // Calculate previous period
+                    const previousStart = new Date(currentStart.getTime() - periodLength);
+                    const previousEnd = new Date(currentStart);
+                    
+                    // Query previous period
+                    const { data: previousApplicants, error: prevError } = await supabase
+                        .from('applicantaccounts')
+                        .select('applicantId')
+                        .gte('created_at', previousStart.toISOString())
+                        .lte('created_at', previousEnd.toISOString());
+                    
+                    if (!prevError && previousApplicants) {
+                        const currentCount = applicants.length;
+                        const previousCount = previousApplicants.length;
+                        const change = previousCount > 0 ? 
+                            Math.round(((currentCount - previousCount) / previousCount) * 100) : 0;
+                        
+                        trendComparison = {
+                            currentMonth: currentCount,
+                            previousMonth: previousCount,
+                            change: change
+                        };
+                        
+                        console.log('📈 [Applicants Report] Trend comparison:', trendComparison);
+                    }
+                } catch (error) {
+                    console.log('⚠️ [Applicants Report] Could not calculate trend comparison:', error);
+                }
+            }
+
+            // NEW: Generate insights
+            const insights = [];
+
+            if (departmentAnalysis.length > 0) {
+                // Find best and worst performing departments
+                const best = departmentAnalysis[0];
+                const worst = departmentAnalysis[departmentAnalysis.length - 1];
+                
+                if (best.successRate >= 70 && best.totalApplicants >= 3) {
+                    insights.push(`${best.department} department shows excellent performance with ${best.successRate}% success rate`);
+                }
+                
+                if (worst.successRate < 50 && worst.totalApplicants >= 5) {
+                    insights.push(`${worst.department} department needs attention - only ${worst.successRate}% success rate`);
+                }
+                
+                // Check for departments with low application volume
+                const lowVolume = departmentAnalysis.filter(d => d.totalApplicants < 3 && d.totalApplicants > 0);
+                if (lowVolume.length > 0) {
+                    insights.push(`Consider targeted recruitment for: ${lowVolume.map(d => d.department).join(', ')}`);
+                }
+            }
+
+            if (trendComparison) {
+                if (trendComparison.change >= 25) {
+                    insights.push(`Application volume increased significantly (${trendComparison.change}%) - ensure adequate screening capacity`);
+                } else if (trendComparison.change <= -25) {
+                    insights.push(`Application volume decreased (${trendComparison.change}%) - review recruitment channels`);
+                }
+            }
+
+            console.log('💡 [Applicants Report] Generated insights:', insights);
+
             // Enhanced summary statistics to match your report format
             const summary = {
                 totalApplications: applicants.length,
@@ -7243,8 +7352,11 @@ The {companyName} HR Team`
                     format: 'pdf',
                     data: processedApplicants,
                     summary: summary,
+                    departmentAnalysis: departmentAnalysis,
+                    trendComparison: trendComparison,
+                    insights: insights,
                     generatedOn: generatedOn,
-                    dateRange: { startDate, endDate     },
+                    dateRange: { startDate, endDate },
                     reportTitle: 'Applicants Report (HR)',
                     reportSubtitle: 'Comprehensive recruitment analytics and detailed reporting for applicants'
                 });
@@ -7255,6 +7367,9 @@ The {companyName} HR Team`
                 success: true,
                 data: processedApplicants,
                 summary: summary,
+                departmentAnalysis: departmentAnalysis,
+                trendComparison: trendComparison,
+                insights: insights,
                 generatedOn: generatedOn,
                 reportTitle: 'Applicants Report (HR)'
             });
@@ -7326,6 +7441,31 @@ The {companyName} HR Team`
 
             console.log(`✅ [Hirees Report] Filtered to ${hirees.length} hirees`);
 
+            // NEW: Calculate department breakdown
+            const departmentBreakdown = [];
+            const deptGroups = {};
+
+            // Group hirees by department
+            hirees.forEach(hiree => {
+                const deptName = hiree.departments?.deptName || 'Unknown';
+                if (!deptGroups[deptName]) {
+                    deptGroups[deptName] = {
+                        department: deptName,
+                        hires: 0
+                    };
+                }
+                deptGroups[deptName].hires++;
+            });
+
+            // Convert to array and sort by hire count
+            Object.values(deptGroups).forEach(dept => {
+                departmentBreakdown.push(dept);
+            });
+
+            departmentBreakdown.sort((a, b) => b.hires - a.hires);
+
+            console.log('📊 [Hirees Report] Department breakdown:', departmentBreakdown);
+
             // Enhanced summary statistics to match your format
             const summary = {
                 totalHirees: hirees.length,
@@ -7350,7 +7490,7 @@ The {companyName} HR Team`
                 middleInitial: hiree.middleInitial || '',
                 email: hiree.useraccounts?.userEmail || 'N/A',
                 phoneNumber: hiree.phoneNo || 'N/A',
-                jobTitle: hiree.jobpositions?.jobTitle || 'N/A',  // Fixed: was appliedPosition
+                jobTitle: hiree.jobpositions?.jobTitle || 'N/A',
                 jobType: hiree.jobpositions?.jobType || 'Full-time',
                 hireDate: hiree.created_at ? 
                     new Date(hiree.created_at).toLocaleDateString('en-US', { 
@@ -7379,6 +7519,7 @@ The {companyName} HR Team`
                     format: 'pdf',
                     data: processedHirees,
                     summary: summary,
+                    departmentBreakdown: departmentBreakdown,
                     generatedOn: generatedOn,
                     dateRange: { startDate, endDate },
                     reportTitle: 'Hirees Report (HR)',
@@ -7390,6 +7531,7 @@ The {companyName} HR Team`
                 success: true,
                 data: processedHirees,
                 summary: summary,
+                departmentBreakdown: departmentBreakdown,
                 generatedOn: generatedOn,
                 reportTitle: 'Hirees Report (HR)'
             });
@@ -8056,6 +8198,272 @@ The {companyName} HR Team`
         } catch (error) {
             console.error('❌ [Timeline Report] Error in getTimelineReport:', error);
             return res.status(500).json({ success: false, message: 'Internal server error: ' + error.message });
+        }
+    },
+
+    getMRFEfficiencyReport: async function(req, res) {
+        if (!req.session.user || req.session.user.userRole !== 'HR') {
+            return res.status(401).json({ success: false, message: 'Unauthorized access' });
+        }
+
+        try {
+            const { startDate, endDate, department, format } = req.query;
+            
+            console.log('🔍 [MRF Efficiency] Fetching MRF efficiency data...');
+            
+            // Get MRFs with line manager details
+            let mrfQuery = supabase
+                .from('mrf')
+                .select(`
+                    mrfId,
+                    positionTitle,
+                    requisitionDate,
+                    requiredDate,
+                    numPersonsRequisitioned,
+                    status,
+                    departmentId,
+                    userId,
+                    departments!inner(deptName),
+                    useraccounts!inner(userEmail)
+                `)
+                .order('requisitionDate', { ascending: false });
+
+            // Apply date filters
+            if (startDate) {
+                mrfQuery = mrfQuery.gte('requisitionDate', startDate);
+            }
+            if (endDate) {
+                const endDateTime = new Date(endDate);
+                endDateTime.setHours(23, 59, 59, 999);
+                mrfQuery = mrfQuery.lte('requisitionDate', endDateTime.toISOString());
+            }
+            if (department && department !== 'all') {
+                mrfQuery = mrfQuery.eq('departmentId', department);
+            }
+
+            const { data: mrfs, error: mrfError } = await mrfQuery;
+
+            if (mrfError) {
+                console.error('❌ [MRF Efficiency] Error fetching MRFs:', mrfError);
+                throw mrfError;
+            }
+
+            // Get all applicants (no status filtering in SQL)
+            const { data: allApplicants, error: applicantsError } = await supabase
+                .from('applicantaccounts')
+                .select(`
+                    applicantId,
+                    applicantStatus,
+                    created_at,
+                    departmentId,
+                    jobId,
+                    jobpositions!inner(jobTitle),
+                    departments!inner(deptName)
+                `);
+
+            if (applicantsError) {
+                console.error('❌ [MRF Efficiency] Error fetching applicants:', applicantsError);
+            }
+
+            // Filter hired applicants in JavaScript
+            const hiredApplicants = (allApplicants || []).filter(applicant => {
+                const status = (applicant.applicantStatus || '').toString().toLowerCase();
+                return status.includes('hired') || status.includes('onboarding');
+            });
+
+            // Process MRF data with clean metrics
+            const mrfData = mrfs.map(mrf => {
+                // Find related hires for this MRF
+                const relatedHires = hiredApplicants.filter(applicant => {
+                    const hireDate = new Date(applicant.created_at);
+                    const mrfDate = new Date(mrf.requisitionDate);
+                    const mrfDeadline = new Date(mrf.requiredDate);
+                    
+                    return applicant.departmentId === mrf.departmentId && 
+                           hireDate >= mrfDate &&
+                           hireDate <= new Date(mrfDeadline.getTime() + (90 * 24 * 60 * 60 * 1000));
+                });
+
+                const personnelHired = relatedHires.length;
+                const fillRate = Math.round((personnelHired / mrf.numPersonsRequisitioned) * 100);
+                const daysOpen = Math.floor((new Date() - new Date(mrf.requisitionDate)) / (1000 * 60 * 60 * 24));
+                const isOverdue = new Date() > new Date(mrf.requiredDate);
+                const daysOverdue = isOverdue ? Math.floor((new Date() - new Date(mrf.requiredDate)) / (1000 * 60 * 60 * 24)) : 0;
+
+                return {
+                    mrfId: mrf.mrfId,
+                    positionTitle: mrf.positionTitle,
+                    department: mrf.departments.deptName,
+                    lineManager: mrf.useraccounts.userEmail,
+                    requisitionDate: new Date(mrf.requisitionDate).toLocaleDateString(),
+                    requiredDate: new Date(mrf.requiredDate).toLocaleDateString(),
+                    personnelRequired: mrf.numPersonsRequisitioned,
+                    personnelHired: personnelHired,
+                    fillRate: fillRate,
+                    daysOpen: daysOpen,
+                    daysOverdue: daysOverdue,
+                    isOverdue: isOverdue,
+                    status: mrf.status
+                };
+            });
+
+            // Department comparison data (let them see differences)
+            const departmentStats = {};
+            mrfData.forEach(mrf => {
+                if (!departmentStats[mrf.department]) {
+                    departmentStats[mrf.department] = {
+                        totalMRFs: 0,
+                        totalRequired: 0,
+                        totalHired: 0,
+                        completedMRFs: 0,
+                        overdueMRFs: 0,
+                        totalDaysOpen: 0
+                    };
+                }
+                
+                const dept = departmentStats[mrf.department];
+                dept.totalMRFs++;
+                dept.totalRequired += mrf.personnelRequired;
+                dept.totalHired += mrf.personnelHired;
+                dept.totalDaysOpen += mrf.daysOpen;
+                if (mrf.fillRate >= 100) dept.completedMRFs++;
+                if (mrf.isOverdue) dept.overdueMRFs++;
+            });
+
+            // Convert to comparison table
+            const departmentComparison = Object.entries(departmentStats).map(([deptName, stats]) => ({
+                department: deptName,
+                totalMRFs: stats.totalMRFs,
+                totalRequired: stats.totalRequired,
+                totalHired: stats.totalHired,
+                fillRate: stats.totalRequired > 0 ? Math.round((stats.totalHired / stats.totalRequired) * 100) : 0,
+                completionRate: stats.totalMRFs > 0 ? Math.round((stats.completedMRFs / stats.totalMRFs) * 100) : 0,
+                avgDaysOpen: stats.totalMRFs > 0 ? Math.round(stats.totalDaysOpen / stats.totalMRFs) : 0,
+                overdueMRFs: stats.overdueMRFs
+            }));
+
+            // Line manager comparison (let them see who's fast/slow)
+            const lineManagerStats = {};
+            mrfData.forEach(mrf => {
+                if (!lineManagerStats[mrf.lineManager]) {
+                    lineManagerStats[mrf.lineManager] = {
+                        totalMRFs: 0,
+                        totalRequired: 0,
+                        totalHired: 0,
+                        totalDaysOpen: 0,
+                        overdueMRFs: 0
+                    };
+                }
+                
+                const manager = lineManagerStats[mrf.lineManager];
+                manager.totalMRFs++;
+                manager.totalRequired += mrf.personnelRequired;
+                manager.totalHired += mrf.personnelHired;
+                manager.totalDaysOpen += mrf.daysOpen;
+                if (mrf.isOverdue) manager.overdueMRFs++;
+            });
+
+            const lineManagerComparison = Object.entries(lineManagerStats).map(([managerEmail, stats]) => ({
+                lineManager: managerEmail,
+                totalMRFs: stats.totalMRFs,
+                totalRequired: stats.totalRequired,
+                totalHired: stats.totalHired,
+                fillRate: stats.totalRequired > 0 ? Math.round((stats.totalHired / stats.totalRequired) * 100) : 0,
+                avgDaysOpen: stats.totalMRFs > 0 ? Math.round(stats.totalDaysOpen / stats.totalMRFs) : 0,
+                overdueMRFs: stats.overdueMRFs
+            }));
+
+            // Time trend analysis (last 6 months)
+            const monthlyTrends = {};
+            const currentDate = new Date();
+            
+            // Initialize last 6 months
+            for (let i = 5; i >= 0; i--) {
+                const monthDate = new Date(currentDate.getFullYear(), currentDate.getMonth() - i, 1);
+                const monthKey = `${monthDate.getFullYear()}-${String(monthDate.getMonth() + 1).padStart(2, '0')}`;
+                monthlyTrends[monthKey] = {
+                    month: monthDate.toLocaleDateString('en-US', { month: 'short', year: 'numeric' }),
+                    mrfsCreated: 0,
+                    personnelRequired: 0,
+                    personnelHired: 0
+                };
+            }
+
+            // Count MRFs by month
+            mrfData.forEach(mrf => {
+                const mrfDate = new Date(mrf.requisitionDate);
+                const monthKey = `${mrfDate.getFullYear()}-${String(mrfDate.getMonth() + 1).padStart(2, '0')}`;
+                
+                if (monthlyTrends[monthKey]) {
+                    monthlyTrends[monthKey].mrfsCreated++;
+                    monthlyTrends[monthKey].personnelRequired += mrf.personnelRequired;
+                    monthlyTrends[monthKey].personnelHired += mrf.personnelHired;
+                }
+            });
+
+            const monthlyData = Object.values(monthlyTrends);
+
+            // Clean summary statistics
+            const totalMRFs = mrfs.length;
+            const totalRequired = mrfs.reduce((sum, mrf) => sum + mrf.numPersonsRequisitioned, 0);
+            const totalHired = mrfData.reduce((sum, mrf) => sum + mrf.personnelHired, 0);
+            const overallFillRate = totalRequired > 0 ? Math.round((totalHired / totalRequired) * 100) : 0;
+            const overdueMRFs = mrfData.filter(mrf => mrf.isOverdue).length;
+            const completedMRFs = mrfData.filter(mrf => mrf.fillRate >= 100).length;
+            const avgDaysOpen = mrfData.length > 0 ? Math.round(mrfData.reduce((sum, mrf) => sum + mrf.daysOpen, 0) / mrfData.length) : 0;
+
+            const summary = {
+                totalMRFs,
+                totalRequired,
+                totalHired,
+                overallFillRate,
+                overdueMRFs,
+                completedMRFs,
+                avgDaysOpen
+            };
+
+            const generatedOn = new Date().toLocaleDateString('en-US', { 
+                year: 'numeric', 
+                month: 'long', 
+                day: 'numeric',
+                hour: '2-digit',
+                minute: '2-digit'
+            });
+
+            if (format === 'pdf') {
+                return res.json({
+                    success: true,
+                    reportType: 'mrf-efficiency',
+                    format: 'pdf',
+                    summary: summary,
+                    mrfData: mrfData,
+                    departmentComparison: departmentComparison,
+                    lineManagerComparison: lineManagerComparison,
+                    monthlyData: monthlyData,
+                    generatedOn: generatedOn,
+                    filters: { startDate, endDate, department },
+                    reportTitle: 'MRF Efficiency Report',
+                    reportSubtitle: 'Manpower requisition fulfillment tracking and performance comparison'
+                });
+            }
+
+            return res.json({
+                success: true,
+                summary: summary,
+                mrfData: mrfData,
+                departmentComparison: departmentComparison,
+                lineManagerComparison: lineManagerComparison,
+                monthlyData: monthlyData,
+                generatedOn: generatedOn,
+                reportTitle: 'MRF Efficiency Report'
+            });
+
+        } catch (error) {
+            console.error('❌ [MRF Efficiency] Error:', error);
+            return res.status(500).json({ 
+                success: false, 
+                message: 'Internal server error: ' + error.message 
+            });
         }
     },
 
