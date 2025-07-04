@@ -7877,11 +7877,11 @@ function setupDateHandlers() {
             const startDate = new Date(startValue);
             const endDate = new Date(endValue);
             
-            if (endDate <= startDate) {
-                alert('End date must be after start date');
-                this.value = '';
-                return;
-            }
+            // if (endDate <= startDate) {
+            //     alert('End date must be after start date');
+            //     this.value = '';
+            //     return;
+            // }
         }
         
         updateScheduleSummary();
@@ -8562,18 +8562,18 @@ function validateForm() {
     }
     
     // End date validation
-    if (!endDate) {
-        console.log('No end date set');
-        isValid = false;
-    } else if (startDate && endDate) {
-        const startDateObj = new Date(startDate);
-        const endDateObj = new Date(endDate);
+    // if (!endDate) {
+    //     console.log('No end date set');
+    //     isValid = false;
+    // } else if (startDate && endDate) {
+    //     const startDateObj = new Date(startDate);
+    //     const endDateObj = new Date(endDate);
         
-        if (endDateObj <= startDateObj) {
-            console.log('End date must be after start date');
-            isValid = false;
-        }
-    }
+    //     if (endDateObj <= startDateObj) {
+    //         console.log('End date must be after start date');
+    //         isValid = false;
+    //     }
+    // }
     
     console.log('Final validation result:', isValid);
     setSubmitButtonState(isValid);
@@ -8813,11 +8813,11 @@ function validateFormData(formData) {
         return false;
     }
     
-    if (endDate <= startDate) {
-        console.error('❌ End date is not after start date');
-        alert('End date must be after start date');
-        return false;
-    }
+    // if (endDate <= startDate) {
+    //     console.error('❌ End date is not after start date');
+    //     alert('End date must be after start date');
+    //     return false;
+    // }
     
     console.log('✅ Form validation passed');
     return true;
