@@ -11,6 +11,85 @@
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css" rel="stylesheet">
     <style>
 
+        /* Base Modal Styles - Ensure proper overlay */
+        .review-modal {
+            display: none; /* CRITICAL: Hidden by default */
+            position: fixed; /* CRITICAL: Fixed positioning for overlay */
+            z-index: 9999; /* CRITICAL: High z-index to appear above everything */
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.5); /* Semi-transparent backdrop */
+            backdrop-filter: blur(3px);
+            overflow: auto; /* Allow scrolling if content is tall */
+        }
+
+        /* Modal Content Container */
+        .review-modal-content {
+            background-color: #fefefe;
+            margin: 3% auto; /* Center horizontally, some margin from top */
+            padding: 30px;
+            border: none;
+            border-radius: 12px;
+            width: 85%;
+            max-width: 900px;
+            max-height: 90vh; /* Prevent modal from being too tall */
+            overflow-y: auto; /* Allow scrolling within modal if needed */
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+            position: relative;
+            animation: modalSlideIn 0.3s ease-out;
+        }
+
+        /* Modal Animation */
+        @keyframes modalSlideIn {
+            from {
+                opacity: 0;
+                transform: translateY(-50px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        /* Close Button - Top Right X */
+        .review-close-button {
+            color: #aaa;
+            float: right;
+            font-size: 28px;
+            font-weight: bold;
+            position: absolute;
+            top: 15px;
+            right: 25px;
+            cursor: pointer;
+            transition: color 0.3s ease;
+            z-index: 10;
+        }
+
+        .review-close-button:hover,
+        .review-close-button:focus {
+            color: #000;
+            text-decoration: none;
+        }
+
+        /* Modal Headers */
+        .review-modal h2 {
+            color: #124A5C;
+            margin-bottom: 20px;
+            font-size: 24px;
+            font-weight: 600;
+            margin-top: 0;
+            padding-right: 40px; /* Space for close button */
+        }
+
+        .review-modal h4 {
+            color: #124A5C;
+            margin: 20px 0 15px 0;
+            font-size: 18px;
+            font-weight: 600;
+        }
+
 .review-modal-reject-button {
     background-color: #e74c3c;
     color: white;
@@ -27,46 +106,220 @@
     opacity: 0.8;
 }
 
-/* Add this CSS to your existing styles */
+/* Applicant Details Section */
+        .applicant-details {
+            background-color: #f8f9fa;
+            padding: 20px;
+            border-radius: 8px;
+            margin: 20px 0;
+            border-left: 4px solid #124A5C;
+        }
 
+        .applicant-details p {
+            margin: 10px 0;
+            line-height: 1.6;
+            color: #333;
+        }
+
+        .applicant-details strong {
+            color: #124A5C;
+            font-weight: 600;
+        }
 /* Center the scores table and enhance its appearance */
 .scores-table {
-    margin: 0 auto;  /* Center the table horizontally */
-    width: 80%;      /* Control the width of the table */
-    border-collapse: collapse;
-    margin-bottom: 20px;
-    text-align: center; /* Center text within the table */
-}
+            margin: 0 auto;
+            width: 80%;
+            border-collapse: collapse;
+            margin-bottom: 20px;
+            background-color: white;
+            border-radius: 8px;
+            overflow: hidden;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        }
 
-.scores-table th, 
-.scores-table td {
-    padding: 8px 12px;
-    border: 1px solid #ddd;
-}
+        .scores-table th,
+        .scores-table td {
+            padding: 12px 15px;
+            border: 1px solid #ddd;
+            text-align: center;
+        }
 
-.scores-table th {
-    background-color: #f2f2f2;
-}
+        .scores-table th {
+            background-color: #124A5C;
+            color: white;
+            font-weight: 600;
+        }
 
 .scores-table tr:nth-child(even) {
-    background-color: #f9f9f9;
-}
+            background-color: #f9f9f9;
+        }
 
-/* Add a container around the scores section to center all elements within */
-.scores-section {
-    text-align: center;
-    margin: 15px 0;
-}
+        .scores-table tr:hover {
+            background-color: #e8f4f8;
+        }
+
+
+/* Scores Section */
+        .scores-section {
+            text-align: center;
+            margin: 25px 0;
+            background-color: #f8f9fa;
+            padding: 20px;
+            border-radius: 8px;
+        }
+
+         /* Back Button */
+        .review-modal-back-button {
+            background: linear-gradient(135deg, #6c757d, #5a6268);
+            color: white;
+        }
+
+        .review-modal-back-button:hover {
+            background: linear-gradient(135deg, #5a6268, #495057);
+            transform: translateY(-2px);
+        }
+
+        /* Confirm Button */
+        .review-modal-confirm-button {
+            background: linear-gradient(135deg, #28a745, #20c997);
+            color: white;
+        }
+
+        .review-modal-confirm-button:hover {
+            background: linear-gradient(135deg, #20c997, #1fa886);
+            transform: translateY(-2px);
+        }
+
+        /* Reject Button */
+        .review-modal-reject-button {
+            background: linear-gradient(135deg, #dc3545, #c82333);
+            color: white;
+        }
+
+        .review-modal-reject-button:hover {
+            background: linear-gradient(135deg, #c82333, #b21f2d);
+            transform: translateY(-2px);
+        }
+
+        /* Reupload Button */
+        .reupload-button {
+            background: linear-gradient(135deg, #f39c12, #e67e22);
+            color: white;
+        }
+
+        .reupload-button:hover {
+            background: linear-gradient(135deg, #e67e22, #d68910);
+            transform: translateY(-2px);
+        }
+
+        /* Hidden Input Fields */
+        .review-modal input[type="hidden"] {
+            display: none;
+        }
+/* Responsive Design */
+        @media (max-width: 768px) {
+            .review-modal-content {
+                width: 95%;
+                margin: 5% auto;
+                padding: 20px;
+            }
+            
+            .scores-table {
+                width: 100%;
+                font-size: 14px;
+            }
+            
+            .review-modal-buttons {
+                flex-direction: column;
+                align-items: stretch;
+            }
+            
+            .review-modal-buttons button {
+                margin-bottom: 10px;
+                min-width: auto;
+            }
+            
+            .review-close-button {
+                font-size: 24px;
+                top: 10px;
+                right: 15px;
+            }
+        }
+
+
+         /* Document Section Styling */
+        .review-modal p {
+            line-height: 1.6;
+            margin: 15px 0;
+            color: #555;
+        }
+
+        .review-modal a {
+            color: #124A5C;
+            text-decoration: none;
+            font-weight: 500;
+        }
+
+        .review-modal a:hover {
+            text-decoration: underline;
+            color: #0d3a47;
+        }
+
+        /* Document Preview Styling */
+        .review-modal div[id*="preview"] {
+            margin: 15px 0;
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            background-color: #f9f9f9;
+            text-align: center;
+        }
+
+        .review-modal div[id*="preview"] img {
+            max-width: 100%;
+            max-height: 300px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+        }
+
+        .review-modal div[id*="preview"] iframe {
+            width: 100%;
+            height: 400px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+        }
+
+        /* Ensure modals appear above all other content */
+        .review-modal {
+            z-index: 10000 !important;
+        }
+
+        /* Override any conflicting styles */
+        #hrInitialScreeningModalHtml,
+        #hrInitialScreeningDecisionModal {
+            display: none !important; /* Ensure hidden by default */
+            position: fixed !important;
+            z-index: 10000 !important;
+        }
+
+        /* Show modal when active */
+        #hrInitialScreeningModalHtml[style*="display: block"],
+        #hrInitialScreeningDecisionModal[style*="display: block"] {
+            display: block !important;
+        }
 
 /* Style for the computation verdict section */
 .computation-verdict {
-    text-align: center;
-    margin: 15px 0;
-    padding: 10px;
-    font-size: 16px;
-    background-color: #f9f9f9;
-    border-radius: 5px;
-}
+            text-align: center;
+            margin: 20px 0;
+            padding: 15px;
+            font-size: 18px;
+            font-weight: bold;
+            background: linear-gradient(135deg, #e8f4f8, #d4edda);
+            border-radius: 8px;
+            border: 2px solid #124A5C;
+            color: #124A5C;
+        }
 
         body {
             font-family: 'Inter', sans-serif;
@@ -392,11 +645,13 @@
     box-shadow: 0 4px 12px rgba(18, 74, 92, 0.3);
 }
 
-.divider {
-    height: 1px;
-    background-color: #e0e0e0;
-    margin: 20px 0;
-}
+/* Divider */
+        .divider {
+            height: 2px;
+            background-color: #124A5C;
+            margin: 20px 0;
+            width: 100%;
+        }
 
 
 /* Progress Steps */
@@ -821,14 +1076,14 @@
     font-style: italic;
 }
 
-/* Enhanced modal styles for document reupload functionality */
+/* Document Reupload Section */
         .document-reupload-section {
-            background-color: #fff3cd;
-            border: 1px solid #ffeaa7;
+            background: linear-gradient(135deg, #fff3cd, #ffeaa7);
+            border: 2px solid #f39c12;
             border-radius: 8px;
             padding: 20px;
             margin: 20px 0;
-            display: none;
+            display: none; /* Hidden by default */
         }
 
         .document-reupload-section.active {
@@ -839,13 +1094,20 @@
             color: #856404;
             margin-top: 0;
             margin-bottom: 15px;
+            display: flex;
+            align-items: center;
         }
 
+        .document-reupload-section h4 i {
+            margin-right: 10px;
+        }
+
+       /* Checkbox Group */
         .checkbox-group {
             display: flex;
             flex-direction: column;
-            gap: 10px;
-            margin-bottom: 15px;
+            gap: 12px;
+            margin: 15px 0;
         }
 
         .checkbox-item {
@@ -855,16 +1117,20 @@
         }
 
         .checkbox-item input[type="checkbox"] {
-            transform: scale(1.2);
+            transform: scale(1.3);
+            cursor: pointer;
         }
 
         .checkbox-item label {
             cursor: pointer;
             user-select: none;
+            color: #856404;
+            font-weight: 500;
         }
 
+        /* Remarks Section */
         .remarks-section {
-            margin-top: 15px;
+            margin: 20px 0;
         }
 
         .remarks-section label {
@@ -874,14 +1140,24 @@
             color: #856404;
         }
 
-        .remarks-section textarea {
+.remarks-section textarea {
             width: 100%;
-            padding: 10px;
-            border: 1px solid #ddd;
-            border-radius: 4px;
+            padding: 12px;
+            border: 2px solid #f39c12;
+            border-radius: 6px;
             resize: vertical;
-            min-height: 80px;
+            min-height: 100px;
+            font-family: Arial, sans-serif;
+            font-size: 14px;
+            line-height: 1.5;
         }
+
+        .remarks-section textarea:focus {
+            outline: none;
+            border-color: #e67e22;
+            box-shadow: 0 0 5px rgba(243, 156, 18, 0.3);
+        }
+
 
         .reupload-button {
             background-color: #f39c12;
@@ -907,24 +1183,81 @@
             flex-wrap: wrap;
         }
 
-        .addtl-document-section {
-            background-color: #e8f4f8;
-            padding: 15px;
-            border-radius: 5px;
-            margin-top: 15px;
+.addtl-document-section {
+            background: linear-gradient(135deg, #e8f4f8, #f0f8ff);
+            padding: 20px;
+            border-radius: 8px;
+            margin: 20px 0;
+            border-left: 4px solid #124A5C;
         }
 
         .addtl-document-section h5 {
             margin-top: 0;
             color: #124A5C;
+            font-weight: 600;
         }
 
+        .addtl-document-section p {
+            color: #555;
+            font-style: italic;
+            margin-bottom: 0;
+        }
+/* Warning Text */
         .warning-text {
             color: #d9534f;
             font-size: 0.9em;
             margin-top: 5px;
             font-style: italic;
+            font-weight: 500;
         }
+        
+        /* Verification Section */
+        .verification-section {
+            background: linear-gradient(135deg, #e8f5e8, #f0f8ff);
+            padding: 20px;
+            border-radius: 8px;
+            margin: 25px 0;
+            border: 2px solid #28a745;
+        }
+
+        .verification-section label {
+            display: flex;
+            align-items: flex-start;
+            gap: 12px;
+            font-weight: normal;
+            color: #155724;
+            line-height: 1.6;
+        }
+
+        .verification-section input[type="checkbox"] {
+            margin-top: 3px;
+            transform: scale(1.2);
+            cursor: pointer;
+        }
+
+        .verification-section p {
+            color: #d9534f;
+            margin: 10px 0 15px 30px;
+            font-size: 0.9em;
+            font-weight: 500;
+        }
+
+        .verification-section textarea {
+            width: 100%;
+            padding: 12px;
+            border: 2px solid #28a745;
+            border-radius: 6px;
+            resize: vertical;
+            min-height: 80px;
+            margin-top: 10px;
+        }
+
+        .verification-section textarea:focus {
+            outline: none;
+            border-color: #20c997;
+            box-shadow: 0 0 5px rgba(40, 167, 69, 0.3);
+        }
+
 
 /* Modal Buttons */
 .modal-buttons {
@@ -1101,64 +1434,110 @@
             <!-- ========== END MODIFIED FILTER SECTION ========== -->
         </div>
 
-        <!-- ========== ADDED P2 APPLICANT STATUS SECTION ========== -->
-        <!-- P2 Applicant Status Section (Hidden by default, shown when "For Review" is clicked) -->
-        <div class="applicant-status-section" id="applicantStatusSection">
-            <!-- Header section with flexbox -->
-            <div class="section-header">
-                <h3 class="subheader">List of Applicants on <span id="currentPhase">Review</span></h3>
-                <div class="right-section" id="finalizeButtonContainer">
-                    <!-- Finalize button will be added dynamically based on phase -->
-                </div>
-            </div>
-            <!-- Divider placed immediately after the section-header -->
-            <div class="divider"></div>
-            
-            <h4>Awaiting for Action</h4>
-            <table class="tracking-table" id="awaitingActionTable">
-                <thead>
-                    <tr>
-                        <th>Applicant No.</th>
-                        <th>Last Name, First Name</th>
-                        <th>Department</th>
-                        <th>Position Applied</th>
-                        <th>Total Score</th>
-                        <th>Applicant Status</th>
-                        <th>Actions</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    <!-- Will be populated dynamically -->
-                </tbody>
-            </table>
-
-            <h4>Applicants on <span id="currentPhase2">Review</span> Declared Results</h4>
-            <div class="sort-section">
-                <label for="sortOptions">Sort By:</label>
-                <select id="sortOptions">
-                    <option value="ascending">Score - Ascending</option>
-                    <option value="descending">Score - Descending</option>
-                    <option value="alphabetical">Alphabetically</option>
-                </select>
-            </div>
-            <table class="tracking-table" id="declaredResultsTable">
-                <thead>
-                    <tr>
-                        <th>Applicant No.</th>
-                        <th>Last Name, First Name</th>
-                        <th>Department</th>
-                        <th>Position Applied</th>
-                        <th>Total Score</th>
-                        <th>Applicant Status</th>
-                        <th>Actions</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    <!-- Will be populated dynamically -->
-                </tbody>
-            </table>
+       <!-- ========== MODIFIED P1 & P2 APPLICANT STATUS SECTION ========== -->
+<div class="applicant-status-section" id="applicantStatusSection">
+    <!-- Header section with flexbox -->
+    <div class="section-header">
+        <h3 class="subheader">Applicant Review Dashboard</h3>
+        <div class="right-section" id="finalizeButtonContainer">
+            <!-- Finalize buttons will be added dynamically based on phase -->
         </div>
-        <!-- ========== END ADDED P2 APPLICANT STATUS SECTION ========== -->
+    </div>
+    <!-- Divider placed immediately after the section-header -->
+    <div class="divider"></div>
+    
+    <!-- ========== P1 REVIEW SECTIONS ========== -->
+    <h2 style="color: #124A5C; margin: 20px 0 15px 0; font-size: 22px; font-weight: bold;">List of Applicants on P1 Review</h2>
+    
+    <!-- P1 Awaiting for Action Section -->
+    <h4>Awaiting for Action</h4>
+    <table class="tracking-table" id="p1AwaitingActionTable">
+        <thead>
+            <tr>
+                <th>Applicant No.</th>
+                <th>Last Name, First Name</th>
+                <th>Department</th>
+                <th>Position Applied</th>
+                <th>Total Score</th>
+                <th>Applicant Status</th>
+                <th>Actions</th>
+            </tr>
+        </thead>
+        <tbody>
+            <!-- Will be populated dynamically -->
+        </tbody>
+    </table>
+
+    <!-- P1 Under Line Manager Review Section -->
+    <h4>Applicants on P1 Review; Under Line Manager Review</h4>
+    <table class="tracking-table" id="p1LineManagerReviewTable">
+        <thead>
+            <tr>
+                <th>Applicant No.</th>
+                <th>Last Name, First Name</th>
+                <th>Department</th>
+                <th>Position Applied</th>
+                <th>Total Score</th>
+                <th>Applicant Status</th>
+                <th>Actions</th>
+            </tr>
+        </thead>
+        <tbody>
+            <!-- Will be populated dynamically -->
+        </tbody>
+    </table>
+
+    <!-- Spacer between P1 and P2 sections -->
+    <div style="margin: 40px 0; border-top: 2px solid #124A5C;"></div>
+    
+    <!-- ========== P2 REVIEW SECTIONS (KEEP EXISTING) ========== -->
+    <h2 style="color: #124A5C; margin: 20px 0 15px 0; font-size: 22px; font-weight: bold;">List of Applicants on P2 Review</h2>
+    
+    <h4>Awaiting for Action</h4>
+    <table class="tracking-table" id="awaitingActionTable">
+        <thead>
+            <tr>
+                <th>Applicant No.</th>
+                <th>Last Name, First Name</th>
+                <th>Department</th>
+                <th>Position Applied</th>
+                <th>Total Score</th>
+                <th>Applicant Status</th>
+                <th>Actions</th>
+            </tr>
+        </thead>
+        <tbody>
+            <!-- Will be populated dynamically -->
+        </tbody>
+    </table>
+
+    <h4>Applicants on <span id="currentPhase2">Review</span> Declared Results</h4>
+    <div class="sort-section">
+        <label for="sortOptions">Sort By:</label>
+        <select id="sortOptions">
+            <option value="ascending">Score - Ascending</option>
+            <option value="descending">Score - Descending</option>
+            <option value="alphabetical">Alphabetically</option>
+        </select>
+    </div>
+    <table class="tracking-table" id="declaredResultsTable">
+        <thead>
+            <tr>
+                <th>Applicant No.</th>
+                <th>Last Name, First Name</th>
+                <th>Department</th>
+                <th>Position Applied</th>
+                <th>Total Score</th>
+                <th>Applicant Status</th>
+                <th>Actions</th>
+            </tr>
+        </thead>
+        <tbody>
+            <!-- Will be populated dynamically -->
+        </tbody>
+    </table>
+</div>
+<!-- ========== END MODIFIED P1 & P2 APPLICANT STATUS SECTION ========== -->
         <!-- Table for Applicant Data -->
 <!-- Table for Applicant Data -->
 <table class="tracking-table" id="mainApplicantTable" style="width: 100%; margin-bottom: 20px; border-collapse: collapse;">
@@ -1199,55 +1578,14 @@
         <!-- For Review Button -->
         <button 
 class="btn-review" 
-onclick="
-    console.log('Opening Modal with:', {
-        lastName: '<%= applicant.lastName %>',
-        firstName: '<%= applicant.firstName %>',
-        birthDate: '<%= applicant.birthDate %>',
-        email: '<%= applicant.userEmail %>',
-        phoneNo: '<%= applicant.phoneNo %>',
-        scores: {
-            degree: '<%= applicant.initialScreeningAssessment.degreeScore %>',
-            experience: '<%= applicant.initialScreeningAssessment.experienceScore %>',
-            certifications: '<%= applicant.initialScreeningAssessment.certificationScore %>',
-            hardSkills: '<%= applicant.initialScreeningAssessment.hardSkillsScore %>',
-            softSkills: '<%= applicant.initialScreeningAssessment.softSkillsScore %>',
-            workSetup: '<%= applicant.initialScreeningAssessment.workSetupScore %>',
-            availability: '<%= applicant.initialScreeningAssessment.availabilityScore %>'
-        },
-        totalScore: '<%= applicant.initialScreeningAssessment.totalScore %>',
-        resumeURL: '<%= applicant.initialScreeningAssessment.resume_url %>',
-        applicantStatus: '<%= applicant.applicantStatus %>'
-    });
-
-    showAppropriateModal(
-        '<%= applicant.userId %>', 
-        '<%= applicant.lastName %>', 
-        '<%= applicant.firstName %>', 
-        '<%= applicant.birthDate %>', 
-        '<%= applicant.userEmail %>', 
-        '<%= applicant.phoneNo %>', 
-        {
-            degree: '<%= applicant.initialScreeningAssessment.degreeScore %>',
-            experience: '<%= applicant.initialScreeningAssessment.experienceScore %>',
-            certifications: '<%= applicant.initialScreeningAssessment.certificationScore %>',
-            hardSkills: '<%= applicant.initialScreeningAssessment.hardSkillsScore %>',
-            softSkills: '<%= applicant.initialScreeningAssessment.softSkillsScore %>',
-            workSetup: '<%= applicant.initialScreeningAssessment.workSetupScore %>',
-            availability: '<%= applicant.initialScreeningAssessment.availabilityScore %>'
-        }, 
-        '<%= applicant.initialScreeningAssessment.totalScore %>', 
-        '<%= applicant.initialScreeningAssessment.degree_url %>',
-        '<%= applicant.initialScreeningAssessment.cert_url %>',
-        '<%= applicant.initialScreeningAssessment.resume_url %>',
-        '<%= applicant.applicantStatus %>'
-    )
-">
+onclick="redirectToReviewFilter()"
+style="background-color: white; color: black; border: 1px solid #124A5C; padding: 10px 20px; cursor: pointer; border-radius: 5px; font-size: 14px; transition: background-color 0.3s ease, color 0.3s ease; width: 150px; text-align: center;">
 For Review
 </button>
 
     
-                            <% } else if (applicant.applicantStatus === 'P2 - Awaiting for HR Evaluation') { %>
+                            <% }
+                             else if (applicant.applicantStatus === 'P2 - Awaiting for HR Evaluation') { %>
     <!-- For Evaluation Button -->
     <a href="/hr/evaluation-form/<%= applicant.applicantId %>">
         <button class="btn-evaluation">For Evaluation</button>
@@ -2878,35 +3216,78 @@ async function fetchP2ApplicantDataForEmails(passedApplicantIds, failedApplicant
         throw error;
     }
 }
-
-
 async function fetchP2EmailTemplates() {
     try {
         console.log("📧 HR P2: Fetching P2 email templates...");
-        
+
         const response = await fetch('/hr/getP2EmailTemplates');
         const data = await response.json();
-        
+
         if (!data.success) {
             throw new Error(data.message || 'Failed to fetch P2 email templates');
         }
-        
+
         console.log("✅ HR P2: Successfully fetched P2 templates");
-        
+
         return data.templates;
-        
+
     } catch (error) {
         console.error("❌ HR P2: Error fetching P2 email templates:", error);
-        
+
         // Fallback templates
         return {
-            passed: {
-                subject: 'Great News! You\'ve Advanced to Final Interview - Prime Infrastructure',
-                template: 'Congratulations {applicantName}! You have advanced to the final interview stage for the {jobTitle} position. Our team will contact you soon.'
+            'P2 - PASSED': {
+                subject: "Great News! You've Advanced to Final Interview - Prime Infrastructure",
+                template: `Dear {applicantName},
+
+Congratulations! We are pleased to inform you that you have successfully passed our HR interview process for the {jobTitle} position at {companyName}.
+
+We were impressed with your qualifications, experience, and the responses you provided during the interview. You have demonstrated the skills and competencies we are looking for in this role.
+
+🎉 Next Steps:
+You will now advance to the final interview stage with our department head/senior management team. This is the final step in our recruitment process.
+
+Our team will contact you within the next 2-3 business days to schedule your final interview. Please be prepared to discuss:
+• Your technical expertise and experience in detail
+• Your career goals and how they align with our company
+• Specific scenarios and problem-solving approaches
+• Your questions about the role and our organization
+
+📋 What to Expect:
+• Interview duration: 45-60 minutes
+• Format: In-person/Virtual (we'll confirm the details)
+• Participants: Department head and senior team members
+• Focus: Technical competency and cultural fit assessment
+
+We appreciate your continued interest in joining {companyName} and look forward to the next step in the process.
+
+If you have any questions in the meantime, please don't hesitate to reach out to our HR team.
+
+Best regards,  
+The {companyName} HR Team`
             },
-            failed: {
+            'P2 - FAILED': {
                 subject: 'Thank You for Your Interview - Prime Infrastructure',
-                template: 'Thank you {applicantName} for your interest in the {jobTitle} position. We have decided to move forward with another candidate.'
+                template: `Dear {applicantName},
+
+Thank you for taking the time to interview with us for the {jobTitle} position at {companyName}. We appreciate your interest in our organization and the effort you put into the interview process.
+
+After careful consideration of all candidates, we have decided to move forward with another candidate whose qualifications more closely match our current requirements for this specific role.
+
+This decision was not made lightly, as we were impressed with many aspects of your background and experience. We encourage you to apply for future opportunities that may be a better fit for your skills and career goals.
+
+🌟 Moving Forward:
+• Your information will remain in our candidate database for future opportunities
+• We will notify you of relevant positions that match your profile
+• Feel free to check our careers page regularly for new openings
+• We welcome you to apply again for suitable roles
+
+We wish you the best of luck in your job search and hope our paths may cross again in the future.
+
+Thank you again for your interest in {companyName}.
+
+Best regards,  
+The {companyName} HR Team`
             }
         };
     }
@@ -3014,28 +3395,31 @@ function p2rejectApplicant(applicantId) {
 // ============================
 // P2 EMAIL MODAL FUNCTIONS
 // ============================
-
+function personalizeTemplate(template, applicant) {
+    return template
+        .replace(/{applicantName}/g, applicant.name)
+        .replace(/{jobTitle}/g, applicant.jobTitle)
+        .replace(/{companyName}/g, 'Company ABC');
+}
 function showP2PassedEmailModal() {
     console.log("📧 HR P2: Showing P2 passed applicants Gmail compose modal");
-    
+
     // Remove existing modal if it exists
     const existingModal = document.getElementById('emailP2PassedModal');
     if (existingModal) {
         existingModal.remove();
     }
-    
-    // Create modal with proper IDs
+
+    // Create modal dynamically
     const modal = createP2EmailModalDynamically('emailP2PassedModal', 'P2', 'passed');
-    
-    // Wait for modal to be added to DOM before accessing elements
+
     setTimeout(() => {
-        // Populate recipients list
         const recipientsList = document.getElementById('p2PassedRecipientsList');
         const recipientsCount = document.getElementById('p2PassedRecipientsCount');
-        
+
         if (recipientsList && currentP2PassedApplicants.length > 0) {
             recipientsCount.textContent = currentP2PassedApplicants.length;
-            
+
             recipientsList.innerHTML = currentP2PassedApplicants.map(applicant => `
                 <div class="recipient-item">
                     <div class="recipient-name">${applicant.name}</div>
@@ -3043,53 +3427,80 @@ function showP2PassedEmailModal() {
                     <div class="recipient-job">${applicant.jobTitle}</div>
                 </div>
             `).join('');
-            
+
             console.log(`📊 HR P2: Populated ${currentP2PassedApplicants.length} passed recipients`);
         }
-        
-        // Set default subject and template with proper element access
+
         const subjectElement = document.getElementById('p2PassedEmailSubject');
         const templateElement = document.getElementById('p2PassedEmailTemplate');
-        
+
         if (subjectElement && templateElement) {
-            subjectElement.value = p2EmailTemplates.passed?.subject || 'Great News! You\'ve Advanced to Final Interview - Prime Infrastructure';
-            templateElement.value = p2EmailTemplates.passed?.template || 'Congratulations! You have advanced to the final interview stage.';
-            console.log("✅ HR P2: Set subject and template values");
+            const defaultSubject = "Great News! You've Advanced to Final Interview - Prime Infrastructure";
+            const defaultTemplate = `Dear {applicantName},
+
+Congratulations! We are pleased to inform you that you have successfully passed our HR interview process for the {jobTitle} position at {companyName}.
+
+We were impressed with your qualifications, experience, and the responses you provided during the interview. You have demonstrated the skills and competencies we are looking for in this role.
+
+🎉 Next Steps:
+You will now advance to the final interview stage with our department head/senior management team. This is the final step in our recruitment process.
+
+Our team will contact you within the next 2-3 business days to schedule your final interview. Please be prepared to discuss:
+• Your technical expertise and experience in detail
+• Your career goals and how they align with our company
+• Specific scenarios and problem-solving approaches
+• Your questions about the role and our organization
+
+📋 What to Expect:
+• Interview duration: 45-60 minutes
+• Format: In-person/Virtual (we'll confirm the details)
+• Participants: Department head and senior team members
+• Focus: Technical competency and cultural fit assessment
+
+We appreciate your continued interest in joining {companyName} and look forward to the next step in the process.
+
+If you have any questions in the meantime, please don't hesitate to reach out to our HR team.
+
+Best regards,
+The {companyName} HR Team`;
+
+            subjectElement.value = p2EmailTemplates.passed?.subject || defaultSubject;
+
+            // Show template personalized for the first applicant in preview
+            const previewApplicant = currentP2PassedApplicants[0];
+            templateElement.value = personalizeTemplate(
+                p2EmailTemplates.passed?.template || defaultTemplate,
+                previewApplicant
+            );
+
+            console.log("✅ HR P2: Set subject and personalized template for first applicant");
         } else {
             console.error("❌ HR P2: Could not find subject or template elements");
-            console.log("Available elements:", {
-                subject: !!subjectElement,
-                template: !!templateElement
-            });
         }
-        
-        // Show the modal
+
         document.getElementById('emailP2PassedModal').style.display = 'block';
         console.log("✅ HR P2: P2 passed email modal displayed");
     }, 100);
 }
-
 function showP2FailedEmailModal() {
     console.log("📧 HR P2: Showing P2 failed applicants Gmail compose modal");
-    
+
     // Remove existing modal if it exists
     const existingModal = document.getElementById('emailP2FailedModal');
     if (existingModal) {
         existingModal.remove();
     }
-    
-    // Create modal with proper IDs
+
+    // Create modal dynamically
     const modal = createP2EmailModalDynamically('emailP2FailedModal', 'P2', 'failed');
-    
-    // Wait for modal to be added to DOM before accessing elements
+
     setTimeout(() => {
-        // Populate recipients list
         const recipientsList = document.getElementById('p2FailedRecipientsList');
         const recipientsCount = document.getElementById('p2FailedRecipientsCount');
-        
+
         if (recipientsList && currentP2FailedApplicants.length > 0) {
             recipientsCount.textContent = currentP2FailedApplicants.length;
-            
+
             recipientsList.innerHTML = currentP2FailedApplicants.map(applicant => `
                 <div class="recipient-item">
                     <div class="recipient-name">${applicant.name}</div>
@@ -3097,23 +3508,50 @@ function showP2FailedEmailModal() {
                     <div class="recipient-job">${applicant.jobTitle}</div>
                 </div>
             `).join('');
-            
+
             console.log(`📊 HR P2: Populated ${currentP2FailedApplicants.length} failed recipients`);
         }
-        
-        // Set default subject and template with proper element access
+
         const subjectElement = document.getElementById('p2FailedEmailSubject');
         const templateElement = document.getElementById('p2FailedEmailTemplate');
-        
+
         if (subjectElement && templateElement) {
-            subjectElement.value = p2EmailTemplates.failed?.subject || 'Thank You for Your Interview - Prime Infrastructure';
-            templateElement.value = p2EmailTemplates.failed?.template || 'Thank you for your interest in our position.';
-            console.log("✅ HR P2: Set failed subject and template values");
+            const defaultSubject = "Thank You for Your Interview - Prime Infrastructure";
+            const defaultTemplate = `Dear {applicantName},
+
+Thank you for taking the time to interview with us for the {jobTitle} position at {companyName}. We appreciate your interest in our organization and the effort you put into the interview process.
+
+After careful consideration of all candidates, we have decided to move forward with another candidate whose qualifications more closely match our current requirements for this specific role.
+
+This decision was not made lightly, as we were impressed with many aspects of your background and experience. We encourage you to apply for future opportunities that may be a better fit for your skills and career goals.
+
+🌟 Moving Forward:
+• Your information will remain in our candidate database for future opportunities
+• We will notify you of relevant positions that match your profile
+• Feel free to check our careers page regularly for new openings
+• We welcome you to apply again for suitable roles
+
+We wish you the best of luck in your job search and hope our paths may cross again in the future.
+
+Thank you again for your interest in {companyName}.
+
+Best regards,
+The {companyName} HR Team`;
+
+            subjectElement.value = p2EmailTemplates.failed?.subject || defaultSubject;
+
+            // Preview with first applicant
+            const previewApplicant = currentP2FailedApplicants[0];
+            templateElement.value = personalizeTemplate(
+                p2EmailTemplates.failed?.template || defaultTemplate,
+                previewApplicant
+            );
+
+            console.log("✅ HR P2: Set subject and personalized template for first failed applicant");
         } else {
             console.error("❌ HR P2: Could not find failed subject or template elements");
         }
-        
-        // Show the modal
+
         document.getElementById('emailP2FailedModal').style.display = 'block';
         console.log("✅ HR P2: P2 failed email modal displayed");
     }, 100);
@@ -4714,11 +5152,18 @@ function hrInitialScreeningModal(userId, lastName, firstName, birthday, email, p
     // Check for additional document and HR remarks
     checkForAdditionalDocument(userId);
     
-    // Show the initial modal
-    document.getElementById('hrInitialScreeningModalHtml').style.display = 'block';
+    // ✅ FIX: ADD THIS LINE TO ACTUALLY SHOW THE MODAL
+    const modal = document.getElementById('hrInitialScreeningModalHtml');
+    if (modal) {
+        modal.style.display = 'block';
+        console.log('✅ Modal displayed successfully');
+    } else {
+        console.error('❌ Modal element not found');
+    }
 }
 
 // Function to open final decision modal (for reuploaded cases)
+
 function hrInitialScreeningDecisionModal(userId, lastName, firstName, birthday, email, phoneNo, scores, verdict, degreeUrl, certUrl, resumeUrl) {
     console.log('Opening Final Decision Modal with Data:', { userId, lastName, firstName, birthday, email, phoneNo, scores, verdict, degreeUrl, certUrl, resumeUrl });
 
@@ -4736,9 +5181,16 @@ function hrInitialScreeningDecisionModal(userId, lastName, firstName, birthday, 
     // Check for additional document and HR remarks in final modal
     checkForAdditionalDocument(userId, 'final');
     
-    // Show the final modal
-    document.getElementById('hrInitialScreeningDecisionModal').style.display = 'block';
+    // ✅ FIX: ADD THIS LINE TO ACTUALLY SHOW THE MODAL
+    const modal = document.getElementById('hrInitialScreeningDecisionModal');
+    if (modal) {
+        modal.style.display = 'block';
+        console.log('✅ Final modal displayed successfully');
+    } else {
+        console.error('❌ Final modal element not found');
+    }
 }
+
 
 // Helper function to populate modal data
 function populateModalData(prefix, userId, lastName, firstName, birthday, email, phoneNo, scores, verdict, degreeUrl, certUrl, resumeUrl) {
@@ -5025,7 +5477,6 @@ window.addEventListener('click', function (event) {
 });
 
 document.addEventListener("DOMContentLoaded", function () {
-    // ========== MODIFIED FILTER FUNCTION TO INCLUDE P2 REVIEW ==========    
     // Function to filter rows based on status
     function filterRowsByStatus(status) {
         const rows = document.querySelectorAll('.tracking-table tbody tr');
@@ -5051,9 +5502,9 @@ document.addEventListener("DOMContentLoaded", function () {
             if (onboardingTable) onboardingTable.style.display = "";
             
         } else if (status === "review") {
-            // Handle P2 Review filter
-            handleP2ReviewFilter();
-            
+            // Handle P1 and P2 Review filter - BUT DON'T AUTO-TRIGGER
+            handleP1AndP2ReviewFilter();
+                
         } else if (status === "for-evaluation") {
             // Show only P2 evaluation rows
             rows.forEach(row => {
@@ -5090,6 +5541,535 @@ document.addEventListener("DOMContentLoaded", function () {
         // Highlight the active filter button
         highlightActiveFilter(status);
     }
+
+    // ============================
+// P1 REVIEW FUNCTIONS
+// ============================
+
+// Handle P1 Review filter
+function handleP1AndP2ReviewFilter() {
+    console.log("🔄 [P1&P2 Filter] Triggering combined P1 and P2 Review filter");
+    
+    const mainTable = document.getElementById('mainApplicantTable');
+    const applicantStatusSection = document.getElementById('applicantStatusSection');
+    const allMainRows = mainTable ? Array.from(mainTable.querySelectorAll('tbody tr')) : [];
+    
+    // Arrays to store rows
+    const p1AwaitingRows = [];
+    const p1LineManagerRows = [];
+    const p2AwaitingRows = [];
+    const p2DeclaredRows = [];
+    
+    // Process each row and categorize it
+    allMainRows.forEach((row, index) => {
+        const lastCell = row.querySelector('td:last-child');
+        if (!lastCell) return;
+        
+        const statusSpan = lastCell.querySelector('span');
+        if (!statusSpan) return;
+        
+        const statusText = statusSpan.textContent.trim();
+        
+        // Extract row data
+        const rowData = extractRowData(row, index);
+        
+        // P1 Categories
+        if (statusText.includes("P1 - Awaiting for HR Action") || 
+            statusText.includes("P1 - Awaiting for Line Manager Action; Requested for Reupload")) {
+            p1AwaitingRows.push(rowData);
+        }
+        else if (statusText.includes("P1 - Awaiting for Line Manager Action; HR PASSED") ||
+                 statusText.includes("P1 - PASSED") ||
+                 statusText.includes("P1 - FAILED")) {
+            p1LineManagerRows.push(rowData);
+        }
+        // P2 Categories (keep existing logic)
+        else if (statusText.includes("P2 - HR Evaluation Accomplished")) {
+            p2AwaitingRows.push(rowData);
+        }
+        else if (statusText.includes("P2 - PASSED") || statusText.includes("P2 - FAILED")) {
+            p2DeclaredRows.push(rowData);
+        }
+    });
+    
+    // Update all tables
+    updateP1AwaitingActionTable(p1AwaitingRows);
+    updateP1LineManagerReviewTable(p1LineManagerRows);
+    updateAwaitingActionTableP2(p2AwaitingRows);
+    updateDeclaredResultsTableP2(p2DeclaredRows);
+    
+    // Update section header buttons
+    updateSectionHeaderButtonsP1AndP2();
+}
+
+// Update P1 Awaiting Action table
+function updateP1AwaitingActionTable(awaitingRows) {
+    const p1AwaitingTable = document.getElementById('p1AwaitingActionTable');
+    if (!p1AwaitingTable) return;
+    
+    const tbody = p1AwaitingTable.querySelector('tbody');
+    if (!tbody) return;
+    
+    tbody.innerHTML = '';
+    
+    if (awaitingRows.length > 0) {
+        awaitingRows.forEach((rowData) => {
+            const newRow = createP1TableRow(rowData, 'awaiting');
+            tbody.appendChild(newRow);
+        });
+    } else {
+        const messageRow = document.createElement('tr');
+        messageRow.innerHTML = `<td colspan="7" class="no-data-message">No P1 applicants awaiting action.</td>`;
+        tbody.appendChild(messageRow);
+    }
+}
+
+// Update P1 Line Manager Review table
+function updateP1LineManagerReviewTable(lineManagerRows) {
+    const p1LineManagerTable = document.getElementById('p1LineManagerReviewTable');
+    if (!p1LineManagerTable) return;
+    
+    const tbody = p1LineManagerTable.querySelector('tbody');
+    if (!tbody) return;
+    
+    tbody.innerHTML = '';
+    
+    if (lineManagerRows.length > 0) {
+        lineManagerRows.forEach((rowData) => {
+            const newRow = createP1TableRow(rowData, 'linemanager');
+            tbody.appendChild(newRow);
+        });
+    } else {
+        const messageRow = document.createElement('tr');
+        messageRow.innerHTML = `<td colspan="7" class="no-data-message">No P1 applicants under line manager review.</td>`;
+        tbody.appendChild(messageRow);
+    }
+}
+
+// Create P1 table row
+function createP1TableRow(rowData, tableType) {
+    const newRow = document.createElement('tr');
+    
+    if (rowData.applicantId) {
+        newRow.setAttribute('data-applicantid', rowData.applicantId);
+    }
+    
+    // Extract userId from rowData - this is crucial for the modal
+    const userId = rowData.userId || extractUserIdFromRowData(rowData);
+    if (userId) {
+        newRow.setAttribute('data-userid', userId);
+    }
+    
+    if (rowData.cells && rowData.cells.length >= 5) {
+        // Applicant No, Name, Department, Position, Total Score
+        for (let i = 0; i < 5; i++) {
+            const cell = document.createElement('td');
+            if (i === 4) {
+                cell.textContent = rowData.totalScore || 'N/A';
+            } else {
+                cell.innerHTML = rowData.cells[i];
+            }
+            newRow.appendChild(cell);
+        }
+        
+        // Status
+        const statusCell = document.createElement('td');
+        const statusMatch = rowData.cells[4].match(/<span><strong>Status:<\/strong>\s*([^<]+)<\/span>/);
+        const status = statusMatch ? statusMatch[1] : 'Unknown';
+        statusCell.textContent = status;
+        newRow.appendChild(statusCell);
+        
+        // Actions
+        const actionCell = document.createElement('td');
+        
+        if (tableType === 'awaiting') {
+            // Determine modal type based on status
+            const isReupload = status.includes('Requested for Reupload');
+            
+            actionCell.innerHTML = `
+                <div style="display: flex; flex-direction: column; gap: 5px;">
+                    <button 
+                        class="btn-view-evaluation" 
+                        onclick="openP1EvaluationModal('${userId}', '${rowData.applicantId}', '${status.replace(/'/g, "\\'")}')"
+                        style="background-color: white; color: black; border: 1px solid #124A5C; padding: 6px 12px; border-radius: 4px; width: 100%; font-size: 14px; transition: background-color 0.3s ease, color 0.3s ease; cursor: pointer;"
+                        onmouseover="this.style.backgroundColor='#124A5C'; this.style.color='white';"
+                        onmouseout="this.style.backgroundColor='white'; this.style.color='black';">
+                        View Evaluation
+                    </button>
+                    <div style="display: flex; gap: 5px;">
+                        <button 
+                            class="btn-pass" 
+                            onclick="p1passApplicant('${rowData.applicantId}')"
+                            style="background-color: #27ae60; color: white; border: none; padding: 6px 12px; border-radius: 4px; cursor: pointer; font-size: 14px; flex: 1;">
+                            Pass
+                        </button>
+                        <button 
+                            class="btn-reject" 
+                            onclick="p1rejectApplicant('${rowData.applicantId}')"
+                            style="background-color: #e74c3c; color: white; border: none; padding: 6px 12px; border-radius: 4px; cursor: pointer; font-size: 14px; flex: 1;">
+                            Reject
+                        </button>
+                    </div>
+                </div>
+            `;
+        } else {
+            // Line manager review - just show status
+            actionCell.innerHTML = `<span style="color: #666; font-style: italic;">Under Line Manager Review</span>`;
+        }
+        
+        newRow.appendChild(actionCell);
+    }
+    
+    return newRow;
+}
+
+// Helper function to extract userId from row data
+function extractUserIdFromRowData(rowData) {
+    // Try to extract from the original row if available
+    if (rowData.originalRow) {
+        return rowData.originalRow.getAttribute('data-userid');
+    }
+    
+    // Try to get from applicantId as fallback
+    return rowData.applicantId;
+}
+
+// P1 Pass/Reject functions
+function p1passApplicant(applicantId) {
+    console.log(`🟢 [P1 Pass] Starting pass action for applicantId: ${applicantId}`);
+    
+    if (!confirm("Are you sure you want to pass this P1 applicant? This action cannot be undone.")) {
+        return;
+    }
+    
+    // Add your P1 pass logic here
+    fetch('/hr/p1-pass-applicant', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ applicantId: applicantId }),
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            alert("Successfully passed P1 applicant!");
+            location.reload();
+        } else {
+            alert("Error passing P1 applicant: " + (data.message || "Unknown error"));
+        }
+    })
+    .catch(error => {
+        console.error("❌ [P1 Pass] Network error:", error);
+        alert("Failed to pass P1 applicant.");
+    });
+}
+
+function p1rejectApplicant(applicantId) {
+    console.log(`🔴 [P1 Reject] Starting reject action for applicantId: ${applicantId}`);
+    
+    if (!confirm("Are you sure you want to reject this P1 applicant? This action cannot be undone.")) {
+        return;
+    }
+    
+    // Add your P1 reject logic here
+    fetch('/hr/p1-reject-applicant', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ applicantId: applicantId }),
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            alert("Successfully rejected P1 applicant!");
+            location.reload();
+        } else {
+            alert("Error rejecting P1 applicant: " + (data.message || "Unknown error"));
+        }
+    })
+    .catch(error => {
+        console.error("❌ [P1 Reject] Network error:", error);
+        alert("Failed to reject P1 applicant.");
+    });
+}
+
+// Redirect to Review filter for P1 statuses
+function redirectToReviewFilter() {
+    console.log("🔄 Redirecting to Review filter page");
+    document.getElementById("filter-review").click();
+}
+
+// Open P1 Evaluation Modal
+function openP1EvaluationModal(userId, applicantId, status) {
+    console.log(`📋 [P1 Evaluation] Opening modal for userId: ${userId}, status: ${status}`);
+    
+    if (!userId) {
+        alert("Error: Missing user ID");
+        return;
+    }
+    
+    // Determine which modal to show based on status
+    if (status.includes('Requested for Reupload')) {
+        console.log("🔄 Opening P1: Final HR Review for Line Manager Endorsement modal");
+        fetchApplicantDataAndShowModal(userId, 'final');
+    } else if (status.includes('P1 - Awaiting for HR Action')) {
+        console.log("🔄 Opening P1: Initial Screening Score Breakdown modal");
+        fetchApplicantDataAndShowModal(userId, 'initial');
+    } else {
+        console.warn("⚠️ Unknown P1 status:", status);
+        fetchApplicantDataAndShowModal(userId, 'initial'); // Default to initial
+    }
+}
+
+// Fetch applicant data and show appropriate modal
+function fetchApplicantDataAndShowModal(userId, modalType) {
+    console.log(`📡 Fetching applicant data for userId: ${userId}, modalType: ${modalType}`);
+    
+    // First try to get data from the current page's applicant data
+    const applicantRow = document.querySelector(`tr[data-userid="${userId}"]`);
+    
+    if (applicantRow) {
+        // Extract data from the row first
+        const cells = applicantRow.querySelectorAll('td');
+        let firstName = '', lastName = '', email = '';
+        
+        if (cells.length > 1) {
+            const nameCell = cells[1];
+            const fullContent = nameCell.innerHTML;
+            const nameParts = fullContent.split('<br>');
+            
+            if (nameParts.length > 0) {
+                const fullName = nameParts[0].trim();
+                const nameComponents = fullName.split(',');
+                lastName = nameComponents[0] ? nameComponents[0].trim() : '';
+                firstName = nameComponents[1] ? nameComponents[1].trim() : '';
+            }
+            
+            if (nameParts.length > 1) {
+                const emailHtml = nameParts[1];
+                email = emailHtml.replace(/<[^>]*>/g, '').trim();
+            }
+        }
+        
+        // Try to get additional data from the global applicants data
+        const applicantsDataScript = document.getElementById('applicants-data');
+        let applicantData = null;
+        
+        if (applicantsDataScript) {
+            try {
+                const applicantsData = JSON.parse(applicantsDataScript.textContent);
+                applicantData = applicantsData.find(a => a.userId == userId);
+            } catch (e) {
+                console.warn("Could not parse applicants data:", e);
+            }
+        }
+        
+        if (applicantData) {
+            console.log("✅ Found applicant data:", applicantData);
+            
+            const scores = {
+                degree: applicantData.initialScreeningAssessment?.degreeScore || 'N/A',
+                experience: applicantData.initialScreeningAssessment?.experienceScore || 'N/A',
+                certifications: applicantData.initialScreeningAssessment?.certificationScore || 'N/A',
+                hardSkills: applicantData.initialScreeningAssessment?.hardSkillsScore || 'N/A',
+                softSkills: applicantData.initialScreeningAssessment?.softSkillsScore || 'N/A',
+                workSetup: applicantData.initialScreeningAssessment?.workSetupScore || 'N/A',
+                availability: applicantData.initialScreeningAssessment?.availabilityScore || 'N/A'
+            };
+            
+            // Show the appropriate modal
+            if (modalType === 'final') {
+                console.log("🎯 Showing P1: Final HR Review modal");
+                hrInitialScreeningDecisionModal(
+                    userId,
+                    applicantData.lastName || lastName,
+                    applicantData.firstName || firstName,
+                    applicantData.birthDate,
+                    applicantData.userEmail || email,
+                    applicantData.phoneNo,
+                    scores,
+                    applicantData.initialScreeningAssessment?.totalScore || 'N/A',
+                    applicantData.initialScreeningAssessment?.degree_url,
+                    applicantData.initialScreeningAssessment?.cert_url,
+                    applicantData.initialScreeningAssessment?.resume_url
+                );
+            } else {
+                console.log("🎯 Showing P1: Initial Screening modal");
+                showAppropriateModal(
+                    userId,
+                    applicantData.lastName || lastName,
+                    applicantData.firstName || firstName,
+                    applicantData.birthDate,
+                    applicantData.userEmail || email,
+                    applicantData.phoneNo,
+                    scores,
+                    applicantData.initialScreeningAssessment?.totalScore || 'N/A',
+                    applicantData.initialScreeningAssessment?.degree_url,
+                    applicantData.initialScreeningAssessment?.cert_url,
+                    applicantData.initialScreeningAssessment?.resume_url,
+                    applicantData.applicantStatus
+                );
+            }
+        } else {
+            // Fallback: fetch from server
+            console.log("⚠️ No local data found, fetching from server...");
+            fetchFromServer(userId, modalType);
+        }
+    } else {
+        // Fallback: fetch from server
+        console.log("⚠️ No row data found, fetching from server...");
+        fetchFromServer(userId, modalType);
+    }
+}
+
+// Server fetch fallback
+function fetchFromServer(userId, modalType) {
+    fetch(`/hr/get-applicant-details/${userId}`)
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                const applicant = data.applicant;
+                const scores = {
+                    degree: applicant.initialScreeningAssessment?.degreeScore || 'N/A',
+                    experience: applicant.initialScreeningAssessment?.experienceScore || 'N/A',
+                    certifications: applicant.initialScreeningAssessment?.certificationScore || 'N/A',
+                    hardSkills: applicant.initialScreeningAssessment?.hardSkillsScore || 'N/A',
+                    softSkills: applicant.initialScreeningAssessment?.softSkillsScore || 'N/A',
+                    workSetup: applicant.initialScreeningAssessment?.workSetupScore || 'N/A',
+                    availability: applicant.initialScreeningAssessment?.availabilityScore || 'N/A'
+                };
+                
+                if (modalType === 'final') {
+                    console.log("🎯 Server data: Showing P1: Final HR Review modal");
+                    hrInitialScreeningDecisionModal(
+                        userId,
+                        applicant.lastName,
+                        applicant.firstName,
+                        applicant.birthDate,
+                        applicant.userEmail,
+                        applicant.phoneNo,
+                        scores,
+                        applicant.initialScreeningAssessment?.totalScore || 'N/A',
+                        applicant.initialScreeningAssessment?.degree_url,
+                        applicant.initialScreeningAssessment?.cert_url,
+                        applicant.initialScreeningAssessment?.resume_url
+                    );
+                } else {
+                    console.log("🎯 Server data: Showing P1: Initial Screening modal");
+                    showAppropriateModal(
+                        userId,
+                        applicant.lastName,
+                        applicant.firstName,
+                        applicant.birthDate,
+                        applicant.userEmail,
+                        applicant.phoneNo,
+                        scores,
+                        applicant.initialScreeningAssessment?.totalScore || 'N/A',
+                        applicant.initialScreeningAssessment?.degree_url,
+                        applicant.initialScreeningAssessment?.cert_url,
+                        applicant.initialScreeningAssessment?.resume_url,
+                        applicant.applicantStatus
+                    );
+                }
+            } else {
+                alert("Error fetching applicant details: " + data.message);
+            }
+        })
+        .catch(error => {
+            console.error("Error fetching applicant details:", error);
+            alert("Failed to fetch applicant details");
+        });
+}
+
+// Make functions globally available
+window.redirectToReviewFilter = redirectToReviewFilter;
+window.openP1EvaluationModal = openP1EvaluationModal;
+window.fetchApplicantDataAndShowModal = fetchApplicantDataAndShowModal;
+window.fetchFromServer = fetchFromServer;
+
+// Update section header buttons for P1 and P2
+function updateSectionHeaderButtonsP1AndP2() {
+    console.log("🔧 [P1&P2 Header] Updating section header buttons for P1 and P2");
+    
+    const rightSection = document.querySelector('#finalizeButtonContainer');
+    
+    if (!rightSection) {
+        console.warn("⚠️ [P1&P2 Header] No finalize button container found");
+        return;
+    }
+    
+    // Clear existing buttons
+    rightSection.innerHTML = '';
+    
+    // Add P1 Finalize button
+    const p1Button = document.createElement('button');
+    p1Button.id = 'finalizeP1Button';
+    p1Button.textContent = 'Finalize P1 Review';
+    p1Button.style.cssText = `
+        padding: 10px 15px;
+        fontSize: 16px;
+        fontWeight: bold;
+        border: none;
+        backgroundColor: #124A5C;
+        color: white;
+        borderRadius: 4px;
+        cursor: pointer;
+        transition: background-color 0.3s ease;
+        marginRight: 10px;
+    `;
+    
+    p1Button.addEventListener('click', function() {
+        console.log("🎯 [P1 Button] Finalize P1 Review button clicked");
+        // Add P1 finalization logic here
+        alert("P1 Review finalization - to be implemented");
+    });
+    
+    // Add P2 Finalize button (existing)
+    const p2Button = document.createElement('button');
+    p2Button.id = 'finalizeP2Button';
+    p2Button.textContent = 'Finalize P2 Review';
+    p2Button.style.cssText = `
+        padding: 10px 15px;
+        fontSize: 16px;
+        fontWeight: bold;
+        border: none;
+        backgroundColor: #124A5C;
+        color: white;
+        borderRadius: 4px;
+        cursor: pointer;
+        transition: background-color 0.3s ease;
+    `;
+    
+    p2Button.addEventListener('click', function() {
+        console.log("🎯 [P2 Button] Finalize P2 Review button clicked");
+        
+        if (checkAllP2ApplicantsMarked()) {
+            console.log("✅ [P2 Button] All P2 applicants marked, showing modal");
+            document.getElementById('notifyApplicantsModal').style.display = 'block';
+        } else {
+            console.warn("⚠️ [P2 Button] Not all P2 applicants marked");
+            alert("Not all P2 applicants have been marked as passed or failed. Please make a decision for all applicants first.");
+        }
+    });
+    
+    rightSection.appendChild(p1Button);
+    rightSection.appendChild(p2Button);
+    
+    console.log("✅ [P1&P2 Header] Added both P1 and P2 finalize buttons");
+}
+
+// Make P1 functions globally available
+window.handleP1AndP2ReviewFilter = handleP1AndP2ReviewFilter;
+window.updateP1AwaitingActionTable = updateP1AwaitingActionTable;
+window.updateP1LineManagerReviewTable = updateP1LineManagerReviewTable;
+window.createP1TableRow = createP1TableRow;
+window.p1passApplicant = p1passApplicant;
+window.p1rejectApplicant = p1rejectApplicant;
+window.openP1EvaluationModal = openP1EvaluationModal;
+window.fetchApplicantDataAndShowModal = fetchApplicantDataAndShowModal;
+window.updateSectionHeaderButtonsP1AndP2 = updateSectionHeaderButtonsP1AndP2;
 
     // Handle the "For Review" filter for P2
     function handleP2ReviewFilter() {
@@ -5136,44 +6116,46 @@ document.addEventListener("DOMContentLoaded", function () {
         updateSectionHeaderButtonsP2();
     }
 
-    // Extract row data for P2
-    function extractRowData(row, index) {
-        const cells = Array.from(row.querySelectorAll('td'));
-        const cellData = cells.map(cell => cell.innerHTML);
+    // Extract row data for P1 and P2 (ENHANCED VERSION)
+function extractRowData(row, index) {
+    const cells = Array.from(row.querySelectorAll('td'));
+    const cellData = cells.map(cell => cell.innerHTML);
+    
+    // Get applicantId, userId and score from row attributes
+    const applicantId = row.getAttribute('data-applicantid');
+    const userId = row.getAttribute('data-userid'); // This is crucial
+    const totalScore = row.getAttribute('data-score') || 'N/A';
+    
+    // Get name and email
+    let applicantName = '';
+    let applicantEmail = '';
+    
+    if (cells.length > 1) {
+        const nameCell = cells[1];
+        const fullContent = nameCell.innerHTML;
+        const nameParts = fullContent.split('<br>');
         
-        // Get applicantId and score from row attributes
-        const applicantId = row.getAttribute('data-applicantid');
-        const totalScore = row.getAttribute('data-score') || 'N/A';
-        
-        // Get name and email
-        let applicantName = '';
-        let applicantEmail = '';
-        
-        if (cells.length > 1) {
-            const nameCell = cells[1];
-            const fullContent = nameCell.innerHTML;
-            const nameParts = fullContent.split('<br>');
-            
-            if (nameParts.length > 0) {
-                applicantName = nameParts[0].trim();
-            }
-            
-            if (nameParts.length > 1) {
-                const emailHtml = nameParts[1];
-                applicantEmail = emailHtml.replace(/<[^>]*>/g, '').trim();
-            }
+        if (nameParts.length > 0) {
+            applicantName = nameParts[0].trim();
         }
         
-        return {
-            index: index + 1,
-            cells: cellData,
-            applicantId: applicantId,
-            totalScore: totalScore,
-            name: applicantName,
-            email: applicantEmail
-        };
+        if (nameParts.length > 1) {
+            const emailHtml = nameParts[1];
+            applicantEmail = emailHtml.replace(/<[^>]*>/g, '').trim();
+        }
     }
-
+    
+    return {
+        index: index + 1,
+        cells: cellData,
+        applicantId: applicantId,
+        userId: userId, // Added this
+        totalScore: totalScore,
+        name: applicantName,
+        email: applicantEmail,
+        originalRow: row // Keep reference to original row
+    };
+}
     // Update Awaiting Action table for P2
     function updateAwaitingActionTableP2(awaitingRows) {
         const awaitingActionTable = document.getElementById('awaitingActionTable');
@@ -5427,8 +6409,22 @@ document.addEventListener("DOMContentLoaded", function () {
     });
 
     // Display all rows initially
-    filterRowsByStatus("all");
+    // filterRowsByStatus("all");
+    const allButton = document.getElementById("filter-all");
+    if (allButton) {
+        allButton.classList.add("active");
+    }
+    
+    // Show all elements by default without running filters
+    const mainTable = document.getElementById('mainApplicantTable');
+    const onboardingTable = document.getElementById('onboardingTable');
+    const applicantStatusSection = document.getElementById('applicantStatusSection');
+    
+    if (mainTable) mainTable.style.display = "";
+    if (onboardingTable) onboardingTable.style.display = "";
+    if (applicantStatusSection) applicantStatusSection.style.display = "none";
 });
+
 
 document.addEventListener("DOMContentLoaded", function () {
     const evaluationButtons = document.querySelectorAll(".btn-evaluation");

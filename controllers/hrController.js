@@ -7,6 +7,7 @@ const flash = require('connect-flash/lib/flash');
 const applicantController = require('../controllers/applicantController');
 const { check } = require('express-validator');
 const { getEmailTemplateData } = require('../utils/emailService');
+const { sendEmail } = require('../utils/emailService');
 
 
 
@@ -2254,21 +2255,6 @@ const hrController = {
                 const { jobId, applicantId, userId } = req.query;
                 console.log('Received request with jobId:', jobId, 'and applicantId:', applicantId);
                 console.log('Received request with userId:', userId);
-
-    
-                // if (applicantId) {
-                //     const { error: updateError } = await supabase
-                //         .from('applicantaccounts')
-                //         .update({ LM_notified: true })
-                //         .eq('applicantId', applicantId);
-    
-                //     if (updateError) {
-                //         console.error('Error updating LM_notified:', updateError);
-                //         return res.status(500).json({ success: false, error: 'Failed to notify Line Manager' });
-                //     }
-    
-                //     return res.json({ success: true, message: 'Line Manager notified successfully' });
-                // }
     
                 const { data: applicants, error: applicantError } = await supabase
     .from('applicantaccounts')
@@ -2349,47 +2335,6 @@ const { data: screeningAssessments, error: screeningError } = await supabase
                 for (const applicant of applicants) {
                     console.log(`Processing applicant: ${applicant.firstName} ${applicant.lastName}`);
 
-                    // let formattedStatus = applicant.applicantStatus;
-    
-                    // ✅ NEW: If HR Evaluation Score is not 0, update the status to 'P2 - HR Evaluation Accomplished'
-                    // if (applicant.hrInterviewFormScore && applicant.hrInterviewFormScore > 0) {
-                    //     formattedStatus = `P2 - HR Evaluation Accomplished - Score: ${applicant.hrInterviewFormScore}`;
-    
-                    //     const { error: updateError } = await supabase
-                    //         .from('applicantaccounts')
-                    //         .update({ applicantStatus: formattedStatus })
-                    //         .eq('applicantId', applicant.applicantId);
-    
-                    //     if (updateError) {
-                    //         console.error(`Error updating applicant ${applicant.applicantId} to P2 - HR Evaluation Accomplished:`, updateError);
-                    //     }
-                    // }
-                    // else if (applicant.p2_hrevalscheduled) {
-                    //     formattedStatus = 'P2 - Awaiting for HR Evaluation';
-    
-                    //     const { error: updateError } = await supabase
-                    //         .from('applicantaccounts')
-                    //         .update({ applicantStatus: formattedStatus })
-                    //         .eq('applicantId', applicant.applicantId);
-    
-                    //     if (updateError) {
-                    //         console.error(`Error updating applicant ${applicant.applicantId} to P2 - Awaiting for HR Evaluation:`, updateError);
-                    //     }
-                    // } 
-                    // else if (applicant.lineManagerApproved || formattedStatus === 'P1 - PASSED') {
-                    //     formattedStatus = 'P2 - HR Screening Scheduled';
-    
-                    //     const { error: updateError } = await supabase
-                    //         .from('applicantaccounts')
-                    //         .update({ applicantStatus: formattedStatus })
-                    //         .eq('applicantId', applicant.applicantId);
-    
-                    //     if (updateError) {
-                    //         console.error(`Error updating applicant ${applicant.applicantId} to P2 - HR Screening Scheduled:`, updateError);
-                    //     }
-                    // } else {
-                    // }
-                       
     
                     // applicant.applicantStatus = formattedStatus;
                      // Assign job title, department name, and user email
@@ -5753,55 +5698,67 @@ The {companyName} HR Team`
             });
         }
     },
-
-
-    sendAutomatedEmail: async function(req, res) {
-        try {
-            const { email, subject, template, applicantName, jobTitle, phase, type } = req.body;
-            
-            console.log(`📧 [HR] Sending automated ${phase} ${type} email to: ${email}`);
-            
-            if (!email || !subject || !template || !applicantName || !jobTitle) {
-                return res.status(400).json({ 
-                    success: false, 
-                    message: "Missing required email parameters" 
-                });
-            }
-            
-            // Process the template with actual values (same as your Line Manager)
-            const processedTemplate = template
-                .replace(/\{applicantName\}/g, applicantName)
-                .replace(/\{jobTitle\}/g, jobTitle)
-                .replace(/\{companyName\}/g, 'Prime Infrastructure');
-            
-            // Use your existing sendEmail function from utils/emailService.js
-            const { sendEmail } = require('../utils/emailService');
-            const result = await sendEmail(email, subject, processedTemplate);
-            
-            if (result && result.messageId) {
-                console.log(`✅ [HR] P2 Email sent successfully to ${email}: ${result.messageId}`);
-                res.json({
-                    success: true,
-                    messageId: result.messageId,
-                    message: 'Email sent successfully'
-                });
-            } else {
-                console.error(`❌ [HR] Failed to send P2 email to ${email}`);
-                res.json({
-                    success: false,
-                    message: result?.error || 'Failed to send email'
-                });
-            }
-            
-        } catch (error) {
-            console.error('❌ [HR] Error in P2 send-automated-email:', error);
-            res.status(500).json({
-                success: false,
-                message: 'Server error: ' + error.message
+sendAutomatedEmail: async function(req, res) {
+    try {
+        const { email, subject, template, applicantName, jobTitle, phase, type } = req.body;
+        
+        console.log(`📧 [HR] Sending automated ${phase} ${type} email to: ${email}`);
+        
+        if (!email || !subject || !template || !applicantName || !jobTitle) {
+            return res.status(400).json({ 
+                success: false, 
+                message: "Missing required email parameters" 
             });
         }
-    },
-
+        
+        // Process the template with actual values
+        const processedTemplate = template
+            .replace(/\{applicantName\}/g, applicantName)
+            .replace(/\{jobTitle\}/g, jobTitle)
+            .replace(/\{companyName\}/g, 'Prime Infrastructure');
+        
+        // Try to require the email service
+        let sendEmail;
+        try {
+            const emailService = require('../utils/emailService');
+            sendEmail = emailService.sendEmail;
+            
+            if (typeof sendEmail !== 'function') {
+                throw new Error('sendEmail is not a function in emailService');
+            }
+        } catch (requireError) {
+            console.error('❌ [HR] Error requiring emailService:', requireError);
+            return res.status(500).json({
+                success: false,
+                message: 'Email service not available: ' + requireError.message
+            });
+        }
+        
+        const result = await sendEmail(email, subject, processedTemplate);
+        
+        if (result && result.success) {
+            console.log(`✅ [HR] P2 Email sent successfully to ${email}`);
+            res.json({
+                success: true,
+                messageId: result.messageId,
+                message: 'Email sent successfully'
+            });
+        } else {
+            console.error(`❌ [HR] Failed to send P2 email to ${email}`);
+            res.json({
+                success: false,
+                message: result?.error || 'Failed to send email'
+            });
+        }
+        
+    } catch (error) {
+        console.error('❌ [HR] Error in P2 send-automated-email:', error);
+        res.status(500).json({
+            success: false,
+            message: 'Server error: ' + error.message
+        });
+    }
+},
     
     submitLeaveRequest: async function (req, res) {
         if (!req.session.user || !req.session.user.userId) {
