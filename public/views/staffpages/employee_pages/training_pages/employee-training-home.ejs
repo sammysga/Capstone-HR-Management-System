@@ -4916,13 +4916,44 @@ function viewFullIdp() {
     document.body.style.overflow = 'hidden';
 }
 
-
-
-        function generateFullIdpContent(idp) {
+function generateFullIdpContent(idp) {
     let content = '';
     
     // Handle both data structures
     const idpData = idp.midYearData || idp.finalYearData || idp;
+    
+    // Top Development Areas Section (New Section)
+    const topDevAreas = getTopDevelopmentAreas(idp);
+    if (topDevAreas && topDevAreas.length > 0) {
+        content += `
+            <div class="form-section">
+                <h3><i class="fas fa-target"></i> Top 5 Development Areas</h3>
+                <p style="color: #666; font-size: 14px; margin-bottom: 15px;">Priority areas identified for professional growth and development</p>
+                <div style="display: flex; flex-direction: column; gap: 10px; margin-bottom: 20px;">
+                    ${topDevAreas.slice(0, 5).map((area, index) => `
+                        <div style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 12px 16px; border-radius: 8px; position: relative; overflow: hidden;">
+                            <div style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: rgba(255,255,255,0.1); opacity: 0.1;"></div>
+                            <div style="position: relative; z-index: 1;">
+                                <div style="display: flex; justify-content: space-between; align-items: center;">
+                                    <span style="font-weight: 600; font-size: 16px;">
+                                        #${index + 1} ${area.area || area.name || area.title || 'Development Area'}
+                                    </span>
+                                    <span style="background: rgba(255,255,255,0.2); padding: 4px 8px; border-radius: 12px; font-size: 12px;">
+                                        Priority ${index + 1}
+                                    </span>
+                                </div>
+                                ${area.description || area.details ? `
+                                    <div style="margin-top: 8px; font-size: 14px; opacity: 0.9;">
+                                        ${area.description || area.details}
+                                    </div>
+                                ` : ''}
+                            </div>
+                        </div>
+                    `).join('')}
+                </div>
+            </div>
+        `;
+    }
     
     // Professional Development Section
     if (idpData.profStrengths || idpData.profAreasForDevelopment || idpData.profActionsToTake) {
@@ -5057,6 +5088,45 @@ function viewFullIdp() {
     }
 
     return content || '<p style="text-align: center; color: #666;">No detailed IDP information available.</p>';
+}
+
+// New function to extract top development areas from JSONB data
+function getTopDevelopmentAreas(idp) {
+    let topDevAreas = [];
+    
+    try {
+        // Check midyear data
+        if (idp.midYearData && idp.midYearData.topDevAreas) {
+            if (typeof idp.midYearData.topDevAreas === 'string') {
+                topDevAreas = JSON.parse(idp.midYearData.topDevAreas);
+            } else if (Array.isArray(idp.midYearData.topDevAreas)) {
+                topDevAreas = idp.midYearData.topDevAreas;
+            }
+        }
+        
+        // Check final year data if no midyear data
+        if (topDevAreas.length === 0 && idp.finalYearData && idp.finalYearData.topDevAreas) {
+            if (typeof idp.finalYearData.topDevAreas === 'string') {
+                topDevAreas = JSON.parse(idp.finalYearData.topDevAreas);
+            } else if (Array.isArray(idp.finalYearData.topDevAreas)) {
+                topDevAreas = idp.finalYearData.topDevAreas;
+            }
+        }
+        
+        // Direct check on main object
+        if (topDevAreas.length === 0 && idp.topDevAreas) {
+            if (typeof idp.topDevAreas === 'string') {
+                topDevAreas = JSON.parse(idp.topDevAreas);
+            } else if (Array.isArray(idp.topDevAreas)) {
+                topDevAreas = idp.topDevAreas;
+            }
+        }
+    } catch (error) {
+        console.error('Error parsing top development areas:', error);
+        topDevAreas = [];
+    }
+    
+    return topDevAreas;
 }
 
         function closeFullIdpModal() {
