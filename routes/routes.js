@@ -22,6 +22,7 @@ router.get('/applicant/login', applicantController.getApplicantLogin);
 router.post('/applicant/login', applicantController.handleLoginSubmit);
 router.get('/applicant/schedule-interview', applicantController.getCalendly);
 router.post('/update-applicant-status', applicantController.updateApplicantStatus);
+router.get('/applicant/logout', applicantController.getLogoutButton);
 
 // Applicant 
 router.get('/about', applicantController.getAboutPage);
@@ -302,6 +303,7 @@ router.get('/linemanager/get-p3-assessment/:userId', lineManagerController.getP3
 
 router.get('/hr/applicant-tracker', hrController.getApplicantTrackerAllJobPositions);
 router.get('/hr/applicant-tracker-jobposition', hrController.getApplicantTrackerByJobPositions);
+router.get('/get-applicant-assessment/:userId', hrController.getApplicantAssessment);
 router.post('/hr/applicant-tracker-jobposition/P1AwaitingforLineManager', hrController.updateStatusToP1AwaitingforLineManager);
 router.get('/hr/view-final-results/:userId', hrController.getFinalResults);
 router.post('/handleFileUpload', applicantController.handleReuploadsFileUpload);

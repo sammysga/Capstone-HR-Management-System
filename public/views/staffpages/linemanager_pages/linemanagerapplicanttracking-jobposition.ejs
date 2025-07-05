@@ -1807,62 +1807,238 @@ document.addEventListener("DOMContentLoaded", function () {
     initializeApplicantTracker();
     
     // ============================
-    // CRITICAL FIX: P1 & P3 FINALIZATION BUTTON SETUP
+    // ROBUST P1 FINALIZATION BUTTON SETUP
     // ============================
     
-    setTimeout(() => {
-        console.log("🔧 Setting up P1 and P3 finalization buttons...");
+    function setupP1FinalizationButton() {
+        console.log("🔧 Setting up P1 finalization button with robust detection...");
         
-        // P1 FINALIZATION BUTTON - FIXED
-        const finalizeP1Button = document.getElementById('finalizeP1Button');
-        if (finalizeP1Button) {
-            console.log("✅ Found P1 finalize button by ID");
+        // Multiple attempts to find and setup the button
+        let attempts = 0;
+        const maxAttempts = 10;
+        
+        function attemptButtonSetup() {
+            attempts++;
+            console.log(`Attempt ${attempts} to setup P1 button...`);
             
-            // Remove any existing event listeners by cloning
-            const newP1Button = finalizeP1Button.cloneNode(true);
-            finalizeP1Button.parentNode.replaceChild(newP1Button, finalizeP1Button);
+            // Try multiple selectors in order of preference
+            const selectors = [
+                '#finalizeP1Button',
+                '.set-finalize-review-button',
+                'button[id*="finalizeP1"]',
+                'button[class*="finalize"]',
+                '#p1FinalizeButtonContainer button',
+                '#p1ReviewSection button'
+            ];
             
-            // Add the click event listener
-            newP1Button.addEventListener('click', function(e) {
-                e.preventDefault();
-                console.log("🚀 P1 Finalize button clicked!");
+            let buttonFound = false;
+            
+            for (const selector of selectors) {
+                const buttons = document.querySelectorAll(selector);
                 
-                if (checkAllApplicantsMarked('P1')) {
-                    console.log("✅ All P1 applicants marked - starting finalization process");
-                    startP1FinalizationProcess();
-                } else {
-                    console.log("⚠️ Not all P1 applicants marked");
-                    alert("Not all P1 applicants have been marked as passed or failed. Please make a decision for all applicants first.");
-                }
-            });
-            
-            console.log("✅ P1 button event listener attached successfully");
-        } else {
-            console.error("❌ P1 finalize button not found! Looking for alternatives...");
-            
-            // Try alternative selectors for P1
-            const altP1Buttons = document.querySelectorAll('.set-finalize-review-button, button[class*="finalize"]');
-            console.log(`Found ${altP1Buttons.length} alternative finalize buttons`);
-            
-            altP1Buttons.forEach((btn, idx) => {
-                const buttonText = btn.textContent || '';
-                if (buttonText.includes('P1') || buttonText.includes('Finalize P1')) {
-                    console.log(`Setting up alternative P1 button ${idx}: "${buttonText}"`);
-                    btn.addEventListener('click', function(e) {
-                        e.preventDefault();
-                        console.log("🚀 Alternative P1 button clicked!");
+                buttons.forEach((button, index) => {
+                    const buttonText = button.textContent || button.innerText || '';
+                    const buttonId = button.id || '';
+                    
+                    // Check if this is likely the P1 finalization button
+                    if (buttonText.toLowerCase().includes('finalize') && 
+                        (buttonText.toLowerCase().includes('p1') || 
+                         buttonId.toLowerCase().includes('p1') ||
+                         buttonText.toLowerCase().includes('review'))) {
                         
-                        if (checkAllApplicantsMarked('P1')) {
-                            startP1FinalizationProcess();
-                        } else {
-                            alert("Not all P1 applicants have been marked as passed or failed. Please make a decision for all applicants first.");
+                        console.log(`✅ Found P1 button with selector "${selector}": "${buttonText}"`);
+                        
+                        // Ensure button has correct ID
+                        if (!button.id) {
+                            button.id = 'finalizeP1Button';
+                        }
+                        
+                        // Remove existing event listeners by cloning
+                        const newButton = button.cloneNode(true);
+                        button.parentNode.replaceChild(newButton, button);
+                        
+                        // Add click event listener with error handling
+                        newButton.addEventListener('click', function(e) {
+                            e.preventDefault();
+                            e.stopPropagation();
+                            
+                            console.log("🚀 P1 Finalize button clicked!");
+                            
+                            try {
+                                // Check if all applicants are marked
+                                if (typeof checkAllApplicantsMarked === 'function') {
+                                    if (checkAllApplicantsMarked('P1')) {
+                                        console.log("✅ All P1 applicants marked - starting finalization");
+                                        
+                                        if (typeof startP1FinalizationProcess === 'function') {
+                                            startP1FinalizationProcess();
+                                        } else {
+                                            console.error("❌ startP1FinalizationProcess function not found");
+                                            alert("Error: Finalization process not available. Please refresh the page.");
+                                        }
+                                    } else {
+                                        console.log("⚠️ Not all P1 applicants marked");
+                                        alert("Not all P1 applicants have been marked as passed or failed. Please make a decision for all applicants first.");
+                                    }
+                                } else {
+                                    console.error("❌ checkAllApplicantsMarked function not found");
+                                    alert("Error: Validation function not available. Please refresh the page.");
+                                }
+                            } catch (error) {
+                                console.error("❌ Error in P1 finalization:", error);
+                                alert("An error occurred during finalization. Please check the console and try again.");
+                            }
+                        });
+                        
+                        // Add visual feedback
+                        newButton.style.display = 'block';
+                        newButton.style.visibility = 'visible';
+                        newButton.style.opacity = '1';
+                        
+                        // Ensure button container is visible
+                        const container = newButton.closest('.finalize-button-container, .review-section-header');
+                        if (container) {
+                            container.style.display = 'flex';
+                            container.style.visibility = 'visible';
+                        }
+                        
+                        console.log("✅ P1 button setup complete and visible");
+                        buttonFound = true;
+                        
+                        // Set up mutation observer to watch for button removal
+                        setupButtonProtection(newButton);
+                        
+                        return; // Exit once we find and setup the button
+                    }
+                });
+                
+                if (buttonFound) break;
+            }
+            
+            if (!buttonFound && attempts < maxAttempts) {
+                console.log(`⚠️ P1 button not found on attempt ${attempts}, retrying...`);
+                setTimeout(attemptButtonSetup, 1000);
+            } else if (!buttonFound) {
+                console.error("❌ P1 finalization button could not be found after all attempts");
+                
+                // Create button if it doesn't exist
+                createP1ButtonIfMissing();
+            }
+        }
+        
+        // Start the setup process
+        attemptButtonSetup();
+    }
+    
+    // ============================
+    // BUTTON PROTECTION SYSTEM
+    // ============================
+    
+    function setupButtonProtection(button) {
+        console.log("🛡️ Setting up button protection...");
+        
+        // Create a mutation observer to watch for button removal
+        const observer = new MutationObserver(function(mutations) {
+            mutations.forEach(function(mutation) {
+                if (mutation.type === 'childList') {
+                    mutation.removedNodes.forEach(function(node) {
+                        if (node === button || (node.nodeType === Node.ELEMENT_NODE && node.contains(button))) {
+                            console.log("🚨 P1 button was removed! Attempting to restore...");
+                            setTimeout(() => {
+                                createP1ButtonIfMissing();
+                            }, 100);
                         }
                     });
                 }
             });
+        });
+        
+        // Start observing
+        observer.observe(document.body, {
+            childList: true,
+            subtree: true
+        });
+        
+        // Store observer reference for cleanup if needed
+        window.p1ButtonObserver = observer;
+    }
+    
+    // ============================
+    // EMERGENCY BUTTON CREATION
+    // ============================
+    
+    function createP1ButtonIfMissing() {
+        console.log("🆘 Creating P1 button as emergency fallback...");
+        
+        // Find a suitable container
+        let container = document.getElementById('p1FinalizeButtonContainer');
+        if (!container) {
+            container = document.querySelector('.review-section-header');
+        }
+        if (!container) {
+            container = document.getElementById('p1ReviewSection');
         }
         
-        // P3 FINALIZATION BUTTON - FIXED
+        if (container) {
+            // Create button container if it doesn't exist
+            let buttonContainer = container.querySelector('.finalize-button-container');
+            if (!buttonContainer) {
+                buttonContainer = document.createElement('div');
+                buttonContainer.className = 'finalize-button-container';
+                buttonContainer.id = 'p1FinalizeButtonContainer';
+                container.appendChild(buttonContainer);
+            }
+            
+            // Create the button
+            const button = document.createElement('button');
+            button.id = 'finalizeP1Button';
+            button.className = 'set-finalize-review-button';
+            button.textContent = 'Finalize P1 Review';
+            button.type = 'button';
+            
+            // Add click handler
+            button.addEventListener('click', function(e) {
+                e.preventDefault();
+                e.stopPropagation();
+                
+                console.log("🚀 Emergency P1 button clicked!");
+                
+                try {
+                    if (typeof checkAllApplicantsMarked === 'function' && checkAllApplicantsMarked('P1')) {
+                        if (typeof startP1FinalizationProcess === 'function') {
+                            startP1FinalizationProcess();
+                        } else {
+                            alert("Error: Finalization process not available.");
+                        }
+                    } else {
+                        alert("Not all P1 applicants have been marked as passed or failed.");
+                    }
+                } catch (error) {
+                    console.error("Error in emergency P1 finalization:", error);
+                    alert("An error occurred. Please refresh the page.");
+                }
+            });
+            
+            // Add to container
+            buttonContainer.appendChild(button);
+            
+            console.log("✅ Emergency P1 button created and added");
+            
+            // Set up protection for the new button
+            setupButtonProtection(button);
+        } else {
+            console.error("❌ Could not find suitable container for P1 button");
+        }
+    }
+    
+    // ============================
+    // P3 FINALIZATION BUTTON SETUP - ORIGINAL
+    // ============================
+    
+    setTimeout(() => {
+        console.log("🔧 Setting up P3 finalization button...");
+        
+        // P3 FINALIZATION BUTTON - ORIGINAL CODE
         const finalizeP3Button = document.getElementById('finalizeP3Button');
         if (finalizeP3Button) {
             console.log("✅ Found P3 finalize button by ID");
@@ -1909,10 +2085,10 @@ document.addEventListener("DOMContentLoaded", function () {
             });
         }
         
-    }, 1000); // FIXED: Single timeout for both P1 and P3 finalization buttons
+    }, 1000);
 
     // ============================
-    // MODAL CONFIRM BUTTONS SETUP - FIXED
+    // MODAL CONFIRM BUTTONS SETUP - ORIGINAL
     // ============================
     
     setTimeout(() => {
@@ -1963,7 +2139,7 @@ document.addEventListener("DOMContentLoaded", function () {
     }, 1200);
     
     // ============================
-    // CLOSE MODAL BUTTONS SETUP - FIXED
+    // CLOSE MODAL BUTTONS SETUP - ORIGINAL
     // ============================
     
     setTimeout(() => {
@@ -1994,7 +2170,7 @@ document.addEventListener("DOMContentLoaded", function () {
     }, 1300);
     
     // ============================
-    // ADDITIONAL SYSTEM INITIALIZATION
+    // ADDITIONAL SYSTEM INITIALIZATION - ORIGINAL
     // ============================
     
     // Initialize other systems with proper sequencing
@@ -2031,7 +2207,7 @@ document.addEventListener("DOMContentLoaded", function () {
     }, 3000);
 
     // ============================
-    // MODAL SETUP
+    // MODAL SETUP - ORIGINAL
     // ============================
     
     if (typeof setupModalEventListeners === 'function') {
@@ -2047,7 +2223,7 @@ document.addEventListener("DOMContentLoaded", function () {
     }
 
     // ============================
-    // ENHANCED JOB OFFER SYSTEM INITIALIZATION
+    // ENHANCED JOB OFFER SYSTEM INITIALIZATION - ORIGINAL
     // ============================
     
     // Load applicants data for enhanced job offer system
@@ -2134,7 +2310,68 @@ document.addEventListener("DOMContentLoaded", function () {
     }, 4000);
     
     // ============================
-    // FINAL INITIALIZATION CHECK
+    // P1 BUTTON INITIALIZATION WITH DELAYS
+    // ============================
+    
+    // Initial P1 setup with progressive delays
+    setTimeout(() => {
+        setupP1FinalizationButton();
+    }, 500);
+    
+    // Backup P1 setup attempts
+    setTimeout(() => {
+        if (!document.getElementById('finalizeP1Button')) {
+            console.log("🔄 Backup P1 button setup attempt...");
+            setupP1FinalizationButton();
+        }
+    }, 2000);
+    
+    setTimeout(() => {
+        if (!document.getElementById('finalizeP1Button')) {
+            console.log("🔄 Final P1 button setup attempt...");
+            createP1ButtonIfMissing();
+        }
+    }, 5000);
+    
+    // ============================
+    // VISIBILITY MONITORING
+    // ============================
+    
+    function monitorButtonVisibility() {
+        setInterval(() => {
+            const button = document.getElementById('finalizeP1Button');
+            if (button) {
+                // Check if button is hidden or has no dimensions
+                const rect = button.getBoundingClientRect();
+                const isHidden = window.getComputedStyle(button).display === 'none' ||
+                                window.getComputedStyle(button).visibility === 'hidden' ||
+                                window.getComputedStyle(button).opacity === '0' ||
+                                rect.width === 0 || rect.height === 0;
+                
+                if (isHidden) {
+                    console.log("🚨 P1 button is hidden! Attempting to restore visibility...");
+                    
+                    // Force visibility
+                    button.style.display = 'block';
+                    button.style.visibility = 'visible';
+                    button.style.opacity = '1';
+                    
+                    // Ensure container is visible
+                    const container = button.closest('.finalize-button-container, .review-section-header');
+                    if (container) {
+                        container.style.display = 'flex';
+                        container.style.visibility = 'visible';
+                    }
+                }
+            }
+        }, 3000); // Check every 3 seconds
+    }
+    
+    // Start monitoring after initial setup
+    setTimeout(monitorButtonVisibility, 10000);
+    
+    // ============================
+    // FINAL INITIALIZATION CHECK - ORIGINAL
     // ============================
     
     setTimeout(() => {
@@ -2180,11 +2417,64 @@ document.addEventListener("DOMContentLoaded", function () {
         });
         
         console.log("=== ENHANCED APPLICANT TRACKER INITIALIZATION COMPLETE ===");
-    }, 5000);
+    }, 8000);
+    
+    // ============================
+    // TESTING FUNCTION
+    // ============================
+    
+    // Enhanced testing function
+    window.testP1FinalizationButton = function() {
+        console.log("🧪 Testing P1 finalization button...");
+        
+        const button = document.getElementById('finalizeP1Button');
+        if (button) {
+            console.log("✅ P1 button found");
+            console.log("Button visibility:", window.getComputedStyle(button).display);
+            console.log("Button opacity:", window.getComputedStyle(button).opacity);
+            
+            const rect = button.getBoundingClientRect();
+            console.log("Button dimensions:", rect.width, "x", rect.height);
+            console.log("Button position:", rect.left, ",", rect.top);
+            
+            // Test click
+            button.click();
+        } else {
+            console.log("❌ P1 button not found, creating emergency button...");
+            createP1ButtonIfMissing();
+        }
+    };
+    
+    // Add CSS to prevent button from being hidden
+    const style = document.createElement('style');
+    style.textContent = `
+        /* Force P1 button visibility */
+        #finalizeP1Button {
+            display: block !important;
+            visibility: visible !important;
+            opacity: 1 !important;
+            position: relative !important;
+            z-index: 100 !important;
+        }
+        
+        /* Ensure container is visible */
+        .finalize-button-container,
+        #p1FinalizeButtonContainer {
+            display: flex !important;
+            visibility: visible !important;
+            opacity: 1 !important;
+        }
+        
+        /* Header layout fix */
+        .review-section-header {
+            display: flex !important;
+            justify-content: space-between !important;
+            align-items: center !important;
+            width: 100% !important;
+        }
+    `;
+    document.head.appendChild(style);
 });
-
-
-
 
 function debugFinalizeButton() {
     console.log("=== DEBUGGING FINALIZE BUTTON ===");

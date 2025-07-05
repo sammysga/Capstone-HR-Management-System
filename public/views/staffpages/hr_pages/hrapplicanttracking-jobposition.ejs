@@ -1447,46 +1447,47 @@
     <div class="divider"></div>
     
     <!-- ========== P1 REVIEW SECTIONS ========== -->
-    <h2 style="color: #124A5C; margin: 20px 0 15px 0; font-size: 22px; font-weight: bold;">List of Applicants on P1 Review</h2>
+    <h2 style="color: #124A5C; margin: 20px 0 15px 0; font-size: 22px; font-weight: bold;">List of Applicants on P1 Review - For Line Manager Endorsement</h2>
     
     <!-- P1 Awaiting for Action Section -->
-    <h4>Awaiting for Action</h4>
-    <table class="tracking-table" id="p1AwaitingActionTable">
-        <thead>
-            <tr>
-                <th>Applicant No.</th>
-                <th>Last Name, First Name</th>
-                <th>Department</th>
-                <th>Position Applied</th>
-                <th>Total Score</th>
-                <th>Applicant Status</th>
-                <th>Actions</th>
-            </tr>
-        </thead>
-        <tbody>
-            <!-- Will be populated dynamically -->
-        </tbody>
-    </table>
+<h4>Awaiting for Action</h4>
+<table class="tracking-table" id="p1AwaitingActionTable">
+    <thead>
+        <tr>
+            <th>Applicant No.</th>
+            <th>Last Name, First Name</th>
+            <th>Department</th>
+            <th>Position Applied</th>
+            <th>Total Score</th>
+            <th>Work Setup/Availability</th>
+            <th>Applicant Status</th>
+            <th>Actions</th>
+        </tr>
+    </thead>
+    <tbody>
+        <!-- Will be populated dynamically -->
+    </tbody>
+</table>
 
-    <!-- P1 Under Line Manager Review Section -->
-    <h4>Applicants on P1 Review; Under Line Manager Review</h4>
-    <table class="tracking-table" id="p1LineManagerReviewTable">
-        <thead>
-            <tr>
-                <th>Applicant No.</th>
-                <th>Last Name, First Name</th>
-                <th>Department</th>
-                <th>Position Applied</th>
-                <th>Total Score</th>
-                <th>Applicant Status</th>
-                <th>Actions</th>
-            </tr>
-        </thead>
-        <tbody>
-            <!-- Will be populated dynamically -->
-        </tbody>
-    </table>
-
+<!-- P1 Under Line Manager Review Section -->
+<h4>Applicants on P1 Review; Under Line Manager Review</h4>
+<table class="tracking-table" id="p1LineManagerReviewTable">
+    <thead>
+        <tr>
+            <th>Applicant No.</th>
+            <th>Last Name, First Name</th>
+            <th>Department</th>
+            <th>Position Applied</th>
+            <th>Total Score</th>
+            <th>Work Setup/Availability</th>
+            <th>Applicant Status</th>
+            <th>Actions</th>
+        </tr>
+    </thead>
+    <tbody>
+        <!-- Will be populated dynamically -->
+    </tbody>
+</table>
     <!-- Spacer between P1 and P2 sections -->
     <div style="margin: 40px 0; border-top: 2px solid #124A5C;"></div>
     
@@ -5289,22 +5290,37 @@ function displayUploadedDocument(fileUrl, linkId, previewId) {
 }
 // Enhanced confirm function for initial screening
 function confirmHRInitialScreeningModal() {
+    console.log("🔄 Enhanced confirm function called");
+    
     const userId = document.getElementById("userId").value;
     
-    if (isReuploadRequested) {
-        // Handle document reupload request - no verification checkbox needed
-        handleDocumentReuploadRequest(userId);
-    } else {
-        // Normal confirmation process - requires verification checkbox
-        const checkbox = document.getElementById("hr-verification-checkbox");
-        const comments = document.getElementById("hr-verification-comments").value;
+    // Check if this is being called from a P1 pass action
+    if (window.p1ActionType === 'pass' && window.p1ActionUserId === userId) {
+        console.log("🟢 [P1 Pass] Confirming pass action via modal");
         
-        if (!checkbox.checked) {
-            alert("Please confirm that the applicant is eligible for endorsement by checking the verification checkbox.");
-            return;
+        if (isReuploadRequested) {
+            // Handle document reupload request - no verification checkbox needed
+            handleDocumentReuploadRequest(userId);
+        } else {
+            // Normal confirmation process - requires verification checkbox
+            const checkbox = document.getElementById("hr-verification-checkbox");
+            const comments = document.getElementById("hr-verification-comments").value;
+            
+            if (!checkbox.checked) {
+                alert("Please confirm that the applicant is eligible for endorsement by checking the verification checkbox.");
+                return;
+            }
+            
+            // Call the normal confirmation which will pass the applicant
+            handleNormalConfirmation(userId, comments);
         }
         
-        handleNormalConfirmation(userId, comments);
+        // Clear the action flags
+        window.p1ActionType = null;
+        window.p1ActionUserId = null;
+    } else {
+        // Call the original confirmation function
+        confirmHRInitialScreeningModal();
     }
 }
 
@@ -5601,90 +5617,308 @@ function handleP1AndP2ReviewFilter() {
     // Update section header buttons
     updateSectionHeaderButtonsP1AndP2();
 }
-
-// Update P1 Awaiting Action table
 function updateP1AwaitingActionTable(awaitingRows) {
+    console.log(`Populating P1 awaiting action table with ${awaitingRows.length} rows`);
+    
     const p1AwaitingTable = document.getElementById('p1AwaitingActionTable');
-    if (!p1AwaitingTable) return;
+    if (!p1AwaitingTable) {
+        console.error("❌ P1 awaiting action table not found");
+        return;
+    }
     
     const tbody = p1AwaitingTable.querySelector('tbody');
-    if (!tbody) return;
+    if (!tbody) {
+        console.error("❌ Tbody not found in P1 awaiting action table");
+        return;
+    }
     
     tbody.innerHTML = '';
     
     if (awaitingRows.length > 0) {
-        awaitingRows.forEach((rowData) => {
+        awaitingRows.forEach((rowData, idx) => {
+            console.log(`Processing P1 awaiting row ${idx + 1}: ${rowData.name}`);
+            
             const newRow = createP1TableRow(rowData, 'awaiting');
             tbody.appendChild(newRow);
+            
+            // Enhance row with work setup data after creation
+            if (rowData.userId) {
+                newRow.setAttribute('data-userid', rowData.userId);
+                enhanceRowWithWorkSetupData(newRow);
+            }
+            
+            console.log(`✅ Added P1 awaiting row ${idx + 1}`);
         });
+        
+        console.log(`✅ Successfully populated P1 awaiting action table with ${awaitingRows.length} rows`);
     } else {
         const messageRow = document.createElement('tr');
-        messageRow.innerHTML = `<td colspan="7" class="no-data-message">No P1 applicants awaiting action.</td>`;
+        const messageCell = document.createElement('td');
+        messageCell.setAttribute('colspan', '8'); // Updated to 8 columns
+        messageCell.className = 'text-center no-data-message';
+        messageCell.style.cssText = `
+            padding: 30px;
+            background-color: #f8f9fa;
+            color: #6c757d;
+            font-style: italic;
+            font-size: 16px;
+            border-left: 4px solid #007bff;
+        `;
+        messageCell.textContent = 'No P1 applicants awaiting for action found.';
+        messageRow.appendChild(messageCell);
         tbody.appendChild(messageRow);
+        
+        console.log("❌ No P1 awaiting rows - added no data message");
     }
 }
 
-// Update P1 Line Manager Review table
+
 function updateP1LineManagerReviewTable(lineManagerRows) {
+    console.log(`Populating P1 line manager review table with ${lineManagerRows.length} rows`);
+    
     const p1LineManagerTable = document.getElementById('p1LineManagerReviewTable');
-    if (!p1LineManagerTable) return;
+    if (!p1LineManagerTable) {
+        console.error("❌ P1 line manager review table not found");
+        return;
+    }
     
     const tbody = p1LineManagerTable.querySelector('tbody');
-    if (!tbody) return;
+    if (!tbody) {
+        console.error("❌ Tbody not found in P1 line manager review table");
+        return;
+    }
     
     tbody.innerHTML = '';
     
     if (lineManagerRows.length > 0) {
-        lineManagerRows.forEach((rowData) => {
+        lineManagerRows.forEach((rowData, idx) => {
+            console.log(`Processing P1 line manager row ${idx + 1}: ${rowData.name}`);
+            
             const newRow = createP1TableRow(rowData, 'linemanager');
             tbody.appendChild(newRow);
+            
+            // Enhance row with work setup data after creation
+            if (rowData.userId) {
+                newRow.setAttribute('data-userid', rowData.userId);
+                enhanceRowWithWorkSetupData(newRow);
+            }
+            
+            console.log(`✅ Added P1 line manager row ${idx + 1}`);
         });
+        
+        console.log(`✅ Successfully populated P1 line manager review table with ${lineManagerRows.length} rows`);
     } else {
         const messageRow = document.createElement('tr');
-        messageRow.innerHTML = `<td colspan="7" class="no-data-message">No P1 applicants under line manager review.</td>`;
+        const messageCell = document.createElement('td');
+        messageCell.setAttribute('colspan', '8'); // Updated to 8 columns
+        messageCell.className = 'text-center no-data-message';
+        messageCell.style.cssText = `
+            padding: 30px;
+            background-color: #f8f9fa;
+            color: #6c757d;
+            font-style: italic;
+            font-size: 16px;
+            border-left: 4px solid #007bff;
+        `;
+        messageCell.textContent = 'No P1 applicants under line manager review found.';
+        messageRow.appendChild(messageCell);
         tbody.appendChild(messageRow);
+        
+        console.log("❌ No P1 line manager rows - added no data message");
     }
 }
 
+// Function to enhance row with actual work setup data from applicants array
+async function enhanceRowWithWorkSetupData(row) {
+    const userId = row.getAttribute('data-userid');
+    if (!userId || row.getAttribute('data-worksetup-enhanced') === 'true') {
+        return; // Skip if already enhanced or no userId
+    }
+    
+    console.log(`🔧 FIXED: Enhancing P1 row for userId: ${userId}`);
+    
+    try {
+        // Try to get data from global applicants data first
+        const applicantsDataScript = document.getElementById('applicants-data');
+        let applicantData = null;
+        
+        if (applicantsDataScript) {
+            try {
+                const applicantsData = JSON.parse(applicantsDataScript.textContent);
+                applicantData = applicantsData.find(a => a.userId == userId);
+            } catch (e) {
+                console.warn("Could not parse applicants data:", e);
+            }
+        }
+        
+        let totalScore = 'N/A';
+        let workSetupPassed = null;
+        let availabilityPassed = null;
+        
+        if (applicantData && applicantData.initialScreeningAssessment) {
+            const assessment = applicantData.initialScreeningAssessment;
+            totalScore = assessment.totalScore || 'N/A';
+            workSetupPassed = assessment.workSetupScore;
+            availabilityPassed = assessment.availabilityScore;
+            
+            console.log(`✅ FIXED: Found data for userId ${userId}:`, {
+                totalScore,
+                workSetupPassed,
+                availabilityPassed
+            });
+        } else {
+            console.log(`⚠️ FIXED: No data found for userId ${userId}, will fetch from server`);
+            
+            // Fallback: fetch from server
+            const response = await fetch(`/hr/get-applicant-assessment/${userId}`);
+            if (response.ok) {
+                const data = await response.json();
+                if (data.success && data.assessment) {
+                    totalScore = data.assessment.totalScore || 'N/A';
+                    workSetupPassed = data.assessment.workSetupScore;
+                    availabilityPassed = data.assessment.availabilityScore;
+                    
+                    console.log(`✅ FIXED: Fetched from server for userId ${userId}:`, {
+                        totalScore,
+                        workSetupPassed,
+                        availabilityPassed
+                    });
+                }
+            }
+        }
+        
+        // Update the score cell
+        const scoreCell = row.querySelector('.score-cell');
+        if (scoreCell) {
+            if (totalScore !== 'N/A' && totalScore !== null && totalScore !== undefined) {
+                scoreCell.textContent = parseFloat(totalScore).toFixed(2);
+                scoreCell.style.color = '#333';
+                scoreCell.style.fontWeight = 'bold';
+            } else {
+                scoreCell.textContent = 'N/A';
+                scoreCell.style.color = '#999';
+            }
+        }
+        
+        // Update the work setup cell with FIXED boolean logic
+        const workSetupCell = row.querySelector('.work-setup-cell');
+        if (workSetupCell) {
+            let workSetupText = 'N/A';
+            let workSetupColor = '#999';
+            
+            // FIXED: Proper boolean handling for workSetupScore and availabilityScore
+            const workSetupBool = workSetupPassed === true || workSetupPassed === 'true' || workSetupPassed === 1;
+            const availabilityBool = availabilityPassed === true || availabilityPassed === 'true' || availabilityPassed === 1;
+            
+            console.log(`🔧 FIXED: Boolean conversion for userId ${userId}:`, {
+                workSetupPassed,
+                availabilityPassed,
+                workSetupBool,
+                availabilityBool
+            });
+            
+            if (workSetupPassed !== null && workSetupPassed !== undefined && 
+                availabilityPassed !== null && availabilityPassed !== undefined) {
+                
+                if (workSetupBool && availabilityBool) {
+                    workSetupText = 'PASSED';
+                    workSetupColor = '#28a745';
+                } else {
+                    workSetupText = 'FAILED';
+                    workSetupColor = '#dc3545';
+                }
+            }
+            
+            workSetupCell.textContent = workSetupText;
+            workSetupCell.style.color = workSetupColor;
+            workSetupCell.style.fontWeight = 'bold';
+            
+            console.log(`✅ FIXED: Set work setup for userId ${userId}: ${workSetupText}`);
+        }
+        
+        // Mark as enhanced
+        row.setAttribute('data-worksetup-enhanced', 'true');
+        
+        console.log(`✅ FIXED: Successfully enhanced P1 row for userId ${userId}`);
+        
+    } catch (error) {
+        console.error(`❌ FIXED: Error enhancing P1 row for userId ${userId}:`, error);
+        
+        // Set error states
+        const scoreCell = row.querySelector('.score-cell');
+        const workSetupCell = row.querySelector('.work-setup-cell');
+        
+        if (scoreCell) {
+            scoreCell.textContent = 'Error';
+            scoreCell.style.color = '#dc3545';
+        }
+        
+        if (workSetupCell) {
+            workSetupCell.textContent = 'Error';
+            workSetupCell.style.color = '#dc3545';
+        }
+    }
+}
 // Create P1 table row
 function createP1TableRow(rowData, tableType) {
-    const newRow = document.createElement('tr');
+   const newRow = document.createElement('tr');
     
     if (rowData.applicantId) {
         newRow.setAttribute('data-applicantid', rowData.applicantId);
     }
     
-    // Extract userId from rowData - this is crucial for the modal
     const userId = rowData.userId || extractUserIdFromRowData(rowData);
     if (userId) {
         newRow.setAttribute('data-userid', userId);
     }
     
     if (rowData.cells && rowData.cells.length >= 5) {
-        // Applicant No, Name, Department, Position, Total Score
-        for (let i = 0; i < 5; i++) {
+        // Applicant No, Name, Department, Position (columns 1-4)
+        for (let i = 0; i < 4; i++) {
             const cell = document.createElement('td');
-            if (i === 4) {
-                cell.textContent = rowData.totalScore || 'N/A';
-            } else {
-                cell.innerHTML = rowData.cells[i];
-            }
+            cell.innerHTML = rowData.cells[i];
             newRow.appendChild(cell);
         }
         
-        // Status
+        // Total Score (column 5)
+        const scoreCell = document.createElement('td');
+        scoreCell.className = 'score-cell';
+        scoreCell.textContent = 'Loading...';
+        scoreCell.style.color = '#6c757d';
+        newRow.appendChild(scoreCell);
+        
+        // Work Setup/Availability (column 6)
+        const workSetupCell = document.createElement('td');
+        workSetupCell.className = 'work-setup-cell';
+        workSetupCell.textContent = 'Loading...';
+        workSetupCell.style.color = '#6c757d';
+        newRow.appendChild(workSetupCell);
+        
+        // Status (column 7)
         const statusCell = document.createElement('td');
         const statusMatch = rowData.cells[4].match(/<span><strong>Status:<\/strong>\s*([^<]+)<\/span>/);
         const status = statusMatch ? statusMatch[1] : 'Unknown';
         statusCell.textContent = status;
         newRow.appendChild(statusCell);
         
-        // Actions
+        // Actions (column 8)
         const actionCell = document.createElement('td');
         
         if (tableType === 'awaiting') {
-            // Determine modal type based on status
-            const isReupload = status.includes('Requested for Reupload');
+            // Extract name from rowData for better user experience
+            let applicantName = 'Unknown';
+            if (rowData.name) {
+                applicantName = rowData.name;
+            } else if (rowData.cells && rowData.cells[1]) {
+                // Extract name from HTML content
+                const nameMatch = rowData.cells[1].match(/^([^<\n]+)/);
+                if (nameMatch) {
+                    applicantName = nameMatch[1].trim();
+                }
+            }
+            
+            // Clean the applicant name for safe usage in onclick
+            const cleanApplicantName = applicantName.replace(/'/g, "\\'").replace(/"/g, '\\"');
             
             actionCell.innerHTML = `
                 <div style="display: flex; flex-direction: column; gap: 5px;">
@@ -5699,21 +5933,22 @@ function createP1TableRow(rowData, tableType) {
                     <div style="display: flex; gap: 5px;">
                         <button 
                             class="btn-pass" 
-                            onclick="p1passApplicant('${rowData.applicantId}')"
-                            style="background-color: #27ae60; color: white; border: none; padding: 6px 12px; border-radius: 4px; cursor: pointer; font-size: 14px; flex: 1;">
+                            onclick="confirmP1Applicant('${userId}', '${cleanApplicantName}')"
+                            style="background-color: #27ae60; color: white; border: none; padding: 6px 12px; border-radius: 4px; cursor: pointer; font-size: 14px; flex: 1;"
+                            title="Pass to Line Manager review">
                             Pass
                         </button>
                         <button 
                             class="btn-reject" 
-                            onclick="p1rejectApplicant('${rowData.applicantId}')"
-                            style="background-color: #e74c3c; color: white; border: none; padding: 6px 12px; border-radius: 4px; cursor: pointer; font-size: 14px; flex: 1;">
+                            onclick="rejectP1Applicant('${userId}', '${cleanApplicantName}')"
+                            style="background-color: #e74c3c; color: white; border: none; padding: 6px 12px; border-radius: 4px; cursor: pointer; font-size: 14px; flex: 1;"
+                            title="Reject applicant">
                             Reject
                         </button>
                     </div>
                 </div>
             `;
         } else {
-            // Line manager review - just show status
             actionCell.innerHTML = `<span style="color: #666; font-style: italic;">Under Line Manager Review</span>`;
         }
         
@@ -5723,6 +5958,194 @@ function createP1TableRow(rowData, tableType) {
     return newRow;
 }
 
+
+// ============================
+// ENSURE GLOBAL AVAILABILITY
+// ============================
+
+// Explicitly assign to window object to ensure global scope
+if (typeof window !== 'undefined') {
+    window.confirmP1Applicant = confirmP1Applicant;
+    window.rejectP1Applicant = rejectP1Applicant;
+    window.createP1TableRow = createP1TableRow;
+    
+    console.log("✅ [P1 Global] P1 functions assigned to window object");
+    console.log("✅ [P1 Global] confirmP1Applicant available:", typeof window.confirmP1Applicant === 'function');
+    console.log("✅ [P1 Global] rejectP1Applicant available:", typeof window.rejectP1Applicant === 'function');
+}
+
+// Also define them in global scope directly
+globalThis.confirmP1Applicant = confirmP1Applicant;
+globalThis.rejectP1Applicant = rejectP1Applicant;
+globalThis.createP1TableRow = createP1TableRow;
+
+console.log("✅ [P1 Global] P1 functions defined in global scope");
+
+// Test function availability immediately
+setTimeout(() => {
+    console.log("🔍 [P1 Test] Testing function availability after 1 second:");
+    console.log("  confirmP1Applicant:", typeof confirmP1Applicant);
+    console.log("  rejectP1Applicant:", typeof rejectP1Applicant);
+    console.log("  window.confirmP1Applicant:", typeof window.confirmP1Applicant);
+    console.log("  window.rejectP1Applicant:", typeof window.rejectP1Applicant);
+}, 1000);
+
+// Function to confirm P1 applicant (directly updates status to P1 Awaiting for Line Manager)
+function confirmP1Applicant(userId, applicantName) {
+    console.log(`🟢 [P1 Confirm] Confirming P1 applicant userId: ${userId}, name: ${applicantName}`);
+    
+    if (!userId) {
+        console.error('❌ [P1 Confirm] Missing userId');
+        alert("Error: Invalid User ID");
+        return;
+    }
+    
+    // Show confirmation dialog
+    if (!confirm(`Are you sure you want to pass ${applicantName} to the Line Manager review stage?`)) {
+        return;
+    }
+    
+    // Show loading state
+    const passButtons = document.querySelectorAll(`button[onclick*="confirmP1Applicant('${userId}'"]`);
+    passButtons.forEach(button => {
+        button.disabled = true;
+        button.textContent = 'Processing...';
+        button.style.backgroundColor = '#6c757d';
+    });
+    
+    // Call the backend endpoint to update status
+    fetch('/hr/applicant-tracker-jobposition/P1AwaitingforLineManager', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ userId: parseInt(userId) }),
+    })
+    .then(response => {
+        console.log(`📡 [P1 Confirm] API response status: ${response.status}`);
+        return response.json();
+    })
+    .then(data => {
+        console.log('📡 [P1 Confirm] API response data:', data);
+        
+        if (data.success) {
+            alert(`✅ Successfully passed ${applicantName} to Line Manager review stage!`);
+            console.log(`✅ [P1 Confirm] Successfully updated userId ${userId} to P1 - Awaiting for Line Manager Action; HR PASSED`);
+            
+            // Refresh the page to show updated status
+            setTimeout(() => {
+                location.reload();
+            }, 1000);
+        } else {
+            throw new Error(data.message || 'Failed to update applicant status');
+        }
+    })
+    .catch(error => {
+        console.error("❌ [P1 Confirm] Error updating applicant status:", error);
+        alert(`❌ Error passing ${applicantName}: ${error.message || 'Unknown error'}`);
+        
+        // Reset button states
+        passButtons.forEach(button => {
+            button.disabled = false;
+            button.textContent = 'Pass';
+            button.style.backgroundColor = '#27ae60';
+        });
+    });
+}
+
+// Function to reject P1 applicant (directly calls reject modal)
+function rejectP1Applicant(userId, applicantName) {
+    console.log(`🔴 [P1 Reject] Rejecting userId: ${userId}, name: ${applicantName}`);
+    
+    if (!userId) {
+        console.error('❌ [P1 Reject] Missing userId');
+        alert("Error: Invalid User ID");
+        return;
+    }
+    
+    if (!confirm(`Are you sure you want to reject ${applicantName}? This action cannot be undone.`)) {
+        return;
+    }
+    
+    // Set the userId in the hidden input before calling the reject function
+    const userIdElement = document.getElementById("userId");
+    if (userIdElement) {
+        userIdElement.value = userId;
+        console.log(`🔴 [P1 Reject] Set userId in modal: ${userId}`);
+    }
+    
+    // Call the existing reject function
+    if (typeof rejectHRInitialScreeningModal === 'function') {
+        console.log(`🔴 [P1 Reject] Calling rejectHRInitialScreeningModal for ${applicantName}`);
+        rejectHRInitialScreeningModal();
+    } else {
+        console.log(`🔴 [P1 Reject] rejectHRInitialScreeningModal not found, using direct API call`);
+        // Fallback: direct API call
+        fetch('/hr/applicant-tracker-jobposition/P1HRFailed', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({ userId: parseInt(userId) }),
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                alert(`Successfully rejected ${applicantName}!`);
+                location.reload();
+            } else {
+                alert("Error rejecting applicant: " + (data.message || "Unknown error"));
+            }
+        })
+        .catch(error => {
+            console.error("❌ [P1 Reject] Network error:", error);
+            alert("Failed to reject applicant.");
+        });
+    }
+}
+
+// New function to handle P1 Pass action through modal
+function handleP1PassAction(userId, applicantId, status) {
+    console.log(`🟢 [P1 Pass] Handling pass action via modal for userId: ${userId}`);
+    
+    if (!userId) {
+        console.error('❌ [P1 Pass] Missing userId');
+        alert("Error: Invalid User ID");
+        return;
+    }
+    
+    // First open the evaluation modal to review, then confirm
+    openP1EvaluationModal(userId, applicantId, status);
+    
+    // Add a flag to indicate this is for passing
+    window.p1ActionType = 'pass';
+    window.p1ActionUserId = userId;
+}
+
+// New function to handle P1 Reject action through modal
+function handleP1RejectAction(userId) {
+    console.log(`🔴 [P1 Reject] Handling reject action via modal for userId: ${userId}`);
+    
+    if (!userId) {
+        console.error('❌ [P1 Reject] Missing userId');
+        alert("Error: Invalid User ID");
+        return;
+    }
+    
+    // Directly call the reject modal function
+    if (typeof rejectHRInitialScreeningModal === 'function') {
+        // Set the userId in the modal before calling reject
+        const userIdElement = document.getElementById("userId");
+        if (userIdElement) {
+            userIdElement.value = userId;
+        }
+        
+        rejectHRInitialScreeningModal();
+    } else {
+        console.error('❌ [P1 Reject] rejectHRInitialScreeningModal function not found');
+        alert('Error: Reject function not available');
+    }
+}
 // Helper function to extract userId from row data
 function extractUserIdFromRowData(rowData) {
     // Try to extract from the original row if available
@@ -6038,10 +6461,10 @@ function updateSectionHeaderButtonsP1AndP2() {
             rightSection.innerHTML = '';
             
             // Add both buttons to the container
-            const p1Button = createButton('finalizeP1Button', 'Finalize P1 Review', function() {
-                console.log("🎯 [P1 Button] Finalize P1 Review button clicked");
-                alert("P1 Review finalization - to be implemented");
-            });
+            // const p1Button = createButton('finalizeP1Button', 'Finalize P1 Review', function() {
+            //     console.log("🎯 [P1 Button] Finalize P1 Review button clicked");
+            //     alert("P1 Review finalization - to be implemented");
+            // });
             
             const p2Button = createButton('finalizeP2Button', 'Finalize P2 Review', function() {
                 console.log("🎯 [P2 Button] Finalize P2 Review button clicked");
@@ -6091,10 +6514,10 @@ function updateSectionHeaderButtonsP1AndP2() {
             existingP1Button.remove();
         }
         
-        const p1Button = createButton('finalizeP1Button', 'Finalize P1 Review', function() {
-            console.log("🎯 [P1 Button] Finalize P1 Review button clicked");
-            alert("P1 Review finalization - to be implemented");
-        });
+        // const p1Button = createButton('finalizeP1Button', 'Finalize P1 Review', function() {
+        //     console.log("🎯 [P1 Button] Finalize P1 Review button clicked");
+        //     alert("P1 Review finalization - to be implemented");
+        // });
         
         // Make the header container flexible if it isn't already
         p1Header.style.display = 'flex';

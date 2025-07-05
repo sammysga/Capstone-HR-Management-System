@@ -2406,7 +2406,9 @@ res.render('staffpages/hr_pages/hrapplicanttracking-jobposition', { applicants }
         } catch (error) {
             res.json({ success: false, message: error.message });
         }
-    },requestDocumentReupload: async function(req, res) {
+    },
+    
+    requestDocumentReupload: async function(req, res) {
     const { userId, documentsToReupload, remarks, hrComments } = req.body;
     
     try {
@@ -3488,27 +3490,27 @@ getApplicantOnboardingData: async function(req, res) {
         }
     },
     
-    updateStatusToP1HRFailed: async function(req, res) {
-        const { userId } = req.body; // Only get userId from request body
-    
-        try {
-            // No need to update initial screening assessment for rejection
-            // Just update the applicant status directly
-    
-            // Update `applicantaccounts` using `userId`
-            const { error: statusError } = await supabase
-                .from('applicantaccounts')
-                .update({ applicantStatus: "P1 - HR FAILED" })
-                .eq('userId', userId);
-            
-            if (statusError) throw statusError;
-    
-            res.json({ success: true, message: "Applicant status updated to P1 - HR FAILED successfully.", userId });
-        } catch (error) {
-            res.json({ success: false, message: error.message });
-        }
-    },
 
+updateStatusToP1HRFailed: async function(req, res) {
+    const { userId } = req.body; // Only get userId from request body
+
+    try {
+        // No need to update initial screening assessment for rejection
+        // Just update the applicant status directly
+
+        // Update `applicantaccounts` using `userId` - CHANGED to match enum
+        const { error: statusError } = await supabase
+            .from('applicantaccounts')
+            .update({ applicantStatus: "P1 - FAILED" })
+            .eq('userId', userId);
+        
+        if (statusError) throw statusError;
+
+        res.json({ success: true, message: "Applicant status updated to P1 - FAILED successfully.", userId });
+    } catch (error) {
+        res.json({ success: false, message: error.message });
+    }
+},
     getViewMRF: async function (req, res) {
         if (req.session.user && req.session.user.userRole === 'HR') {
             try {
@@ -7337,6 +7339,59 @@ sendAutomatedEmail: async function(req, res) {
         }
     },
 
+    // Add this endpoint to your HR controller
+getApplicantAssessment: async function(req, res) {
+    try {
+        const { userId } = req.params;
+        
+        if (!userId) {
+            return res.status(400).json({ 
+                success: false, 
+                message: 'User ID is required' 
+            });
+        }
+        
+        console.log(`📡 Fetching assessment data for userId: ${userId}`);
+        
+        const { data: assessment, error } = await supabase
+            .from('applicant_initialscreening_assessment')
+            .select(`
+                userId,
+                totalScore,
+                workSetupScore,
+                availabilityScore,
+                degreeScore,
+                experienceScore,
+                certificationScore,
+                hardSkillsScore,
+                softSkillsScore
+            `)
+            .eq('userId', userId)
+            .single();
+        
+        if (error) {
+            console.error('Error fetching assessment:', error);
+            return res.status(404).json({ 
+                success: false, 
+                message: 'Assessment not found' 
+            });
+        }
+        
+        console.log(`✅ Found assessment for userId ${userId}:`, assessment);
+        
+        res.json({ 
+            success: true, 
+            assessment: assessment 
+        });
+        
+    } catch (error) {
+        console.error('Error in getApplicantAssessment:', error);
+        res.status(500).json({ 
+            success: false, 
+            message: 'Internal server error' 
+        });
+    }
+},
     getHireesReport: async function(req, res) {
         if (!req.session.user || req.session.user.userRole !== 'HR') {
             return res.status(401).json({ success: false, message: 'Unauthorized access' });
