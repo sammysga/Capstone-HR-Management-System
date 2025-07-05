@@ -582,11 +582,24 @@ document.addEventListener("DOMContentLoaded", function() {
         }
     }
 
-    // Back to Home button functionality (formerly logout)
-    document.getElementById("logout-button").addEventListener("click", function() {
-        window.location.href = '/applicant/logout'; // Redirect to the about page route
-    });
-
+ document.getElementById("logout-button").addEventListener("click", function() {
+            fetch("/applicant/logout", {
+                method: "GET",
+                headers: {
+                    "Content-Type": "application/json"
+                }
+            })
+            .then(response => {
+                if (response.ok) {
+                    window.location.href = "/applicant/login";
+                } else {
+                    console.error("Logout failed");
+                }
+            })
+            .catch(error => {
+                console.error("Error during logout:", error);
+            });
+        });
     // 🔥 REMOVED: Single status check on page load
     // This is now handled by the enhanced loadChatHistory function
     console.log("✅ [Chatbot] Chat initialized with conversation restoration");

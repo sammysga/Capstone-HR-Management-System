@@ -5989,75 +5989,154 @@ window.openP1EvaluationModal = openP1EvaluationModal;
 window.fetchApplicantDataAndShowModal = fetchApplicantDataAndShowModal;
 window.fetchFromServer = fetchFromServer;
 
-// Update section header buttons for P1 and P2
+
+// Update section header buttons for P1 and P2 - Fixed positioning with debugging
 function updateSectionHeaderButtonsP1AndP2() {
     console.log("🔧 [P1&P2 Header] Updating section header buttons for P1 and P2");
     
-    const rightSection = document.querySelector('#finalizeButtonContainer');
+    // Debug: Log all headers to see what we're working with
+    const allHeaders = document.querySelectorAll('h1, h2, h3, h4, h5, h6');
+    console.log("📋 [Debug] All headers found:", Array.from(allHeaders).map(h => h.textContent));
     
-    if (!rightSection) {
-        console.warn("⚠️ [P1&P2 Header] No finalize button container found");
-        return;
+    // Find P1 section header with multiple strategies
+    let p1Header = Array.from(document.querySelectorAll('h1, h2, h3, h4, h5, h6')).find(h => 
+        h.textContent.includes('List of Applicants on P1 Review') || 
+        h.textContent.includes('P1 Review') ||
+        h.textContent.toLowerCase().includes('p1')
+    );
+    
+    // Find P2 section header with multiple strategies
+    let p2Header = Array.from(document.querySelectorAll('h1, h2, h3, h4, h5, h6')).find(h => 
+        h.textContent.includes('List of Applicants on P2 Review') || 
+        h.textContent.includes('P2 Review') ||
+        h.textContent.toLowerCase().includes('p2')
+    );
+    
+    // Alternative: Look for elements with specific text content (not just headers)
+    if (!p1Header) {
+        p1Header = Array.from(document.querySelectorAll('*')).find(el => 
+            el.textContent && el.textContent.includes('List of Applicants on P1 Review')
+        );
     }
     
-    // Clear existing buttons
-    rightSection.innerHTML = '';
+    if (!p2Header) {
+        p2Header = Array.from(document.querySelectorAll('*')).find(el => 
+            el.textContent && el.textContent.includes('List of Applicants on P2 Review')
+        );
+    }
     
-    // Add P1 Finalize button
-    const p1Button = document.createElement('button');
-    p1Button.id = 'finalizeP1Button';
-    p1Button.textContent = 'Finalize P1 Review';
-    p1Button.style.cssText = `
-        padding: 10px 15px;
-        fontSize: 16px;
-        fontWeight: bold;
-        border: none;
-        backgroundColor: #124A5C;
-        color: white;
-        borderRadius: 4px;
-        cursor: pointer;
-        transition: background-color 0.3s ease;
-        marginRight: 10px;
-    `;
+    console.log("🔍 [Debug] P1 Header found:", p1Header ? p1Header.textContent : "NOT FOUND");
+    console.log("🔍 [Debug] P2 Header found:", p2Header ? p2Header.textContent : "NOT FOUND");
     
-    p1Button.addEventListener('click', function() {
-        console.log("🎯 [P1 Button] Finalize P1 Review button clicked");
-        // Add P1 finalization logic here
-        alert("P1 Review finalization - to be implemented");
-    });
-    
-    // Add P2 Finalize button (existing)
-    const p2Button = document.createElement('button');
-    p2Button.id = 'finalizeP2Button';
-    p2Button.textContent = 'Finalize P2 Review';
-    p2Button.style.cssText = `
-        padding: 10px 15px;
-        fontSize: 16px;
-        fontWeight: bold;
-        border: none;
-        backgroundColor: #124A5C;
-        color: white;
-        borderRadius: 4px;
-        cursor: pointer;
-        transition: background-color 0.3s ease;
-    `;
-    
-    p2Button.addEventListener('click', function() {
-        console.log("🎯 [P2 Button] Finalize P2 Review button clicked");
-        
-        if (checkAllP2ApplicantsMarked()) {
-            console.log("✅ [P2 Button] All P2 applicants marked, showing modal");
-            document.getElementById('notifyApplicantsModal').style.display = 'block';
-        } else {
-            console.warn("⚠️ [P2 Button] Not all P2 applicants marked");
-            alert("Not all P2 applicants have been marked as passed or failed. Please make a decision for all applicants first.");
+    if (!p1Header && !p2Header) {
+        console.warn("⚠️ [P1&P2 Header] Neither P1 nor P2 section headers found");
+        // Fallback: try to use the old container method
+        const rightSection = document.querySelector('#finalizeButtonContainer');
+        if (rightSection) {
+            console.log("🔄 [Fallback] Using original container method");
+            // Clear existing buttons
+            rightSection.innerHTML = '';
+            
+            // Add both buttons to the container
+            const p1Button = createButton('finalizeP1Button', 'Finalize P1 Review', function() {
+                console.log("🎯 [P1 Button] Finalize P1 Review button clicked");
+                alert("P1 Review finalization - to be implemented");
+            });
+            
+            const p2Button = createButton('finalizeP2Button', 'Finalize P2 Review', function() {
+                console.log("🎯 [P2 Button] Finalize P2 Review button clicked");
+                if (checkAllP2ApplicantsMarked()) {
+                    console.log("✅ [P2 Button] All P2 applicants marked, showing modal");
+                    document.getElementById('notifyApplicantsModal').style.display = 'block';
+                } else {
+                    console.warn("⚠️ [P2 Button] Not all P2 applicants marked");
+                    alert("Not all P2 applicants have been marked as passed or failed. Please make a decision for all applicants first.");
+                }
+            });
+            
+            rightSection.appendChild(p1Button);
+            rightSection.appendChild(p2Button);
+            console.log("✅ [Fallback] Added both buttons to container");
+            return;
         }
-    });
+    }
     
-    rightSection.appendChild(p1Button);
-    rightSection.appendChild(p2Button);
+    // Helper function to create buttons
+    function createButton(id, text, clickHandler) {
+        const button = document.createElement('button');
+        button.id = id;
+        button.textContent = text;
+        button.style.cssText = `
+            padding: 10px 15px;
+            font-size: 16px;
+            font-weight: bold;
+            border: none;
+            background-color: #124A5C;
+            color: white;
+            border-radius: 4px;
+            cursor: pointer;
+            transition: background-color 0.3s ease;
+            margin-left: 20px;
+            vertical-align: middle;
+        `;
+        button.addEventListener('click', clickHandler);
+        return button;
+    }
     
-    console.log("✅ [P1&P2 Header] Added both P1 and P2 finalize buttons");
+    // Create and place P1 button
+    if (p1Header) {
+        // Remove existing P1 button if it exists
+        const existingP1Button = document.getElementById('finalizeP1Button');
+        if (existingP1Button) {
+            existingP1Button.remove();
+        }
+        
+        const p1Button = createButton('finalizeP1Button', 'Finalize P1 Review', function() {
+            console.log("🎯 [P1 Button] Finalize P1 Review button clicked");
+            alert("P1 Review finalization - to be implemented");
+        });
+        
+        // Make the header container flexible if it isn't already
+        p1Header.style.display = 'flex';
+        p1Header.style.alignItems = 'center';
+        p1Header.style.justifyContent = 'space-between';
+        
+        // Append button to P1 header
+        p1Header.appendChild(p1Button);
+        console.log("✅ [P1&P2 Header] Added P1 finalize button next to P1 header");
+    }
+    
+    // Create and place P2 button
+    if (p2Header) {
+        // Remove existing P2 button if it exists
+        const existingP2Button = document.getElementById('finalizeP2Button');
+        if (existingP2Button) {
+            existingP2Button.remove();
+        }
+        
+        const p2Button = createButton('finalizeP2Button', 'Finalize P2 Review', function() {
+            console.log("🎯 [P2 Button] Finalize P2 Review button clicked");
+            
+            if (checkAllP2ApplicantsMarked()) {
+                console.log("✅ [P2 Button] All P2 applicants marked, showing modal");
+                document.getElementById('notifyApplicantsModal').style.display = 'block';
+            } else {
+                console.warn("⚠️ [P2 Button] Not all P2 applicants marked");
+                alert("Not all P2 applicants have been marked as passed or failed. Please make a decision for all applicants first.");
+            }
+        });
+        
+        // Make the header container flexible if it isn't already
+        p2Header.style.display = 'flex';
+        p2Header.style.alignItems = 'center';
+        p2Header.style.justifyContent = 'space-between';
+        
+        // Append button to P2 header
+        p2Header.appendChild(p2Button);
+        console.log("✅ [P1&P2 Header] Added P2 finalize button next to P2 header");
+    }
+    
+    console.log("✅ [P1&P2 Header] Finished updating section header buttons");
 }
 
 // Make P1 functions globally available

@@ -4045,7 +4045,7 @@ getLogoutButton: function(req, res) {
             console.error('Error destroying session:', err);
             return res.status(500).send('Internal Server Error');
         }
-        res.redirect('/applicant/login');
+       res.redirect('/applicant/login');
     });
 },
 
