@@ -1094,31 +1094,10 @@ table.tracking-table tbody:empty::after {
 <span><strong>Status:</strong> <%= applicant.applicantStatus || 'Pending' %></span>
 <div style="margin-top: 10px;">
     <% if (applicant.applicantStatus && applicant.applicantStatus.startsWith('P1 - Awaiting for Line Manager Action; HR PASSED')) { %>
-        <!-- For Review Button -->
-        <button 
+       <button 
             class="btn-review" 
-            onclick="lineManagerInitialScreeningModal(
-                    '<%= applicant.userId %>', 
-                    '<%= applicant.lastName %>', 
-                    '<%= applicant.firstName %>', 
-                    '<%= applicant.birthDate %>', 
-                    '<%= applicant.userEmail %>', 
-                    '<%= applicant.phoneNo %>', 
-                    {
-                        degree: '<%= applicant.initialScreeningAssessment.degreeScore %>',
-                        experience: '<%= applicant.initialScreeningAssessment.experienceScore %>',
-                        certifications: '<%= applicant.initialScreeningAssessment.certificationScore %>',
-                        hardSkills: '<%= applicant.initialScreeningAssessment.hardSkillsScore %>',
-                        softSkills: '<%= applicant.initialScreeningAssessment.softSkillsScore %>',
-                        workSetup: '<%= applicant.initialScreeningAssessment.workSetupScore %>',
-                        availability: '<%= applicant.initialScreeningAssessment.availabilityScore %>'
-                    }, 
-                    '<%= applicant.initialScreeningAssessment.totalScore %>', 
-                    '<%= applicant.initialScreeningAssessment.degree_url %>',
-                    '<%= applicant.initialScreeningAssessment.cert_url %>',
-                    '<%= applicant.initialScreeningAssessment.resume_url %>'
-                )
-            ">
+            onclick="goToP1ReviewFilter()"
+            style="background-color: white; color: black; border: 1px solid #124A5C; padding: 10px 20px; cursor: pointer; border-radius: 5px; font-size: 14px; transition: background-color 0.3s ease, color 0.3s ease; width: 150px; text-align: center;">
             For Review
         </button>
     <% } else if (applicant.applicantStatus === 'P2 - Awaiting for HR Evaluation') { %>
@@ -9284,9 +9263,9 @@ function createP1AwaitingStatusCellEnhanced(rowData) {
         View Evaluation
       </button>
       <div style="margin-top: 5px;">
-        <button 
-          class="btn-review" 
-          onclick="passApplicant()"
+        <button
+          class="btn-review"
+          onclick="passApplicant('${userId}')"
           style="background-color: #28a745; color: white; margin-right: 5px; min-width: 70px;"
         >
           Pass
@@ -12584,9 +12563,7 @@ function changeApplicantStatus(userId) {
     statusCell.innerHTML = `<span><strong>Status:</strong> ${currentStatus}</span>`;
   });
 }
-
-function passApplicant() {
-  const userId = document.getElementById('userId').value;
+function passApplicant(userId) {
   if (!userId) {
     alert("Error: Invalid User ID");
     return;
@@ -12619,7 +12596,6 @@ function passApplicant() {
       }, 300);
       
       alert("Successfully marked applicant status as PASSED! The applicant will be notified when you finalize the review.");
-      
     } else {
       alert("Error updating applicant status: " + (data.message || "Unknown error"));
     }

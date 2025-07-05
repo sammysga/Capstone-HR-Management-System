@@ -1512,7 +1512,7 @@
         </tbody>
     </table>
 
-    <h4>Applicants on <span id="currentPhase2">Review</span> Declared Results</h4>
+    <h4>Applicants on <span id="currentPhase2">Review</span> - Declared Results</h4>
     <div class="sort-section">
         <label for="sortOptions">Sort By:</label>
         <select id="sortOptions">
@@ -6673,7 +6673,7 @@ function extractRowData(row, index) {
             // Add the section header
             const headerRow = document.createElement('tr');
             headerRow.classList.add('section-header-row');
-            headerRow.innerHTML = `<td colspan="7" style="background-color: #f0f0f0; font-weight: bold; padding: 8px;">List of P2 Applicants Awaiting Review</td>`;
+            // headerRow.innerHTML = `<td colspan="7" style="background-color: #f0f0f0; font-weight: bold; padding: 8px;">List of P2 Applicants Awaiting Review</td>`;
             awaitingTbody.appendChild(headerRow);
             
             // Add each row with Pass/Reject buttons
@@ -6704,7 +6704,7 @@ function extractRowData(row, index) {
             // Add the section header
             const headerRow = document.createElement('tr');
             headerRow.classList.add('section-header-row');
-            headerRow.innerHTML = `<td colspan="7" style="background-color: #f0f0f0; font-weight: bold; padding: 8px;">List of P2 Applicants - Declared Results</td>`;
+            // headerRow.innerHTML = `<td colspan="7" style="background-color: #f0f0f0; font-weight: bold; padding: 8px;">List of P2 Applicants - Declared Results</td>`;
             declaredTbody.appendChild(headerRow);
             
             // Add each row with Toggle Status button
