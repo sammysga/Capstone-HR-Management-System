@@ -282,6 +282,54 @@ body {
 }
 
 .set-finalize-review-button {
+            margin: 5px 10px;
+            background-color: #124A5C;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            cursor: pointer;
+            border-radius: 5px;
+            width: auto;
+            min-width: 200px;
+            white-space: nowrap;
+            text-align: center;
+            font-size: 16px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            transition: background-color 0.3s ease;
+        }
+
+        .set-finalize-review-button:hover {
+            background-color: #B4E3E3;
+            color: #124A5C;
+        }
+
+        /* CRITICAL FIX: Header with flexbox for proper button positioning */
+.review-section-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 20px;
+    padding: 10px 0;
+    border-bottom: 2px solid #124A5C;
+    width: 100%;
+}
+
+.review-section-header h3 {
+    margin: 0;
+    color: #124A5C;
+    font-size: 24px;
+    flex-grow: 1;
+}
+
+/* Button container positioned to the right */
+.finalize-button-container {
+    display: flex;
+    align-items: center;
+    margin-left: auto; /* This pushes the button to the right */
+}
+
+/* Keep your existing button styles */
+.set-finalize-review-button {
     margin: 5px 10px;
     background-color: #124A5C;
     color: white;
@@ -302,7 +350,6 @@ body {
     background-color: #B4E3E3;
     color: #124A5C;
 }
-
 .finalize-container {
     display: flex;
     flex-direction: column;
@@ -900,18 +947,22 @@ table.tracking-table tbody:empty::after {
 <!-- REPLACE the existing applicant-status-section with this updated structure -->
 <div class="applicant-status-section" id="applicantStatusSection">
     <!-- Header section with flexbox -->
-    <div class="section-header">
+    <!-- <div class="section-header">
         <h3 class="subheader">Applicant Review Management</h3>
-    </div>
+    </div> -->
     <!-- Divider placed immediately after the section-header -->
-    <div class="divider"></div>
+    <!-- <div class="divider"></div> -->
     
     <!-- P1 Review Section -->
-    <div id="p1ReviewSection">
+<div id="p1ReviewSection">
+    <!-- FIXED: Use flexbox header for proper button positioning -->
+    <div class="review-section-header">
         <h3>List of Applicants on P1 Review</h3>
-        <div class="right-section" id="p1FinalizeButtonContainer" style="display: none;">
+        <div class="finalize-button-container" id="p1FinalizeButtonContainer">
             <button id="finalizeP1Button" class="set-finalize-review-button">Finalize P1 Review</button>
         </div>
+    </div>
+    
         
         <h4>Awaiting for Action - P1</h4>
         <table class="tracking-table" id="p1AwaitingActionTable">
@@ -954,9 +1005,12 @@ table.tracking-table tbody:empty::after {
     
     <!-- P3 Review Section -->
 <div id="p3ReviewSection">
-    <h3>List of Applicants on P3 Review</h3>
-    <div class="right-section" id="p3FinalizeButtonContainer" style="display: none;">
-        <button id="finalizeP3Button" class="set-finalize-review-button">Finalize P3 Review</button>
+    <!-- FIXED: Use flexbox header for proper button positioning -->
+    <div class="review-section-header">
+        <h3>List of Applicants on P3 Review</h3>
+        <div class="finalize-button-container" id="p3FinalizeButtonContainer">
+            <button id="finalizeP3Button" class="set-finalize-review-button">Finalize P3 Review</button>
+        </div>
     </div>
 
     <h4>Awaiting for Action - P3</h4>
@@ -8375,41 +8429,43 @@ function testWorkSetupLogic() {
     console.log(`  Expected: ${testCase.expected}, Got: ${resultText} ${isCorrect ? '✅' : '❌'}`);
   });
 }
+
 async function fetchP3AssessmentData(userId) {
+    console.log(`Fetching P3 assessment data for userId: ${userId}`);
+    
     try {
-        console.log(`Fetching P3 assessment for userId: ${userId}`);
+        const response = await fetch(`/linemanager/get-p3-assessment/${userId}`);
         
-        // First try to get from global applicantsData if available
-        if (window.applicantsData && window.applicantsData.length > 0) {
-            const applicantData = window.applicantsData.find(a => a.userId == userId);
-            if (applicantData && applicantData.panelAssessment) {
-                console.log(`Found P3 assessment in local data for userId: ${userId}`, applicantData.panelAssessment);
-                return {
-                    totalAssessmentRating: applicantData.panelAssessment.totalAssessmentRating || 'N/A',
-                    conclusion: applicantData.panelAssessment.conclusion || 'N/A'
-                };
-            }
+        if (!response.ok) {
+            console.warn(`No P3 assessment found for userId: ${userId}`);
+            return {
+                totalAssessmentRating: 'N/A',
+                conclusion: 'N/A'
+            };
         }
         
-        // Fallback to API call
-        const response = await fetch(`/linemanager/get-p3-assessment/${userId}`);
-        if (response.ok) {
-            const data = await response.json();
-            if (data.success && data.assessmentData) {
-                return {
-                    totalAssessmentRating: data.assessmentData.totalAssessmentRating || 'N/A',
-                    conclusion: data.assessmentData.conclusion || 'N/A'
-                };
-            }
+        const data = await response.json();
+        
+        if (data.success && data.assessmentData) {
+            console.log(`✅ Successfully fetched P3 assessment for userId: ${userId}`, data.assessmentData);
+            return {
+                totalAssessmentRating: data.assessmentData.totalAssessmentRating || 'N/A',
+                conclusion: data.assessmentData.conclusion || 'N/A'
+            };
+        } else {
+            console.warn(`No assessment data in response for userId: ${userId}`);
+            return {
+                totalAssessmentRating: 'N/A',
+                conclusion: 'N/A'
+            };
         }
     } catch (error) {
-        console.error(`Error fetching P3 assessment for userId ${userId}:`, error);
+        console.error(`Error fetching P3 assessment for userId: ${userId}`, error);
+        return {
+            totalAssessmentRating: 'N/A',
+            conclusion: 'N/A'
+        };
     }
-    
-    return {
-        totalAssessmentRating: 'N/A',
-        conclusion: 'N/A'
-    };
 }
 
 
@@ -9185,10 +9241,18 @@ async function populateP3AwaitingActionTableEnhanced(awaitingRowsP3) {
             const rowData = awaitingRowsP3[idx];
             console.log(`Processing enhanced P3 awaiting row ${idx + 1}: ${rowData.name}`);
             
-            // Fetch assessment data for this user
-            const assessmentData = await fetchP3AssessmentData(rowData.userId);
+            let newRow;
             
-            const newRow = await createP3AwaitingRowEnhanced(rowData, assessmentData);
+            // Try using backend data first, fallback to API call
+            if (rowData.panelAssessment && rowData.panelAssessment.totalAssessmentRating !== 'N/A') {
+                console.log(`Using backend panel assessment data for ${rowData.name}`);
+                newRow = createP3RowWithBackendData(rowData);
+            } else {
+                console.log(`Fetching panel assessment data via API for ${rowData.name}`);
+                const assessmentData = await fetchP3AssessmentData(rowData.userId);
+                newRow = await createP3AwaitingRowEnhanced(rowData, assessmentData);
+            }
+            
             awaitingTbody.appendChild(newRow);
             
             if (rowData.userId) {
@@ -9305,21 +9369,29 @@ function populateP3DeclaredResultsTableEnhanced(declaredRowsP3) {
 
 
 // ENHANCED: Create P3 awaiting row with assessment data
-async function createP3AwaitingRowEnhanced(rowData, assessmentData) {
+async function createP3AwaitingRowEnhanced(rowData, assessmentData = null) {
     console.log("Creating enhanced P3 awaiting row for:", rowData.name);
     
     const newRow = document.createElement('tr');
     
     if (rowData.userId) {
         newRow.setAttribute('data-userid', rowData.userId);
-        newRow.setAttribute('data-assessment-rating', assessmentData.totalAssessmentRating || '0');
-        newRow.setAttribute('data-conclusion', assessmentData.conclusion || '');
     }
+    
+    // If assessmentData wasn't passed, fetch it
+    if (!assessmentData) {
+        assessmentData = await fetchP3AssessmentData(rowData.userId);
+    }
+    
+    // Set data attributes for filtering/sorting
+    newRow.setAttribute('data-assessment-rating', assessmentData.totalAssessmentRating || '0');
+    newRow.setAttribute('data-conclusion', assessmentData.conclusion || '');
     
     // Enhanced applicantId extraction
     let applicantId = extractApplicantIdForP3(rowData);
     
-    console.log(`Enhanced P3 Row applicantId determined as: ${applicantId} for userId: ${rowData.userId}`);
+    console.log(`Enhanced P3 Row - userId: ${rowData.userId}, applicantId: ${applicantId}`);
+    console.log(`Assessment data:`, assessmentData);
     
     // P3 awaiting rows now have 7 columns (including assessment rating and conclusion)
     const cells = [
@@ -9342,7 +9414,7 @@ async function createP3AwaitingRowEnhanced(rowData, assessmentData) {
         }
         
         newRow.appendChild(cell);
-        console.log(`Added enhanced P3 cell ${index + 1}`);
+        console.log(`Added enhanced P3 cell ${index + 1}: ${typeof cellHTML === 'string' ? cellHTML.substring(0, 50) : cellHTML}`);
     });
     
     return newRow;
@@ -9399,7 +9471,8 @@ async function createP3DeclaredRowEnhanced(rowData) {
         statusText = 'P3 - UNKNOWN STATUS';
     }
     
-    console.log(`Enhanced P3 row status determined as: "${statusText}"`);
+    console.log(`Enhanced P3 row status: "${statusText}"`);
+    console.log(`Assessment data:`, assessmentData);
     
     // P3 declared rows now have 8 columns (7 + actions)
     const cells = [
