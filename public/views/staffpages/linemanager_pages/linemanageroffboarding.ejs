@@ -7,45 +7,426 @@
     <link rel="stylesheet" href="/css/sidebar.css"> <!-- Linking Sidebar CSS -->
     <link rel="stylesheet" href="/css/linemanager.css"> <!-- Linking Main Content CSS -->
 </head>
+<style>
+    /* Tab Navigation */
+    .tab-navigation {
+        display: flex;
+        background: white;
+        border-radius: 8px 8px 0 0;
+        box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        margin-bottom: 0;
+        margin-top: 20px;
+    }
+
+    .tab-btn {
+        flex: 1;
+        padding: 15px 20px;
+        border: none;
+        background: transparent;
+        cursor: pointer;
+        font-size: 16px;
+        font-weight: 500;
+        color: #657081;
+        border-bottom: 3px solid transparent;
+        transition: all 0.3s ease;
+    }
+
+    .tab-btn.active {
+        color: #124A5C;
+        border-bottom-color: #07ACB9;
+        background-color: #f8f9fa;
+    }
+
+    .tab-btn:hover {
+        background-color: #f8f9fa;
+        color: #124A5C;
+    }
+
+    /* Tab Content */
+    .tab-content {
+        display: none;
+        background: white;
+        border-radius: 0 0 8px 8px;
+        box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        padding: 20px;
+    }
+
+    .tab-content.active {
+        display: block;
+    }
+
+    /* Reports Section */
+    .reports-section {
+        margin-bottom: 30px;
+    }
+
+    .reports-header {
+        font-size: 1.4rem;
+        font-weight: bold;
+        color: #124A5C;
+        margin-bottom: 20px;
+        border-bottom: 2px solid #07ACB9;
+        padding-bottom: 10px;
+    }
+
+    .filter-row {
+        display: flex;
+        gap: 15px;
+        align-items: end;
+        margin-bottom: 20px;
+        flex-wrap: wrap;
+    }
+
+    .filter-group {
+        display: flex;
+        flex-direction: column;
+        min-width: 150px;
+    }
+
+    .filter-group label {
+        font-size: 14px;
+        color: #555;
+        margin-bottom: 5px;
+        font-weight: 500;
+    }
+
+    .filter-group select,
+    .filter-group input {
+        padding: 8px 12px;
+        border: 1px solid #ddd;
+        border-radius: 5px;
+        font-size: 14px;
+        background-color: white;
+    }
+
+    .report-buttons {
+        display: flex;
+        gap: 10px;
+        flex-wrap: wrap;
+    }
+
+    .report-btn {
+        background-color: #124A5C;
+        color: white;
+        border: none;
+        padding: 10px 20px;
+        border-radius: 5px;
+        font-size: 14px;
+        cursor: pointer;
+        transition: background-color 0.3s ease;
+        display: flex;
+        align-items: center;
+        gap: 5px;
+    }
+
+    .report-btn:hover {
+        background-color: #07ACB9;
+    }
+
+    .report-btn:disabled {
+        background-color: #ccc;
+        cursor: not-allowed;
+    }
+
+    /* Summary Cards */
+    .summary-cards {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+        gap: 15px;
+        margin-bottom: 20px;
+    }
+
+    .summary-card {
+        background: linear-gradient(135deg, #124A5C, #07ACB9);
+        color: white;
+        padding: 20px;
+        border-radius: 8px;
+        text-align: center;
+    }
+
+    .summary-card h3 {
+        font-size: 2rem;
+        margin: 0;
+        font-weight: bold;
+    }
+
+    .summary-card p {
+        margin: 5px 0 0 0;
+        font-size: 14px;
+        opacity: 0.9;
+    }
+
+    /* Reports Table */
+    .reports-table {
+        width: 100%;
+        border-collapse: collapse;
+        margin-top: 20px;
+        background-color: white;
+        font-size: 14px;
+    }
+
+    .reports-table th,
+    .reports-table td {
+        padding: 12px 8px;
+        text-align: left;
+        border-bottom: 1px solid #ddd;
+    }
+
+    .reports-table th {
+        background-color: #124A5C;
+        color: white;
+        font-weight: 600;
+        position: sticky;
+        top: 0;
+    }
+
+    .reports-table tr:nth-child(even) {
+        background-color: #f9f9f9;
+    }
+
+    .reports-table tr:hover {
+        background-color: #e8f4f8;
+    }
+
+    /* Status Badges */
+    .status-badge {
+        display: inline-block;
+        padding: 5px 10px;
+        border-radius: 20px;
+        font-size: 0.9rem;
+        font-weight: bold;
+    }
+
+    .status-pending {
+        background-color: #FFC107;
+        color: #333;
+    }
+
+    .status-completed-employee {
+        background-color: #2196F3;
+        color: white;
+    }
+
+    .status-completed {
+        background-color: #4CAF50;
+        color: white;
+    }
+
+    .status-awaiting {
+        background-color: #FF9800;
+        color: white;
+    }
+
+    /* Loading States */
+    .loading {
+        text-align: center;
+        padding: 20px;
+        color: #666;
+    }
+
+    .loading::after {
+        content: '...';
+        animation: dots 1.5s steps(5, end) infinite;
+    }
+
+    @keyframes dots {
+        0%, 20% { color: rgba(0,0,0,0); text-shadow: .25em 0 0 rgba(0,0,0,0), .5em 0 0 rgba(0,0,0,0); }
+        40% { color: #666; text-shadow: .25em 0 0 rgba(0,0,0,0), .5em 0 0 rgba(0,0,0,0); }
+        60% { text-shadow: .25em 0 0 #666, .5em 0 0 rgba(0,0,0,0); }
+        80%, 100% { text-shadow: .25em 0 0 #666, .5em 0 0 #666; }
+    }
+
+    /* No Data State */
+    .no-data {
+        text-align: center;
+        padding: 40px 20px;
+        color: #666;
+        font-style: italic;
+    }
+
+    /* Responsive Design for Reports */
+    @media (max-width: 768px) {
+        .tab-navigation {
+            flex-direction: column;
+        }
+        
+        .filter-row {
+            flex-direction: column;
+            align-items: stretch;
+        }
+        
+        .summary-cards {
+            grid-template-columns: 1fr;
+        }
+        
+        .reports-table {
+            font-size: 12px;
+        }
+        
+        .reports-table th,
+        .reports-table td {
+            padding: 8px 4px;
+        }
+        
+        .report-buttons {
+            justify-content: center;
+        }
+    }
+</style>
 <body>
     <%- include('../../partials/linemanager_partials') %>
 
     <div class="main-content">
         <div class="content">
-            <h1>Offboarding Requests</h1>
+            <h1>Offboarding Management</h1>
 
-            <table class="form-table">
-                <thead>
-                    <tr>
-                        <th>Employee Name</th>
-                        <th>Date Requested</th>
-                        <th>Status</th>
-                        <th>Action</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    <% if (requests && requests.length > 0) { %>
-                        <% requests.forEach(function(request) { %>
-                            <tr>
-                                <td><%= request.staffName %></td>
-                                <td><%= new Date(request.created_at).toLocaleDateString() %></td>
-                                <td><%= request.status %></td>
-                                <td><a href="/linemanager/view-offboarding-request/<%= request.userId %>">View Request</a></td>
-                            </tr>
-                        <% }); %>
-                    <% } else { %>
+            <!-- Tab Navigation -->
+            <div class="tab-navigation">
+                <button class="tab-btn active" onclick="switchTab('requests')">
+                    Current Requests
+                </button>
+                <button class="tab-btn" onclick="switchTab('reports')">
+                    Reports & Analytics
+                </button>
+            </div>
+
+            <!-- Current Requests Tab (Your existing content) -->
+            <div id="requests-tab" class="tab-content active">
+                <table class="form-table">
+                    <thead>
                         <tr>
-                            <td colspan="4">No pending requests found.</td>
+                            <th>Employee Name</th>
+                            <th>Date Requested</th>
+                            <th>Status</th>
+                            <th>Action</th>
                         </tr>
-                    <% } %>
-                </tbody>
-            </table>
+                    </thead>
+                    <tbody>
+                        <% if (requests && requests.length > 0) { %>
+                            <% requests.forEach(function(request) { %>
+                                <tr>
+                                    <td><%= request.staffName %></td>
+                                    <td><%= new Date(request.created_at).toLocaleDateString() %></td>
+                                    <td><%= request.status %></td>
+                                    <td><a href="/linemanager/view-offboarding-request/<%= request.userId %>">View Request</a></td>
+                                </tr>
+                            <% }); %>
+                        <% } else { %>
+                            <tr>
+                                <td colspan="4">No pending requests found.</td>
+                            </tr>
+                        <% } %>
+                    </tbody>
+                </table>
+            </div>
+
+            <!-- Reports Tab (New functionality) -->
+            <div id="reports-tab" class="tab-content">
+                <div class="reports-section">
+                    <h2 class="reports-header">Department Offboarding Analytics</h2>
+                    
+                    <!-- Summary Cards -->
+                    <div class="summary-cards" id="summaryCards">
+                        <div class="summary-card">
+                            <h3 id="totalRequests">-</h3>
+                            <p>Total Requests</p>
+                        </div>
+                        <div class="summary-card">
+                            <h3 id="resignations">-</h3>
+                            <p>Resignations</p>
+                        </div>
+                        <div class="summary-card">
+                            <h3 id="retirements">-</h3>
+                            <p>Retirements</p>
+                        </div>
+                        <div class="summary-card">
+                            <h3 id="pendingRequests">-</h3>
+                            <p>Pending</p>
+                        </div>
+                        <div class="summary-card">
+                            <h3 id="avgProcessingTime">-</h3>
+                            <p>Avg Processing (Days)</p>
+                        </div>
+                        <div class="summary-card">
+                            <h3 id="monthlyRequests">-</h3>
+                            <p>This Month</p>
+                        </div>
+                    </div>
+
+                    <!-- Filters and Actions -->
+                    <div class="filter-row">
+                        <div class="filter-group">
+                            <label for="startDate">Start Date</label>
+                            <input type="date" id="startDate" name="startDate">
+                        </div>
+                        <div class="filter-group">
+                            <label for="endDate">End Date</label>
+                            <input type="date" id="endDate" name="endDate">
+                        </div>
+                        <div class="filter-group">
+                            <label for="typeFilter">Type</label>
+                            <select id="typeFilter" name="typeFilter">
+                                <option value="all">All Types</option>
+                                <option value="Resignation">Resignations</option>
+                                <option value="Retirement">Retirements</option>
+                            </select>
+                        </div>
+                        <div class="report-buttons">
+                            <button class="report-btn" onclick="generateReport()">
+                                📊 Generate Report
+                            </button>
+                            <button class="report-btn" onclick="exportToPDF()" id="exportBtn" disabled>
+                                📄 Export PDF
+                            </button>
+                            <button class="report-btn" onclick="refreshStats()">
+                                🔄 Refresh
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Reports Table -->
+                    <div id="reportsTableContainer">
+                        <div class="loading" id="loadingIndicator" style="display: none;">
+                            Loading reports data
+                        </div>
+                        
+                        <table class="reports-table" id="reportsTable" style="display: none;">
+                            <thead>
+                                <tr>
+                                    <th>Request ID</th>
+                                    <th>Timestamp</th>
+                                    <th>Employee Name</th>
+                                    <th>Type</th>
+                                    <th>Reason</th>
+                                    <th>Last Day</th>
+                                    <th>Notice Period Start</th>
+                                    <th>Notice Days</th>
+                                    <th>Clearance Sent</th>
+                                    <th>Employee Completion</th>
+                                    <th>Status</th>
+                                </tr>
+                            </thead>
+                            <tbody id="reportsTableBody">
+                                <!-- Data will be populated by JavaScript -->
+                            </tbody>
+                        </table>
+                        
+                        <div class="no-data" id="noDataMessage" style="display: none;">
+                            No data available for the selected filters. Try adjusting your search criteria.
+                        </div>
+                    </div>
+                </div>
+            </div>
         </div>
     </div>
 
-    <!-- JavaScript for sidebar functionality -->
+    <!-- PDF Generation Library -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.31/jspdf.plugin.autotable.min.js"></script>
+
+    <!-- Your existing JavaScript for sidebar functionality -->
     <script>
-        // Toggle active class for sidebar links
+        // Toggle active class for sidebar links (YOUR EXISTING CODE)
         document.querySelectorAll('.sidebar ul li a').forEach(link => {
             link.addEventListener('click', function() {
                 document.querySelectorAll('.sidebar ul li a').forEach(link => link.classList.remove('active'));
@@ -53,14 +434,13 @@
             });
         });
 
-        // Toggle collapsible content
+        // Toggle collapsible content (YOUR EXISTING CODE)
         document.querySelectorAll('.collapsible-header').forEach(header => {
             header.addEventListener('click', function() {
                 var content = this.nextElementSibling;
                 if (content.style.display === 'block') {
                     content.style.display = 'none';
                 } else {
-                    // Hide all other collapsible contents
                     document.querySelectorAll('.collapsible-content').forEach(item => {
                         if (item !== content) {
                             item.style.display = 'none';
@@ -70,6 +450,440 @@
                 }
             });
         });
+
+        // NEW REPORTS FUNCTIONALITY (see next step for full JavaScript)
+        // Tab switching functionality
+        function switchTab(tabName) {
+            console.log(`🔄 [Tabs] Switching to ${tabName} tab`);
+            
+            // Remove active class from all tabs and content
+            document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
+            document.querySelectorAll('.tab-content').forEach(content => content.classList.remove('active'));
+            
+            // Add active class to selected tab and content
+            document.querySelector(`[onclick="switchTab('${tabName}')"]`).classList.add('active');
+            document.getElementById(`${tabName}-tab`).classList.add('active');
+            
+            // Load data if switching to reports tab
+            if (tabName === 'reports') {
+                loadDashboardStats();
+            }
+        }
+
+        // Offboarding Reports Functionality
+        let currentReportData = null;
+
+        // Initialize when page loads
+        document.addEventListener('DOMContentLoaded', function() {
+            console.log('🚀 [Line Manager Offboarding Reports] Initializing...');
+            
+            // Load dashboard stats when page loads
+            loadDashboardStats();
+            
+            // Set default date range (last 30 days)
+            setDefaultDateRange();
+            
+            // Add event listeners
+            setupEventListeners();
+            
+            console.log('✅ [Line Manager Offboarding Reports] Initialization complete');
+        });
+
+        // Tab switching functionality
+        function switchTab(tabName) {
+            console.log(`🔄 [Tabs] Switching to ${tabName} tab`);
+            
+            // Remove active class from all tabs and content
+            document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
+            document.querySelectorAll('.tab-content').forEach(content => content.classList.remove('active'));
+            
+            // Add active class to selected tab and content
+            document.querySelector(`[onclick="switchTab('${tabName}')"]`).classList.add('active');
+            document.getElementById(`${tabName}-tab`).classList.add('active');
+            
+            // Load data if switching to reports tab
+            if (tabName === 'reports') {
+                loadDashboardStats();
+            }
+        }
+
+        // Set default date range (last 30 days)
+        function setDefaultDateRange() {
+            const today = new Date();
+            const thirtyDaysAgo = new Date(today.getTime() - (30 * 24 * 60 * 60 * 1000));
+            
+            document.getElementById('endDate').value = today.toISOString().split('T')[0];
+            document.getElementById('startDate').value = thirtyDaysAgo.toISOString().split('T')[0];
+        }
+
+        // Setup event listeners
+        function setupEventListeners() {
+            // Filter change listeners
+            document.getElementById('startDate').addEventListener('change', function() {
+                if (currentReportData) {
+                    console.log('📅 [Filters] Start date changed, clearing current data');
+                    currentReportData = null;
+                    document.getElementById('exportBtn').disabled = true;
+                }
+            });
+            
+            document.getElementById('endDate').addEventListener('change', function() {
+                if (currentReportData) {
+                    console.log('📅 [Filters] End date changed, clearing current data');
+                    currentReportData = null;
+                    document.getElementById('exportBtn').disabled = true;
+                }
+            });
+            
+            document.getElementById('typeFilter').addEventListener('change', function() {
+                if (currentReportData) {
+                    console.log('🏷️ [Filters] Type filter changed, clearing current data');
+                    currentReportData = null;
+                    document.getElementById('exportBtn').disabled = true;
+                }
+            });
+        }
+
+        // Load dashboard statistics
+        async function loadDashboardStats() {
+            console.log('📊 [Dashboard] Loading statistics...');
+            
+            try {
+                const response = await fetch('/linemanager/offboarding-dashboard-stats');
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+                
+                const data = await response.json();
+                if (data.success) {
+                    updateSummaryCards(data.stats);
+                    console.log('✅ [Dashboard] Statistics loaded successfully');
+                } else {
+                    throw new Error(data.message || 'Failed to load dashboard stats');
+                }
+            } catch (error) {
+                console.error('❌ [Dashboard] Error loading statistics:', error);
+                showError('Failed to load dashboard statistics. Please try again.');
+            }
+        }
+
+        // Update summary cards with data
+        function updateSummaryCards(stats) {
+            document.getElementById('totalRequests').textContent = stats.totalRequests || 0;
+            document.getElementById('resignations').textContent = stats.resignations || 0;
+            document.getElementById('retirements').textContent = stats.retirements || 0;
+            document.getElementById('pendingRequests').textContent = stats.pendingRequests || 0;
+            document.getElementById('avgProcessingTime').textContent = stats.avgProcessingTime || 0;
+            document.getElementById('monthlyRequests').textContent = stats.monthlyRequests || 0;
+        }
+
+        // Generate report with current filters
+        async function generateReport() {
+            console.log('📋 [Reports] Generating report...');
+            
+            const startDate = document.getElementById('startDate').value;
+            const endDate = document.getElementById('endDate').value;
+            const type = document.getElementById('typeFilter').value;
+            
+            // Validate date range
+            if (startDate && endDate && new Date(startDate) > new Date(endDate)) {
+                showError('Start date cannot be after end date.');
+                return;
+            }
+            
+            // Show loading
+            showLoading(true);
+            
+            try {
+                const params = new URLSearchParams();
+                if (startDate) params.append('startDate', startDate);
+                if (endDate) params.append('endDate', endDate);
+                if (type && type !== 'all') params.append('type', type);
+                
+                const response = await fetch(`/linemanager/offboarding-reports?${params.toString()}`);
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+                
+                const data = await response.json();
+                if (data.success) {
+                    currentReportData = data;
+                    populateReportsTable(data.data);
+                    updateSummaryCards(data.summary);
+                    document.getElementById('exportBtn').disabled = false;
+                    console.log(`✅ [Reports] Report generated with ${data.data.length} records`);
+                } else {
+                    throw new Error(data.message || 'Failed to generate report');
+                }
+            } catch (error) {
+                console.error('❌ [Reports] Error generating report:', error);
+                showError('Failed to generate report. Please try again.');
+                showNoData();
+            } finally {
+                showLoading(false);
+            }
+        }
+
+        // Populate reports table with data
+        function populateReportsTable(data) {
+            const tableBody = document.getElementById('reportsTableBody');
+            const table = document.getElementById('reportsTable');
+            const noDataMessage = document.getElementById('noDataMessage');
+            
+            if (!data || data.length === 0) {
+                showNoData();
+                return;
+            }
+            
+            // Clear existing data
+            tableBody.innerHTML = '';
+            
+            // Populate table rows
+            data.forEach(row => {
+                const tr = document.createElement('tr');
+                tr.innerHTML = `
+                    <td>${row.requestId}</td>
+                    <td>${row.timestamp}</td>
+                    <td>${row.employeeName}</td>
+                    <td>
+                        <span class="status-badge ${row.type === 'Resignation' ? 'status-pending' : 'status-completed'}">
+                            ${row.type}
+                        </span>
+                    </td>
+                    <td title="${row.reason}">${truncateText(row.reason, 30)}</td>
+                    <td>${row.lastDay}</td>
+                    <td>${row.noticePeriodStart}</td>
+                    <td>${row.noticePeriodDays}</td>
+                    <td>${row.clearanceSent}</td>
+                    <td>${row.employeeCompletion}</td>
+                    <td>
+                        <span class="status-badge ${getStatusClass(row.status)}">
+                            ${row.status}
+                        </span>
+                    </td>
+                `;
+                tableBody.appendChild(tr);
+            });
+            
+            // Show table, hide no data message
+            table.style.display = 'table';
+            noDataMessage.style.display = 'none';
+        }
+
+        // Show loading state
+        function showLoading(show) {
+            const loadingIndicator = document.getElementById('loadingIndicator');
+            const table = document.getElementById('reportsTable');
+            const noDataMessage = document.getElementById('noDataMessage');
+            
+            if (show) {
+                loadingIndicator.style.display = 'block';
+                table.style.display = 'none';
+                noDataMessage.style.display = 'none';
+            } else {
+                loadingIndicator.style.display = 'none';
+            }
+        }
+
+        // Show no data state
+        function showNoData() {
+            const table = document.getElementById('reportsTable');
+            const noDataMessage = document.getElementById('noDataMessage');
+            
+            table.style.display = 'none';
+            noDataMessage.style.display = 'block';
+        }
+
+        // Export to PDF
+        async function exportToPDF() {
+            if (!currentReportData) {
+                showError('No data to export. Please generate a report first.');
+                return;
+            }
+            
+            console.log('📄 [PDF] Starting PDF export...');
+            
+            try {
+                // Get PDF data from backend
+                const startDate = document.getElementById('startDate').value;
+                const endDate = document.getElementById('endDate').value;
+                const type = document.getElementById('typeFilter').value;
+                
+                const params = new URLSearchParams();
+                if (startDate) params.append('startDate', startDate);
+                if (endDate) params.append('endDate', endDate);
+                if (type && type !== 'all') params.append('type', type);
+                params.append('format', 'pdf');
+                
+                const response = await fetch(`/linemanager/offboarding-reports?${params.toString()}`);
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+                
+                const pdfData = await response.json();
+                if (!pdfData.success) {
+                    throw new Error(pdfData.message || 'Failed to get PDF data');
+                }
+                
+                generatePDFDocument(pdfData);
+                console.log('✅ [PDF] PDF exported successfully');
+                
+            } catch (error) {
+                console.error('❌ [PDF] Error exporting PDF:', error);
+                showError('Failed to export PDF. Please try again.');
+            }
+        }
+
+        // Generate PDF document using jsPDF
+        function generatePDFDocument(data) {
+            const { jsPDF } = window.jspdf;
+            const doc = new jsPDF('landscape', 'mm', 'a4');
+            
+            // Add title
+            doc.setFontSize(18);
+            doc.setFont(undefined, 'bold');
+            doc.text(data.reportTitle, 20, 20);
+            
+            // Add subtitle
+            doc.setFontSize(12);
+            doc.setFont(undefined, 'normal');
+            doc.text(data.reportSubtitle, 20, 30);
+            
+            // Add generation info
+            doc.setFontSize(10);
+            doc.text(`Generated on: ${data.generatedOn}`, 20, 40);
+            
+            // Add date range if filters applied
+            if (data.filters.startDate || data.filters.endDate) {
+                const dateRange = `Date Range: ${data.filters.startDate || 'All'} to ${data.filters.endDate || 'All'}`;
+                doc.text(dateRange, 20, 45);
+            }
+            
+            // Add type filter if applied
+            if (data.filters.type && data.filters.type !== 'all') {
+                doc.text(`Type Filter: ${data.filters.type}`, 20, 50);
+            }
+            
+            // Add department info
+            if (data.departmentName) {
+                doc.setFontSize(12);
+                doc.setFont(undefined, 'bold');
+                doc.text(`Department: ${data.departmentName}`, 20, 60);
+            }
+            
+            // Add summary statistics
+            let yPos = 75;
+            doc.setFontSize(14);
+            doc.setFont(undefined, 'bold');
+            doc.text('Summary Statistics', 20, yPos);
+            
+            yPos += 10;
+            doc.setFontSize(10);
+            doc.setFont(undefined, 'normal');
+            doc.text(`Total Requests: ${data.summary.totalRequests}`, 20, yPos);
+            doc.text(`Resignations: ${data.summary.resignations}`, 80, yPos);
+            doc.text(`Retirements: ${data.summary.retirements}`, 140, yPos);
+            doc.text(`Pending: ${data.summary.pending}`, 200, yPos);
+            
+            yPos += 8;
+            doc.text(`In Progress: ${data.summary.inProgress}`, 20, yPos);
+            doc.text(`Completed: ${data.summary.completed}`, 80, yPos);
+            
+            // Add table
+            yPos += 15;
+            
+            const tableHeaders = [
+                'ID', 'Date', 'Employee', 'Type', 'Reason', 
+                'Last Day', 'Notice Start', 'Notice Days', 'Clearance', 'Completion', 'Status'
+            ];
+            
+            const tableData = data.data.map(row => [
+                row.requestId.toString(),
+                row.timestamp,
+                row.employeeName,
+                row.type,
+                truncateText(row.reason, 20),
+                row.lastDay,
+                row.noticePeriodStart,
+                row.noticePeriodDays.toString(),
+                row.clearanceSent,
+                row.employeeCompletion,
+                row.status
+            ]);
+            
+            doc.autoTable({
+                head: [tableHeaders],
+                body: tableData,
+                startY: yPos,
+                styles: {
+                    fontSize: 8,
+                    cellPadding: 2
+                },
+                headStyles: {
+                    fillColor: [18, 74, 92],
+                    textColor: [255, 255, 255],
+                    fontStyle: 'bold'
+                },
+                alternateRowStyles: {
+                    fillColor: [249, 249, 249]
+                },
+                columnStyles: {
+                    0: { cellWidth: 15 }, // ID
+                    1: { cellWidth: 20 }, // Date
+                    2: { cellWidth: 30 }, // Employee
+                    3: { cellWidth: 20 }, // Type
+                    4: { cellWidth: 35 }, // Reason
+                    5: { cellWidth: 20 }, // Last Day
+                    6: { cellWidth: 20 }, // Notice Start
+                    7: { cellWidth: 15 }, // Notice Days
+                    8: { cellWidth: 20 }, // Clearance
+                    9: { cellWidth: 20 }, // Completion
+                    10: { cellWidth: 20 }  // Status
+                }
+            });
+            
+            // Generate filename
+            const now = new Date();
+            const dateStr = now.toISOString().split('T')[0];
+            const deptName = data.departmentName ? data.departmentName.replace(/\s+/g, '-').toLowerCase() : 'dept';
+            const filename = `${deptName}-offboarding-report-${dateStr}.pdf`;
+            
+            // Save the PDF
+            doc.save(filename);
+        }
+
+        // Refresh statistics
+        function refreshStats() {
+            console.log('🔄 [Refresh] Refreshing dashboard statistics...');
+            loadDashboardStats();
+        }
+
+        // Utility functions
+        function truncateText(text, maxLength) {
+            if (!text) return 'N/A';
+            if (text.length <= maxLength) return text;
+            return text.substring(0, maxLength - 3) + '...';
+        }
+
+        function getStatusClass(status) {
+            switch (status) {
+                case 'Pending HR':
+                    return 'status-pending';
+                case 'Sent to Employee':
+                    return 'status-awaiting';
+                case 'Completed by Employee':
+                    return 'status-completed-employee';
+                case 'Completed':
+                    return 'status-completed';
+                default:
+                    return 'status-pending';
+            }
+        }
+
+        function showError(message) {
+            alert('Error: ' + message);
+            console.error('❌ [Error]', message);
+        }
     </script>
 </body>
 </html>

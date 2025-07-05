@@ -128,6 +128,17 @@ router.get('/hr/recruitment/reports/applicant-status', hrController.getApplicant
 router.get('/hr/recruitment/reports/timeline', hrController.getTimelineReport);
 router.get('/hr/recruitment/reports/search-applicants', hrController.getSearchApplicants);
 router.get('/hr/recruitment/reports/mrf-efficiency', hrController.getMRFEfficiencyReport);
+// Main recruitment reports page
+router.get('/line-manager/recruitment/reports', lineManagerController.getRecruitmentReports);
+router.get('/line-manager/recruitment/department-info', lineManagerController.getDepartmentInfo);
+router.get('/line-manager/recruitment/dashboard/stats', lineManagerController.getDeptDashboardStats);
+router.get('/line-manager/recruitment/dashboard/charts', lineManagerController.getDeptChartData);
+router.get('/line-manager/recruitment/reports/applicants', lineManagerController.getDeptApplicantsReport);
+router.get('/line-manager/recruitment/reports/hirees', lineManagerController.getDeptHireesReport);
+router.get('/line-manager/recruitment/reports/applicant-status', lineManagerController.getDeptApplicantStatusReport);
+router.get('/line-manager/recruitment/reports/mrf-performance', lineManagerController.getMRFPerformanceReport);
+router.get('/line-manager/recruitment/reports/pipeline', lineManagerController.getDeptPipelineReport);
+router.get('/line-manager/recruitment/reports/search-applicants', lineManagerController.getSearchDeptApplicants);
 
 router.get('/logout', hrController.getLogoutButton);
 router.get('/logout', lineManagerController.getLogoutButton);
@@ -549,6 +560,8 @@ router.get('/hr/training-efficiency', hrController.getTrainingEfficiency);
 
 router.get('/hr/offboarding-dashboard-stats', hrController.getOffboardingDashboardStats);
 router.get('/hr/offboarding-reports', hrController.getOffboardingReports);
+router.get('/linemanager/offboarding-dashboard-stats', lineManagerController.getOffboardingDashboardStats);
+router.get('/linemanager/offboarding-reports', lineManagerController.getOffboardingReports);
 
 
 router.get('/hr/reports/employees', hrController.getEmployeesForReports);

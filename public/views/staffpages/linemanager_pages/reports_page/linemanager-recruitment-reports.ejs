@@ -1,0 +1,1888 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Department Recruitment Dashboard & Reports</title>
+    <link rel="stylesheet" href="/css/sidebar.css"> <!-- Linking Sidebar CSS -->
+    <link rel="stylesheet" href="/css/linemanager.css"> <!-- Linking Main Content CSS -->
+    <link rel="stylesheet" href="/css/recruitment_reports.css"> <!-- Linking Main Content CSS -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+</head>
+<body>
+    <%- include('../../../partials/linemanager_partials') %>
+    
+    <div class="main-content" style="margin-left: 280px;">
+        <!-- Header -->
+        <div class="recruitment-header">
+            <h1><i class="fas fa-users"></i> Department Recruitment Dashboard</h1>
+            <p>Department-specific recruitment analytics and reporting for your team's hiring activities</p>
+            <div class="department-info">
+                <span class="dept-badge" id="current-department">Loading Department...</span>
+            </div>
+        </div>
+        
+        <!-- Tab Navigation -->
+        <div class="tab-navigation">
+            <button class="tab-button active" data-tab="dashboard">
+                <i class="fas fa-chart-line"></i> Dashboard
+            </button>
+            <button class="tab-button" data-tab="reports">
+                <i class="fas fa-file-alt"></i> Reports
+            </button>
+        </div>
+        
+        <!-- Dashboard Tab -->
+        <div class="tab-content active" id="dashboard-tab">
+            <!-- Statistics Overview -->
+            <div class="stats-container">
+                <div class="stats-grid">
+                    <div class="stat-card dept-stat-card primary">
+                        <h3>Department Applicants</h3>
+                        <div class="stat-value" id="dept-applicants">0</div>
+                        <div class="stat-label">Total applications for your department</div>
+                    </div>
+                    
+                    <div class="stat-card dept-stat-card success">
+                        <h3>Department Hirees</h3>
+                        <div class="stat-value" id="dept-hirees">0</div>
+                        <div class="stat-label">Successfully hired for your team</div>
+                    </div>
+                    
+                    <div class="stat-card dept-stat-card warning">
+                        <h3>Pending Your Review</h3>
+                        <div class="stat-value" id="pending-reviews">0</div>
+                        <div class="stat-label">Awaiting your review/interview</div>
+                    </div>
+                    
+                    <div class="stat-card dept-stat-card info">
+                        <h3>Your Active MRFs</h3>
+                        <div class="stat-value" id="your-mrfs">0</div>
+                        <div class="stat-label">Your open requisitions</div>
+                    </div>
+                    
+                    <div class="stat-card dept-stat-card danger">
+                        <h3>Avg. Hiring Time</h3>
+                        <div class="stat-value" id="avg-hiring-time">0</div>
+                        <div class="stat-label">Average days to hire in dept</div>
+                    </div>
+                    
+                    <div class="stat-card dept-stat-card primary">
+                        <h3>This Month</h3>
+                        <div class="stat-value" id="monthly-dept-applicants">0</div>
+                        <div class="stat-label">New dept applications</div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Charts -->
+            <div class="charts-container">
+                <div class="chart-card">
+                    <h3>Department Application Status</h3>
+                    <canvas id="deptStatusChart"></canvas>
+                </div>
+                
+                <div class="chart-card">
+                    <h3>Monthly Application Trends</h3>
+                    <canvas id="monthlyDeptTrendsChart"></canvas>
+                </div>
+                
+                <div class="chart-card">
+                    <h3>Your MRF Progress</h3>
+                    <canvas id="mrfProgressChart"></canvas>
+                </div>
+                
+                <div class="chart-card">
+                    <h3>Department Hiring Timeline</h3>
+                    <canvas id="deptTimelineChart"></canvas>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Reports Tab -->
+        <div class="tab-content" id="reports-tab">
+            <div class="reports-container">
+                <!-- 1. Department Applicants Report -->
+                <div class="report-card">
+                    <div class="report-card-header">
+                        <div class="report-icon applicants">
+                            <i class="fas fa-user-plus"></i>
+                        </div>
+                        <div>
+                            <h3 class="report-title">Department Applicants Report</h3>
+                            <p class="report-description">Comprehensive overview of all job applicants for your department with detailed screening scores and status tracking</p>
+                        </div>
+                    </div>
+                    
+                    <form class="report-form" id="dept-applicants-form">
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label for="dept-applicants-filter-type">Filter Type</label>
+                                <select id="dept-applicants-filter-type" name="filterType" onchange="toggleDateInputs('dept-applicants')">
+                                    <option value="month">This Month</option>
+                                    <option value="last-month">Last Month</option>
+                                    <option value="quarter">This Quarter</option>
+                                    <option value="year">This Year</option>
+                                    <option value="custom">Custom Date Range</option>
+                                </select>
+                            </div>
+                            <div class="form-group custom-dates" id="dept-applicants-custom-dates" style="display: none;">
+                                <label for="dept-applicants-start">Start Date</label>
+                                <input type="date" id="dept-applicants-start" name="startDate">
+                            </div>
+                            <div class="form-group custom-dates" id="dept-applicants-custom-dates-end" style="display: none;">
+                                <label for="dept-applicants-end">End Date</label>
+                                <input type="date" id="dept-applicants-end" name="endDate">
+                            </div>
+                            <div class="btn-group">
+                                <button type="button" class="btn btn-primary" onclick="generateDeptReport('dept-applicants', 'view')">
+                                    <i class="fas fa-eye"></i> View Report
+                                </button>
+                                <button type="button" class="btn btn-outline" onclick="generateDeptReport('dept-applicants', 'pdf')">
+                                    <i class="fas fa-file-pdf"></i> Download PDF
+                                </button>
+                            </div>
+                        </div>
+                    </form>
+                    
+                    <div class="report-results" id="dept-applicants-results"></div>
+                </div>
+                
+                <!-- 2. Department Hirees Report -->
+                <div class="report-card">
+                    <div class="report-card-header">
+                        <div class="report-icon hirees">
+                            <i class="fas fa-user-check"></i>
+                        </div>
+                        <div>
+                            <h3 class="report-title">Department Hirees Report</h3>
+                            <p class="report-description">Track successfully hired candidates in your department with onboarding timelines and employment details</p>
+                        </div>
+                    </div>
+                    
+                    <form class="report-form" id="dept-hirees-form">
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label for="dept-hirees-filter-type">Filter Type</label>
+                                <select id="dept-hirees-filter-type" name="filterType" onchange="toggleDateInputs('dept-hirees')">
+                                    <option value="month">This Month</option>
+                                    <option value="last-month">Last Month</option>
+                                    <option value="quarter">This Quarter</option>
+                                    <option value="year">This Year</option>
+                                    <option value="custom">Custom Date Range</option>
+                                </select>
+                            </div>
+                            <div class="form-group custom-dates" id="dept-hirees-custom-dates" style="display: none;">
+                                <label for="dept-hirees-start">Start Date</label>
+                                <input type="date" id="dept-hirees-start" name="startDate">
+                            </div>
+                            <div class="form-group custom-dates" id="dept-hirees-custom-dates-end" style="display: none;">
+                                <label for="dept-hirees-end">End Date</label>
+                                <input type="date" id="dept-hirees-end" name="endDate">
+                            </div>
+                            <div class="btn-group">
+                                <button type="button" class="btn btn-primary" onclick="generateDeptReport('dept-hirees', 'view')">
+                                    <i class="fas fa-eye"></i> View Report
+                                </button>
+                                <button type="button" class="btn btn-outline" onclick="generateDeptReport('dept-hirees', 'pdf')">
+                                    <i class="fas fa-file-pdf"></i> Download PDF
+                                </button>
+                            </div>
+                        </div>
+                    </form>
+                    <div class="report-results" id="dept-hirees-results"></div>
+                </div>
+                
+                <!-- 3. Individual Applicant Status Report -->
+                <div class="report-card">
+                    <div class="report-card-header">
+                        <div class="report-icon status">
+                            <i class="fas fa-user-cog"></i>
+                        </div>
+                        <div>
+                            <h3 class="report-title">Department Applicant Status</h3>
+                            <p class="report-description">Detailed status tracking for individual applicants to your department positions</p>
+                        </div>
+                    </div>
+                    
+                    <form class="report-form" id="dept-status-form">
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label for="dept-applicant-search">Select Department Applicant</label>
+                                <div class="searchable-dropdown" id="dept-applicant-dropdown">
+                                    <input 
+                                        type="text" 
+                                        id="dept-applicant-search" 
+                                        name="applicantName" 
+                                        placeholder="Type applicant name to search department applicants..."
+                                        autocomplete="off"
+                                        required
+                                    >
+                                    <i class="fas fa-chevron-down dropdown-icon"></i>
+                                    <div class="dropdown-menu" id="dept-applicant-dropdown-menu"></div>
+                                </div>
+                            </div>
+                            <div class="btn-group">
+                                <button type="button" class="btn btn-primary" onclick="generateDeptReport('dept-status', 'view')">
+                                    <i class="fas fa-eye"></i> View Status
+                                </button>
+                                <button type="button" class="btn btn-outline" onclick="generateDeptReport('dept-status', 'pdf')">
+                                    <i class="fas fa-file-pdf"></i> Download PDF
+                                </button>
+                            </div>
+                        </div>
+                    </form>
+                    
+                    <div class="report-results" id="dept-status-results"></div>
+                </div>
+                
+                <!-- 4. Your MRF Performance Report -->
+                <div class="report-card">
+                    <div class="report-card-header">
+                        <div class="report-icon performance">
+                            <i class="fas fa-chart-bar"></i>
+                        </div>
+                        <div>
+                            <h3 class="report-title">Your MRF Performance</h3>
+                            <p class="report-description">Track your manpower requisitions from request to successful hiring with performance metrics</p>
+                        </div>
+                    </div>
+                    
+                    <form class="report-form" id="mrf-performance-form">
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label for="mrf-performance-filter-type">Filter Type</label>
+                                <select id="mrf-performance-filter-type" name="filterType" onchange="toggleDateInputs('mrf-performance')">
+                                    <option value="month">This Month</option>
+                                    <option value="last-month">Last Month</option>
+                                    <option value="quarter">This Quarter</option>
+                                    <option value="year">This Year</option>
+                                    <option value="custom">Custom Date Range</option>
+                                </select>
+                            </div>
+                            <div class="form-group custom-dates" id="mrf-performance-custom-dates" style="display: none;">
+                                <label for="mrf-performance-start">Start Date</label>
+                                <input type="date" id="mrf-performance-start" name="startDate">
+                            </div>
+                            <div class="form-group custom-dates" id="mrf-performance-custom-dates-end" style="display: none;">
+                                <label for="mrf-performance-end">End Date</label>
+                                <input type="date" id="mrf-performance-end" name="endDate">
+                            </div>
+                            <div class="btn-group">
+                                <button type="button" class="btn btn-primary" onclick="generateDeptReport('mrf-performance', 'view')">
+                                    <i class="fas fa-eye"></i> View Report
+                                </button>
+                                <button type="button" class="btn btn-outline" onclick="generateDeptReport('mrf-performance', 'pdf')">
+                                    <i class="fas fa-file-pdf"></i> Download PDF
+                                </button>
+                            </div>
+                        </div>
+                    </form>
+                    
+                    <div class="report-results" id="mrf-performance-results"></div>
+                </div>
+
+                <!-- 5. Department Hiring Pipeline -->
+                <div class="report-card">
+                    <div class="report-card-header">
+                        <div class="report-icon pipeline">
+                            <i class="fas fa-sitemap"></i>
+                        </div>
+                        <div>
+                            <h3 class="report-title">Department Hiring Pipeline</h3>
+                            <p class="report-description">Analyze your department's recruitment pipeline, bottlenecks, and opportunities for improvement</p>
+                        </div>
+                    </div>
+                    
+                    <form class="report-form" id="dept-pipeline-form">
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label for="dept-pipeline-filter-type">Filter Type</label>
+                                <select id="dept-pipeline-filter-type" name="filterType" onchange="toggleDateInputs('dept-pipeline')">
+                                    <option value="month">This Month</option>
+                                    <option value="last-month">Last Month</option>
+                                    <option value="quarter">This Quarter</option>
+                                    <option value="year">This Year</option>
+                                    <option value="custom">Custom Date Range</option>
+                                </select>
+                            </div>
+                            <div class="form-group custom-dates" id="dept-pipeline-custom-dates" style="display: none;">
+                                <label for="dept-pipeline-start">Start Date</label>
+                                <input type="date" id="dept-pipeline-start" name="startDate">
+                            </div>
+                            <div class="form-group custom-dates" id="dept-pipeline-custom-dates-end" style="display: none;">
+                                <label for="dept-pipeline-end">End Date</label>
+                                <input type="date" id="dept-pipeline-end" name="endDate">
+                            </div>
+                            <div class="btn-group">
+                                <button type="button" class="btn btn-primary" onclick="generateDeptReport('dept-pipeline', 'view')">
+                                    <i class="fas fa-eye"></i> View Analysis
+                                </button>
+                                <button type="button" class="btn btn-outline" onclick="generateDeptReport('dept-pipeline', 'pdf')">
+                                    <i class="fas fa-file-pdf"></i> Download PDF
+                                </button>
+                            </div>
+                        </div>
+                    </form>
+                    
+                    <div class="report-results" id="dept-pipeline-results"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Chart.js and PDF Libraries -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.31/jspdf.plugin.autotable.min.js"></script>
+    
+    <script>
+
+        // Global variables
+        let statusChart, trendsChart, mrfProgressChart, timelineChart;
+        let deptApplicantDropdown;
+        let currentDepartment = null;
+
+        // ===============================================
+        // INITIALIZATION & TAB FUNCTIONALITY
+        // ===============================================
+
+        document.addEventListener('DOMContentLoaded', function() {
+            console.log('🚀 [Line Manager] Initializing recruitment reports...');
+            
+            // Initialize tab functionality
+            initializeTabs();
+            
+            // Load department-specific data
+            loadDepartmentInfo();
+            loadDeptDashboardData();
+            loadDeptChartsData();
+            setDefaultDates();
+
+            // Initialize department applicant dropdown
+            deptApplicantDropdown = new SearchableDeptApplicantDropdown();
+            
+            console.log('✅ [Line Manager] Recruitment reports initialized');
+        });
+
+        // Tab functionality (PRESERVED from original)
+        function initializeTabs() {
+            const tabButtons = document.querySelectorAll('.tab-button');
+            const tabContents = document.querySelectorAll('.tab-content');
+            
+            tabButtons.forEach(button => {
+                button.addEventListener('click', () => {
+                    console.log(`🔄 [Tab] Switching to ${button.dataset.tab} tab`);
+                    
+                    // Remove active class from all buttons and contents
+                    tabButtons.forEach(btn => btn.classList.remove('active'));
+                    tabContents.forEach(content => content.classList.remove('active'));
+                    
+                    // Add active class to clicked button and corresponding content
+                    button.classList.add('active');
+                    const tabId = `${button.dataset.tab}-tab`;
+                    const targetTab = document.getElementById(tabId);
+                    if (targetTab) {
+                        targetTab.classList.add('active');
+                        console.log(`✅ [Tab] Switched to ${button.dataset.tab} tab`);
+                    }
+                });
+            });
+        }
+
+        // ===============================================
+        // DEPARTMENT INFO & DASHBOARD DATA
+        // ===============================================
+
+        // Load department information
+        async function loadDepartmentInfo() {
+            try {
+                console.log('🔄 [Line Manager] Loading department info...');
+                
+                const response = await fetch('/line-manager/recruitment/department-info');
+                
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+                
+                const result = await response.json();
+                console.log('🏢 [Line Manager] Department info:', result);
+                
+                if (result.success) {
+                    currentDepartment = result.department;
+                    document.getElementById('current-department').textContent = result.department.deptName;
+                    console.log(`✅ [Line Manager] Department set: ${result.department.deptName}`);
+                } else {
+                    throw new Error(result.message || 'Failed to fetch department info');
+                }
+                
+            } catch (error) {
+                console.error('❌ [Line Manager] Error loading department info:', error);
+                document.getElementById('current-department').textContent = 'Department Info Unavailable';
+            }
+        }
+
+        // Load department dashboard statistics
+        async function loadDeptDashboardData() {
+            try {
+                console.log('🔄 [Line Manager] Loading department dashboard data...');
+                
+                const response = await fetch('/line-manager/recruitment/dashboard/stats');
+                
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+                
+                const result = await response.json();
+                console.log('📊 [Line Manager] Dashboard response:', result);
+                
+                if (!result.success) {
+                    throw new Error(result.message || 'Failed to fetch dashboard stats');
+                }
+                
+                const stats = result.stats;
+                
+                // Update dashboard stats with department-specific data
+                document.getElementById('dept-applicants').textContent = stats.deptApplicants;
+                document.getElementById('dept-hirees').textContent = stats.deptHirees;
+                document.getElementById('pending-reviews').textContent = stats.pendingReviews;
+                document.getElementById('your-mrfs').textContent = stats.yourMRFs;
+                document.getElementById('avg-hiring-time').textContent = stats.avgHiringTime + ' days';
+                document.getElementById('monthly-dept-applicants').textContent = stats.monthlyDeptApplicants;
+                
+                console.log('✅ [Line Manager] Dashboard updated successfully');
+                
+            } catch (error) {
+                console.error('❌ [Line Manager] Error loading dashboard data:', error);
+                alert('Could not load dashboard statistics. Please refresh the page.');
+                
+                // Fallback to default values
+                document.getElementById('dept-applicants').textContent = '0';
+                document.getElementById('dept-hirees').textContent = '0';
+                document.getElementById('pending-reviews').textContent = '0';
+                document.getElementById('your-mrfs').textContent = '0';
+                document.getElementById('avg-hiring-time').textContent = '0 days';
+                document.getElementById('monthly-dept-applicants').textContent = '0';
+            }
+        }
+
+        // Load department chart data
+        async function loadDeptChartsData() {
+            try {
+                console.log('🔄 [Line Manager] Loading department chart data...');
+                
+                const response = await fetch('/line-manager/recruitment/dashboard/charts');
+                
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+                
+                const result = await response.json();
+                console.log('📊 [Line Manager] Chart data response:', result);
+                
+                if (!result.success) {
+                    throw new Error(result.message || 'Failed to fetch chart data');
+                }
+                
+                const chartData = result.chartData;
+                
+                // Initialize charts with department-specific data
+                initializeDeptCharts(chartData);
+                
+                console.log('✅ [Line Manager] Charts updated with department data');
+                
+            } catch (error) {
+                console.error('❌ [Line Manager] Error loading chart data:', error);
+                console.log('📊 [Line Manager] Falling back to mock data for charts');
+                initializeDeptChartsWithMockData();
+            }
+        }
+
+        // ===============================================
+        // CHART INITIALIZATION
+        // ===============================================
+
+        // Initialize department charts
+        function initializeDeptCharts(chartData) {
+            // Destroy existing charts if they exist
+            if (statusChart) statusChart.destroy();
+            if (trendsChart) trendsChart.destroy();
+            if (mrfProgressChart) mrfProgressChart.destroy();
+            if (timelineChart) timelineChart.destroy();
+
+            // 1. Department Status Distribution Chart
+            const statusCtx = document.getElementById('deptStatusChart').getContext('2d');
+            statusChart = new Chart(statusCtx, {
+                type: 'doughnut',
+                data: {
+                    labels: chartData.statusDistribution.labels,
+                    datasets: [{
+                        data: chartData.statusDistribution.data,
+                        backgroundColor: [
+                            '#ffc107', // Pending
+                            '#17a2b8', // HR Interview
+                            '#2385B0', // Your Review
+                            '#28a745', // Hired
+                            '#dc3545'  // Rejected
+                        ],
+                        borderWidth: 0
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: { position: 'bottom' },
+                        tooltip: {
+                            callbacks: {
+                                label: function(context) {
+                                    const total = context.dataset.data.reduce((a, b) => a + b, 0);
+                                    const percentage = total > 0 ? ((context.parsed * 100) / total).toFixed(1) : 0;
+                                    return `${context.label}: ${context.parsed} (${percentage}%)`;
+                                }
+                            }
+                        }
+                    }
+                }
+            });
+            
+            // 2. Monthly Department Trends Chart
+            const trendsCtx = document.getElementById('monthlyDeptTrendsChart').getContext('2d');
+            trendsChart = new Chart(trendsCtx, {
+                type: 'line',
+                data: {
+                    labels: chartData.monthlyTrends.labels,
+                    datasets: [{
+                        label: 'Department Applications',
+                        data: chartData.monthlyTrends.applications,
+                        borderColor: '#2385B0',
+                        backgroundColor: 'rgba(35, 133, 176, 0.1)',
+                        tension: 0.4,
+                        fill: true
+                    }, {
+                        label: 'Department Hires',
+                        data: chartData.monthlyTrends.hires,
+                        borderColor: '#28a745',
+                        backgroundColor: 'rgba(40, 167, 69, 0.1)',
+                        tension: 0.4,
+                        fill: true
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            ticks: { stepSize: 1 }
+                        }
+                    },
+                    plugins: {
+                        tooltip: {
+                            mode: 'index',
+                            intersect: false
+                        }
+                    }
+                }
+            });
+            
+            // 3. MRF Progress Chart
+            const mrfCtx = document.getElementById('mrfProgressChart').getContext('2d');
+            mrfProgressChart = new Chart(mrfCtx, {
+                type: 'bar',
+                data: {
+                    labels: chartData.mrfProgress.labels,
+                    datasets: [{
+                        label: 'Your MRFs',
+                        data: chartData.mrfProgress.data,
+                        backgroundColor: '#2385B0',
+                        borderColor: '#1a5f78',
+                        borderWidth: 1
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            ticks: { stepSize: 1 }
+                        }
+                    }
+                }
+            });
+            
+            // 4. Department Timeline Chart
+            const timelineCtx = document.getElementById('deptTimelineChart').getContext('2d');
+            timelineChart = new Chart(timelineCtx, {
+                type: 'bar',
+                data: {
+                    labels: chartData.timeline.labels,
+                    datasets: [{
+                        label: 'Days to Hire',
+                        data: chartData.timeline.data,
+                        backgroundColor: '#28a745',
+                        borderColor: '#1e7e34',
+                        borderWidth: 1
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            ticks: { stepSize: 5 }
+                        }
+                    }
+                }
+            });
+        }
+
+        // Initialize charts with mock data fallback
+        function initializeDeptChartsWithMockData() {
+            const mockData = {
+                statusDistribution: {
+                    labels: ['Pending', 'HR Interview', 'Your Review', 'Hired', 'Rejected'],
+                    data: [3, 2, 4, 1, 1]
+                },
+                monthlyTrends: {
+                    labels: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun'],
+                    applications: [5, 3, 7, 4, 6, 2],
+                    hires: [1, 2, 3, 1, 2, 1]
+                },
+                mrfProgress: {
+                    labels: ['Draft', 'Pending Approval', 'Approved', 'Filled'],
+                    data: [2, 1, 3, 2]
+                },
+                timeline: {
+                    labels: ['0-15 days', '16-30 days', '31-45 days', '46+ days'],
+                    data: [15, 25, 35, 45]
+                }
+            };
+            
+            initializeDeptCharts(mockData);
+        }
+
+        // ===============================================
+        // REPORT GENERATION
+        // ===============================================
+
+        // Generate department-specific reports
+        async function generateDeptReport(reportType, format) {
+            console.log(`🔄 [Line Manager] Generating ${reportType} report (${format})...`);
+            
+            // Special handling for department status report
+            if (reportType === 'dept-status') {
+                const selectedApplicant = deptApplicantDropdown?.getSelectedApplicant();
+                if (!selectedApplicant) {
+                    alert('Please select an applicant from the dropdown first.');
+                    return;
+                }
+            }
+            
+            const form = document.getElementById(`${reportType}-form`);
+            const button = event.target;
+            const resultsDiv = document.getElementById(`${reportType}-results`);
+            
+            // Add loading state
+            button.classList.add('loading');
+            button.disabled = true;
+            
+            try {
+                // Get form data
+                const formData = new FormData(form);
+                const params = new URLSearchParams();
+
+                if (reportType === 'dept-status' && deptApplicantDropdown?.getSelectedApplicant()) {
+                    params.append('applicantName', deptApplicantDropdown.getSelectedApplicant().name);
+                } else {
+                    // Handle date filtering
+                    const filterType = document.getElementById(`${reportType}-filter-type`)?.value;
+                    
+                    if (filterType && filterType !== 'custom') {
+                        const dateRange = calculateDateRange(filterType);
+                        if (dateRange) {
+                            params.append('startDate', dateRange.startDate);
+                            params.append('endDate', dateRange.endDate);
+                            params.append('filterType', filterType);
+                        }
+                    } else {
+                        for (let [key, value] of formData.entries()) {
+                            if (value) params.append(key, value);
+                        }
+                    }
+                }
+                
+                if (format) params.append('format', format);
+                
+                console.log(`📋 [Line Manager] Form parameters:`, Object.fromEntries(params));
+                
+                // Endpoint mapping for line manager reports
+                let endpoint = '';
+                switch(reportType) {
+                    case 'dept-applicants':
+                        endpoint = '/line-manager/recruitment/reports/applicants';
+                        break;
+                    case 'dept-hirees':
+                        endpoint = '/line-manager/recruitment/reports/hirees';
+                        break;
+                    case 'dept-status':
+                        endpoint = '/line-manager/recruitment/reports/applicant-status';
+                        break;
+                    case 'mrf-performance':
+                        endpoint = '/line-manager/recruitment/reports/mrf-performance';
+                        break;
+                    case 'dept-pipeline':
+                        endpoint = '/line-manager/recruitment/reports/pipeline';
+                        break;
+                    default:
+                        throw new Error('Unknown report type: ' + reportType);
+                }
+                
+                if (format === 'pdf') {
+                    console.log(`📄 [Line Manager] PDF generation requested for ${reportType}`);
+                    
+                    // Fetch data first
+                    const response = await fetch(`${endpoint}?${params.toString()}`);
+                    
+                    if (!response.ok) {
+                        throw new Error(`HTTP error! status: ${response.status}`);
+                    }
+                    
+                    const data = await response.json();
+                    
+                    if (!data.success) {
+                        throw new Error(data.message || 'Failed to generate report');
+                    }
+                    
+                    // Generate PDF
+                    generateDeptPDF(data, reportType);
+                    
+                } else {
+                    console.log(`👁️ [Line Manager] View mode requested for ${reportType}`);
+                    
+                    const response = await fetch(`${endpoint}?${params.toString()}`);
+                    
+                    if (!response.ok) {
+                        throw new Error(`HTTP error! status: ${response.status}`);
+                    }
+                    
+                    const data = await response.json();
+                    console.log(`✅ [Line Manager] Received data:`, data);
+                    
+                    if (!data.success) {
+                        throw new Error(data.message || 'Failed to fetch report data');
+                    }
+                    
+                    // Display the department-specific data
+                    displayDeptReportResults(resultsDiv, data, reportType);
+                    console.log(`✅ [Line Manager] ${reportType} report displayed successfully`);
+                }
+                
+            } catch (error) {
+                console.error(`❌ [Line Manager] Error generating ${reportType} report:`, error);
+                alert('Error generating report: ' + error.message);
+            } finally {
+                // Remove loading state
+                button.classList.remove('loading');
+                button.disabled = false;
+            }
+        }
+
+        // ===============================================
+        // PDF GENERATION
+        // ===============================================
+
+        function generateDeptPDF(data, reportType) {
+            try {
+                if (typeof window.jspdf === 'undefined') {
+                    throw new Error('jsPDF library is not loaded. Please refresh the page and try again.');
+                }
+                
+                let jsPDF;
+                if (window.jspdf && window.jspdf.jsPDF) {
+                    jsPDF = window.jspdf.jsPDF;
+                } else if (window.jsPDF) {
+                    jsPDF = window.jsPDF;
+                } else {
+                    throw new Error('jsPDF not found. Please refresh the page.');
+                }
+                
+                const doc = new jsPDF();
+                
+                // Set up document header
+                doc.setFontSize(20);
+                doc.setTextColor(35, 133, 176);
+                doc.text('Department Recruitment Management', 20, 20);
+                
+                doc.setFontSize(16);
+                doc.setTextColor(0, 0, 0);
+                const reportTitles = {
+                    'dept-applicants': 'Department Applicants Report',
+                    'dept-hirees': 'Department Hirees Report',
+                    'dept-status': 'Department Applicant Status Report',
+                    'mrf-performance': 'Your MRF Performance Report',
+                    'dept-pipeline': 'Department Hiring Pipeline Report'
+                };
+                doc.text(reportTitles[reportType], 20, 35);
+                
+                // Add department info
+                doc.setFontSize(12);
+                doc.setTextColor(100, 100, 100);
+                if (currentDepartment) {
+                    doc.text(`Department: ${currentDepartment.deptName}`, 20, 45);
+                }
+                doc.text(`Generated on: ${new Date().toLocaleDateString()}`, 20, 52);
+                
+                let yPosition = 65;
+                
+                // Add summary if available
+                if (data.summary && reportType !== 'dept-status') {
+                    doc.setFontSize(14);
+                    doc.setTextColor(0, 0, 0);
+                    doc.text('Summary', 20, yPosition);
+                    yPosition += 10;
+                    
+                    doc.setFontSize(10);
+                    Object.entries(data.summary).forEach(([key, value]) => {
+                        const label = key.replace(/([A-Z])/g, ' $1').replace(/^./, str => str.toUpperCase());
+                        doc.text(`${label}: ${value}`, 25, yPosition);
+                        yPosition += 6;
+                    });
+                    yPosition += 10;
+                }
+                
+                // Add data tables based on report type
+                if (reportType === 'dept-applicants' && data.data) {
+                    const tableData = data.data.map(applicant => [
+                        applicant.applicantId || '',
+                        `${applicant.firstName || ''} ${applicant.lastName || ''}`,
+                        applicant.email || '',
+                        applicant.jobTitle || '',
+                        applicant.status || '',
+                        applicant.initialScreeningScore || 'N/A',
+                        applicant.hrInterviewScore || 'N/A',
+                        applicant.lineManagerScore || 'N/A'
+                    ]);
+                    
+                    doc.autoTable({
+                        startY: yPosition,
+                        head: [['ID', 'Name', 'Email', 'Job Title', 'Status', 'Initial Score', 'HR Score', 'Your Score']],
+                        body: tableData,
+                        styles: { fontSize: 8 },
+                        headStyles: { fillColor: [35, 133, 176] },
+                        margin: { top: 60 }
+                    });
+                }
+                
+                // Add other report types here...
+                
+                // Download the PDF
+                const filename = `dept_${reportType}_report_${new Date().toISOString().split('T')[0]}.pdf`;
+                doc.save(filename);
+                
+                console.log(`✅ Department PDF generated: ${filename}`);
+                
+            } catch (pdfError) {
+                console.error('❌ Error generating PDF:', pdfError);
+                alert('Error generating PDF: ' + pdfError.message);
+            }
+        }
+
+        // ===============================================
+        // REPORT RESULTS DISPLAY
+        // ===============================================
+
+        // Display department report results
+        function displayDeptReportResults(resultsDiv, data, reportType) {
+            resultsDiv.style.display = 'block';
+            
+            let html = '<div class="results-header"><h4>Department Report Results</h4></div>';
+            
+            // Add department context
+            if (currentDepartment) {
+                html += `<div class="dept-context">
+                    <strong>Department:</strong> ${currentDepartment.deptName}
+                </div>`;
+            }
+
+            // Add generation date
+            if (data.generatedOn) {
+                html += `<div class="generation-date">
+                    <small><i class="fas fa-clock"></i> Generated on: ${data.generatedOn}</small>
+                </div>`;
+            }
+
+            // ===== 1. DEPARTMENT APPLICANT STATUS REPORT =====
+            if (reportType === 'dept-status' && data.applicant) {
+                html += `
+                    <div class="applicant-status-report">
+                        <div class="applicant-header">
+                            <h5><i class="fas fa-user-circle"></i> ${data.applicant.firstName} ${data.applicant.lastName}</h5>
+                            <span class="risk-badge risk-${data.applicant.riskLevel.toLowerCase()}">${data.applicant.riskLevel} Risk</span>
+                        </div>
+                        
+                        <div class="applicant-details-grid">
+                            <div class="detail-card">
+                                <h6>Personal Information</h6>
+                                <p><strong>Email:</strong> ${data.applicant.email}</p>
+                                <p><strong>Phone:</strong> ${data.applicant.phoneNumber}</p>
+                                <p><strong>Birth Date:</strong> ${data.applicant.birthDate}</p>
+                                <p><strong>Job Position:</strong> ${data.applicant.jobPosition}</p>
+                            </div>
+                            
+                            <div class="detail-card">
+                                <h6>Application Progress</h6>
+                                <p><strong>Application Date:</strong> ${data.applicant.applicationDate}</p>
+                                <p><strong>Days in Process:</strong> ${data.applicant.daysInProcess} days</p>
+                                <p><strong>Current Status:</strong> ${data.applicant.currentStatus}</p>
+                                <p><strong>Performance Level:</strong> ${data.applicant.performanceLevel}</p>
+                            </div>
+                            
+                            <div class="detail-card">
+                                <h6>Evaluation Scores</h6>
+                                <p><strong>Initial Screening:</strong> ${data.applicant.initialScreeningScore}</p>
+                                <p><strong>HR Interview:</strong> ${data.applicant.hrInterviewScore}</p>
+                                <p><strong>Your Score:</strong> ${data.applicant.yourScore}</p>
+                                <p><strong>Total Score:</strong> <span class="total-score">${data.applicant.totalScore}</span></p>
+                            </div>
+                            
+                            <div class="detail-card">
+                                <h6>Status Progression</h6>
+                                <p><strong>HR Screening:</strong> <span class="status-${data.applicant.hrScreeningApproved.toLowerCase()}">${data.applicant.hrScreeningApproved}</span></p>
+                                <p><strong>Your Review:</strong> <span class="status-${data.applicant.yourReviewStatus.toLowerCase()}">${data.applicant.yourReviewStatus}</span></p>
+                                <p><strong>Final Status:</strong> <span class="status-${data.applicant.finalStatus.toLowerCase().replace(' ', '-')}">${data.applicant.finalStatus}</span></p>
+                            </div>
+                        </div>
+                `;
+
+                // Add intelligence insights
+                if (data.intelligence) {
+                    if (data.intelligence.nextActions && data.intelligence.nextActions.length > 0) {
+                        html += `
+                            <div class="intelligence-section">
+                                <h6><i class="fas fa-tasks"></i> Next Actions Required</h6>
+                                <ul class="action-list">
+                        `;
+                        data.intelligence.nextActions.forEach(action => {
+                            html += `<li class="action-item">${action}</li>`;
+                        });
+                        html += '</ul></div>';
+                    }
+
+                    if (data.intelligence.recommendations && data.intelligence.recommendations.length > 0) {
+                        html += `
+                            <div class="intelligence-section">
+                                <h6><i class="fas fa-lightbulb"></i> Recommendations</h6>
+                                <ul class="recommendation-list">
+                        `;
+                        data.intelligence.recommendations.forEach(rec => {
+                            html += `<li class="recommendation-item">${rec}</li>`;
+                        });
+                        html += '</ul></div>';
+                    }
+
+                    if (data.intelligence.performanceIndicators && data.intelligence.performanceIndicators.length > 0) {
+                        html += `
+                            <div class="intelligence-section">
+                                <h6><i class="fas fa-chart-line"></i> Performance Indicators</h6>
+                                <ul class="performance-list">
+                        `;
+                        data.intelligence.performanceIndicators.forEach(indicator => {
+                            html += `<li class="performance-item">${indicator}</li>`;
+                        });
+                        html += '</ul></div>';
+                    }
+                }
+
+                // Add status history
+                if (data.statusHistory && data.statusHistory.length > 0) {
+                    html += `
+                        <div class="status-history">
+                            <h6><i class="fas fa-history"></i> Status History</h6>
+                            <div class="timeline">
+                    `;
+                    
+                    data.statusHistory.forEach(history => {
+                        html += `
+                            <div class="timeline-item">
+                                <div class="timeline-date">${history.date}</div>
+                                <div class="timeline-status">${history.status}</div>
+                                <div class="timeline-notes">${history.notes}</div>
+                            </div>
+                        `;
+                    });
+                    
+                    html += '</div></div>';
+                }
+
+                html += '</div>'; // Close applicant-status-report
+            }
+
+            // ===== 2. MRF PERFORMANCE REPORT =====
+            else if (reportType === 'mrf-performance') {
+                // Add summary cards
+                if (data.summary) {
+                    html += '<div class="results-summary">';
+                    Object.entries(data.summary).forEach(([key, value]) => {
+                        html += `
+                            <div class="summary-item">
+                                <div class="summary-value">${value}</div>
+                                <div class="summary-label">${key.replace(/([A-Z])/g, ' $1').replace(/^./, str => str.toUpperCase())}</div>
+                            </div>
+                        `;
+                    });
+                    html += '</div>';
+                }
+
+                // Add insights
+                if (data.insights && data.insights.length > 0) {
+                    html += `
+                        <div class="dept-insights">
+                            <h5><i class="fas fa-lightbulb"></i> MRF Performance Insights</h5>
+                            <ul>
+                    `;
+                    data.insights.forEach(insight => {
+                        html += `<li>${insight}</li>`;
+                    });
+                    html += '</ul></div>';
+                }
+
+                // Add action items
+                if (data.actionItems && data.actionItems.length > 0) {
+                    html += `
+                        <div class="action-items">
+                            <h5><i class="fas fa-tasks"></i> Action Items</h5>
+                            <ul>
+                    `;
+                    data.actionItems.forEach(action => {
+                        html += `<li class="action-item-urgent">${action}</li>`;
+                    });
+                    html += '</ul></div>';
+                }
+
+                // *** ADD THE MISSING MRF DATA TABLE ***
+                if (data.mrfData && data.mrfData.length > 0) {
+                    html += `
+                        <div class="data-table-container">
+                            <h5><i class="fas fa-table"></i> Your MRF Details</h5>
+                            <table class="data-table">
+                                <thead>
+                                    <tr>
+                                        <th>MRF ID</th>
+                                        <th>Position Title</th>
+                                        <th>Requisition Date</th>
+                                        <th>Required Date</th>
+                                        <th>Personnel Required</th>
+                                        <th>Personnel Hired</th>
+                                        <th>Fill Rate</th>
+                                        <th>Days Open</th>
+                                        <th>Urgency Level</th>
+                                        <th>Performance Level</th>
+                                        <th>Status</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                    `;
+                    
+                    data.mrfData.forEach(mrf => {
+                        const urgencyClass = mrf.urgencyLevel === 'Critical' ? 'status-failed' : 
+                                        mrf.urgencyLevel === 'High' ? 'status-pending' : 'status-passed';
+                        const performanceClass = mrf.performanceLevel === 'Excellent' ? 'status-hired' :
+                                            mrf.performanceLevel === 'Good' ? 'status-passed' :
+                                            mrf.performanceLevel === 'Average' ? 'status-pending' : 'status-failed';
+                        
+                        html += `
+                            <tr>
+                                <td><strong>${mrf.mrfId}</strong></td>
+                                <td>${mrf.positionTitle}</td>
+                                <td>${mrf.requisitionDate}</td>
+                                <td>${mrf.requiredDate}</td>
+                                <td>${mrf.personnelRequired}</td>
+                                <td>${mrf.personnelHired}</td>
+                                <td><strong>${mrf.fillRate}%</strong></td>
+                                <td>${mrf.daysOpen}</td>
+                                <td><span class="status-badge ${urgencyClass}">${mrf.urgencyLevel}</span></td>
+                                <td><span class="status-badge ${performanceClass}">${mrf.performanceLevel}</span></td>
+                                <td>${mrf.status}</td>
+                            </tr>
+                        `;
+                    });
+                    
+                    html += '</tbody></table></div>';
+                }
+
+                // Add recommendations
+                if (data.recommendations && data.recommendations.length > 0) {
+                    html += `
+                        <div class="recommendations">
+                            <h5><i class="fas fa-clipboard-list"></i> Recommendations</h5>
+                            <ul>
+                    `;
+                    data.recommendations.forEach(rec => {
+                        html += `<li class="recommendation-item">${rec}</li>`;
+                    });
+                    html += '</ul></div>';
+                }
+            }
+
+            // ===== 3. DEPARTMENT PIPELINE REPORT =====
+            else if (reportType === 'dept-pipeline' && data.pipelineData) {
+                const pipeline = data.pipelineData;
+
+                // Pipeline health overview
+                html += `
+                    <div class="pipeline-health">
+                        <h5><i class="fas fa-heartbeat"></i> Pipeline Health Overview</h5>
+                        <div class="health-score">
+                            <div class="health-circle health-${pipeline.pipelineHealth.overallHealth.toLowerCase()}">
+                                <span class="health-value">${pipeline.pipelineHealth.healthScore}</span>
+                                <span class="health-label">Health Score</span>
+                            </div>
+                            <div class="health-status">
+                                <h6>Overall Health: ${pipeline.pipelineHealth.overallHealth}</h6>
+                                <p><strong>Strengths:</strong> ${pipeline.pipelineHealth.strengths.join(', ') || 'None identified'}</p>
+                                <p><strong>Critical Issues:</strong> ${pipeline.pipelineHealth.criticalIssues.join(', ') || 'None identified'}</p>
+                            </div>
+                        </div>
+                    </div>
+                `;
+
+                // Pipeline stages
+                html += `
+                    <div class="pipeline-stages">
+                        <h5><i class="fas fa-sitemap"></i> Pipeline Stages</h5>
+                        <div class="stages-flow">
+                            <div class="stage-item">
+                                <div class="stage-number">${pipeline.stages.applied}</div>
+                                <div class="stage-label">Applied</div>
+                            </div>
+                            <div class="stage-arrow">→</div>
+                            <div class="stage-item">
+                                <div class="stage-number">${pipeline.stages.initialScreening}</div>
+                                <div class="stage-label">Initial Screening</div>
+                                <div class="conversion-rate">${pipeline.conversionRates.applicationToScreening}%</div>
+                            </div>
+                            <div class="stage-arrow">→</div>
+                            <div class="stage-item">
+                                <div class="stage-number">${pipeline.stages.hrInterview}</div>
+                                <div class="stage-label">HR Interview</div>
+                                <div class="conversion-rate">${pipeline.conversionRates.screeningToHR}%</div>
+                            </div>
+                            <div class="stage-arrow">→</div>
+                            <div class="stage-item">
+                                <div class="stage-number">${pipeline.stages.yourReview}</div>
+                                <div class="stage-label">Your Review</div>
+                                <div class="conversion-rate">${pipeline.conversionRates.hrToYourReview}%</div>
+                            </div>
+                            <div class="stage-arrow">→</div>
+                            <div class="stage-item">
+                                <div class="stage-number">${pipeline.stages.hired}</div>
+                                <div class="stage-label">Hired</div>
+                                <div class="conversion-rate">${pipeline.conversionRates.yourReviewToHire}%</div>
+                            </div>
+                        </div>
+                        <div class="overall-conversion">
+                            <strong>Overall Conversion Rate: ${pipeline.conversionRates.overallConversion}%</strong>
+                        </div>
+                    </div>
+                `;
+
+                // Pipeline insights
+                if (data.insights && data.insights.length > 0) {
+                    html += `
+                        <div class="dept-insights">
+                            <h5><i class="fas fa-lightbulb"></i> Pipeline Insights</h5>
+                            <ul>
+                    `;
+                    data.insights.forEach(insight => {
+                        html += `<li>${insight}</li>`;
+                    });
+                    html += '</ul></div>';
+                }
+
+                // Time analysis
+                html += `
+                    <div class="time-analysis">
+                        <h5><i class="fas fa-clock"></i> Time Analysis</h5>
+                        <div class="time-metrics">
+                            <div class="metric-item">
+                                <div class="metric-value">${pipeline.timeAnalysis.avgTimeInPipeline}</div>
+                                <div class="metric-label">Avg Days in Pipeline</div>
+                            </div>
+                            <div class="metric-item">
+                                <div class="metric-value">${pipeline.timeAnalysis.stuckCandidates}</div>
+                                <div class="metric-label">Stuck Candidates (30+ days)</div>
+                            </div>
+                            <div class="metric-item">
+                                <div class="metric-value">${pipeline.timeAnalysis.fastTrackCandidates}</div>
+                                <div class="metric-label">Fast Track Hires (≤14 days)</div>
+                            </div>
+                        </div>
+                    </div>
+                `;
+
+                // Bottleneck analysis
+                if (pipeline.bottleneckAnalysis.criticalBottleneck) {
+                    html += `
+                        <div class="bottleneck-analysis">
+                            <h5><i class="fas fa-exclamation-triangle"></i> Bottleneck Analysis</h5>
+                            <div class="bottleneck-alert">
+                                <strong>Critical Bottleneck Detected:</strong> ${pipeline.bottleneckAnalysis.criticalBottleneck}
+                                <br><small>Impact: ${pipeline.bottleneckAnalysis.bottleneckImpact}% conversion rate drop</small>
+                            </div>
+                        </div>
+                    `;
+                }
+
+                // Position breakdown
+                if (pipeline.positionBreakdown && Object.keys(pipeline.positionBreakdown).length > 0) {
+                    html += `
+                        <div class="position-breakdown">
+                            <h5><i class="fas fa-chart-bar"></i> Position Breakdown</h5>
+                            <table class="data-table">
+                                <thead>
+                                    <tr>
+                                        <th>Position</th>
+                                        <th>Total Applicants</th>
+                                        <th>Hired</th>
+                                        <th>In Progress</th>
+                                        <th>Avg Days</th>
+                                        <th>Conversion Rate</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                    `;
+                    
+                    Object.entries(pipeline.positionBreakdown).forEach(([position, data]) => {
+                        html += `
+                            <tr>
+                                <td><strong>${position}</strong></td>
+                                <td>${data.total}</td>
+                                <td>${data.hired}</td>
+                                <td>${data.inProgress}</td>
+                                <td>${data.avgDays}</td>
+                                <td><strong>${data.conversionRate}%</strong></td>
+                            </tr>
+                        `;
+                    });
+                    
+                    html += '</tbody></table></div>';
+                }
+
+                // Prioritized actions
+                if (data.prioritizedActions && data.prioritizedActions.length > 0) {
+                    html += `
+                        <div class="prioritized-actions">
+                            <h5><i class="fas fa-tasks"></i> Prioritized Actions</h5>
+                    `;
+                    
+                    data.prioritizedActions.forEach(action => {
+                        const priorityClass = action.priority === 'HIGH' ? 'priority-high' : 'priority-medium';
+                        html += `
+                            <div class="action-item ${priorityClass}">
+                                <div class="action-priority">${action.priority}</div>
+                                <div class="action-details">
+                                    <div class="action-text">${action.action}</div>
+                                    <div class="action-timeline">Timeline: ${action.timeline}</div>
+                                </div>
+                            </div>
+                        `;
+                    });
+                    
+                    html += '</div>';
+                }
+            }
+
+            // ===== EXISTING REPORTS (dept-applicants, dept-hirees) =====
+            else if (reportType === 'dept-applicants' && data.data && data.data.length > 0) {
+                // Add summary if available
+                if (data.summary) {
+                    html += '<div class="results-summary">';
+                    Object.entries(data.summary).forEach(([key, value]) => {
+                        html += `
+                            <div class="summary-item">
+                                <div class="summary-value">${value}</div>
+                                <div class="summary-label">${key.replace(/([A-Z])/g, ' $1').replace(/^./, str => str.toUpperCase())}</div>
+                            </div>
+                        `;
+                    });
+                    html += '</div>';
+                }
+
+                // Add department insights if available
+                if (data.insights && data.insights.length > 0) {
+                    html += `
+                        <div class="dept-insights">
+                            <h5><i class="fas fa-lightbulb"></i> Department Insights</h5>
+                            <ul>
+                    `;
+                    data.insights.forEach(insight => {
+                        html += `<li>${insight}</li>`;
+                    });
+                    html += '</ul></div>';
+                }
+
+                // Add action items if available
+                if (data.actionItems && data.actionItems.length > 0) {
+                    html += `
+                        <div class="action-items">
+                            <h5><i class="fas fa-tasks"></i> Action Items</h5>
+                            <ul>
+                    `;
+                    data.actionItems.forEach(action => {
+                        html += `<li class="action-item-urgent">${action}</li>`;
+                    });
+                    html += '</ul></div>';
+                }
+
+                html += `
+                    <div class="data-table-container">
+                        <table class="data-table">
+                            <thead>
+                                <tr>
+                                    <th>Applicant ID</th>
+                                    <th>Last Name</th>
+                                    <th>First Name</th>
+                                    <th>Email</th>
+                                    <th>Job Title</th>
+                                    <th>Application Date</th>
+                                    <th>Status</th>
+                                    <th>Initial Score</th>
+                                    <th>HR Score</th>
+                                    <th>Your Score</th>
+                                    <th>Total Score</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                `;
+                
+                data.data.forEach(applicant => {
+                    const statusClass = getStatusClass(applicant.status);
+                    html += `
+                        <tr>
+                            <td><strong>${applicant.applicantId}</strong></td>
+                            <td>${applicant.lastName}</td>
+                            <td>${applicant.firstName}</td>
+                            <td>${applicant.email}</td>
+                            <td>${applicant.jobTitle}</td>
+                            <td>${applicant.applicationDate}</td>
+                            <td><span class="status-badge ${statusClass}">${applicant.status}</span></td>
+                            <td>${applicant.initialScreeningScore || 'N/A'}</td>
+                            <td>${applicant.hrInterviewScore || 'N/A'}</td>
+                            <td>${applicant.lineManagerScore || 'N/A'}</td>
+                            <td><strong>${applicant.totalScore || 'N/A'}</strong></td>
+                        </tr>
+                    `;
+                });
+                
+                html += '</tbody></table></div>';
+            }
+            
+            else if (reportType === 'dept-hirees' && data.data && data.data.length > 0) {
+                // Add summary if available
+                if (data.summary) {
+                    html += '<div class="results-summary">';
+                    Object.entries(data.summary).forEach(([key, value]) => {
+                        html += `
+                            <div class="summary-item">
+                                <div class="summary-value">${value}</div>
+                                <div class="summary-label">${key.replace(/([A-Z])/g, ' $1').replace(/^./, str => str.toUpperCase())}</div>
+                            </div>
+                        `;
+                    });
+                    html += '</div>';
+                }
+
+                // Add insights
+                if (data.insights && data.insights.length > 0) {
+                    html += `
+                        <div class="dept-insights">
+                            <h5><i class="fas fa-lightbulb"></i> Hiring Insights</h5>
+                            <ul>
+                    `;
+                    data.insights.forEach(insight => {
+                        html += `<li>${insight}</li>`;
+                    });
+                    html += '</ul></div>';
+                }
+
+                html += `
+                    <div class="data-table-container">
+                        <table class="data-table">
+                            <thead>
+                                <tr>
+                                    <th>Hire ID</th>
+                                    <th>Last Name</th>
+                                    <th>First Name</th>
+                                    <th>Job Title</th>
+                                    <th>Job Type</th>
+                                    <th>Hire Date</th>
+                                    <th>Days to Hire</th>
+                                    <th>Total Score</th>
+                                    <th>Quality</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                `;
+                
+                data.data.forEach(hiree => {
+                    const qualityClass = hiree.hireQuality === 'Excellent' ? 'status-hired' :
+                                    hiree.hireQuality === 'Good' ? 'status-passed' :
+                                    hiree.hireQuality === 'Average' ? 'status-pending' : 'status-failed';
+                    
+                    html += `
+                        <tr>
+                            <td><strong>${hiree.hireId}</strong></td>
+                            <td>${hiree.lastName}</td>
+                            <td>${hiree.firstName}</td>
+                            <td>${hiree.jobTitle}</td>
+                            <td>${hiree.jobType}</td>
+                            <td>${hiree.hireDate}</td>
+                            <td>${hiree.daysToHire}</td>
+                            <td>${hiree.totalScore}</td>
+                            <td><span class="status-badge ${qualityClass}">${hiree.hireQuality}</span></td>
+                        </tr>
+                    `;
+                });
+                
+                html += '</tbody></table></div>';
+            }
+
+            // Handle no data cases
+            else if (!data.data || data.data.length === 0) {
+                html += `
+                    <div class="no-data">
+                        <i class="fas fa-info-circle"></i>
+                        <p>No data available for the selected criteria.</p>
+                    </div>
+                `;
+            }
+            
+            resultsDiv.innerHTML = html;
+        }
+
+        // ===============================================
+        // SEARCHABLE DROPDOWN CLASS
+        // ===============================================
+
+        // Department Applicant Dropdown Class
+        class SearchableDeptApplicantDropdown {
+            constructor() {
+                this.container = document.getElementById('dept-applicant-dropdown');
+                this.input = document.getElementById('dept-applicant-search');
+                this.menu = document.getElementById('dept-applicant-dropdown-menu');
+                this.icon = this.container?.querySelector('.dropdown-icon');
+                
+                this.searchTimeout = null;
+                this.selectedApplicant = null;
+                this.highlightedIndex = -1;
+                this.applicants = [];
+                this.allApplicants = [];
+                this.isLoaded = false;
+                
+                if (this.container && this.input && this.menu) {
+                    this.init();
+                }
+            }
+            
+            init() {
+                this.bindEvents();
+                this.loadAllDeptApplicants();
+            }
+            
+            bindEvents() {
+                this.input.addEventListener('input', (e) => this.handleInput(e));
+                this.input.addEventListener('focus', (e) => this.handleFocus(e));
+                this.input.addEventListener('keydown', (e) => this.handleKeydown(e));
+                
+                if (this.icon) {
+                    this.icon.addEventListener('click', (e) => {
+                        e.preventDefault();
+                        this.input.focus();
+                        if (this.isMenuVisible()) {
+                            this.hideMenu();
+                        } else {
+                            this.showAllApplicants();
+                        }
+                    });
+                }
+                
+                document.addEventListener('click', (e) => {
+                    if (!this.container.contains(e.target)) {
+                        this.hideMenu();
+                    }
+                });
+            }
+            
+            async loadAllDeptApplicants() {
+                try {
+                    console.log('🔄 Loading department applicants for dropdown...');
+                    
+                    const response = await fetch('/line-manager/recruitment/reports/search-applicants?query=all&loadAll=true');
+                    
+                    if (!response.ok) {
+                        throw new Error('Failed to load department applicants');
+                    }
+                    
+                    const data = await response.json();
+                    
+                    if (data.success) {
+                        this.allApplicants = data.applicants;
+                        this.isLoaded = true;
+                        console.log(`✅ Loaded ${this.allApplicants.length} department applicants for dropdown`);
+                    } else {
+                        console.error('❌ Failed to load department applicants:', data.message);
+                    }
+                    
+                } catch (error) {
+                    console.error('❌ Error loading department applicants:', error);
+                }
+            }
+            
+            handleInput(e) {
+                const query = e.target.value.trim();
+                
+                if (this.searchTimeout) {
+                    clearTimeout(this.searchTimeout);
+                }
+                
+                if (this.selectedApplicant && this.selectedApplicant.name !== query) {
+                    this.selectedApplicant = null;
+                }
+                
+                if (query.length === 0) {
+                    this.showAllApplicants();
+                    return;
+                }
+                
+                this.searchTimeout = setTimeout(() => {
+                    this.filterApplicants(query);
+                }, 150);
+            }
+            
+            handleFocus(e) {
+                if (this.isLoaded) {
+                    this.showAllApplicants();
+                } else {
+                    this.showLoading();
+                    const checkLoaded = setInterval(() => {
+                        if (this.isLoaded) {
+                            clearInterval(checkLoaded);
+                            this.showAllApplicants();
+                        }
+                    }, 100);
+                }
+            }
+            
+            handleKeydown(e) {
+                if (!this.isMenuVisible()) return;
+                
+                switch (e.key) {
+                    case 'ArrowDown':
+                        e.preventDefault();
+                        this.highlightNext();
+                        break;
+                    case 'ArrowUp':
+                        e.preventDefault();
+                        this.highlightPrevious();
+                        break;
+                    case 'Enter':
+                        e.preventDefault();
+                        if (this.highlightedIndex >= 0 && this.applicants[this.highlightedIndex]) {
+                            this.selectApplicant(this.applicants[this.highlightedIndex]);
+                        }
+                        break;
+                    case 'Escape':
+                        this.hideMenu();
+                        this.input.blur();
+                        break;
+                }
+            }
+            
+            showAllApplicants() {
+                if (!this.isLoaded) {
+                    this.showLoading();
+                    return;
+                }
+                
+                this.applicants = this.allApplicants;
+                this.displayResults(this.applicants);
+            }
+            
+            filterApplicants(query) {
+                if (!this.isLoaded) {
+                    this.showLoading();
+                    return;
+                }
+                
+                const searchTerm = query.toLowerCase();
+                
+                const filtered = this.allApplicants.filter(applicant => {
+                    const name = applicant.name.toLowerCase();
+                    const email = applicant.email.toLowerCase();
+                    const position = applicant.position.toLowerCase();
+                    
+                    return name.includes(searchTerm) || 
+                        email.includes(searchTerm) || 
+                        position.includes(searchTerm);
+                });
+                
+                this.applicants = filtered;
+                this.displayResults(this.applicants);
+            }
+            
+            showLoading() {
+                this.menu.innerHTML = `
+                    <div class="dropdown-loading">
+                        <span class="search-loading-spinner"></span>
+                        Loading department applicants...
+                    </div>
+                `;
+                this.showMenu();
+            }
+            
+            displayResults(applicants) {
+                this.highlightedIndex = -1;
+                
+                if (applicants.length === 0) {
+                    this.showNoResults();
+                    return;
+                }
+                
+                const displayApplicants = applicants.slice(0, 50);
+                
+                const html = displayApplicants.map((applicant, index) => `
+                    <div class="dropdown-item" data-index="${index}">
+                        <div class="applicant-name">${applicant.name}</div>
+                        <div class="applicant-details">
+                            ${applicant.email} • ${applicant.position}
+                            <span class="applicant-status-badge ${this.getStatusClass(applicant.status)}">${applicant.status}</span>
+                        </div>
+                    </div>
+                `).join('');
+                
+                let footerHtml = '';
+                if (applicants.length > 50) {
+                    footerHtml = `
+                        <div class="dropdown-footer">
+                            Showing 50 of ${applicants.length} department applicants. Type to narrow results.
+                        </div>
+                    `;
+                }
+                
+                this.menu.innerHTML = html + footerHtml;
+                
+                this.menu.querySelectorAll('.dropdown-item').forEach((item, index) => {
+                    item.addEventListener('click', () => this.selectApplicant(displayApplicants[index]));
+                    item.addEventListener('mouseenter', () => this.highlightItem(index));
+                });
+                
+                this.showMenu();
+            }
+            
+            showNoResults() {
+                const query = this.input.value.trim();
+                this.menu.innerHTML = `
+                    <div class="dropdown-no-results">
+                        ${query ? `No department applicants found for "${query}".` : 'No department applicants found.'} 
+                        <br><small>Try a different search term.</small>
+                    </div>
+                `;
+                this.showMenu();
+            }
+            
+            selectApplicant(applicant) {
+                this.selectedApplicant = applicant;
+                this.input.value = applicant.name;
+                this.hideMenu();
+                console.log('Selected department applicant:', applicant);
+            }
+            
+            highlightNext() {
+                const maxIndex = Math.min(this.applicants.length - 1, 49);
+                if (this.highlightedIndex < maxIndex) {
+                    this.highlightItem(this.highlightedIndex + 1);
+                }
+            }
+            
+            highlightPrevious() {
+                if (this.highlightedIndex > 0) {
+                    this.highlightItem(this.highlightedIndex - 1);
+                }
+            }
+            
+            highlightItem(index) {
+                this.menu.querySelectorAll('.dropdown-item').forEach(item => {
+                    item.classList.remove('selected');
+                });
+                
+                const items = this.menu.querySelectorAll('.dropdown-item');
+                if (items[index]) {
+                    items[index].classList.add('selected');
+                    this.highlightedIndex = index;
+                    items[index].scrollIntoView({
+                        block: 'nearest',
+                        behavior: 'smooth'
+                    });
+                }
+            }
+            
+            showMenu() {
+                this.menu.classList.add('show');
+                this.container.classList.add('open');
+            }
+            
+            hideMenu() {
+                this.menu.classList.remove('show');
+                this.container.classList.remove('open');
+                this.highlightedIndex = -1;
+            }
+            
+            isMenuVisible() {
+                return this.menu.classList.contains('show');
+            }
+            
+            getStatusClass(status) {
+                if (!status) return 'status-pending';
+                
+                const statusLower = status.toLowerCase();
+                if (statusLower.includes('pending') || statusLower.includes('awaiting')) return 'status-pending';
+                if (statusLower.includes('passed') || statusLower.includes('approved')) return 'status-passed';
+                if (statusLower.includes('failed') || statusLower.includes('rejected')) return 'status-failed';
+                if (statusLower.includes('hired')) return 'status-hired';
+                
+                return 'status-pending';
+            }
+            
+            getSelectedApplicant() {
+                return this.selectedApplicant;
+            }
+        }
+
+        // ===============================================
+        // UTILITY FUNCTIONS
+        // ===============================================
+
+        // Get status CSS class
+        function getStatusClass(status) {
+            if (!status) return '';
+            
+            const statusLower = status.toLowerCase();
+            if (statusLower.includes('pending') || statusLower.includes('awaiting')) return 'status-pending';
+            if (statusLower.includes('passed') || statusLower.includes('approved') || statusLower.includes('completed')) return 'status-passed';
+            if (statusLower.includes('failed') || statusLower.includes('rejected')) return 'status-failed';
+            if (statusLower.includes('hired')) return 'status-hired';
+            if (statusLower.includes('progress')) return 'status-pending';
+            
+            return 'status-pending';
+        }
+
+        // Set default dates for date inputs
+        function setDefaultDates() {
+            const today = new Date();
+            const firstDay = new Date(today.getFullYear(), today.getMonth(), 1);
+            const lastDay = new Date(today.getFullYear(), today.getMonth() + 1, 0);
+            
+            const startDateInputs = document.querySelectorAll('input[name="startDate"]');
+            const endDateInputs = document.querySelectorAll('input[name="endDate"]');
+            
+            startDateInputs.forEach(input => {
+                input.value = firstDay.toISOString().split('T')[0];
+            });
+            
+            endDateInputs.forEach(input => {
+                input.value = lastDay.toISOString().split('T')[0];
+            });
+        }
+
+        // Toggle date inputs based on filter type
+        function toggleDateInputs(reportType) {
+            const filterType = document.getElementById(`${reportType}-filter-type`).value;
+            const customDatesStart = document.getElementById(`${reportType}-custom-dates`);
+            const customDatesEnd = document.getElementById(`${reportType}-custom-dates-end`);
+            
+            if (filterType === 'custom') {
+                customDatesStart.style.display = 'block';
+                customDatesEnd.style.display = 'block';
+            } else {
+                customDatesStart.style.display = 'none';
+                customDatesEnd.style.display = 'none';
+            }
+        }
+
+        // Calculate date range based on filter type
+        function calculateDateRange(filterType) {
+            const today = new Date();
+            let startDate, endDate;
+            
+            switch (filterType) {
+                case 'month':
+                    startDate = new Date(today.getFullYear(), today.getMonth(), 1);
+                    endDate = new Date(today.getFullYear(), today.getMonth() + 1, 0);
+                    break;
+                case 'last-month':
+                    startDate = new Date(today.getFullYear(), today.getMonth() - 1, 1);
+                    endDate = new Date(today.getFullYear(), today.getMonth(), 0);
+                    break;
+                case 'quarter':
+                    const currentQuarter = Math.floor(today.getMonth() / 3);
+                    startDate = new Date(today.getFullYear(), currentQuarter * 3, 1);
+                    endDate = new Date(today.getFullYear(), (currentQuarter + 1) * 3, 0);
+                    break;
+                case 'year':
+                    startDate = new Date(today.getFullYear(), 0, 1);
+                    endDate = new Date(today.getFullYear(), 11, 31);
+                    break;
+                default:
+                    return null;
+            }
+            
+            return {
+                startDate: startDate.toISOString().split('T')[0],
+                endDate: endDate.toISOString().split('T')[0]
+            };
+        }
+
+        // ===============================================
+        // SIDEBAR & COLLAPSIBLE FUNCTIONALITY (PRESERVED)
+        // ===============================================
+
+        // Toggle active class for sidebar links
+        document.querySelectorAll('.sidebar ul li a').forEach(link => {
+            link.addEventListener('click', function() {
+                document.querySelectorAll('.sidebar ul li a').forEach(link => link.classList.remove('active'));
+                this.classList.add('active');
+            });
+        });
+
+        // Toggle collapsible content
+        document.querySelectorAll('.collapsible-header').forEach(header => {
+            header.addEventListener('click', function() {
+                var content = this.nextElementSibling;
+                if (content.style.display === 'block') {
+                    content.style.display = 'none';
+                } else {
+                    document.querySelectorAll('.collapsible-content').forEach(item => {
+                        if (item !== content) {
+                            item.style.display = 'none';
+                        }
+                    });
+                    content.style.display = 'block';
+                }
+            });
+        });
+
+        // ===============================================
+        // CONSOLE LOGGING FOR DEBUGGING
+        // ===============================================
+
+        console.log('📋 [Line Manager] Recruitment reports JavaScript loaded successfully');
+
+        // Global functions for HTML onclick events
+        window.generateDeptReport = generateDeptReport;
+        window.toggleDateInputs = toggleDateInputs;
+    </script>
+</body>
+</html>
