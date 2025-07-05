@@ -8187,6 +8187,7 @@ function setupP1TableFilters() {
   // Create filter controls for P1 Declared Results Table
   createP1DeclaredFilterControls();
 }
+
 function createP1AwaitingFilterControls() {
     const p1AwaitingTable = document.getElementById('p1AwaitingActionTable');
     if (!p1AwaitingTable) return;
@@ -8207,7 +8208,7 @@ function createP1AwaitingFilterControls() {
     
     if (!awaitingHeader) return;
     
-    // Create filter controls container - REMOVED Filter By
+    // Create filter controls container with updated options
     const filterContainer = document.createElement('div');
     filterContainer.id = 'p1AwaitingFilterControls';
     filterContainer.style.cssText = `
@@ -8222,11 +8223,9 @@ function createP1AwaitingFilterControls() {
         <div style="display: flex; align-items: center; gap: 15px; flex-wrap: wrap;">
             <div style="display: flex; align-items: center; gap: 10px;">
                 <label for="p1AwaitingSortBy" style="font-weight: bold; color: #124A5C;">Sort By:</label>
-                <select id="p1AwaitingSortBy" style="padding: 8px; border: 1px solid #ddd; border-radius: 4px; background-color: white; min-width: 200px;">
-                    <option value="score-desc">Total Score (Highest First)</option>
-                    <option value="score-asc">Total Score (Lowest First)</option>
-                    <option value="worksetup-desc">Work Setup/Availability (Passed First)</option>
-                    <option value="worksetup-asc">Work Setup/Availability (Failed First)</option>
+                <select id="p1AwaitingSortBy" style="padding: 8px; border: 1px solid #ddd; border-radius: 4px; background-color: white; min-width: 250px;">
+                    <option value="combined-desc">Work Setup + Total Score (Best First)</option>
+                    <option value="combined-asc">Work Setup + Total Score (Worst First)</option>
                     <option value="name-asc">Name (A-Z)</option>
                     <option value="name-desc">Name (Z-A)</option>
                 </select>
@@ -8240,14 +8239,15 @@ function createP1AwaitingFilterControls() {
     // Insert filter container after the awaiting header
     awaitingHeader.insertAdjacentElement('afterend', filterContainer);
     
-    // Set up event listeners - ONLY SORT NOW
+    // Set up event listeners
     document.getElementById('p1AwaitingApplySort').addEventListener('click', () => {
         const sortBy = document.getElementById('p1AwaitingSortBy').value;
         applyP1AwaitingSort(sortBy);
     });
 }
-
 // UPDATED: Apply sort for P1 Awaiting Action table (removed filtering)
+
+// Updated sort function to extract total score from table cells
 async function applyP1AwaitingSort(sortBy) {
     console.log("Applying P1 Awaiting sort...");
     
@@ -8261,9 +8261,18 @@ async function applyP1AwaitingSort(sortBy) {
     
     console.log(`Processing ${rows.length} P1 awaiting rows`);
     
-    // Enhance row data with work setup/availability info
+    // Enhance row data with work setup/availability info and extract total score
     for (const row of rows) {
         await enhanceRowWithWorkSetupDataFixed(row);
+        
+        // Extract total score from the table cell (assuming it's in column 5)
+        const totalScoreCell = row.querySelector('td:nth-child(5)');
+        if (totalScoreCell) {
+            const scoreText = totalScoreCell.textContent.trim();
+            const score = parseFloat(scoreText) || 0;
+            row.setAttribute('data-total-score', score.toString());
+            console.log(`Row total score: ${score}`);
+        }
     }
     
     // Sort rows
@@ -8298,7 +8307,7 @@ function createP1DeclaredFilterControls() {
     
     if (!declaredHeader) return;
     
-    // Create filter controls container - REMOVED Filter By
+    // Create filter controls container with updated options
     const filterContainer = document.createElement('div');
     filterContainer.id = 'p1DeclaredFilterControls';
     filterContainer.style.cssText = `
@@ -8313,11 +8322,9 @@ function createP1DeclaredFilterControls() {
         <div style="display: flex; align-items: center; gap: 15px; flex-wrap: wrap;">
             <div style="display: flex; align-items: center; gap: 10px;">
                 <label for="p1DeclaredSortBy" style="font-weight: bold; color: #124A5C;">Sort By:</label>
-                <select id="p1DeclaredSortBy" style="padding: 8px; border: 1px solid #ddd; border-radius: 4px; background-color: white; min-width: 200px;">
-                    <option value="score-desc">Total Score (Highest First)</option>
-                    <option value="score-asc">Total Score (Lowest First)</option>
-                    <option value="worksetup-desc">Work Setup/Availability (Passed First)</option>
-                    <option value="worksetup-asc">Work Setup/Availability (Failed First)</option>
+                <select id="p1DeclaredSortBy" style="padding: 8px; border: 1px solid #ddd; border-radius: 4px; background-color: white; min-width: 250px;">
+                    <option value="combined-desc">Work Setup + Total Score (Best First)</option>
+                    <option value="combined-asc">Work Setup + Total Score (Worst First)</option>
                     <option value="name-asc">Name (A-Z)</option>
                     <option value="name-desc">Name (Z-A)</option>
                 </select>
@@ -8331,7 +8338,7 @@ function createP1DeclaredFilterControls() {
     // Insert filter container after the declared header
     declaredHeader.insertAdjacentElement('afterend', filterContainer);
     
-    // Set up event listeners - ONLY SORT NOW
+    // Set up event listeners
     document.getElementById('p1DeclaredApplySort').addEventListener('click', () => {
         const sortBy = document.getElementById('p1DeclaredSortBy').value;
         applyP1DeclaredSort(sortBy);
@@ -8353,9 +8360,18 @@ async function applyP1DeclaredSort(sortBy) {
     
     console.log(`Processing ${rows.length} P1 declared rows`);
     
-    // Enhance row data with work setup/availability info
+    // Enhance row data with work setup/availability info and extract total score
     for (const row of rows) {
         await enhanceRowWithWorkSetupDataFixed(row);
+        
+        // Extract total score from the table cell (assuming it's in column 5)
+        const totalScoreCell = row.querySelector('td:nth-child(5)');
+        if (totalScoreCell) {
+            const scoreText = totalScoreCell.textContent.trim();
+            const score = parseFloat(scoreText) || 0;
+            row.setAttribute('data-total-score', score.toString());
+            console.log(`Row total score: ${score}`);
+        }
     }
     
     // Sort rows
@@ -8476,7 +8492,7 @@ async function applyP1DeclaredFilters() {
 // FIXED: Work Setup/Availability Logic - Only PASSED if BOTH are true
 
 async function enhanceRowWithWorkSetupDataFixed(row) {
-    const userId = row.getAttribute('data-userid');
+   const userId = row.getAttribute('data-userid');
     if (!userId || userId === 'undefined') return;
     
     // Skip if already enhanced
@@ -8876,59 +8892,57 @@ function matchesP1Filter(row, filterBy) {
       return true;
   }
 }
-function compareP1Rows(rowA, rowB, sortBy) {
-  switch (sortBy) {
-    case 'score-desc':
-      const scoreA = parseFloat(rowA.getAttribute('data-score')) || 0;
-      const scoreB = parseFloat(rowB.getAttribute('data-score')) || 0;
-      return scoreB - scoreA; // Highest first
-      
-    case 'score-asc':
-      const scoreA2 = parseFloat(rowA.getAttribute('data-score')) || 0;
-      const scoreB2 = parseFloat(rowB.getAttribute('data-score')) || 0;
-      return scoreA2 - scoreB2; // Lowest first
-      
-    case 'worksetup-desc':
-      // FIXED: Passed first, then failed, then by score
-      const passedA = rowA.getAttribute('data-worksetup-passed') === 'true';
-      const passedB = rowB.getAttribute('data-worksetup-passed') === 'true';
-      
-      if (passedA && !passedB) return -1; // A passed, B failed -> A first
-      if (!passedA && passedB) return 1;  // A failed, B passed -> B first
-      
-      // If both same status, sort by score (highest first)
-      const scoreA3 = parseFloat(rowA.getAttribute('data-score')) || 0;
-      const scoreB3 = parseFloat(rowB.getAttribute('data-score')) || 0;
-      return scoreB3 - scoreA3;
-      
-    case 'worksetup-asc':
-      // FIXED: Failed first, then passed, then by score
-      const passedA2 = rowA.getAttribute('data-worksetup-passed') === 'true';
-      const passedB2 = rowB.getAttribute('data-worksetup-passed') === 'true';
-      
-      if (!passedA2 && passedB2) return -1; // A failed, B passed -> A first
-      if (passedA2 && !passedB2) return 1;  // A passed, B failed -> B first
-      
-      // If both same status, sort by score (highest first)
-      const scoreA4 = parseFloat(rowA.getAttribute('data-score')) || 0;
-      const scoreB4 = parseFloat(rowB.getAttribute('data-score')) || 0;
-      return scoreB4 - scoreA4;
-      
-    case 'name-asc':
-      const nameA = getRowName(rowA);
-      const nameB = getRowName(rowB);
-      return nameA.localeCompare(nameB);
-      
-    case 'name-desc':
-      const nameA2 = getRowName(rowA);
-      const nameB2 = getRowName(rowB);
-      return nameB2.localeCompare(nameA2);
-      
-    default:
-      return 0;
-  }
-}
 
+
+// Updated comparison function for P1 rows
+function compareP1Rows(a, b, sortBy) {
+    console.log(`Comparing rows with sortBy: ${sortBy}`);
+    
+    switch (sortBy) {
+        case 'combined-desc':
+            // Work Setup Passed first, then highest total score
+            const aWorkSetupPassed = a.getAttribute('data-worksetup-passed') === 'true';
+            const bWorkSetupPassed = b.getAttribute('data-worksetup-passed') === 'true';
+            
+            // Primary sort: Work Setup (Passed before Failed)
+            if (aWorkSetupPassed !== bWorkSetupPassed) {
+                return bWorkSetupPassed ? 1 : -1; // Passed comes first
+            }
+            
+            // Secondary sort: Total Score (highest first within each group)
+            const aScore = parseFloat(a.getAttribute('data-total-score')) || 0;
+            const bScore = parseFloat(b.getAttribute('data-total-score')) || 0;
+            return bScore - aScore; // Descending
+            
+        case 'combined-asc':
+            // Work Setup Failed first, then lowest total score
+            const aWorkSetupPassedAsc = a.getAttribute('data-worksetup-passed') === 'true';
+            const bWorkSetupPassedAsc = b.getAttribute('data-worksetup-passed') === 'true';
+            
+            // Primary sort: Work Setup (Failed before Passed)
+            if (aWorkSetupPassedAsc !== bWorkSetupPassedAsc) {
+                return aWorkSetupPassedAsc ? 1 : -1; // Failed comes first
+            }
+            
+            // Secondary sort: Total Score (lowest first within each group)
+            const aScoreAsc = parseFloat(a.getAttribute('data-total-score')) || 0;
+            const bScoreAsc = parseFloat(b.getAttribute('data-total-score')) || 0;
+            return aScoreAsc - bScoreAsc; // Ascending
+            
+        case 'name-asc':
+            const aName = a.querySelector('td:nth-child(2)').textContent.trim();
+            const bName = b.querySelector('td:nth-child(2)').textContent.trim();
+            return aName.localeCompare(bName);
+            
+        case 'name-desc':
+            const aNameDesc = a.querySelector('td:nth-child(2)').textContent.trim();
+            const bNameDesc = b.querySelector('td:nth-child(2)').textContent.trim();
+            return bNameDesc.localeCompare(aNameDesc);
+            
+        default:
+            return 0;
+    }
+}
 window.viewP3Evaluation = viewP3Evaluation;
 window.extractApplicantIdForP3 = extractApplicantIdForP3;
 window.viewP3EvaluationByUserId = viewP3EvaluationByUserId;
@@ -10044,7 +10058,7 @@ function createP3AwaitingFilterControls() {
                 <select id="p3AwaitingSortBy" style="padding: 8px; border: 1px solid #ddd; border-radius: 4px; background-color: white; min-width: 200px;">
                     <option value="rating-desc">Total Assessment Rating (Highest First)</option>
                     <option value="rating-asc">Total Assessment Rating (Lowest First)</option>
-                    <option value="conclusion-recommend">Conclusion (Strongly Recommend First)</option>
+
                     <option value="name-asc">Name (A-Z)</option>
                     <option value="name-desc">Name (Z-A)</option>
                 </select>
@@ -10122,7 +10136,7 @@ function createP3DeclaredFilterControls() {
                 <select id="p3DeclaredSortBy" style="padding: 8px; border: 1px solid #ddd; border-radius: 4px; background-color: white; min-width: 200px;">
                     <option value="rating-desc">Total Assessment Rating (Highest First)</option>
                     <option value="rating-asc">Total Assessment Rating (Lowest First)</option>
-                    <option value="conclusion-recommend">Conclusion (Strongly Recommend First)</option>
+                    
                     <option value="name-asc">Name (A-Z)</option>
                     <option value="name-desc">Name (Z-A)</option>
                 </select>
