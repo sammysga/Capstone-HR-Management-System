@@ -6413,20 +6413,39 @@ getApplicantTrackerByJobPositions: async function (req, res) {
             }
             console.log('Fetched screening assessments:', screeningAssessments);
 
-            // NEW: Fetch P3 panel screening assessments
+            // FIXED: Enhanced panel assessment fetching with better matching
+            console.log('🔍 DEBUGGING: About to fetch panel assessments...');
+            
             const { data: panelAssessments, error: panelError } = await supabase
                 .from('applicant_panelscreening_assessment')
                 .select(`
                     applicantUserId,
                     totalAssessmentRating,
-                    conclusion
+                    conclusion,
+                    panelInterviewId,
+                    created_at,
+                    jobId
                 `);
             
             if (panelError) {
-                console.error('Error fetching panel assessments:', panelError);
+                console.error('❌ Error fetching panel assessments:', panelError);
                 throw panelError;
             }
-            console.log('Fetched panel assessments:', panelAssessments);
+            
+            console.log('🔍 RAW Panel Assessments Data:', panelAssessments);
+            console.log(`🔍 Found ${panelAssessments?.length || 0} panel assessment records`);
+            
+            // Debug: Show what userIds we're looking for
+            const applicantUserIds = applicants.map(a => a.userId);
+            console.log('🔍 Looking for panel assessments for userIds:', applicantUserIds);
+            
+            // CRITICAL FIX: Also look up by applicantId since that might be the key
+            const applicantIds = applicants.map(a => a.applicantId);
+            console.log('🔍 Also looking for panel assessments for applicantIds:', applicantIds);
+            
+            // Debug: Show what applicantUserIds exist in panel assessments
+            const panelUserIds = panelAssessments?.map(p => p.applicantUserId) || [];
+            console.log('🔍 Panel assessment applicantUserIds available:', panelUserIds);
 
             // Fetch user emails using userId
             const { data: userAccounts, error: userError } = await supabase
@@ -6450,65 +6469,101 @@ getApplicantTrackerByJobPositions: async function (req, res) {
                 console.error('Error fetching departments:', departmentError);
                 throw departmentError;
             }
-            console.log('Fetched departments:', departments);
 
             for (const applicant of applicants) {
-                console.log(`Processing applicant: ${applicant.firstName} ${applicant.lastName}`);
+                console.log(`\n🔍 Processing applicant: ${applicant.firstName} ${applicant.lastName} (userId: ${applicant.userId}, applicantId: ${applicant.applicantId})`);
 
                 applicant.jobTitle = jobTitles.find(job => job.jobId === applicant.jobId)?.jobTitle || 'N/A';
                 applicant.deptName = departments.find(dept => dept.departmentId === applicant.departmentId)?.deptName || 'N/A';
                 applicant.userEmail = userAccounts.find(user => user.userId === applicant.userId)?.userEmail || 'N/A';
                 applicant.birthDate = userAccounts.find(user => user.userId === applicant.userId)?.birthDate || 'N/A';
 
-                // Match `userId` to fetch the corresponding initial screening assessment
+                // Match initial screening assessment
                 const screeningData = screeningAssessments.find(assessment => assessment.userId === applicant.userId) || {};
 
-                // NEW: Match `userId` to fetch the corresponding panel assessment
-                const panelData = panelAssessments.find(assessment => assessment.applicantUserId === applicant.userId) || {};
+                // FIXED: Enhanced panel assessment matching with multiple strategies
+                console.log(`🔍 Looking for panel assessment for userId: ${applicant.userId}, applicantId: ${applicant.applicantId}`);
+                
+                let panelData = null;
+                
+                // Strategy 1: Match by userId (applicantUserId field)
+                panelData = panelAssessments.find(assessment => assessment.applicantUserId === applicant.userId);
+                
+                if (panelData) {
+                    console.log(`✅ Found panel data by userId match:`, {
+                        applicantUserId: panelData.applicantUserId,
+                        totalAssessmentRating: panelData.totalAssessmentRating,
+                        conclusion: panelData.conclusion
+                    });
+                } else {
+                    // Strategy 2: Match by applicantId (in case applicantUserId field stores applicantId)
+                    panelData = panelAssessments.find(assessment => assessment.applicantUserId === applicant.applicantId);
+                    
+                    if (panelData) {
+                        console.log(`✅ Found panel data by applicantId match:`, {
+                            applicantUserId: panelData.applicantUserId,
+                            totalAssessmentRating: panelData.totalAssessmentRating,
+                            conclusion: panelData.conclusion
+                        });
+                    } else {
+                        console.log(`❌ No panel data found for userId: ${applicant.userId} or applicantId: ${applicant.applicantId}`);
+                        
+                        // Show available data for debugging
+                        console.log(`🔍 Available panel assessment applicantUserIds:`, panelUserIds);
+                    }
+                }
 
-                // FIXED: Proper boolean handling for Work Setup and Availability
+                // Work setup and availability logic (unchanged)
                 const workSetupScore = screeningData.workSetupScore;
                 const availabilityScore = screeningData.availabilityScore;
-                
-                // Convert to proper boolean values
                 const workSetupPassed = (workSetupScore === true || workSetupScore === 'true' || workSetupScore === '1' || workSetupScore === 1);
                 const availabilityPassed = (availabilityScore === true || availabilityScore === 'true' || availabilityScore === '1' || availabilityScore === 1);
-                
-                console.log(`UserId ${applicant.userId} Work Setup Logic:`);
-                console.log(`  workSetupScore: ${workSetupScore} (${typeof workSetupScore}) -> ${workSetupPassed}`);
-                console.log(`  availabilityScore: ${availabilityScore} (${typeof availabilityScore}) -> ${availabilityPassed}`);
-                console.log(`  Both passed: ${workSetupPassed && availabilityPassed}`);
 
-                // Merge the screening assessment data into the applicant object
+                // Merge screening assessment data (unchanged)
                 applicant.initialScreeningAssessment = {
                     degreeScore: screeningData.degreeScore || 'N/A',
                     experienceScore: screeningData.experienceScore || 'N/A',
                     certificationScore: screeningData.certificationScore || 'N/A',
                     hardSkillsScore: screeningData.hardSkillsScore || 'N/A',
                     softSkillsScore: screeningData.softSkillsScore || 'N/A',
-                    workSetupScore: workSetupPassed, // Send as boolean
-                    availabilityScore: availabilityPassed, // Send as boolean
+                    workSetupScore: workSetupPassed,
+                    availabilityScore: availabilityPassed,
                     totalScore: screeningData.totalScore || 'N/A',
                     degree_url: screeningData.degree_url || '#',
                     cert_url: screeningData.cert_url || '#',
                     resume_url: screeningData.resume_url || '#',
                 };
 
-                // NEW: Merge the panel assessment data into the applicant object
-                applicant.panelAssessment = {
-                    totalAssessmentRating: panelData.totalAssessmentRating || 'N/A',
-                    conclusion: panelData.conclusion || 'N/A'
-                };
-
-                console.log('Updated applicant details:', applicant);
+                // FIXED: Panel assessment data with proper handling
+                if (panelData) {
+                    applicant.panelAssessment = {
+                        totalAssessmentRating: panelData.totalAssessmentRating || 'N/A',
+                        conclusion: panelData.conclusion || 'N/A',
+                        hasData: true
+                    };
+                    console.log(`✅ Applied panel assessment data for ${applicant.firstName}:`, applicant.panelAssessment);
+                } else {
+                    applicant.panelAssessment = {
+                        totalAssessmentRating: 'N/A',
+                        conclusion: 'N/A',
+                        hasData: false
+                    };
+                    console.log(`❌ No panel assessment data available for ${applicant.firstName} ${applicant.lastName}`);
+                }
             }
 
-            console.log('Final applicants list:', applicants);
-        
+            // Final summary
+            console.log('\n📊 PANEL ASSESSMENT SUMMARY:');
+            applicants.forEach(applicant => {
+                const hasPanel = applicant.panelAssessment.hasData;
+                const rating = applicant.panelAssessment.totalAssessmentRating;
+                const conclusion = applicant.panelAssessment.conclusion;
+                console.log(`  ${applicant.firstName} ${applicant.lastName} (userId: ${applicant.userId}, applicantId: ${applicant.applicantId}): ${hasPanel ? '✅' : '❌'} Panel Data - Rating: ${rating}, Conclusion: ${conclusion}`);
+            });
 
             res.render('staffpages/linemanager_pages/linemanagerapplicanttracking-jobposition', { 
                 applicants,
-                applicantsJSON: JSON.stringify(applicants) // Make data accessible in script
+                applicantsJSON: JSON.stringify(applicants)
             });           
         } catch (error) {
             console.error('Error fetching applicants:', error);
@@ -7733,8 +7788,8 @@ getP3Assessment: async function(req, res) {
         
         console.log(`Fetching P3 assessment for userId: ${userId}`);
         
-        // Fetch from applicant_panelscreening_assessment table
-        const { data: panelAssessment, error } = await supabase
+        // FIXED: Remove .single() to handle cases where no data exists
+        const { data: panelAssessments, error } = await supabase
             .from('applicant_panelscreening_assessment')
             .select(`
                 totalAssessmentRating,
@@ -7744,28 +7799,94 @@ getP3Assessment: async function(req, res) {
                 longTermGoalsRapport,
                 equipmentToolsSoftware,
                 remarks,
-                interviewDate
+                interviewDate,
+                applicantUserId
             `)
-            .eq('applicantUserId', userId)
-            .single();
+            .eq('applicantUserId', userId);
         
         if (error) {
             console.error('Error fetching P3 assessment:', error);
-            return res.status(404).json({
+            return res.status(500).json({
                 success: false,
-                message: 'P3 assessment not found',
+                message: 'Database error fetching P3 assessment',
                 error: error.message
             });
         }
         
-        if (!panelAssessment) {
-            return res.status(404).json({
-                success: false,
-                message: 'No P3 assessment found for this user'
+        // Handle multiple scenarios
+        if (!panelAssessments || panelAssessments.length === 0) {
+            console.log(`No P3 assessment found for userId: ${userId}`);
+            
+            // FIXED: Try searching by applicantId instead (common issue)
+            console.log(`Trying to find assessment by treating userId ${userId} as applicantId...`);
+            
+            // First, get the applicant record to find their actual applicantId
+            const { data: applicantRecord, error: applicantError } = await supabase
+                .from('applicantaccounts')
+                .select('applicantId')
+                .eq('userId', userId)
+                .single();
+            
+            if (!applicantError && applicantRecord) {
+                console.log(`Found applicantId: ${applicantRecord.applicantId} for userId: ${userId}`);
+                
+                // Try searching by applicantId
+                const { data: panelByApplicantId, error: panelByIdError } = await supabase
+                    .from('applicant_panelscreening_assessment')
+                    .select(`
+                        totalAssessmentRating,
+                        conclusion,
+                        panelFormData,
+                        strengthsRapport,
+                        longTermGoalsRapport,
+                        equipmentToolsSoftware,
+                        remarks,
+                        interviewDate,
+                        applicantUserId
+                    `)
+                    .eq('applicantUserId', applicantRecord.applicantId);
+                
+                if (!panelByIdError && panelByApplicantId && panelByApplicantId.length > 0) {
+                    const panelData = panelByApplicantId[0]; // Take first record if multiple
+                    console.log(`✅ Found P3 assessment by applicantId for userId: ${userId}`);
+                    
+                    return res.json({
+                        success: true,
+                        assessmentData: {
+                            totalAssessmentRating: panelData.totalAssessmentRating || 'N/A',
+                            conclusion: panelData.conclusion || 'N/A',
+                            panelFormData: panelData.panelFormData || {},
+                            strengthsRapport: panelData.strengthsRapport || '',
+                            longTermGoalsRapport: panelData.longTermGoalsRapport || '',
+                            equipmentToolsSoftware: panelData.equipmentToolsSoftware || '',
+                            remarks: panelData.remarks || '',
+                            interviewDate: panelData.interviewDate || null
+                        }
+                    });
+                }
+            }
+            
+            // If still no data found, return N/A values instead of 404
+            console.log(`No P3 assessment found for userId: ${userId} by any method`);
+            return res.json({
+                success: true,
+                assessmentData: {
+                    totalAssessmentRating: 'N/A',
+                    conclusion: 'N/A',
+                    panelFormData: {},
+                    strengthsRapport: '',
+                    longTermGoalsRapport: '',
+                    equipmentToolsSoftware: '',
+                    remarks: '',
+                    interviewDate: null
+                }
             });
         }
         
-        console.log(`Successfully fetched P3 assessment for userId: ${userId}`);
+        // Take the first record if multiple exist
+        const panelAssessment = panelAssessments[0];
+        
+        console.log(`✅ Successfully fetched P3 assessment for userId: ${userId}`);
         
         res.json({
             success: true,
