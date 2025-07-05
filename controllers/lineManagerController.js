@@ -19873,6 +19873,2400 @@ getTrainingSummaryReport: async function (req, res) {
         });
     }
 },
+
+// Recruitment Line Mnaager Reports
+getRecruitmentReports: async function (req, res) {
+    if (req.session.user && req.session.user.userRole === 'Line Manager') {
+        res.render('staffpages/linemanager_pages/reports_page/linemanager-recruitment-reports');
+    } else {
+        req.flash('errors', { authError: 'Unauthorized. Line Manager access only.' });
+        res.redirect('/staff/login');
+    }
+},
+
+
+// 1. Get line manager's department info
+getDepartmentInfo: async function(req, res) {
+    if (!req.session.user || req.session.user.userRole !== 'Line Manager') {
+        return res.status(401).json({ success: false, message: 'Unauthorized access' });
+    }
+
+    try {
+        console.log('🔍 [Line Manager] Fetching department info...');
+        
+        // Get line manager's staff account to find department
+        const { data: staffAccount, error: staffError } = await supabase
+            .from('staffaccounts')
+            .select(`
+                departmentId,
+                departments!inner(departmentId, deptName)
+            `)
+            .eq('userId', req.session.user.userId)
+            .single();
+
+        if (staffError) {
+            console.error('❌ [Line Manager] Error fetching staff account:', staffError);
+            throw staffError;
+        }
+
+        if (!staffAccount || !staffAccount.departments) {
+            return res.status(404).json({ 
+                success: false, 
+                message: 'Department information not found for your account' 
+            });
+        }
+
+        console.log(`✅ [Line Manager] Found department: ${staffAccount.departments.deptName}`);
+
+        return res.json({
+            success: true,
+            department: {
+                departmentId: staffAccount.departmentId,
+                deptName: staffAccount.departments.deptName
+            }
+        });
+
+    } catch (error) {
+        console.error('❌ [Line Manager] Error fetching department info:', error);
+        return res.status(500).json({ 
+            success: false, 
+            message: 'Error fetching department information: ' + error.message 
+        });
+    }
+},
+
+// 2. Get department-specific dashboard statistics
+getDeptDashboardStats: async function(req, res) {
+    if (!req.session.user || req.session.user.userRole !== 'Line Manager') {
+        return res.status(401).json({ success: false, message: 'Unauthorized access' });
+    }
+
+    try {
+        console.log('🔍 [Line Manager] Fetching department dashboard stats...');
+
+        // First get line manager's department
+        const { data: staffAccount, error: staffError } = await supabase
+            .from('staffaccounts')
+            .select('departmentId')
+            .eq('userId', req.session.user.userId)
+            .single();
+
+        if (staffError || !staffAccount) {
+            throw new Error('Could not find department for line manager');
+        }
+
+        const departmentId = staffAccount.departmentId;
+        console.log(`📍 [Line Manager] Department ID: ${departmentId}`);
+
+        // Get department applicants
+        const { data: deptApplicants, error: applicantsError } = await supabase
+            .from('applicantaccounts')
+            .select('applicantId, applicantStatus, created_at')
+            .eq('departmentId', departmentId);
+
+        if (applicantsError) {
+            console.error('❌ [Line Manager] Error fetching department applicants:', applicantsError);
+            throw applicantsError;
+        }
+
+        console.log(`✅ [Line Manager] Found ${deptApplicants.length} department applicants`);
+
+        // Get department hirees
+        const deptHirees = deptApplicants.filter(a => 
+            a.applicantStatus?.includes('Hired') || a.applicantStatus?.includes('Onboarding')
+        );
+
+        // Get pending reviews (applications awaiting line manager review)
+        const pendingReviews = deptApplicants.filter(a => {
+            const status = a.applicantStatus || '';
+            return status.includes('Awaiting Line Manager') || 
+                   status.includes('Panel Interview') ||
+                   status.includes('P2');
+        });
+
+        // Get line manager's MRFs
+        const { data: yourMRFs, error: mrfError } = await supabase
+            .from('mrf')
+            .select('mrfId')
+            .eq('userId', req.session.user.userId)
+            .in('status', ['Pending', 'Approved']);
+
+        if (mrfError) {
+            console.error('❌ [Line Manager] Error fetching MRFs:', mrfError);
+        }
+
+        // Calculate average hiring time for department
+        let avgHiringTime = 0;
+        if (deptHirees.length > 0) {
+            const hiringTimes = deptHirees.map(h => {
+                const applicationDate = new Date(h.created_at);
+                const currentDate = new Date();
+                return Math.floor((currentDate - applicationDate) / (1000 * 60 * 60 * 24));
+            });
+            avgHiringTime = Math.round(hiringTimes.reduce((sum, time) => sum + time, 0) / hiringTimes.length);
+        }
+
+        // Get this month's department applications
+        const currentDate = new Date();
+        const monthlyDeptApplicants = deptApplicants.filter(a => {
+            const appDate = new Date(a.created_at);
+            return appDate.getMonth() === currentDate.getMonth() && 
+                   appDate.getFullYear() === currentDate.getFullYear();
+        });
+
+        const stats = {
+            deptApplicants: deptApplicants.length,
+            deptHirees: deptHirees.length,
+            pendingReviews: pendingReviews.length,
+            yourMRFs: yourMRFs ? yourMRFs.length : 0,
+            avgHiringTime: avgHiringTime,
+            monthlyDeptApplicants: monthlyDeptApplicants.length
+        };
+
+        console.log('📊 [Line Manager] Department stats:', stats);
+
+        return res.json({
+            success: true,
+            stats: stats
+        });
+
+    } catch (error) {
+        console.error('❌ [Line Manager] Error fetching department dashboard stats:', error);
+        return res.status(500).json({ 
+            success: false, 
+            message: 'Error fetching department statistics: ' + error.message 
+        });
+    }
+},
+
+// 3. Get department-specific chart data
+getDeptChartData: async function(req, res) {
+    if (!req.session.user || req.session.user.userRole !== 'Line Manager') {
+        return res.status(401).json({ success: false, message: 'Unauthorized access' });
+    }
+
+    try {
+        console.log('🔍 [Line Manager] Fetching department chart data...');
+
+        // Get line manager's department
+        const { data: staffAccount, error: staffError } = await supabase
+            .from('staffaccounts')
+            .select('departmentId')
+            .eq('userId', req.session.user.userId)
+            .single();
+
+        if (staffError || !staffAccount) {
+            throw new Error('Could not find department for line manager');
+        }
+
+        const departmentId = staffAccount.departmentId;
+
+        // Get department applicants with job data
+        const { data: deptApplicants, error: applicantsError } = await supabase
+            .from('applicantaccounts')
+            .select(`
+                applicantId,
+                applicantStatus,
+                created_at,
+                jobpositions!inner(jobTitle)
+            `)
+            .eq('departmentId', departmentId);
+
+        if (applicantsError) {
+            console.error('❌ [Line Manager] Error fetching department applicants:', applicantsError);
+            throw applicantsError;
+        }
+
+        console.log(`✅ [Line Manager] Found ${deptApplicants.length} department applicants for charts`);
+
+        // 1. Department Status Distribution
+        const statusCounts = {
+            pending: 0,
+            hrInterview: 0,
+            yourReview: 0,
+            hired: 0,
+            rejected: 0
+        };
+
+        deptApplicants.forEach(applicant => {
+            const status = applicant.applicantStatus || '';
+            const statusLower = status.toLowerCase();
+            
+            if (statusLower.includes('hired') || statusLower.includes('onboarding')) {
+                statusCounts.hired++;
+            } else if (statusLower.includes('line manager') || statusLower.includes('p2') || statusLower.includes('panel')) {
+                statusCounts.yourReview++;
+            } else if (statusLower.includes('hr interview') || statusLower.includes('p1')) {
+                statusCounts.hrInterview++;
+            } else if (statusLower.includes('failed') || statusLower.includes('rejected')) {
+                statusCounts.rejected++;
+            } else {
+                statusCounts.pending++;
+            }
+        });
+
+        // 2. Monthly Department Trends (last 6 months)
+        const monthlyData = {};
+        const currentDate = new Date();
+        
+        // Initialize last 6 months
+        for (let i = 5; i >= 0; i--) {
+            const monthDate = new Date(currentDate.getFullYear(), currentDate.getMonth() - i, 1);
+            const monthKey = `${monthDate.getFullYear()}-${String(monthDate.getMonth() + 1).padStart(2, '0')}`;
+            monthlyData[monthKey] = {
+                month: monthDate.toLocaleDateString('en-US', { month: 'short' }),
+                applications: 0,
+                hires: 0
+            };
+        }
+
+        // Count department applications and hires by month
+        deptApplicants.forEach(applicant => {
+            const appDate = new Date(applicant.created_at);
+            const monthKey = `${appDate.getFullYear()}-${String(appDate.getMonth() + 1).padStart(2, '0')}`;
+            
+            if (monthlyData[monthKey]) {
+                monthlyData[monthKey].applications++;
+                
+                const status = applicant.applicantStatus || '';
+                if (status.toLowerCase().includes('hired') || status.toLowerCase().includes('onboarding')) {
+                    monthlyData[monthKey].hires++;
+                }
+            }
+        });
+
+        const monthlyTrends = Object.values(monthlyData);
+
+        /// 3. Line Manager's MRF Progress
+        const { data: yourMRFs, error: mrfError } = await supabase
+            .from('mrf')
+            .select('status')
+            .eq('userId', req.session.user.userId);
+
+        const mrfCounts = {
+            pending: 0,
+            approved: 0,
+            notApproved: 0
+        };
+
+        if (yourMRFs) {
+            yourMRFs.forEach(mrf => {
+                const status = (mrf.status || '').toLowerCase();
+                
+                // Match your actual status values
+                if (status === 'pending' || status.includes('pending')) {
+                    mrfCounts.pending++;
+                } else if (status === 'approved' || status.includes('approved')) {
+                    mrfCounts.approved++;
+                } else if (status === 'not approved' || status.includes('not approved') || status.includes('rejected') || status.includes('declined')) {
+                    mrfCounts.notApproved++;
+                } else {
+                    // Default unknown statuses to pending
+                    mrfCounts.pending++;
+                }
+            });
+        }
+
+        console.log('📊 [Line Manager] MRF Counts:', mrfCounts); // Debug log to see actual data
+
+        // 4. Department Timeline Distribution
+        const timelineCounts = {
+            '0-15 days': 0,
+            '16-30 days': 0,
+            '31-45 days': 0,
+            '46+ days': 0
+        };
+
+        // Calculate timeline for hired department applicants
+        const hiredDeptApplicants = deptApplicants.filter(a => {
+            const status = a.applicantStatus || '';
+            return status.toLowerCase().includes('hired') || status.toLowerCase().includes('onboarding');
+        });
+
+        hiredDeptApplicants.forEach(applicant => {
+            const appDate = new Date(applicant.created_at);
+            const currentDate = new Date();
+            const daysDiff = Math.floor((currentDate - appDate) / (1000 * 60 * 60 * 24));
+
+            if (daysDiff <= 15) {
+                timelineCounts['0-15 days']++;
+            } else if (daysDiff <= 30) {
+                timelineCounts['16-30 days']++;
+            } else if (daysDiff <= 45) {
+                timelineCounts['31-45 days']++;
+            } else {
+                timelineCounts['46+ days']++;
+            }
+        });
+
+        const chartData = {
+            statusDistribution: {
+                labels: ['Pending', 'HR Interview', 'Your Review', 'Hired', 'Rejected'],
+                data: [
+                    statusCounts.pending,
+                    statusCounts.hrInterview,
+                    statusCounts.yourReview,
+                    statusCounts.hired,
+                    statusCounts.rejected
+                ]
+            },
+            monthlyTrends: {
+                labels: monthlyTrends.map(m => m.month),
+                applications: monthlyTrends.map(m => m.applications),
+                hires: monthlyTrends.map(m => m.hires)
+            },
+            mrfProgress: {
+                // Updated to match your actual statuses
+                labels: ['Pending', 'Approved', 'Not Approved'],
+                data: [
+                    mrfCounts.pending,
+                    mrfCounts.approved,
+                    mrfCounts.notApproved
+                ]
+            },
+            timeline: {
+                labels: Object.keys(timelineCounts),
+                data: Object.values(timelineCounts)
+            }
+        };
+
+        console.log('📊 [Line Manager] Department chart data prepared');
+
+        return res.json({
+            success: true,
+            chartData: chartData
+        });
+
+    } catch (error) {
+        console.error('❌ [Line Manager] Error fetching department chart data:', error);
+        return res.status(500).json({ 
+            success: false, 
+            message: 'Error fetching department chart data: ' + error.message 
+        });
+    }
+},
+
+// 4. Get department applicants report
+getDeptApplicantsReport: async function(req, res) {
+    if (!req.session.user || req.session.user.userRole !== 'Line Manager') {
+        return res.status(401).json({ success: false, message: 'Unauthorized access' });
+    }
+
+    try {
+        const { startDate, endDate, format } = req.query;
+        
+        console.log('🔍 [Line Manager] Fetching department applicants report...');
+        
+        // Get line manager's department
+        const { data: staffAccount, error: staffError } = await supabase
+            .from('staffaccounts')
+            .select('departmentId')
+            .eq('userId', req.session.user.userId)
+            .single();
+
+        if (staffError || !staffAccount) {
+            throw new Error('Could not find department for line manager');
+        }
+
+        const departmentId = staffAccount.departmentId;
+
+        // Enhanced query for department applicants
+        let query = supabase
+            .from('applicantaccounts')
+            .select(`
+                applicantId,
+                lastName,
+                firstName,
+                middleInitial,
+                phoneNo,
+                applicantStatus,
+                initialScreeningScore,
+                hrInterviewFormScore,
+                lineManagerFormEvalScore,
+                created_at,
+                userId,
+                jobId,
+                useraccounts!inner(userEmail),
+                jobpositions!inner(jobTitle),
+                departments!inner(deptName)
+            `)
+            .eq('departmentId', departmentId)
+            .order('created_at', { ascending: false });
+
+        // Apply date filters
+        if (startDate) {
+            query = query.gte('created_at', startDate);
+        }
+        if (endDate) {
+            const endDateTime = new Date(endDate);
+            endDateTime.setHours(23, 59, 59, 999);
+            query = query.lte('created_at', endDateTime.toISOString());
+        }
+
+        const { data: applicants, error } = await query;
+
+        if (error) {
+            console.error('❌ [Line Manager] Error fetching department applicants:', error);
+            return res.status(500).json({ success: false, message: 'Error fetching department applicants: ' + error.message });
+        }
+
+        console.log(`✅ [Line Manager] Found ${applicants.length} department applicants`);
+
+        // === BUSINESS INTELLIGENCE ANALYSIS ===
+
+        // 1. Performance Analysis
+        const performanceAnalysis = {
+            highPerformers: applicants.filter(a => {
+                const total = (a.initialScreeningScore || 0) + (a.hrInterviewFormScore || 0) + (a.lineManagerFormEvalScore || 0);
+                return total >= 240; // 80% of 300 max score
+            }),
+            averagePerformers: applicants.filter(a => {
+                const total = (a.initialScreeningScore || 0) + (a.hrInterviewFormScore || 0) + (a.lineManagerFormEvalScore || 0);
+                return total >= 180 && total < 240; // 60-79%
+            }),
+            lowPerformers: applicants.filter(a => {
+                const total = (a.initialScreeningScore || 0) + (a.hrInterviewFormScore || 0) + (a.lineManagerFormEvalScore || 0);
+                return total > 0 && total < 180; // Below 60%
+            })
+        };
+
+        // 2. Pipeline Efficiency Analysis
+        const pipelineAnalysis = {
+            pendingYourAction: applicants.filter(a => {
+                const status = (a.applicantStatus || '').toLowerCase();
+                return status.includes('awaiting line manager') || 
+                       status.includes('pending your review') ||
+                       status.includes('p2') ||
+                       status.includes('panel interview');
+            }),
+            stuckInHR: applicants.filter(a => {
+                const status = (a.applicantStatus || '').toLowerCase();
+                const daysSinceApplication = Math.floor((new Date() - new Date(a.created_at)) / (1000 * 60 * 60 * 24));
+                return status.includes('hr') && daysSinceApplication > 14;
+            }),
+            fastTrack: applicants.filter(a => {
+                const daysSinceApplication = Math.floor((new Date() - new Date(a.created_at)) / (1000 * 60 * 60 * 24));
+                const status = (a.applicantStatus || '').toLowerCase();
+                return daysSinceApplication <= 7 && (status.includes('hired') || status.includes('final'));
+            })
+        };
+
+        // 3. Quality Analysis
+        const qualityMetrics = {
+            avgInitialScore: applicants.length > 0 ? 
+                Math.round(applicants.reduce((sum, a) => sum + (a.initialScreeningScore || 0), 0) / applicants.length) : 0,
+            avgHRScore: applicants.length > 0 ?
+                Math.round(applicants.reduce((sum, a) => sum + (a.hrInterviewFormScore || 0), 0) / applicants.length) : 0,
+            avgYourScore: applicants.length > 0 ?
+                Math.round(applicants.reduce((sum, a) => sum + (a.lineManagerFormEvalScore || 0), 0) / applicants.length) : 0,
+            conversionRate: applicants.length > 0 ?
+                Math.round((applicants.filter(a => (a.applicantStatus || '').toLowerCase().includes('hired')).length / applicants.length) * 100) : 0
+        };
+
+        // 4. Timeline Analysis
+        const timelineAnalysis = {
+            avgProcessingTime: applicants.length > 0 ?
+                Math.round(applicants.reduce((sum, a) => {
+                    return sum + Math.floor((new Date() - new Date(a.created_at)) / (1000 * 60 * 60 * 24));
+                }, 0) / applicants.length) : 0,
+            quickHires: applicants.filter(a => {
+                const days = Math.floor((new Date() - new Date(a.created_at)) / (1000 * 60 * 60 * 24));
+                return days <= 14 && (a.applicantStatus || '').toLowerCase().includes('hired');
+            }).length,
+            delayedCandidates: applicants.filter(a => {
+                const days = Math.floor((new Date() - new Date(a.created_at)) / (1000 * 60 * 60 * 24));
+                const status = (a.applicantStatus || '').toLowerCase();
+                return days > 30 && !status.includes('hired') && !status.includes('rejected');
+            }).length
+        };
+
+        // === INTELLIGENT INSIGHTS GENERATION ===
+        const insights = [];
+        const actionItems = [];
+        const recommendations = [];
+
+        // Performance Insights
+        if (performanceAnalysis.highPerformers.length > 0) {
+            insights.push(`🌟 ${performanceAnalysis.highPerformers.length} high-performing candidates identified - consider fast-tracking these applications`);
+            actionItems.push(`Review ${performanceAnalysis.highPerformers.length} high-performers for immediate interview scheduling`);
+        }
+
+        if (performanceAnalysis.lowPerformers.length > performanceAnalysis.highPerformers.length && performanceAnalysis.lowPerformers.length > 3) {
+            insights.push(`⚠️ High ratio of low-performing candidates suggests need to review job requirements or screening criteria`);
+            recommendations.push('Consider tightening initial screening requirements to improve candidate quality');
+        }
+
+        // Pipeline Insights
+        if (pipelineAnalysis.pendingYourAction.length > 0) {
+            insights.push(`⏰ ${pipelineAnalysis.pendingYourAction.length} applicants awaiting your review - prompt action needed to maintain pipeline flow`);
+            actionItems.push(`Schedule interviews for ${pipelineAnalysis.pendingYourAction.length} pending candidates within 3 business days`);
+        }
+
+        if (pipelineAnalysis.stuckInHR.length > 0) {
+            insights.push(`🚫 ${pipelineAnalysis.stuckInHR.length} candidates stuck in HR stage for >14 days - follow up recommended`);
+            actionItems.push(`Coordinate with HR to resolve ${pipelineAnalysis.stuckInHR.length} delayed applications`);
+        }
+
+        if (pipelineAnalysis.fastTrack.length > 0) {
+            insights.push(`🚀 ${pipelineAnalysis.fastTrack.length} candidates processed efficiently (≤7 days) - excellent pipeline velocity`);
+        }
+
+        // Quality Insights
+        if (qualityMetrics.conversionRate < 15 && applicants.length > 10) {
+            insights.push(`📉 Low conversion rate (${qualityMetrics.conversionRate}%) indicates potential issues with candidate quality or process efficiency`);
+            recommendations.push('Analyze rejection reasons and consider adjusting recruitment channels or requirements');
+        }
+
+        if (qualityMetrics.conversionRate > 40 && applicants.length > 5) {
+            insights.push(`📈 Excellent conversion rate (${qualityMetrics.conversionRate}%) - your department attracts quality candidates`);
+        }
+
+        if (qualityMetrics.avgYourScore > 0 && qualityMetrics.avgYourScore < 60) {
+            insights.push(`📊 Your average interview score (${qualityMetrics.avgYourScore}) suggests candidates may not fully meet role requirements`);
+            recommendations.push('Consider refining job descriptions or working with HR to improve pre-screening');
+        }
+
+        // Timeline Insights
+        if (timelineAnalysis.avgProcessingTime > 45) {
+            insights.push(`⏱️ Average processing time (${timelineAnalysis.avgProcessingTime} days) exceeds best practices - streamlining recommended`);
+            recommendations.push('Target reducing average processing time to under 30 days through process optimization');
+        }
+
+        if (timelineAnalysis.delayedCandidates > 0) {
+            insights.push(`🔄 ${timelineAnalysis.delayedCandidates} candidates in process >30 days - risk of candidate drop-off`);
+            actionItems.push(`Prioritize decisions on ${timelineAnalysis.delayedCandidates} long-pending applications`);
+        }
+
+        // Department Comparison (if available)
+        if (applicants.length > 0) {
+            // Get company average for comparison
+            const { data: companyApplicants } = await supabase
+                .from('applicantaccounts')
+                .select('applicantStatus, created_at, lineManagerFormEvalScore')
+                .gte('created_at', startDate || '2024-01-01')
+                .lte('created_at', endDate || new Date().toISOString());
+
+            if (companyApplicants && companyApplicants.length > 0) {
+                const companyConversionRate = Math.round(
+                    (companyApplicants.filter(a => (a.applicantStatus || '').toLowerCase().includes('hired')).length / companyApplicants.length) * 100
+                );
+                
+                if (qualityMetrics.conversionRate > companyConversionRate + 10) {
+                    insights.push(`🏆 Your department's conversion rate (${qualityMetrics.conversionRate}%) exceeds company average (${companyConversionRate}%)`);
+                } else if (qualityMetrics.conversionRate < companyConversionRate - 10) {
+                    insights.push(`📊 Your department's conversion rate (${qualityMetrics.conversionRate}%) is below company average (${companyConversionRate}%)`);
+                    recommendations.push('Analyze successful departments\' practices and consider adopting similar strategies');
+                }
+            }
+        }
+
+        // Enhanced summary statistics
+        const summary = {
+            totalDeptApplications: applicants.length,
+            awaitingYourReview: pipelineAnalysis.pendingYourAction.length,
+            hrScreeningPassed: applicants.filter(a => {
+                const status = (a.applicantStatus || '').toLowerCase();
+                return status.includes('passed hr') || status.includes('p1 passed') || (a.hrInterviewFormScore && a.hrInterviewFormScore > 0);
+            }).length,
+            deptHired: applicants.filter(a => {
+                const status = (a.applicantStatus || '').toLowerCase();
+                return status.includes('hired') || status.includes('onboarding');
+            }).length,
+            rejectedByYou: applicants.filter(a => {
+                const status = (a.applicantStatus || '').toLowerCase();
+                return status.includes('line manager rejected') || status.includes('p2 failed');
+            }).length,
+            // Intelligence metrics
+            avgProcessingTime: timelineAnalysis.avgProcessingTime,
+            conversionRate: qualityMetrics.conversionRate,
+            avgYourScore: qualityMetrics.avgYourScore,
+            highPerformers: performanceAnalysis.highPerformers.length,
+            urgentActions: actionItems.length
+        };
+
+        // Helper function to calculate total score
+        const calculateTotalScore = (applicant) => {
+            const initial = applicant.initialScreeningScore || 0;
+            const hr = applicant.hrInterviewFormScore || 0;
+            const lineManager = applicant.lineManagerFormEvalScore || 0;
+            
+            if (initial > 0 || hr > 0 || lineManager > 0) {
+                return initial + hr + lineManager;
+            }
+            return null;
+        };
+
+        // Process department applicants data with intelligence flags
+        const processedApplicants = applicants.map(applicant => {
+            const totalScore = calculateTotalScore(applicant);
+            const daysSinceApplication = Math.floor((new Date() - new Date(applicant.created_at)) / (1000 * 60 * 60 * 24));
+            
+            // Intelligence flags
+            let flags = [];
+            if (totalScore && totalScore >= 240) flags.push('high-performer');
+            if (daysSinceApplication > 30) flags.push('delayed');
+            if ((applicant.applicantStatus || '').toLowerCase().includes('awaiting line manager')) flags.push('pending-your-action');
+            if (totalScore && totalScore < 150) flags.push('low-score');
+
+            return {
+                applicantId: applicant.applicantId,
+                lastName: applicant.lastName || 'N/A',
+                firstName: applicant.firstName || 'N/A',
+                middleInitial: applicant.middleInitial || '',
+                email: applicant.useraccounts?.userEmail || 'N/A',
+                phoneNumber: applicant.phoneNo || 'N/A',
+                jobTitle: applicant.jobpositions?.jobTitle || 'N/A',
+                applicationDate: applicant.created_at ? 
+                    new Date(applicant.created_at).toLocaleDateString('en-US', { 
+                        year: 'numeric', 
+                        month: '2-digit', 
+                        day: '2-digit' 
+                    }) : 'N/A',
+                status: applicant.applicantStatus || 'Pending',
+                initialScreeningScore: applicant.initialScreeningScore || 'N/A',
+                hrInterviewScore: applicant.hrInterviewFormScore || 'N/A',
+                lineManagerScore: applicant.lineManagerFormEvalScore || 'N/A',
+                totalScore: totalScore || 'N/A',
+                daysInProcess: daysSinceApplication,
+                intelligenceFlags: flags
+            };
+        });
+
+        const generatedOn = new Date().toLocaleDateString('en-US', { 
+            year: 'numeric', 
+            month: 'long', 
+            day: 'numeric',
+            hour: '2-digit',
+            minute: '2-digit'
+        });
+
+        return res.json({
+            success: true,
+            data: processedApplicants,
+            summary: summary,
+            insights: insights,
+            actionItems: actionItems,
+            recommendations: recommendations,
+            intelligence: {
+                performanceAnalysis,
+                pipelineAnalysis,
+                qualityMetrics,
+                timelineAnalysis
+            },
+            generatedOn: generatedOn,
+            reportTitle: 'Department Applicants Report - Intelligence Enhanced'
+        });
+
+    } catch (error) {
+        console.error('❌ [Line Manager] Error in getDeptApplicantsReport:', error);
+        return res.status(500).json({ success: false, message: 'Internal server error: ' + error.message });
+    }
+},
+
+// 5. Get department hirees report
+// Enhanced getDeptHireesReport with Business Intelligence
+getDeptHireesReport: async function(req, res) {
+    if (!req.session.user || req.session.user.userRole !== 'Line Manager') {
+        return res.status(401).json({ success: false, message: 'Unauthorized access' });
+    }
+
+    try {
+        const { startDate, endDate, format } = req.query;
+        
+        console.log('🔍 [Line Manager] Fetching department hirees report...');
+        
+        // Get line manager's department
+        const { data: staffAccount, error: staffError } = await supabase
+            .from('staffaccounts')
+            .select('departmentId')
+            .eq('userId', req.session.user.userId)
+            .single();
+
+        if (staffError || !staffAccount) {
+            throw new Error('Could not find department for line manager');
+        }
+
+        const departmentId = staffAccount.departmentId;
+
+        // Enhanced query for department applicants with more data
+        let query = supabase
+            .from('applicantaccounts')
+            .select(`
+                applicantId,
+                lastName,
+                firstName,
+                middleInitial,
+                phoneNo,
+                applicantStatus,
+                created_at,
+                initialScreeningScore,
+                hrInterviewFormScore,
+                lineManagerFormEvalScore,
+                userId,
+                jobId,
+                useraccounts!inner(userEmail),
+                jobpositions!inner(jobTitle, jobType),
+                departments!inner(deptName)
+            `)
+            .eq('departmentId', departmentId)
+            .order('created_at', { ascending: false });
+
+        // Apply date filters
+        if (startDate) {
+            query = query.gte('created_at', startDate);
+        }
+        if (endDate) {
+            const endDateTime = new Date(endDate);
+            endDateTime.setHours(23, 59, 59, 999);
+            query = query.lte('created_at', endDateTime.toISOString());
+        }
+
+        const { data: allApplicants, error } = await query;
+
+        if (error) {
+            console.error('❌ [Line Manager] Error fetching department applicants:', error);
+            return res.status(500).json({ success: false, message: 'Error fetching department applicants: ' + error.message });
+        }
+
+        // Filter for hired department applicants
+        const hirees = allApplicants.filter(applicant => {
+            const status = applicant.applicantStatus || '';
+            return status.toLowerCase().includes('hired') || 
+                   status.toLowerCase().includes('onboarding');
+        });
+
+        console.log(`✅ [Line Manager] Found ${hirees.length} department hirees`);
+
+        // === BUSINESS INTELLIGENCE ANALYSIS ===
+
+        // 1. Hiring Quality Analysis
+        const qualityAnalysis = {
+            excellentHires: hirees.filter(h => {
+                const total = (h.initialScreeningScore || 0) + (h.hrInterviewFormScore || 0) + (h.lineManagerFormEvalScore || 0);
+                return total >= 270; // 90%+ of 300 max score
+            }),
+            goodHires: hirees.filter(h => {
+                const total = (h.initialScreeningScore || 0) + (h.hrInterviewFormScore || 0) + (h.lineManagerFormEvalScore || 0);
+                return total >= 210 && total < 270; // 70-89%
+            }),
+            averageHires: hirees.filter(h => {
+                const total = (h.initialScreeningScore || 0) + (h.hrInterviewFormScore || 0) + (h.lineManagerFormEvalScore || 0);
+                return total >= 150 && total < 210; // 50-69%
+            }),
+            riskHires: hirees.filter(h => {
+                const total = (h.initialScreeningScore || 0) + (h.hrInterviewFormScore || 0) + (h.lineManagerFormEvalScore || 0);
+                return total > 0 && total < 150; // Below 50%
+            })
+        };
+
+        // 2. Hiring Velocity Analysis
+        const velocityAnalysis = {
+            fastHires: hirees.filter(h => {
+                const days = Math.floor((new Date() - new Date(h.created_at)) / (1000 * 60 * 60 * 24));
+                return days <= 21; // Hired within 3 weeks
+            }),
+            standardHires: hirees.filter(h => {
+                const days = Math.floor((new Date() - new Date(h.created_at)) / (1000 * 60 * 60 * 24));
+                return days > 21 && days <= 45; // 3-6 weeks
+            }),
+            slowHires: hirees.filter(h => {
+                const days = Math.floor((new Date() - new Date(h.created_at)) / (1000 * 60 * 60 * 24));
+                return days > 45; // Over 6 weeks
+            }),
+            avgTimeToHire: hirees.length > 0 ? Math.round(hirees.reduce((sum, h) => {
+                return sum + Math.floor((new Date() - new Date(h.created_at)) / (1000 * 60 * 60 * 24));
+            }, 0) / hirees.length) : 0
+        };
+
+        // 3. Job Type Distribution Analysis
+        const jobTypeAnalysis = {
+            fullTime: hirees.filter(h => h.jobpositions?.jobType === 'Full-time'),
+            partTime: hirees.filter(h => h.jobpositions?.jobType === 'Part-time'),
+            contract: hirees.filter(h => h.jobpositions?.jobType === 'Contract'),
+            internship: hirees.filter(h => h.jobpositions?.jobType === 'Internship'),
+            temporary: hirees.filter(h => h.jobpositions?.jobType === 'Temporary')
+        };
+
+        // 4. Onboarding Status Analysis
+        const onboardingAnalysis = {
+            onboarding: hirees.filter(h => {
+                const status = h.applicantStatus || '';
+                return status.toLowerCase().includes('onboarding');
+            }),
+            completed: hirees.filter(h => {
+                const status = h.applicantStatus || '';
+                return status.toLowerCase().includes('hired') && !status.toLowerCase().includes('onboarding');
+            }),
+            recentHires: hirees.filter(h => {
+                const days = Math.floor((new Date() - new Date(h.created_at)) / (1000 * 60 * 60 * 24));
+                return days <= 30; // Hired within last 30 days
+            })
+        };
+
+        // 5. Seasonal Trends Analysis
+        const seasonalAnalysis = {};
+        const monthNames = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+        
+        // Initialize months
+        monthNames.forEach(month => {
+            seasonalAnalysis[month] = 0;
+        });
+
+        // Count hires by month
+        hirees.forEach(h => {
+            const hireDate = new Date(h.created_at);
+            const monthName = monthNames[hireDate.getMonth()];
+            seasonalAnalysis[monthName]++;
+        });
+
+        // Find peak hiring month
+        const peakMonth = Object.keys(seasonalAnalysis).reduce((a, b) => 
+            seasonalAnalysis[a] > seasonalAnalysis[b] ? a : b
+        );
+
+        // 6. Performance Score Analysis
+        const scoreAnalysis = {
+            avgInitialScore: hirees.length > 0 ? Math.round(hirees.reduce((sum, h) => sum + (h.initialScreeningScore || 0), 0) / hirees.length) : 0,
+            avgHRScore: hirees.length > 0 ? Math.round(hirees.reduce((sum, h) => sum + (h.hrInterviewFormScore || 0), 0) / hirees.length) : 0,
+            avgLineManagerScore: hirees.length > 0 ? Math.round(hirees.reduce((sum, h) => sum + (h.lineManagerFormEvalScore || 0), 0) / hirees.length) : 0,
+            avgTotalScore: hirees.length > 0 ? Math.round(hirees.reduce((sum, h) => {
+                return sum + ((h.initialScreeningScore || 0) + (h.hrInterviewFormScore || 0) + (h.lineManagerFormEvalScore || 0));
+            }, 0) / hirees.length) : 0
+        };
+
+        // === INTELLIGENT INSIGHTS GENERATION ===
+        const insights = [];
+        const actionItems = [];
+        const recommendations = [];
+        const successMetrics = [];
+
+        // Quality Insights
+        if (qualityAnalysis.excellentHires.length > 0) {
+            const percentage = Math.round((qualityAnalysis.excellentHires.length / hirees.length) * 100);
+            insights.push(`🌟 ${qualityAnalysis.excellentHires.length} excellent hires (${percentage}%) with scores ≥90% - outstanding recruitment quality`);
+            successMetrics.push(`${percentage}% excellent hire rate demonstrates strong candidate evaluation process`);
+        }
+
+        if (qualityAnalysis.riskHires.length > 0) {
+            const percentage = Math.round((qualityAnalysis.riskHires.length / hirees.length) * 100);
+            insights.push(`⚠️ ${qualityAnalysis.riskHires.length} risk hires (${percentage}%) with low scores - monitor performance closely`);
+            actionItems.push(`Schedule 30-day check-ins for ${qualityAnalysis.riskHires.length} lower-scoring new hires`);
+            recommendations.push('Consider raising minimum score thresholds for future hiring decisions');
+        }
+
+        // Velocity Insights
+        if (velocityAnalysis.avgTimeToHire <= 21) {
+            insights.push(`🚀 Excellent hiring velocity - average ${velocityAnalysis.avgTimeToHire} days to hire (target: <30 days)`);
+            successMetrics.push(`Fast hiring process maintains competitive advantage in talent acquisition`);
+        } else if (velocityAnalysis.avgTimeToHire > 45) {
+            insights.push(`⏰ Slow hiring velocity - average ${velocityAnalysis.avgTimeToHire} days to hire exceeds best practices`);
+            recommendations.push('Streamline interview scheduling and decision-making processes to reduce time-to-hire');
+            actionItems.push('Review and optimize interview scheduling workflow');
+        }
+
+        if (velocityAnalysis.slowHires.length > 0 && velocityAnalysis.slowHires.length > velocityAnalysis.fastHires.length) {
+            insights.push(`📉 ${velocityAnalysis.slowHires.length} slow hires (>45 days) indicate process bottlenecks`);
+            recommendations.push('Analyze common delays in slow hires and implement process improvements');
+        }
+
+        // Job Type Insights
+        const totalHires = hirees.length;
+        if (jobTypeAnalysis.fullTime.length / totalHires > 0.8) {
+            insights.push(`💼 Strong focus on full-time hiring (${Math.round((jobTypeAnalysis.fullTime.length / totalHires) * 100)}%) indicates strategic workforce building`);
+        }
+
+        if (jobTypeAnalysis.contract.length > 0) {
+            const contractPercentage = Math.round((jobTypeAnalysis.contract.length / totalHires) * 100);
+            insights.push(`📝 ${contractPercentage}% contract hires provide workforce flexibility`);
+        }
+
+        // Onboarding Insights
+        if (onboardingAnalysis.onboarding.length > 0) {
+            insights.push(`🎯 ${onboardingAnalysis.onboarding.length} new hires currently in onboarding process`);
+            actionItems.push(`Monitor onboarding progress for ${onboardingAnalysis.onboarding.length} new team members`);
+        }
+
+        if (onboardingAnalysis.recentHires.length > 0) {
+            insights.push(`👥 ${onboardingAnalysis.recentHires.length} recent hires (last 30 days) - ensure proper integration and support`);
+            actionItems.push(`Schedule integration check-ins for ${onboardingAnalysis.recentHires.length} recent hires`);
+        }
+
+        // Seasonal Insights
+        if (seasonalAnalysis[peakMonth] > 0) {
+            insights.push(`📅 Peak hiring month: ${peakMonth} with ${seasonalAnalysis[peakMonth]} hires - useful for future planning`);
+            recommendations.push(`Plan increased recruitment activities around ${peakMonth} based on historical success`);
+        }
+
+        // Score Performance Insights
+        if (scoreAnalysis.avgTotalScore >= 240) {
+            insights.push(`📊 Excellent average hire score (${scoreAnalysis.avgTotalScore}/300) indicates strong candidate quality`);
+            successMetrics.push('High-quality candidate selection process validates recruitment strategy');
+        } else if (scoreAnalysis.avgTotalScore < 180) {
+            insights.push(`📉 Below-average hire scores (${scoreAnalysis.avgTotalScore}/300) suggest need for improved screening`);
+            recommendations.push('Review and enhance screening criteria to improve candidate quality');
+        }
+
+        // Department Performance vs Goals
+        if (hirees.length > 0) {
+            // Get company hiring data for comparison
+            const { data: companyHires } = await supabase
+                .from('applicantaccounts')
+                .select('applicantStatus, created_at, departmentId')
+                .gte('created_at', startDate || '2024-01-01')
+                .lte('created_at', endDate || new Date().toISOString());
+
+            if (companyHires) {
+                const allCompanyHires = companyHires.filter(h => 
+                    (h.applicantStatus || '').toLowerCase().includes('hired')
+                );
+                
+                const deptHireRate = hirees.length;
+                const companyAvgPerDept = allCompanyHires.length / new Set(allCompanyHires.map(h => h.departmentId)).size;
+                
+                if (deptHireRate > companyAvgPerDept * 1.2) {
+                    insights.push(`🏆 Your department's hiring rate exceeds company average by 20%+ - excellent performance`);
+                    successMetrics.push('Above-average hiring performance contributes to organizational growth');
+                } else if (deptHireRate < companyAvgPerDept * 0.8) {
+                    insights.push(`📊 Your department's hiring rate is below company average - consider scaling recruitment efforts`);
+                    recommendations.push('Evaluate current hiring needs and consider expanding recruitment activities');
+                }
+            }
+        }
+
+        // Retention Risk Assessment
+        const highRiskHires = hirees.filter(h => {
+            const totalScore = (h.initialScreeningScore || 0) + (h.hrInterviewFormScore || 0) + (h.lineManagerFormEvalScore || 0);
+            const daysToHire = Math.floor((new Date() - new Date(h.created_at)) / (1000 * 60 * 60 * 24));
+            return totalScore < 180 || daysToHire > 60; // Low score or very slow hire
+        });
+
+        if (highRiskHires.length > 0) {
+            insights.push(`🚨 ${highRiskHires.length} hires flagged as retention risk - proactive management recommended`);
+            actionItems.push(`Implement enhanced support and mentoring for ${highRiskHires.length} at-risk new hires`);
+            recommendations.push('Develop retention-focused onboarding plan for lower-scoring hires');
+        }
+
+        // Enhanced summary statistics with intelligence
+        const summary = {
+            totalDeptHirees: hirees.length,
+            fullTime: jobTypeAnalysis.fullTime.length,
+            partTime: jobTypeAnalysis.partTime.length,
+            contract: jobTypeAnalysis.contract.length,
+            onboarding: onboardingAnalysis.onboarding.length,
+            // Intelligence metrics
+            avgTimeToHire: velocityAnalysis.avgTimeToHire,
+            avgHireScore: scoreAnalysis.avgTotalScore,
+            excellentHires: qualityAnalysis.excellentHires.length,
+            riskHires: qualityAnalysis.riskHires.length,
+            fastHires: velocityAnalysis.fastHires.length,
+            recentHires: onboardingAnalysis.recentHires.length,
+            peakHiringMonth: peakMonth,
+            successRate: Math.round((qualityAnalysis.excellentHires.length + qualityAnalysis.goodHires.length) / hirees.length * 100)
+        };
+
+        // Helper function to calculate hire quality score
+        const calculateHireQuality = (hiree) => {
+            const total = (hiree.initialScreeningScore || 0) + (hiree.hrInterviewFormScore || 0) + (hiree.lineManagerFormEvalScore || 0);
+            if (total >= 270) return 'Excellent';
+            if (total >= 210) return 'Good';
+            if (total >= 150) return 'Average';
+            if (total > 0) return 'Risk';
+            return 'No Score';
+        };
+
+        // Process department hirees data with intelligence flags
+        const processedHirees = hirees.map((hiree, index) => {
+            const totalScore = (hiree.initialScreeningScore || 0) + (hiree.hrInterviewFormScore || 0) + (hiree.lineManagerFormEvalScore || 0);
+            const daysToHire = Math.floor((new Date() - new Date(hiree.created_at)) / (1000 * 60 * 60 * 24));
+            const quality = calculateHireQuality(hiree);
+            
+            // Intelligence flags
+            let flags = [];
+            if (quality === 'Excellent') flags.push('top-performer');
+            if (quality === 'Risk') flags.push('retention-risk');
+            if (daysToHire <= 21) flags.push('fast-hire');
+            if (daysToHire > 45) flags.push('slow-hire');
+            if ((hiree.applicantStatus || '').toLowerCase().includes('onboarding')) flags.push('onboarding');
+            if (daysToHire <= 30) flags.push('recent-hire');
+
+            return {
+                hireId: `DEPT-HIR${String(index + 1).padStart(3, '0')}`,
+                lastName: hiree.lastName || 'N/A',
+                firstName: hiree.firstName || 'N/A', 
+                middleInitial: hiree.middleInitial || '',
+                email: hiree.useraccounts?.userEmail || 'N/A',
+                phoneNumber: hiree.phoneNo || 'N/A',
+                jobTitle: hiree.jobpositions?.jobTitle || 'N/A',
+                jobType: hiree.jobpositions?.jobType || 'Full-time',
+                hireDate: hiree.created_at ? 
+                    new Date(hiree.created_at).toLocaleDateString('en-US', { 
+                        year: 'numeric', 
+                        month: '2-digit', 
+                        day: '2-digit' 
+                    }) : 'N/A',
+                daysToHire: daysToHire,
+                totalScore: totalScore > 0 ? totalScore : 'N/A',
+                hireQuality: quality,
+                intelligenceFlags: flags,
+                retentionRisk: quality === 'Risk' || daysToHire > 60 ? 'High' : quality === 'Average' ? 'Medium' : 'Low'
+            };
+        });
+
+        const generatedOn = new Date().toLocaleDateString('en-US', { 
+            year: 'numeric', 
+            month: 'long', 
+            day: 'numeric',
+            hour: '2-digit',
+            minute: '2-digit'
+        });
+
+        return res.json({
+            success: true,
+            data: processedHirees,
+            summary: summary,
+            insights: insights,
+            actionItems: actionItems,
+            recommendations: recommendations,
+            successMetrics: successMetrics,
+            intelligence: {
+                qualityAnalysis,
+                velocityAnalysis,
+                jobTypeAnalysis,
+                onboardingAnalysis,
+                seasonalAnalysis,
+                scoreAnalysis
+            },
+            generatedOn: generatedOn,
+            reportTitle: 'Department Hirees Report - Intelligence Enhanced'
+        });
+
+    } catch (error) {
+        console.error('❌ [Line Manager] Error in getDeptHireesReport:', error);
+        return res.status(500).json({ success: false, message: 'Internal server error: ' + error.message });
+    }
+},
+
+// 6. Search department applicants for dropdown
+getSearchDeptApplicants: async function(req, res) {
+    if (!req.session.user || req.session.user.userRole !== 'Line Manager') {
+        return res.status(401).json({ success: false, message: 'Unauthorized access' });
+    }
+
+    try {
+        const { query, loadAll } = req.query;
+        
+        console.log('🔍 [Line Manager] Search department applicants. Query:', query, 'LoadAll:', loadAll);
+        
+        // Get line manager's department
+        const { data: staffAccount, error: staffError } = await supabase
+            .from('staffaccounts')
+            .select('departmentId')
+            .eq('userId', req.session.user.userId)
+            .single();
+
+        if (staffError || !staffAccount) {
+            throw new Error('Could not find department for line manager');
+        }
+
+        const departmentId = staffAccount.departmentId;
+        const shouldLoadAll = loadAll === 'true' || query === 'all';
+        
+        if (!shouldLoadAll && (!query || query.trim().length < 2)) {
+            return res.json({ success: true, applicants: [] });
+        }
+
+        // Search for department applicants only
+        const { data: applicants, error } = await supabase
+            .from('applicantaccounts')
+            .select(`
+                applicantId,
+                lastName,
+                firstName,
+                applicantStatus,
+                created_at,
+                userId,
+                jobId,
+                useraccounts!inner(userEmail),
+                jobpositions!inner(jobTitle)
+            `)
+            .eq('departmentId', departmentId)
+            .order('created_at', { ascending: false })
+            .limit(shouldLoadAll ? 100 : 30);
+
+        if (error) {
+            console.error('❌ [Line Manager] Error searching department applicants:', error);
+            return res.status(500).json({ success: false, message: 'Error searching department applicants' });
+        }
+
+        let filteredApplicants = applicants;
+
+        // Filter by search term if not loading all
+        if (!shouldLoadAll) {
+            const searchTerm = query.trim().toLowerCase();
+            
+            filteredApplicants = applicants.filter(applicant => {
+                const firstName = (applicant.firstName || '').toLowerCase();
+                const lastName = (applicant.lastName || '').toLowerCase();
+                const fullName = `${firstName} ${lastName}`;
+                const reverseName = `${lastName} ${firstName}`;
+                const email = (applicant.useraccounts?.userEmail || '').toLowerCase();
+                const position = (applicant.jobpositions?.jobTitle || '').toLowerCase();
+                
+                return firstName.includes(searchTerm) || 
+                       lastName.includes(searchTerm) || 
+                       fullName.includes(searchTerm) ||
+                       reverseName.includes(searchTerm) ||
+                       email.includes(searchTerm) ||
+                       position.includes(searchTerm);
+            });
+        }
+
+        // Format results for dropdown
+        const formattedResults = filteredApplicants.map(applicant => ({
+            applicantId: applicant.applicantId,
+            name: `${applicant.firstName} ${applicant.lastName}`,
+            email: applicant.useraccounts?.userEmail || 'N/A',
+            position: applicant.jobpositions?.jobTitle || 'N/A',
+            status: applicant.applicantStatus || 'Pending',
+            applicationDate: new Date(applicant.created_at).toISOString().split('T')[0]
+        }));
+
+        console.log(`✅ [Line Manager] Returning ${formattedResults.length} department applicants`);
+
+        return res.json({
+            success: true,
+            applicants: formattedResults
+        });
+
+    } catch (error) {
+        console.error('❌ [Line Manager] Error searching department applicants:', error);
+        return res.status(500).json({ success: false, message: 'Internal server error' });
+    }
+},
+
+// 7. INTELLIGENT Department Applicant Status Report
+getDeptApplicantStatusReport: async function(req, res) {
+    if (!req.session.user || req.session.user.userRole !== 'Line Manager') {
+        return res.status(401).json({ success: false, message: 'Unauthorized access' });
+    }
+
+    try {
+        const { applicantName, format } = req.query;
+        
+        console.log('🔍 [Line Manager] Searching department applicant by name...');
+        
+        if (!applicantName || applicantName.trim().length < 2) {
+            return res.status(400).json({ success: false, message: 'Applicant name is required (minimum 2 characters)' });
+        }
+
+        // Get line manager's department
+        const { data: staffAccount, error: staffError } = await supabase
+            .from('staffaccounts')
+            .select('departmentId')
+            .eq('userId', req.session.user.userId)
+            .single();
+
+        if (staffError || !staffAccount) {
+            throw new Error('Could not find department for line manager');
+        }
+
+        const departmentId = staffAccount.departmentId;
+        const searchName = applicantName.trim().toLowerCase();
+
+        // Enhanced query for department applicants only
+        const { data: applicants, error: searchError } = await supabase
+            .from('applicantaccounts')
+            .select(`
+                applicantId,
+                lastName,
+                firstName,
+                middleInitial,
+                phoneNo,
+                birthDate,
+                applicantStatus,
+                initialScreeningScore,
+                hrInterviewFormScore,
+                lineManagerFormEvalScore,
+                created_at,
+                userId,
+                jobId,
+                useraccounts!inner(userEmail),
+                jobpositions!inner(jobTitle)
+            `)
+            .eq('departmentId', departmentId)
+            .order('created_at', { ascending: false });
+
+        if (searchError) {
+            console.error('❌ [Line Manager] Error searching department applicants:', searchError);
+            return res.status(500).json({ success: false, message: 'Error searching department applicants: ' + searchError.message });
+        }
+
+        // Filter by name in JavaScript
+        const matchingApplicants = applicants.filter(applicant => {
+            const firstName = (applicant.firstName || '').toLowerCase();
+            const lastName = (applicant.lastName || '').toLowerCase();
+            const fullName = `${firstName} ${lastName}`;
+            const reverseName = `${lastName} ${firstName}`;
+            
+            return firstName.includes(searchName) || 
+                   lastName.includes(searchName) || 
+                   fullName.includes(searchName) ||
+                   reverseName.includes(searchName);
+        });
+
+        if (matchingApplicants.length === 0) {
+            return res.json({
+                success: false,
+                message: `No department applicants found matching "${applicantName}". Please check the spelling and try again.`,
+                searchSuggestion: true
+            });
+        }
+
+        if (matchingApplicants.length > 1) {
+            const suggestions = matchingApplicants.map(applicant => ({
+                applicantId: applicant.applicantId,
+                name: `${applicant.firstName} ${applicant.lastName}`,
+                email: applicant.useraccounts?.userEmail || 'N/A',
+                position: applicant.jobpositions?.jobTitle || 'N/A',
+                status: applicant.applicantStatus || 'Pending',
+                applicationDate: new Date(applicant.created_at).toLocaleDateString('en-US', { 
+                    year: 'numeric', 
+                    month: '2-digit', 
+                    day: '2-digit' 
+                })
+            }));
+
+            return res.json({
+                success: false,
+                message: `Found ${matchingApplicants.length} department applicants matching "${applicantName}". Please be more specific:`,
+                multipleMatches: true,
+                suggestions: suggestions
+            });
+        }
+
+        // Exactly one match found
+        const applicant = matchingApplicants[0];
+
+        // === INTELLIGENT STATUS ANALYSIS ===
+        
+        // Calculate processing metrics
+        const applicationDate = new Date(applicant.created_at);
+        const currentDate = new Date();
+        const daysInProcess = Math.floor((currentDate - applicationDate) / (1000 * 60 * 60 * 24));
+        const totalScore = (applicant.initialScreeningScore || 0) + (applicant.hrInterviewFormScore || 0) + (applicant.lineManagerFormEvalScore || 0);
+
+        // Status progression analysis
+        const statusProgression = {
+            hrScreeningApproved: () => {
+                const status = (applicant.applicantStatus || '').toLowerCase();
+                const hrScore = applicant.hrInterviewFormScore;
+                
+                if (status.includes('passed hr') || status.includes('p1 passed') || (hrScore && hrScore > 0)) {
+                    return 'Yes';
+                }
+                if (status.includes('failed hr') || status.includes('p1 failed')) {
+                    return 'No';
+                }
+                return 'Pending';
+            },
+            yourReviewStatus: () => {
+                const status = (applicant.applicantStatus || '').toLowerCase();
+                const lineManagerScore = applicant.lineManagerFormEvalScore;
+                
+                if (status.includes('passed panel') || status.includes('p2 passed') || status.includes('line manager passed') || (lineManagerScore && lineManagerScore > 0)) {
+                    return 'Yes';
+                }
+                if (status.includes('failed panel') || status.includes('p2 failed') || status.includes('line manager failed')) {
+                    return 'No';
+                }
+                return 'Pending';
+            },
+            finalStatus: () => {
+                const status = (applicant.applicantStatus || '').toLowerCase();
+                
+                if (status.includes('hired') || status.includes('onboarding')) {
+                    return 'Hired';
+                }
+                if (status.includes('rejected') || status.includes('failed')) {
+                    return 'Rejected';
+                }
+                return 'In Progress';
+            }
+        };
+
+        // Intelligence analysis
+        const intelligence = {
+            riskLevel: 'Low',
+            recommendations: [],
+            nextActions: [],
+            performanceIndicators: [],
+            timeline: {
+                isDelayed: daysInProcess > 30,
+                isUrgent: daysInProcess > 45,
+                isStandard: daysInProcess <= 30
+            }
+        };
+
+        // Risk assessment
+        if (daysInProcess > 45) {
+            intelligence.riskLevel = 'High';
+            intelligence.recommendations.push('Candidate may lose interest due to lengthy process - expedite decision');
+            intelligence.nextActions.push('Schedule immediate review/decision meeting');
+        } else if (daysInProcess > 30) {
+            intelligence.riskLevel = 'Medium';
+            intelligence.recommendations.push('Process approaching maximum timeframe - prioritize this candidate');
+        }
+
+        // Performance analysis
+        if (totalScore >= 240) {
+            intelligence.performanceIndicators.push('Excellent candidate - scores in top 10%');
+            intelligence.nextActions.push('Fast-track this high-performing candidate');
+        } else if (totalScore < 150 && totalScore > 0) {
+            intelligence.performanceIndicators.push('Below-average scores - carefully consider fit');
+            intelligence.recommendations.push('Additional evaluation may be needed before proceeding');
+        }
+
+        // Status-specific insights
+        const currentStatus = (applicant.applicantStatus || '').toLowerCase();
+        if (currentStatus.includes('awaiting line manager') || currentStatus.includes('pending your review')) {
+            intelligence.nextActions.push('YOUR ACTION REQUIRED: Schedule interview/review within 3 business days');
+            intelligence.riskLevel = intelligence.riskLevel === 'Low' ? 'Medium' : intelligence.riskLevel;
+        }
+
+        if (statusProgression.hrScreeningApproved() === 'Yes' && statusProgression.yourReviewStatus() === 'Pending') {
+            intelligence.nextActions.push('Candidate has passed HR screening - ready for your evaluation');
+        }
+
+        // Fetch enhanced status history
+        const { data: statusHistory, error: historyError } = await supabase
+            .from('chatbot_history')
+            .select('message, timestamp, applicantStage')
+            .eq('userId', applicant.userId)
+            .order('timestamp', { ascending: true });
+
+        let processedHistory = [];
+        if (statusHistory && statusHistory.length > 0) {
+            processedHistory = statusHistory.map(history => {
+                let messageText = '';
+                if (typeof history.message === 'string') {
+                    try {
+                        const parsed = JSON.parse(history.message);
+                        messageText = parsed.text || history.message;
+                    } catch (e) {
+                        messageText = history.message;
+                    }
+                } else {
+                    messageText = 'Status updated';
+                }
+
+                return {
+                    status: history.applicantStage || 'Status Update',
+                    date: new Date(history.timestamp).toLocaleDateString('en-US', { 
+                        year: 'numeric', 
+                        month: '2-digit', 
+                        day: '2-digit' 
+                    }),
+                    notes: messageText.substring(0, 150) + (messageText.length > 150 ? '...' : '')
+                };
+            });
+        } else {
+            processedHistory = [
+                {
+                    status: 'Application Submitted',
+                    date: new Date(applicant.created_at).toLocaleDateString('en-US', { 
+                        year: 'numeric', 
+                        month: '2-digit', 
+                        day: '2-digit' 
+                    }),
+                    notes: 'Initial application received for department position'
+                }
+            ];
+        }
+
+        // Enhanced applicant details with intelligence
+        const applicantDetails = {
+            applicantId: applicant.applicantId,
+            lastName: applicant.lastName || 'N/A',
+            firstName: applicant.firstName || 'N/A',
+            middleInitial: applicant.middleInitial || '',
+            email: applicant.useraccounts?.userEmail || 'N/A',
+            phoneNumber: applicant.phoneNo || 'N/A',
+            birthDate: applicant.birthDate ? 
+                new Date(applicant.birthDate).toLocaleDateString('en-US', { 
+                    year: 'numeric', 
+                    month: '2-digit', 
+                    day: '2-digit' 
+                }) : 'N/A',
+            jobPosition: applicant.jobpositions?.jobTitle || 'N/A',
+            applicationDate: new Date(applicant.created_at).toLocaleDateString('en-US', { 
+                year: 'numeric', 
+                month: '2-digit', 
+                day: '2-digit' 
+            }),
+            daysInProcess: daysInProcess,
+            currentStatus: applicant.applicantStatus || 'Pending',
+            hrScreeningApproved: statusProgression.hrScreeningApproved(),
+            yourReviewStatus: statusProgression.yourReviewStatus(),
+            finalStatus: statusProgression.finalStatus(),
+            
+            // Scores
+            initialScreeningScore: applicant.initialScreeningScore || 'N/A',
+            hrInterviewScore: applicant.hrInterviewFormScore || 'N/A',
+            yourScore: applicant.lineManagerFormEvalScore || 'N/A',
+            totalScore: totalScore > 0 ? totalScore : 'N/A',
+            
+            // Intelligence
+            riskLevel: intelligence.riskLevel,
+            performanceLevel: totalScore >= 240 ? 'Excellent' : totalScore >= 180 ? 'Good' : totalScore >= 120 ? 'Average' : totalScore > 0 ? 'Below Average' : 'Not Evaluated'
+        };
+
+        const generatedOn = new Date().toLocaleDateString('en-US', { 
+            year: 'numeric', 
+            month: 'long', 
+            day: 'numeric',
+            hour: '2-digit',
+            minute: '2-digit'
+        });
+
+        return res.json({
+            success: true,
+            applicant: applicantDetails,
+            statusHistory: processedHistory,
+            intelligence: intelligence,
+            generatedOn: generatedOn,
+            reportTitle: 'Department Applicant Status Report - Intelligence Enhanced'
+        });
+
+    } catch (error) {
+        console.error('❌ [Line Manager] Error in getDeptApplicantStatusReport:', error);
+        return res.status(500).json({ success: false, message: 'Internal server error: ' + error.message });
+    }
+},
+
+// 8. INTELLIGENT MRF Performance Report
+getMRFPerformanceReport: async function(req, res) {
+    if (!req.session.user || req.session.user.userRole !== 'Line Manager') {
+        return res.status(401).json({ success: false, message: 'Unauthorized access' });
+    }
+
+    try {
+        const { startDate, endDate, format } = req.query;
+        
+        console.log('🔍 [Line Manager] Fetching MRF performance report...');
+        
+        // Get line manager's MRFs
+        let mrfQuery = supabase
+            .from('mrf')
+            .select(`
+                mrfId,
+                positionTitle,
+                requisitionDate,
+                requiredDate,
+                numPersonsRequisitioned,
+                status,
+                departmentId,
+                departments!inner(deptName)
+            `)
+            .eq('userId', req.session.user.userId)
+            .order('requisitionDate', { ascending: false });
+
+        // Apply date filters
+        if (startDate) {
+            mrfQuery = mrfQuery.gte('requisitionDate', startDate);
+        }
+        if (endDate) {
+            const endDateTime = new Date(endDate);
+            endDateTime.setHours(23, 59, 59, 999);
+            mrfQuery = mrfQuery.lte('requisitionDate', endDateTime.toISOString());
+        }
+
+        const { data: mrfs, error: mrfError } = await mrfQuery;
+
+        if (mrfError) {
+            console.error('❌ [Line Manager] Error fetching MRFs:', mrfError);
+            throw mrfError;
+        }
+
+        console.log(`✅ [Line Manager] Found ${mrfs.length} MRFs for performance analysis`);
+
+        // Get department applicants to calculate hires related to MRFs
+        const { data: deptApplicants, error: applicantsError } = await supabase
+            .from('applicantaccounts')
+            .select(`
+                applicantId,
+                applicantStatus,
+                created_at,
+                departmentId,
+                jobId,
+                jobpositions!inner(jobTitle)
+            `)
+            .eq('departmentId', mrfs[0]?.departmentId || 0);
+
+        const hiredApplicants = (deptApplicants || []).filter(applicant => {
+            const status = (applicant.applicantStatus || '').toLowerCase();
+            return status.includes('hired') || status.includes('onboarding');
+        });
+
+        // === INTELLIGENT MRF ANALYSIS ===
+
+        // Process MRF performance data with intelligence
+        const mrfData = mrfs.map(mrf => {
+            // Smart hire attribution
+            const relatedHires = hiredApplicants.filter(applicant => {
+                const hireDate = new Date(applicant.created_at);
+                const mrfDate = new Date(mrf.requisitionDate);
+                const mrfDeadline = new Date(mrf.requiredDate);
+                
+                return hireDate >= mrfDate &&
+                       hireDate <= new Date(mrfDeadline.getTime() + (60 * 24 * 60 * 60 * 1000)); // 60 days after deadline
+            });
+
+            const personnelHired = relatedHires.length;
+            const fillRate = Math.round((personnelHired / mrf.numPersonsRequisitioned) * 100);
+            const daysOpen = Math.floor((new Date() - new Date(mrf.requisitionDate)) / (1000 * 60 * 60 * 24));
+            const daysUntilDeadline = Math.floor((new Date(mrf.requiredDate) - new Date()) / (1000 * 60 * 60 * 24));
+            const isOverdue = new Date() > new Date(mrf.requiredDate);
+            const urgencyLevel = daysUntilDeadline <= 7 ? 'Critical' : daysUntilDeadline <= 21 ? 'High' : 'Normal';
+
+            return {
+                mrfId: mrf.mrfId,
+                positionTitle: mrf.positionTitle,
+                requisitionDate: new Date(mrf.requisitionDate).toLocaleDateString(),
+                requiredDate: new Date(mrf.requiredDate).toLocaleDateString(),
+                personnelRequired: mrf.numPersonsRequisitioned,
+                personnelHired: personnelHired,
+                fillRate: fillRate,
+                daysOpen: daysOpen,
+                daysUntilDeadline: daysUntilDeadline,
+                isOverdue: isOverdue,
+                urgencyLevel: urgencyLevel,
+                status: mrf.status,
+                performanceLevel: fillRate >= 100 ? 'Excellent' : fillRate >= 75 ? 'Good' : fillRate >= 50 ? 'Average' : 'Needs Attention'
+            };
+        });
+
+        // Performance analysis
+        const performanceAnalysis = {
+            excellentMRFs: mrfData.filter(m => m.fillRate >= 100),
+            goodMRFs: mrfData.filter(m => m.fillRate >= 75 && m.fillRate < 100),
+            strugglingMRFs: mrfData.filter(m => m.fillRate < 50),
+            overdueMRFs: mrfData.filter(m => m.isOverdue),
+            urgentMRFs: mrfData.filter(m => m.urgencyLevel === 'Critical' || m.urgencyLevel === 'High'),
+            avgFillRate: mrfData.length > 0 ? Math.round(mrfData.reduce((sum, m) => sum + m.fillRate, 0) / mrfData.length) : 0,
+            avgDaysOpen: mrfData.length > 0 ? Math.round(mrfData.reduce((sum, m) => sum + m.daysOpen, 0) / mrfData.length) : 0
+        };
+
+        // Intelligent insights
+        const insights = [];
+        const actionItems = [];
+        const recommendations = [];
+
+        // Performance insights
+        if (performanceAnalysis.excellentMRFs.length > 0) {
+            insights.push(`🎯 ${performanceAnalysis.excellentMRFs.length} MRFs fully filled - excellent requisition management`);
+        }
+
+        if (performanceAnalysis.strugglingMRFs.length > 0) {
+            insights.push(`⚠️ ${performanceAnalysis.strugglingMRFs.length} MRFs with <50% fill rate need immediate attention`);
+            actionItems.push(`Review and adjust requirements for ${performanceAnalysis.strugglingMRFs.length} underperforming MRFs`);
+        }
+
+        if (performanceAnalysis.urgentMRFs.length > 0) {
+            insights.push(`🚨 ${performanceAnalysis.urgentMRFs.length} MRFs approaching deadline - urgent action required`);
+            actionItems.push(`Expedite hiring process for ${performanceAnalysis.urgentMRFs.length} urgent MRFs`);
+        }
+
+        if (performanceAnalysis.overdueMRFs.length > 0) {
+            insights.push(`📅 ${performanceAnalysis.overdueMRFs.length} MRFs are overdue - review requirements and timeline`);
+            recommendations.push('Consider extending deadlines or adjusting requirements for overdue MRFs');
+        }
+
+        // Efficiency insights
+        if (performanceAnalysis.avgDaysOpen > 60) {
+            insights.push(`⏰ Average MRF open time (${performanceAnalysis.avgDaysOpen} days) indicates slow hiring process`);
+            recommendations.push('Streamline recruitment process to reduce average days to fill positions');
+        }
+
+        if (performanceAnalysis.avgFillRate < 70) {
+            insights.push(`📊 Overall fill rate (${performanceAnalysis.avgFillRate}%) below industry standard (80%+)`);
+            recommendations.push('Review job requirements and compensation packages to improve attractiveness');
+        } else if (performanceAnalysis.avgFillRate >= 90) {
+            insights.push(`🏆 Outstanding fill rate (${performanceAnalysis.avgFillRate}%) exceeds industry standards`);
+        }
+
+        // Strategic insights
+        const currentMonth = new Date().getMonth();
+        const recentMRFs = mrfData.filter(m => new Date(m.requisitionDate).getMonth() === currentMonth);
+        if (recentMRFs.length > 3) {
+            insights.push(`📈 High MRF volume this month (${recentMRFs.length}) - ensure adequate recruitment resources`);
+            recommendations.push('Consider temporary recruitment support for high-volume periods');
+        }
+
+        // Summary statistics
+        const summary = {
+            totalMRFs: mrfs.length,
+            totalRequired: mrfs.reduce((sum, mrf) => sum + mrf.numPersonsRequisitioned, 0),
+            totalHired: mrfData.reduce((sum, mrf) => sum + mrf.personnelHired, 0),
+            yourFillRate: performanceAnalysis.avgFillRate,
+            avgDaysOpen: performanceAnalysis.avgDaysOpen,
+            excellentMRFs: performanceAnalysis.excellentMRFs.length,
+            strugglingMRFs: performanceAnalysis.strugglingMRFs.length,
+            urgentMRFs: performanceAnalysis.urgentMRFs.length,
+            overdueMRFs: performanceAnalysis.overdueMRFs.length
+        };
+
+        const generatedOn = new Date().toLocaleDateString('en-US', { 
+            year: 'numeric', 
+            month: 'long', 
+            day: 'numeric',
+            hour: '2-digit',
+            minute: '2-digit'
+        });
+
+        return res.json({
+            success: true,
+            summary: summary,
+            mrfData: mrfData,
+            insights: insights,
+            actionItems: actionItems,
+            recommendations: recommendations,
+            intelligence: {
+                performanceAnalysis
+            },
+            generatedOn: generatedOn,
+            reportTitle: 'Your MRF Performance Report - Intelligence Enhanced'
+        });
+
+    } catch (error) {
+        console.error('❌ [Line Manager] Error in getMRFPerformanceReport:', error);
+        return res.status(500).json({ success: false, message: 'Internal server error: ' + error.message });
+    }
+},
+
+// 9. INTELLIGENT Department Pipeline Report
+getDeptPipelineReport: async function(req, res) {
+    if (!req.session.user || req.session.user.userRole !== 'Line Manager') {
+        return res.status(401).json({ success: false, message: 'Unauthorized access' });
+    }
+
+    try {
+        const { startDate, endDate, format } = req.query;
+        
+        console.log('🔍 [Line Manager] Fetching department pipeline report...');
+        
+        // Get line manager's department
+        const { data: staffAccount, error: staffError } = await supabase
+            .from('staffaccounts')
+            .select('departmentId')
+            .eq('userId', req.session.user.userId)
+            .single();
+
+        if (staffError || !staffAccount) {
+            throw new Error('Could not find department for line manager');
+        }
+
+        const departmentId = staffAccount.departmentId;
+
+        // Get department applicants for pipeline analysis
+        let query = supabase
+            .from('applicantaccounts')
+            .select(`
+                applicantId,
+                applicantStatus,
+                created_at,
+                initialScreeningScore,
+                hrInterviewFormScore,
+                lineManagerFormEvalScore,
+                jobpositions!inner(jobTitle)
+            `)
+            .eq('departmentId', departmentId)
+            .order('created_at', { ascending: false });
+
+        // Apply date filters
+        if (startDate) {
+            query = query.gte('created_at', startDate);
+        }
+        if (endDate) {
+            const endDateTime = new Date(endDate);
+            endDateTime.setHours(23, 59, 59, 999);
+            query = query.lte('created_at', endDateTime.toISOString());
+        }
+
+        const { data: applicants, error } = await query;
+
+        if (error) {
+            console.error('❌ [Line Manager] Error fetching department applicants for pipeline:', error);
+            throw error;
+        }
+
+        console.log(`✅ [Line Manager] Found ${applicants.length} department applicants for pipeline analysis`);
+
+        // === INTELLIGENT PIPELINE ANALYSIS ===
+
+        // Advanced pipeline stage analysis
+        const pipelineStages = {
+            applied: applicants.length,
+            initialScreening: applicants.filter(a => (a.initialScreeningScore || 0) > 0 || (a.applicantStatus || '').toLowerCase().includes('screen')).length,
+            hrInterview: applicants.filter(a => (a.hrInterviewFormScore || 0) > 0 || (a.applicantStatus || '').toLowerCase().includes('hr')).length,
+            yourReview: applicants.filter(a => (a.lineManagerFormEvalScore || 0) > 0 || (a.applicantStatus || '').toLowerCase().includes('line manager')).length,
+            hired: applicants.filter(a => (a.applicantStatus || '').toLowerCase().includes('hired')).length
+        };
+
+        // Conversion rate analysis
+        const conversionRates = {
+            applicationToScreening: pipelineStages.applied > 0 ? Math.round((pipelineStages.initialScreening / pipelineStages.applied) * 100) : 0,
+            screeningToHR: pipelineStages.initialScreening > 0 ? Math.round((pipelineStages.hrInterview / pipelineStages.initialScreening) * 100) : 0,
+            hrToYourReview: pipelineStages.hrInterview > 0 ? Math.round((pipelineStages.yourReview / pipelineStages.hrInterview) * 100) : 0,
+            yourReviewToHire: pipelineStages.yourReview > 0 ? Math.round((pipelineStages.hired / pipelineStages.yourReview) * 100) : 0,
+            overallConversion: pipelineStages.applied > 0 ? Math.round((pipelineStages.hired / pipelineStages.applied) * 100) : 0
+        };
+
+        // Bottleneck detection
+        const bottleneckAnalysis = {
+            criticalBottleneck: null,
+            bottleneckStage: '',
+            bottleneckImpact: 0
+        };
+
+        // Find the stage with lowest conversion rate
+        const conversionStages = [
+            { stage: 'Application to Screening', rate: conversionRates.applicationToScreening },
+            { stage: 'Screening to HR', rate: conversionRates.screeningToHR },
+            { stage: 'HR to Your Review', rate: conversionRates.hrToYourReview },
+            { stage: 'Your Review to Hire', rate: conversionRates.yourReviewToHire }
+        ];
+
+        const lowestConversion = conversionStages.reduce((min, stage) => 
+            stage.rate < min.rate ? stage : min
+        );
+
+        if (lowestConversion.rate < 50) {
+            bottleneckAnalysis.criticalBottleneck = lowestConversion.stage;
+            bottleneckAnalysis.bottleneckStage = lowestConversion.stage;
+            bottleneckAnalysis.bottleneckImpact = 50 - lowestConversion.rate;
+        }
+
+        // Time-in-stage analysis
+        const timeAnalysis = {
+            avgTimeInPipeline: applicants.length > 0 ? Math.round(applicants.reduce((sum, a) => {
+                return sum + Math.floor((new Date() - new Date(a.created_at)) / (1000 * 60 * 60 * 24));
+            }, 0) / applicants.length) : 0,
+            stuckCandidates: applicants.filter(a => {
+                const days = Math.floor((new Date() - new Date(a.created_at)) / (1000 * 60 * 60 * 24));
+                const status = (a.applicantStatus || '').toLowerCase();
+                return days > 30 && !status.includes('hired') && !status.includes('rejected');
+            }).length,
+            fastTrackCandidates: applicants.filter(a => {
+                const days = Math.floor((new Date() - new Date(a.created_at)) / (1000 * 60 * 60 * 24));
+                const status = (a.applicantStatus || '').toLowerCase();
+                return days <= 14 && status.includes('hired');
+            }).length
+        };
+
+        // Quality flow analysis
+        const qualityAnalysis = {
+            highQualityInPipeline: applicants.filter(a => {
+                const total = (a.initialScreeningScore || 0) + (a.hrInterviewFormScore || 0) + (a.lineManagerFormEvalScore || 0);
+                return total >= 200; // High quality candidates still in pipeline
+            }).length,
+            avgScoreByStage: {
+                initialScreening: pipelineStages.initialScreening > 0 ? Math.round(applicants.reduce((sum, a) => sum + (a.initialScreeningScore || 0), 0) / pipelineStages.initialScreening) : 0,
+                hrInterview: pipelineStages.hrInterview > 0 ? Math.round(applicants.reduce((sum, a) => sum + (a.hrInterviewFormScore || 0), 0) / pipelineStages.hrInterview) : 0,
+                yourReview: pipelineStages.yourReview > 0 ? Math.round(applicants.reduce((sum, a) => sum + (a.lineManagerFormEvalScore || 0), 0) / pipelineStages.yourReview) : 0
+            }
+        };
+
+        // Intelligent insights generation
+        const insights = [];
+        const actionItems = [];
+        const recommendations = [];
+        
+        // Pipeline health assessment
+        const pipelineHealth = {
+            overallHealth: 'Good',
+            healthScore: 0,
+            criticalIssues: [],
+            strengths: []
+        };
+
+        // Calculate health score (0-100)
+        let healthScore = 0;
+        
+        // Conversion rate contribution (40% of score)
+        healthScore += Math.min(conversionRates.overallConversion * 0.4, 40);
+        
+        // Speed contribution (30% of score)
+        const speedScore = timeAnalysis.avgTimeInPipeline <= 21 ? 30 : 
+                          timeAnalysis.avgTimeInPipeline <= 35 ? 20 : 
+                          timeAnalysis.avgTimeInPipeline <= 50 ? 10 : 0;
+        healthScore += speedScore;
+        
+        // Quality contribution (30% of score)
+        const qualityScore = qualityAnalysis.highQualityInPipeline >= 5 ? 30 :
+                            qualityAnalysis.highQualityInPipeline >= 3 ? 20 :
+                            qualityAnalysis.highQualityInPipeline >= 1 ? 10 : 0;
+        healthScore += qualityScore;
+
+        pipelineHealth.healthScore = Math.round(healthScore);
+        pipelineHealth.overallHealth = healthScore >= 80 ? 'Excellent' : 
+                                      healthScore >= 60 ? 'Good' : 
+                                      healthScore >= 40 ? 'Fair' : 'Poor';
+
+        // Generate intelligent insights
+        if (conversionRates.overallConversion >= 15) {
+            insights.push(`🎯 Strong conversion rate (${conversionRates.overallConversion}%) - excellent pipeline efficiency`);
+            pipelineHealth.strengths.push('High conversion rate');
+        } else if (conversionRates.overallConversion < 8) {
+            insights.push(`⚠️ Low conversion rate (${conversionRates.overallConversion}%) - pipeline needs optimization`);
+            pipelineHealth.criticalIssues.push('Poor conversion rate');
+            recommendations.push('Review job requirements and candidate screening criteria');
+        }
+
+        if (bottleneckAnalysis.criticalBottleneck) {
+            insights.push(`🔴 Critical bottleneck detected at "${bottleneckAnalysis.criticalBottleneck}" stage`);
+            pipelineHealth.criticalIssues.push(`Bottleneck: ${bottleneckAnalysis.criticalBottleneck}`);
+            
+            // Stage-specific recommendations
+            if (bottleneckAnalysis.criticalBottleneck.includes('Screening')) {
+                recommendations.push('Streamline initial screening process - consider automated pre-screening');
+                actionItems.push('Review and optimize screening criteria within 1 week');
+            } else if (bottleneckAnalysis.criticalBottleneck.includes('HR')) {
+                recommendations.push('Coordinate with HR to expedite interview scheduling');
+                actionItems.push('Meet with HR team to discuss pipeline flow optimization');
+            } else if (bottleneckAnalysis.criticalBottleneck.includes('Your Review')) {
+                recommendations.push('Allocate more time for candidate evaluations or delegate reviews');
+                actionItems.push('Schedule dedicated time blocks for candidate reviews');
+            }
+        }
+
+        if (timeAnalysis.stuckCandidates > 0) {
+            insights.push(`⏰ ${timeAnalysis.stuckCandidates} candidates stuck in pipeline for 30+ days`);
+            actionItems.push(`Review and expedite decisions for ${timeAnalysis.stuckCandidates} long-pending candidates`);
+            pipelineHealth.criticalIssues.push('Candidates stuck in pipeline');
+        }
+
+        if (timeAnalysis.fastTrackCandidates > 0) {
+            insights.push(`⚡ ${timeAnalysis.fastTrackCandidates} candidates hired within 14 days - excellent speed`);
+            pipelineHealth.strengths.push('Fast hiring capability');
+        }
+
+        if (qualityAnalysis.highQualityInPipeline >= 3) {
+            insights.push(`💎 ${qualityAnalysis.highQualityInPipeline} high-quality candidates in pipeline - prioritize these`);
+            actionItems.push('Fast-track high-scoring candidates to prevent losing them');
+        }
+
+        // Volume analysis
+        const currentMonth = new Date().getMonth();
+        const thisMonthApplicants = applicants.filter(a => new Date(a.created_at).getMonth() === currentMonth);
+        
+        if (thisMonthApplicants.length > 20) {
+            insights.push(`📈 High application volume this month (${thisMonthApplicants.length}) - ensure adequate processing capacity`);
+            recommendations.push('Consider additional interview slots or reviewer support');
+        } else if (thisMonthApplicants.length < 5) {
+            insights.push(`📉 Low application volume this month (${thisMonthApplicants.length}) - may need recruitment boost`);
+            recommendations.push('Consider enhancing job posting visibility or recruitment channels');
+        }
+
+        // Efficiency benchmarks
+        if (timeAnalysis.avgTimeInPipeline <= 21) {
+            insights.push(`🚀 Excellent pipeline speed (${timeAnalysis.avgTimeInPipeline} days avg) - faster than industry standard`);
+            pipelineHealth.strengths.push('Fast processing time');
+        } else if (timeAnalysis.avgTimeInPipeline > 45) {
+            insights.push(`🐌 Slow pipeline processing (${timeAnalysis.avgTimeInPipeline} days avg) - candidates may lose interest`);
+            pipelineHealth.criticalIssues.push('Slow processing time');
+            recommendations.push('Implement timeline targets for each pipeline stage');
+        }
+
+        // Position-specific analysis
+        const positionBreakdown = {};
+        applicants.forEach(applicant => {
+            const position = applicant.jobpositions?.jobTitle || 'Unknown';
+            if (!positionBreakdown[position]) {
+                positionBreakdown[position] = {
+                    total: 0,
+                    hired: 0,
+                    inProgress: 0,
+                    avgDays: 0
+                };
+            }
+            positionBreakdown[position].total++;
+            
+            if ((applicant.applicantStatus || '').toLowerCase().includes('hired')) {
+                positionBreakdown[position].hired++;
+            } else if (!(applicant.applicantStatus || '').toLowerCase().includes('rejected')) {
+                positionBreakdown[position].inProgress++;
+            }
+        });
+
+        // Calculate position-specific metrics
+        Object.keys(positionBreakdown).forEach(position => {
+            const posData = positionBreakdown[position];
+            const positionApplicants = applicants.filter(a => (a.jobpositions?.jobTitle || 'Unknown') === position);
+            
+            posData.avgDays = positionApplicants.length > 0 ? Math.round(
+                positionApplicants.reduce((sum, a) => {
+                    return sum + Math.floor((new Date() - new Date(a.created_at)) / (1000 * 60 * 60 * 24));
+                }, 0) / positionApplicants.length
+            ) : 0;
+            
+            posData.conversionRate = posData.total > 0 ? Math.round((posData.hired / posData.total) * 100) : 0;
+        });
+
+        // Action item prioritization
+        const prioritizedActions = [];
+        
+        if (pipelineHealth.criticalIssues.length > 0) {
+            prioritizedActions.push({
+                priority: 'HIGH',
+                action: 'Address critical pipeline issues immediately',
+                timeline: '1-3 days'
+            });
+        }
+        
+        if (timeAnalysis.stuckCandidates > 0) {
+            prioritizedActions.push({
+                priority: 'HIGH',
+                action: `Review ${timeAnalysis.stuckCandidates} candidates stuck in pipeline`,
+                timeline: '1 week'
+            });
+        }
+        
+        if (qualityAnalysis.highQualityInPipeline > 0) {
+            prioritizedActions.push({
+                priority: 'MEDIUM',
+                action: `Fast-track ${qualityAnalysis.highQualityInPipeline} high-quality candidates`,
+                timeline: '2 weeks'
+            });
+        }
+
+        // Enhanced pipeline data with intelligence (NO PREDICTIVE ANALYTICS)
+        const enhancedPipelineData = {
+            stages: pipelineStages,
+            conversionRates: conversionRates,
+            timeAnalysis: timeAnalysis,
+            qualityAnalysis: qualityAnalysis,
+            bottleneckAnalysis: bottleneckAnalysis,
+            positionBreakdown: positionBreakdown,
+            pipelineHealth: pipelineHealth
+        };
+
+        const generatedOn = new Date().toLocaleDateString('en-US', { 
+            year: 'numeric', 
+            month: 'long', 
+            day: 'numeric',
+            hour: '2-digit',
+            minute: '2-digit'
+        });
+
+        return res.json({
+            success: true,
+            pipelineData: enhancedPipelineData,
+            insights: insights,
+            actionItems: actionItems,
+            recommendations: recommendations,
+            prioritizedActions: prioritizedActions,
+            generatedOn: generatedOn,
+            reportTitle: 'Department Pipeline Report - Intelligence Enhanced'
+        });
+
+    } catch (error) {
+        console.error('❌ [Line Manager] Error in getDeptPipelineReport:', error);
+        return res.status(500).json({ success: false, message: 'Internal server error: ' + error.message });
+    }
+},
+
+getOffboardingReports: async function(req, res) {
+    if (!req.session.user || req.session.user.userRole !== 'Line Manager') {
+        return res.status(401).json({ success: false, message: 'Unauthorized access' });
+    }
+
+    try {
+        const { startDate, endDate, type, format } = req.query;
+        const managerUserId = req.session.user.userId;
+        
+        console.log('🔍 [Line Manager Offboarding Reports] Fetching offboarding data...');
+        console.log('📅 [Line Manager Offboarding Reports] Filters:', { startDate, endDate, type, format });
+        
+        // First, get the manager's department
+        const { data: managerData, error: managerError } = await supabase
+            .from('staffaccounts')
+            .select('departmentId')
+            .eq('userId', managerUserId)
+            .single();
+
+        if (managerError || !managerData) {
+            console.error('❌ [Line Manager Reports] Error fetching manager data:', managerError);
+            return res.status(500).json({ success: false, message: 'Error fetching manager information' });
+        }
+
+        const managerDepartmentId = managerData.departmentId;
+        console.log('🏢 [Line Manager Reports] Manager department ID:', managerDepartmentId);
+
+        // Get all staff in the manager's department
+        const { data: departmentStaff, error: staffError } = await supabase
+            .from('staffaccounts')
+            .select('userId, firstName, lastName')
+            .eq('departmentId', managerDepartmentId);
+
+        if (staffError) {
+            console.error('❌ [Line Manager Reports] Error fetching department staff:', staffError);
+            return res.status(500).json({ success: false, message: 'Error fetching department staff' });
+        }
+
+        const departmentUserIds = departmentStaff.map(staff => staff.userId);
+        console.log(`👥 [Line Manager Reports] Found ${departmentUserIds.length} staff members in department`);
+
+        if (departmentUserIds.length === 0) {
+            return res.json({
+                success: true,
+                data: [],
+                summary: {
+                    totalRequests: 0,
+                    resignations: 0,
+                    retirements: 0,
+                    pending: 0,
+                    inProgress: 0,
+                    completed: 0
+                },
+                monthlyData: [],
+                generatedOn: new Date().toLocaleDateString('en-US', { 
+                    year: 'numeric', 
+                    month: 'long', 
+                    day: 'numeric',
+                    hour: '2-digit',
+                    minute: '2-digit'
+                }),
+                reportTitle: 'Department Offboarding Report (Line Manager)'
+            });
+        }
+
+        // Build query for offboarding requests in manager's department
+        let query = supabase
+            .from('offboarding_requests')
+            .select(`
+                requestId,
+                userId,
+                offboardingType,
+                reason,
+                message,
+                last_day,
+                status,
+                created_at,
+                notice_period_start,
+                clearance_sent_date,
+                employee_completion_date,
+                hr_decision_date
+            `)
+            .in('userId', departmentUserIds)
+            .order('created_at', { ascending: false });
+
+        // Apply date filters
+        if (startDate) {
+            query = query.gte('created_at', startDate);
+            console.log('📅 [Line Manager Reports] Applied start date filter:', startDate);
+        }
+        if (endDate) {
+            const endDateTime = new Date(endDate);
+            endDateTime.setHours(23, 59, 59, 999);
+            query = query.lte('created_at', endDateTime.toISOString());
+            console.log('📅 [Line Manager Reports] Applied end date filter:', endDateTime.toISOString());
+        }
+
+        // Apply type filter
+        if (type && type !== 'all') {
+            query = query.eq('offboardingType', type);
+            console.log('📋 [Line Manager Reports] Applied type filter:', type);
+        }
+
+        const { data: offboardingData, error } = await query;
+
+        if (error) {
+            console.error('❌ [Line Manager Reports] Error fetching data:', error);
+            return res.status(500).json({ success: false, message: 'Error fetching offboarding data: ' + error.message });
+        }
+
+        console.log(`✅ [Line Manager Reports] Found ${offboardingData.length} offboarding requests`);
+
+        if (offboardingData.length === 0) {
+            return res.json({
+                success: true,
+                data: [],
+                summary: {
+                    totalRequests: 0,
+                    resignations: 0,
+                    retirements: 0,
+                    pending: 0,
+                    inProgress: 0,
+                    completed: 0
+                },
+                monthlyData: [],
+                generatedOn: new Date().toLocaleDateString('en-US', { 
+                    year: 'numeric', 
+                    month: 'long', 
+                    day: 'numeric',
+                    hour: '2-digit',
+                    minute: '2-digit'
+                }),
+                reportTitle: 'Department Offboarding Report (Line Manager)'
+            });
+        }
+
+        // Get department name
+        const { data: departmentData, error: deptError } = await supabase
+            .from('departments')
+            .select('deptName')
+            .eq('departmentId', managerDepartmentId)
+            .single();
+
+        const departmentName = departmentData?.deptName || 'Unknown Department';
+
+        // Calculate summary statistics
+        const summary = {
+            totalRequests: offboardingData.length,
+            resignations: offboardingData.filter(r => r.offboardingType === 'Resignation').length,
+            retirements: offboardingData.filter(r => r.offboardingType === 'Retirement').length,
+            pending: offboardingData.filter(r => r.status === 'Pending HR').length,
+            inProgress: offboardingData.filter(r => 
+                r.status === 'Sent to Employee' || r.status === 'Completed by Employee'
+            ).length,
+            completed: offboardingData.filter(r => r.status === 'Completed').length
+        };
+
+        // Process data for display
+        const processedData = offboardingData.map(request => {
+            // Find corresponding staff account
+            const staffAccount = departmentStaff.find(staff => staff.userId === request.userId);
+
+            // Calculate notice period
+            let noticePeriodDays = null;
+            if (request.notice_period_start && request.last_day) {
+                const startDate = new Date(request.notice_period_start);
+                const endDate = new Date(request.last_day);
+                noticePeriodDays = Math.ceil((endDate - startDate) / (1000 * 60 * 60 * 24));
+            }
+
+            return {
+                requestId: request.requestId,
+                timestamp: new Date(request.created_at).toLocaleDateString('en-US', { 
+                    year: 'numeric', 
+                    month: '2-digit', 
+                    day: '2-digit' 
+                }),
+                employeeName: staffAccount ? `${staffAccount.firstName} ${staffAccount.lastName}` : 'Unknown Employee',
+                department: departmentName,
+                type: request.offboardingType || 'Not Specified',
+                reason: request.reason || request.message || 'Not Provided',
+                lastDay: request.last_day ? 
+                    new Date(request.last_day).toLocaleDateString('en-US', { 
+                        year: 'numeric', 
+                        month: '2-digit', 
+                        day: '2-digit' 
+                    }) : 'Not Set',
+                noticePeriodStart: request.notice_period_start ? 
+                    new Date(request.notice_period_start).toLocaleDateString('en-US', { 
+                        year: 'numeric', 
+                        month: '2-digit', 
+                        day: '2-digit' 
+                    }) : 'Not Set',
+                noticePeriodDays: noticePeriodDays || 'N/A',
+                clearanceSent: request.clearance_sent_date ? 
+                    new Date(request.clearance_sent_date).toLocaleDateString('en-US', { 
+                        year: 'numeric', 
+                        month: '2-digit', 
+                        day: '2-digit' 
+                    }) : 'Not Sent',
+                employeeCompletion: request.employee_completion_date ? 
+                    new Date(request.employee_completion_date).toLocaleDateString('en-US', { 
+                        year: 'numeric', 
+                        month: '2-digit', 
+                        day: '2-digit' 
+                    }) : 'Not Completed',
+                status: request.status || 'Pending'
+            };
+        });
+
+        // Monthly breakdown
+        const monthlyBreakdown = {};
+        offboardingData.forEach(request => {
+            const date = new Date(request.created_at);
+            const monthKey = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}`;
+            
+            if (!monthlyBreakdown[monthKey]) {
+                monthlyBreakdown[monthKey] = {
+                    month: date.toLocaleDateString('en-US', { year: 'numeric', month: 'long' }),
+                    resignations: 0,
+                    retirements: 0,
+                    total: 0
+                };
+            }
+            
+            monthlyBreakdown[monthKey].total++;
+            if (request.offboardingType === 'Resignation') {
+                monthlyBreakdown[monthKey].resignations++;
+            } else if (request.offboardingType === 'Retirement') {
+                monthlyBreakdown[monthKey].retirements++;
+            }
+        });
+
+        const monthlyData = Object.values(monthlyBreakdown).sort((a, b) => a.month.localeCompare(b.month));
+
+        // Add generation timestamp
+        const generatedOn = new Date().toLocaleDateString('en-US', { 
+            year: 'numeric', 
+            month: 'long', 
+            day: 'numeric',
+            hour: '2-digit',
+            minute: '2-digit'
+        });
+
+        console.log('📊 [Line Manager Reports] Summary stats:', summary);
+
+        if (format === 'pdf') {
+            console.log('📄 [Line Manager Reports] PDF format requested');
+            return res.json({
+                success: true,
+                reportType: 'department-offboarding',
+                format: 'pdf',
+                data: processedData,
+                summary: summary,
+                monthlyData: monthlyData,
+                generatedOn: generatedOn,
+                filters: { startDate, endDate, type },
+                reportTitle: `${departmentName} - Offboarding Report (Line Manager)`,
+                reportSubtitle: `Department-specific tracking of employee resignations and retirements with clearance status and timeline analysis`,
+                departmentName: departmentName
+            });
+        }
+
+        return res.json({
+            success: true,
+            data: processedData,
+            summary: summary,
+            monthlyData: monthlyData,
+            generatedOn: generatedOn,
+            reportTitle: `${departmentName} - Offboarding Report (Line Manager)`,
+            departmentName: departmentName
+        });
+
+    } catch (error) {
+        console.error('❌ [Line Manager Reports] Error in getOffboardingReports:', error);
+        return res.status(500).json({ success: false, message: 'Internal server error: ' + error.message });
+    }
+},
+
+getOffboardingDashboardStats: async function(req, res) {
+    if (!req.session.user || req.session.user.userRole !== 'Line Manager') {
+        return res.status(401).json({ success: false, message: 'Unauthorized access' });
+    }
+
+    try {
+        const managerUserId = req.session.user.userId;
+        console.log('🔍 [Line Manager Dashboard] Fetching dashboard statistics...');
+
+        // First, get the manager's department
+        const { data: managerData, error: managerError } = await supabase
+            .from('staffaccounts')
+            .select('departmentId')
+            .eq('userId', managerUserId)
+            .single();
+
+        if (managerError || !managerData) {
+            console.error('❌ [Line Manager Dashboard] Error fetching manager data:', managerError);
+            throw new Error('Error fetching manager information');
+        }
+
+        const managerDepartmentId = managerData.departmentId;
+
+        // Get all staff in the manager's department
+        const { data: departmentStaff, error: staffError } = await supabase
+            .from('staffaccounts')
+            .select('userId')
+            .eq('departmentId', managerDepartmentId);
+
+        if (staffError) {
+            console.error('❌ [Line Manager Dashboard] Error fetching department staff:', staffError);
+            throw staffError;
+        }
+
+        const departmentUserIds = departmentStaff.map(staff => staff.userId);
+
+        if (departmentUserIds.length === 0) {
+            return res.json({
+                success: true,
+                stats: {
+                    totalRequests: 0,
+                    resignations: 0,
+                    retirements: 0,
+                    pendingRequests: 0,
+                    avgProcessingTime: 0,
+                    monthlyRequests: 0
+                }
+            });
+        }
+
+        // Get all offboarding requests for department staff
+        const { data: allRequests, error: requestsError } = await supabase
+            .from('offboarding_requests')
+            .select(`
+                requestId,
+                offboardingType,
+                status,
+                created_at,
+                last_day
+            `)
+            .in('userId', departmentUserIds);
+
+        if (requestsError) {
+            console.error('❌ [Line Manager Dashboard] Error fetching requests:', requestsError);
+            throw requestsError;
+        }
+
+        console.log(`✅ [Line Manager Dashboard] Found ${allRequests.length} total requests for department`);
+
+        // Calculate statistics
+        const currentDate = new Date();
+        const thisMonth = allRequests.filter(r => {
+            const reqDate = new Date(r.created_at);
+            return reqDate.getMonth() === currentDate.getMonth() && 
+                reqDate.getFullYear() === currentDate.getFullYear();
+        });
+
+        // Calculate average processing time for completed requests
+        const completedRequests = allRequests.filter(r => r.status === 'Completed');
+        let avgProcessingTime = 0;
+        if (completedRequests.length > 0) {
+            const processingTimes = completedRequests.map(r => {
+                const startDate = new Date(r.created_at);
+                const endDate = new Date(); // Assuming completion is recent
+                return Math.floor((endDate - startDate) / (1000 * 60 * 60 * 24));
+            });
+            avgProcessingTime = Math.round(processingTimes.reduce((sum, time) => sum + time, 0) / processingTimes.length);
+        }
+
+        const stats = {
+            totalRequests: allRequests.length,
+            resignations: allRequests.filter(r => r.offboardingType === 'Resignation').length,
+            retirements: allRequests.filter(r => r.offboardingType === 'Retirement').length,
+            pendingRequests: allRequests.filter(r => r.status === 'Pending HR').length,
+            avgProcessingTime: avgProcessingTime,
+            monthlyRequests: thisMonth.length
+        };
+
+        console.log('📊 [Line Manager Dashboard] Final stats:', stats);
+
+        return res.json({
+            success: true,
+            stats: stats
+        });
+
+    } catch (error) {
+        console.error('❌ [Line Manager Dashboard] Error fetching dashboard stats:', error);
+        return res.status(500).json({ 
+            success: false, 
+            message: 'Error fetching dashboard statistics: ' + error.message 
+        });
+    }
+},
     //  getTrainingRequestsForNotifications: function(req, res) {
     //      try {
     //     // Query to get training requests that need approval (isApproved = null)

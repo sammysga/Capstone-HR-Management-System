@@ -1447,20 +1447,20 @@
         let html = '<div class="results-header"><h4>Report Results</h4></div>';
         
         // Add summary if available (for non-timeline reports)
-        if (data.summary && reportType !== 'timeline') {
-            html += '<div class="results-summary">';
+        // if (data.summary && reportType !== 'timeline') {
+        //     html += '<div class="results-summary">';
             
-            Object.entries(data.summary).forEach(([key, value]) => {
-                html += `
-                    <div class="summary-item">
-                        <div class="summary-value">${value}</div>
-                        <div class="summary-label">${key.replace(/([A-Z])/g, ' $1').replace(/^./, str => str.toUpperCase())}</div>
-                    </div>
-                `;
-            });
+        //     Object.entries(data.summary).forEach(([key, value]) => {
+        //         html += `
+        //             <div class="summary-item">
+        //                 <div class="summary-value">${value}</div>
+        //                 <div class="summary-label">${key.replace(/([A-Z])/g, ' $1').replace(/^./, str => str.toUpperCase())}</div>
+        //             </div>
+        //         `;
+        //     });
             
-            html += '</div>';
-        }
+        //     html += '</div>';
+        // }
         
         // Add data table based on report type
         if (reportType === 'applicants' && data.data && data.data.length > 0) {
@@ -1568,21 +1568,71 @@
         }
         
         else if (reportType === 'hirees' && data.data && data.data.length > 0) {
+    
+            // === BUSINESS INTELLIGENCE DASHBOARD ===
             
-            // Add Department Hiring Summary (NEW)
-            if (data.departmentBreakdown) {
+            // 1. Intelligence Summary Cards
+            if (data.intelligence) {
                 html += `
-                    <div style="background: #f8f9fa; padding: 15px; border-radius: 5px; margin-bottom: 20px;">
-                        <h4 style="margin-bottom: 10px;">Hiring by Department</h4>
-                        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 10px;">
+                    <div class="intelligence-dashboard">
+                        <h4><i class="fas fa-brain"></i> Business Intelligence Summary</h4>
+                        <div class="intelligence-cards">
+                            <div class="intel-card quality">
+                                <div class="intel-icon"><i class="fas fa-star"></i></div>
+                                <div class="intel-content">
+                                    <div class="intel-value">${data.intelligence.qualityAnalysis.excellentHires.length}</div>
+                                    <div class="intel-label">Excellent Hires</div>
+                                    <div class="intel-sublabel">Scores ≥90%</div>
+                                </div>
+                            </div>
+                            
+                            <div class="intel-card velocity">
+                                <div class="intel-icon"><i class="fas fa-rocket"></i></div>
+                                <div class="intel-content">
+                                    <div class="intel-value">${data.summary.avgTimeToHire}</div>
+                                    <div class="intel-label">Avg Time to Hire</div>
+                                    <div class="intel-sublabel">${data.summary.avgTimeToHire <= 21 ? 'Excellent' : data.summary.avgTimeToHire <= 45 ? 'Good' : 'Needs Improvement'}</div>
+                                </div>
+                            </div>
+                            
+                            <div class="intel-card success">
+                                <div class="intel-icon"><i class="fas fa-trophy"></i></div>
+                                <div class="intel-content">
+                                    <div class="intel-value">${data.summary.successRate}%</div>
+                                    <div class="intel-label">Success Rate</div>
+                                    <div class="intel-sublabel">Excellent + Good hires</div>
+                                </div>
+                            </div>
+                            
+                            <div class="intel-card risk ${data.intelligence.qualityAnalysis.riskHires.length > 0 ? 'warning' : 'safe'}">
+                                <div class="intel-icon"><i class="fas fa-shield-alt"></i></div>
+                                <div class="intel-content">
+                                    <div class="intel-value">${data.intelligence.qualityAnalysis.riskHires.length}</div>
+                                    <div class="intel-label">Risk Hires</div>
+                                    <div class="intel-sublabel">Need monitoring</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                `;
+            }
+
+            // 2. Key Insights Section
+            if (data.insights && data.insights.length > 0) {
+                html += `
+                    <div class="insights-section">
+                        <h4><i class="fas fa-lightbulb"></i> Key Insights</h4>
+                        <div class="insights-grid">
                 `;
                 
-                data.departmentBreakdown.forEach(dept => {
+                data.insights.forEach(insight => {
+                    const insightType = insight.includes('🌟') ? 'positive' : 
+                                    insight.includes('⚠️') || insight.includes('📉') ? 'warning' : 
+                                    insight.includes('🚀') || insight.includes('🏆') ? 'success' : 'info';
+                    
                     html += `
-                        <div style="background: white; padding: 8px; border-radius: 3px; text-align: center;">
-                            <strong>${dept.department}</strong><br>
-                            <span style="font-size: 1.5em; color: #28a745;">${dept.hires}</span><br>
-                            <small>new hires</small>
+                        <div class="insight-item ${insightType}">
+                            <div class="insight-text">${insight}</div>
                         </div>
                     `;
                 });
@@ -1590,232 +1640,1102 @@
                 html += '</div></div>';
             }
 
-            // Regular data table (keep existing)
+            // // 3. Action Items (if any)
+            // if (data.actionItems && data.actionItems.length > 0) {
+            //     html += `
+            //         <div class="action-items-section">
+            //             <h4><i class="fas fa-tasks"></i> Required Actions</h4>
+            //             <div class="action-items-list">
+            //     `;
+                
+            //     data.actionItems.forEach(action => {
+            //         html += `
+            //             <div class="action-item urgent">
+            //                 <i class="fas fa-exclamation-triangle"></i>
+            //                 <span>${action}</span>
+            //             </div>
+            //         `;
+            //     });
+                
+            //     html += '</div></div>';
+            // }
+
+            // // 4. Department Performance Comparison
+            // if (data.intelligence && data.intelligence.departmentComparison && data.intelligence.departmentComparison.length > 0) {
+            //     html += `
+            //         <div class="department-performance">
+            //             <h4><i class="fas fa-building"></i> Department Performance Analysis</h4>
+            //             <div class="department-cards">
+            //     `;
+                
+            //     data.intelligence.departmentComparison.slice(0, 6).forEach(dept => {
+            //         const efficiencyClass = dept.hiringEfficiency === 'Excellent' ? 'excellent' : 
+            //                             dept.hiringEfficiency === 'Good' ? 'good' : 'average';
+                    
+            //         html += `
+            //             <div class="dept-card ${efficiencyClass}">
+            //                 <div class="dept-header">
+            //                     <h5>${dept.department}</h5>
+            //                     <span class="efficiency-badge ${efficiencyClass}">${dept.hiringEfficiency}</span>
+            //                 </div>
+            //                 <div class="dept-metrics">
+            //                     <div class="metric">
+            //                         <span class="metric-value">${dept.totalHires}</span>
+            //                         <span class="metric-label">Total Hires</span>
+            //                     </div>
+            //                     <div class="metric">
+            //                         <span class="metric-value">${dept.avgTimeToHire}d</span>
+            //                         <span class="metric-label">Avg Days</span>
+            //                     </div>
+            //                     <div class="metric">
+            //                         <span class="metric-value">${dept.avgScore || 'N/A'}</span>
+            //                         <span class="metric-label">Avg Score</span>
+            //                     </div>
+            //                 </div>
+            //             </div>
+            //         `;
+            //     });
+                
+            //     html += '</div></div>';
+            // }
+
+            // // 5. Quality Distribution Visualization
+            // if (data.intelligence && data.intelligence.qualityAnalysis) {
+            //     const qa = data.intelligence.qualityAnalysis;
+            //     html += `
+            //         <div class="quality-analysis">
+            //             <h4><i class="fas fa-chart-pie"></i> Hire Quality Distribution</h4>
+            //             <div class="quality-bars">
+            //                 <div class="quality-bar excellent">
+            //                     <div class="bar-label">Excellent (≥90%)</div>
+            //                     <div class="bar-container">
+            //                         <div class="bar-fill" style="width: ${data.data.length > 0 ? (qa.excellentHires.length / data.data.length) * 100 : 0}%"></div>
+            //                     </div>
+            //                     <div class="bar-value">${qa.excellentHires.length}</div>
+            //                 </div>
+                            
+            //                 <div class="quality-bar good">
+            //                     <div class="bar-label">Good (70-89%)</div>
+            //                     <div class="bar-container">
+            //                         <div class="bar-fill" style="width: ${data.data.length > 0 ? (qa.goodHires.length / data.data.length) * 100 : 0}%"></div>
+            //                     </div>
+            //                     <div class="bar-value">${qa.goodHires.length}</div>
+            //                 </div>
+                            
+            //                 <div class="quality-bar average">
+            //                     <div class="bar-label">Average (50-69%)</div>
+            //                     <div class="bar-container">
+            //                         <div class="bar-fill" style="width: ${data.data.length > 0 ? (qa.averageHires.length / data.data.length) * 100 : 0}%"></div>
+            //                     </div>
+            //                     <div class="bar-value">${qa.averageHires.length}</div>
+            //                 </div>
+                            
+            //                 <div class="quality-bar risk">
+            //                     <div class="bar-label">Risk (<50%)</div>
+            //                     <div class="bar-container">
+            //                         <div class="bar-fill" style="width: ${data.data.length > 0 ? (qa.riskHires.length / data.data.length) * 100 : 0}%"></div>
+            //                     </div>
+            //                     <div class="bar-value">${qa.riskHires.length}</div>
+            //                 </div>
+            //             </div>
+            //         </div>
+            //     `;
+            // }
+
+            // // 6. Velocity Analysis
+            // if (data.intelligence && data.intelligence.velocityAnalysis) {
+            //     const va = data.intelligence.velocityAnalysis;
+            //     html += `
+            //         <div class="velocity-analysis">
+            //             <h4><i class="fas fa-tachometer-alt"></i> Hiring Velocity Analysis</h4>
+            //             <div class="velocity-metrics">
+            //                 <div class="velocity-metric fast">
+            //                     <div class="velocity-icon"><i class="fas fa-rocket"></i></div>
+            //                     <div class="velocity-data">
+            //                         <div class="velocity-number">${va.fastHires.length}</div>
+            //                         <div class="velocity-label">Fast Hires</div>
+            //                         <div class="velocity-desc">≤21 days</div>
+            //                     </div>
+            //                 </div>
+                            
+            //                 <div class="velocity-metric standard">
+            //                     <div class="velocity-icon"><i class="fas fa-clock"></i></div>
+            //                     <div class="velocity-data">
+            //                         <div class="velocity-number">${va.standardHires.length}</div>
+            //                         <div class="velocity-label">Standard</div>
+            //                         <div class="velocity-desc">22-45 days</div>
+            //                     </div>
+            //                 </div>
+                            
+            //                 <div class="velocity-metric slow">
+            //                     <div class="velocity-icon"><i class="fas fa-hourglass-half"></i></div>
+            //                     <div class="velocity-data">
+            //                         <div class="velocity-number">${va.slowHires.length}</div>
+            //                         <div class="velocity-label">Slow</div>
+            //                         <div class="velocity-desc">45+ days</div>
+            //                     </div>
+            //                 </div>
+            //             </div>
+            //         </div>
+            //     `;
+            // }
+
+            // 7. Success Metrics
+            if (data.successMetrics && data.successMetrics.length > 0) {
+                html += `
+                    <div class="success-metrics">
+                        <h4><i class="fas fa-medal"></i> Success Metrics</h4>
+                        <div class="metrics-list">
+                `;
+                
+                data.successMetrics.forEach(metric => {
+                    html += `
+                        <div class="success-metric">
+                            <i class="fas fa-check-circle"></i>
+                            <span>${metric}</span>
+                        </div>
+                    `;
+                });
+                
+                html += '</div></div>';
+            }
+
+            // // 8. Recommendations
+            // if (data.recommendations && data.recommendations.length > 0) {
+            //     html += `
+            //         <div class="recommendations-section">
+            //             <h4><i class="fas fa-clipboard-list"></i> Strategic Recommendations</h4>
+            //             <div class="recommendations-list">
+            //     `;
+                
+            //     data.recommendations.forEach(rec => {
+            //         html += `
+            //             <div class="recommendation-item">
+            //                 <i class="fas fa-arrow-right"></i>
+            //                 <span>${rec}</span>
+            //             </div>
+            //         `;
+            //     });
+                
+            //     html += '</div></div>';
+            // }
+
+            // 9. Enhanced Data Table with Intelligence Flags
             html += `
                 <div class="data-table-container">
-                    <table class="data-table">
+                    <h4><i class="fas fa-table"></i> Detailed Hirees Data</h4>
+                    <table class="data-table enhanced">
                         <thead>
                             <tr>
                                 <th>Hire ID</th>
-                                <th>Last Name</th>
-                                <th>First Name</th>
-                                <th>Job Title</th>
+                                <th>Name</th>
                                 <th>Department</th>
+                                <th>Job Title</th>
                                 <th>Job Type</th>
                                 <th>Hire Date</th>
+                                <th>Days to Hire</th>
+                                <th>Total Score</th>
+                                <th>Quality</th>
+                                <th>Risk Level</th>
+                                <th>Flags</th>
                             </tr>
                         </thead>
                         <tbody>
             `;
             
             data.data.forEach(hiree => {
+                const qualityClass = hiree.hireQuality === 'Excellent' ? 'excellent' : 
+                                    hiree.hireQuality === 'Good' ? 'good' : 
+                                    hiree.hireQuality === 'Average' ? 'average' : 'risk';
+                
+                const riskClass = hiree.retentionRisk === 'Low' ? 'low-risk' : 
+                                hiree.retentionRisk === 'Medium' ? 'medium-risk' : 'high-risk';
+                
+                // Generate flags display
+                let flagsHtml = '';
+                if (hiree.intelligenceFlags && hiree.intelligenceFlags.length > 0) {
+                    hiree.intelligenceFlags.forEach(flag => {
+                        const flagClass = flag === 'top-performer' ? 'flag-excellent' : 
+                                        flag === 'fast-hire' ? 'flag-fast' : 
+                                        flag === 'retention-risk' ? 'flag-risk' : 
+                                        flag === 'onboarding' ? 'flag-onboarding' : 'flag-normal';
+                        
+                        flagsHtml += `<span class="intelligence-flag ${flagClass}">${flag.replace('-', ' ')}</span>`;
+                    });
+                }
+                
                 html += `
-                    <tr>
+                    <tr class="enhanced-row">
                         <td><strong>${hiree.hireId}</strong></td>
-                        <td>${hiree.lastName}</td>
-                        <td>${hiree.firstName}</td>
-                        <td>${hiree.jobTitle}</td>
+                        <td>${hiree.firstName} ${hiree.lastName}</td>
                         <td>${hiree.department}</td>
+                        <td>${hiree.jobTitle}</td>
                         <td>${hiree.jobType}</td>
                         <td>${hiree.hireDate}</td>
+                        <td><span class="days-badge ${hiree.daysToHire <= 21 ? 'fast' : hiree.daysToHire <= 45 ? 'standard' : 'slow'}">${hiree.daysToHire}d</span></td>
+                        <td><strong>${hiree.totalScore}</strong></td>
+                        <td><span class="quality-badge ${qualityClass}">${hiree.hireQuality}</span></td>
+                        <td><span class="risk-badge ${riskClass}">${hiree.retentionRisk}</span></td>
+                        <td class="flags-cell">${flagsHtml}</td>
                     </tr>
                 `;
             });
             
             html += '</tbody></table></div>';
+
+            // 10. Seasonal Insights (if available)
+            if (data.intelligence && data.intelligence.seasonalAnalysis && data.summary.peakHiringMonth) {
+                html += `
+                    <div class="seasonal-insights">
+                        <h4><i class="fas fa-calendar-alt"></i> Seasonal Hiring Insights</h4>
+                        <div class="seasonal-content">
+                            <div class="peak-month">
+                                <i class="fas fa-chart-line"></i>
+                                <span>Peak hiring month: <strong>${data.summary.peakHiringMonth}</strong></span>
+                            </div>
+                            <div class="seasonal-tip">
+                                <i class="fas fa-info-circle"></i>
+                                <span>Plan increased recruitment activities around this period for optimal results</span>
+                            </div>
+                        </div>
+                    </div>
+                `;
+            }
         }
         
         else if (reportType === 'status' && data.applicant) {
+    
+            // // === INTELLIGENCE HEADER WITH PRIORITY & RISK ===
+            // html += `
+            //     <div class="applicant-intelligence-header">
+            //         <div class="applicant-overview">
+            //             <div class="applicant-name">
+            //                 <h4><i class="fas fa-user-circle"></i> ${data.applicant.firstName} ${data.applicant.lastName}</h4>
+            //                 <div class="applicant-id">ID: ${data.applicant.applicantId}</div>
+            //             </div>
+            //             <div class="intelligence-badges">
+            //                 <span class="priority-badge priority-${data.applicant.priorityLevel.toLowerCase()}">${data.applicant.priorityLevel} Priority</span>
+            //                 <span class="risk-badge risk-${data.applicant.riskLevel.toLowerCase()}">${data.applicant.riskLevel} Risk</span>
+            //                 <span class="urgency-badge urgency-${data.applicant.urgencyLevel.toLowerCase().replace(' ', '-')}">${data.applicant.urgencyLevel}</span>
+            //             </div>
+            //         </div>
+                    
+            //         <div class="intelligence-score">
+            //             <div class="score-circle priority-${data.applicant.priorityLevel.toLowerCase()}">
+            //                 <span class="score-value">${data.applicant.priorityScore || 0}</span>
+            //                 <span class="score-label">Priority Score</span>
+            //             </div>
+            //         </div>
+            //     </div>
+            // `;
+
+            // // === CRITICAL ALERTS SECTION ===
+            // if (data.intelligence && (data.intelligence.nextActions.length > 0 || data.applicant.urgencyLevel === 'Critical')) {
+            //     html += `
+            //         <div class="critical-alerts">
+            //             <h4><i class="fas fa-exclamation-triangle"></i> Immediate Action Required</h4>
+            //             <div class="alerts-container">
+            //     `;
+                
+            //     if (data.applicant.urgencyLevel === 'Critical') {
+            //         html += `
+            //             <div class="alert critical">
+            //                 <i class="fas fa-fire"></i>
+            //                 <div class="alert-content">
+            //                     <div class="alert-title">CRITICAL: ${data.applicant.daysInProcess} days in process</div>
+            //                     <div class="alert-desc">Candidate may lose interest - immediate decision required</div>
+            //                 </div>
+            //             </div>
+            //         `;
+            //     }
+                
+            //     if (data.intelligence.nextActions && data.intelligence.nextActions.length > 0) {
+            //         data.intelligence.nextActions.forEach(action => {
+            //             const isUrgent = action.includes('REQUIRED') || action.includes('ESCALATION');
+            //             html += `
+            //                 <div class="alert ${isUrgent ? 'urgent' : 'normal'}">
+            //                     <i class="fas ${isUrgent ? 'fa-bolt' : 'fa-arrow-right'}"></i>
+            //                     <div class="alert-content">
+            //                         <div class="alert-title">${isUrgent ? 'URGENT ACTION' : 'Next Action'}</div>
+            //                         <div class="alert-desc">${action}</div>
+            //                     </div>
+            //                 </div>
+            //             `;
+            //         });
+            //     }
+                
+            //     html += '</div></div>';
+            // }
+
+            // // === INTELLIGENCE DASHBOARD ===
+            // html += `
+            //     <div class="status-intelligence-dashboard">
+            //         <div class="intelligence-metrics">
+            //             <div class="metric-card candidate-quality">
+            //                 <div class="metric-icon quality-${data.applicant.candidateQuality.toLowerCase().replace(' ', '-')}">
+            //                     <i class="fas fa-star"></i>
+            //                 </div>
+            //                 <div class="metric-content">
+            //                     <div class="metric-value">${data.applicant.candidateQuality}</div>
+            //                     <div class="metric-label">Candidate Quality</div>
+            //                 </div>
+            //             </div>
+                        
+            //             <div class="metric-card process-efficiency">
+            //                 <div class="metric-icon efficiency-${data.applicant.processEfficiency.toLowerCase().replace(' ', '-')}">
+            //                     <i class="fas fa-cogs"></i>
+            //                 </div>
+            //                 <div class="metric-content">
+            //                     <div class="metric-value">${data.applicant.processEfficiency}</div>
+            //                     <div class="metric-label">Process Efficiency</div>
+            //                 </div>
+            //             </div>
+                        
+            //             <div class="metric-card timeline-status">
+            //                 <div class="metric-icon timeline-${data.applicant.daysInProcess <= 30 ? 'good' : data.applicant.daysInProcess <= 45 ? 'warning' : 'critical'}">
+            //                     <i class="fas fa-clock"></i>
+            //                 </div>
+            //                 <div class="metric-content">
+            //                     <div class="metric-value">${data.applicant.daysInProcess} days</div>
+            //                     <div class="metric-label">In Process</div>
+            //                 </div>
+            //             </div>
+                        
+            //             <div class="metric-card total-score">
+            //                 <div class="metric-icon score-${data.applicant.totalScore === 'N/A' ? 'none' : data.applicant.totalScore >= 240 ? 'excellent' : data.applicant.totalScore >= 180 ? 'good' : 'average'}">
+            //                     <i class="fas fa-chart-bar"></i>
+            //                 </div>
+            //                 <div class="metric-content">
+            //                     <div class="metric-value">${data.applicant.totalScore}</div>
+            //                     <div class="metric-label">Total Score</div>
+            //                 </div>
+            //             </div>
+            //         </div>
+            //     </div>
+            // `;
+
+            // // === PERFORMANCE INDICATORS ===
+            // if (data.intelligence && data.intelligence.performanceIndicators && data.intelligence.performanceIndicators.length > 0) {
+            //     html += `
+            //         <div class="performance-indicators">
+            //             <h4><i class="fas fa-chart-line"></i> Performance Indicators</h4>
+            //             <div class="indicators-grid">
+            //     `;
+                
+            //     data.intelligence.performanceIndicators.forEach(indicator => {
+            //         const indicatorType = indicator.includes('Top-tier') || indicator.includes('excellent') ? 'positive' : 
+            //                             indicator.includes('Below-average') || indicator.includes('carefully') ? 'warning' : 'neutral';
+                    
+            //         html += `
+            //             <div class="indicator-item ${indicatorType}">
+            //                 <i class="fas ${indicatorType === 'positive' ? 'fa-arrow-up' : indicatorType === 'warning' ? 'fa-exclamation-circle' : 'fa-info-circle'}"></i>
+            //                 <span>${indicator}</span>
+            //             </div>
+            //         `;
+            //     });
+                
+            //     html += '</div></div>';
+            // }
+
+            // // === PROCESS TIMELINE VISUALIZATION ===
+            // html += `
+            //     <div class="process-timeline">
+            //         <h4><i class="fas fa-route"></i> Application Process Timeline</h4>
+            //         <div class="timeline-progress">
+            //             <div class="timeline-step ${data.applicant.hrScreeningApproved !== 'Pending' ? 'completed' : 'current'}">
+            //                 <div class="step-circle">
+            //                     <i class="fas ${data.applicant.hrScreeningApproved === 'Yes' ? 'fa-check' : data.applicant.hrScreeningApproved === 'No' ? 'fa-times' : 'fa-clock'}"></i>
+            //                 </div>
+            //                 <div class="step-content">
+            //                     <div class="step-title">HR Screening</div>
+            //                     <div class="step-status status-${data.applicant.hrScreeningApproved.toLowerCase()}">${data.applicant.hrScreeningApproved}</div>
+            //                     <div class="step-score">HR Score: ${data.applicant.hrInterviewScore}</div>
+            //                 </div>
+            //             </div>
+                        
+            //             <div class="timeline-connector ${data.applicant.hrScreeningApproved === 'Yes' ? 'active' : ''}"></div>
+                        
+            //             <div class="timeline-step ${data.applicant.panelScreeningApproved !== 'Pending' ? 'completed' : data.applicant.hrScreeningApproved === 'Yes' ? 'current' : ''}">
+            //                 <div class="step-circle">
+            //                     <i class="fas ${data.applicant.panelScreeningApproved === 'Yes' ? 'fa-check' : data.applicant.panelScreeningApproved === 'No' ? 'fa-times' : 'fa-clock'}"></i>
+            //                 </div>
+            //                 <div class="step-content">
+            //                     <div class="step-title">Panel/Line Manager Review</div>
+            //                     <div class="step-status status-${data.applicant.panelScreeningApproved.toLowerCase()}">${data.applicant.panelScreeningApproved}</div>
+            //                     <div class="step-score">Manager Score: ${data.applicant.lineManagerScore}</div>
+            //                 </div>
+            //             </div>
+                        
+            //             <div class="timeline-connector ${data.applicant.panelScreeningApproved === 'Yes' ? 'active' : ''}"></div>
+                        
+            //             <div class="timeline-step ${data.applicant.isHired === 'Hired' ? 'completed' : data.applicant.panelScreeningApproved === 'Yes' ? 'current' : ''}">
+            //                 <div class="step-circle">
+            //                     <i class="fas ${data.applicant.isHired === 'Hired' ? 'fa-user-check' : data.applicant.isHired === 'Rejected' ? 'fa-user-times' : 'fa-hourglass-half'}"></i>
+            //                 </div>
+            //                 <div class="step-content">
+            //                     <div class="step-title">Final Decision</div>
+            //                     <div class="step-status status-${data.applicant.isHired.toLowerCase().replace(' ', '-')}">${data.applicant.isHired}</div>
+            //                     <div class="step-score">Total: ${data.applicant.totalScore}</div>
+            //                 </div>
+            //             </div>
+            //         </div>
+            //     </div>
+            // `;
+
+            // === DETAILED APPLICANT INFORMATION ===
             html += `
-                <div class="applicant-info-card">
-                    <h4>Applicant Information</h4>
-                    <div class="applicant-info-grid">
-                        <div class="applicant-info-item">
-                            <strong>Last Name</strong>
-                            <span>${data.applicant.lastName}</span>
+                <div class="applicant-details-section">
+                    <h4><i class="fas fa-id-card"></i> Applicant Information</h4>
+                    <div class="details-grid">
+                        <div class="detail-group personal">
+                            <h5><i class="fas fa-user"></i> Personal Details</h5>
+                            <div class="detail-items">
+                                <div class="detail-item">
+                                    <span class="detail-label">Full Name:</span>
+                                    <span class="detail-value">${data.applicant.firstName} ${data.applicant.middleInitial} ${data.applicant.lastName}</span>
+                                </div>
+                                <div class="detail-item">
+                                    <span class="detail-label">Email:</span>
+                                    <span class="detail-value">${data.applicant.email}</span>
+                                </div>
+                                <div class="detail-item">
+                                    <span class="detail-label">Phone:</span>
+                                    <span class="detail-value">${data.applicant.phoneNumber}</span>
+                                </div>
+                                <div class="detail-item">
+                                    <span class="detail-label">Birth Date:</span>
+                                    <span class="detail-value">${data.applicant.birthDate}</span>
+                                </div>
+                            </div>
                         </div>
-                        <div class="applicant-info-item">
-                            <strong>First Name</strong>
-                            <span>${data.applicant.firstName}</span>
+                        
+                        <div class="detail-group position">
+                            <h5><i class="fas fa-briefcase"></i> Position Details</h5>
+                            <div class="detail-items">
+                                <div class="detail-item">
+                                    <span class="detail-label">Job Position:</span>
+                                    <span class="detail-value">${data.applicant.jobPosition}</span>
+                                </div>
+                                <div class="detail-item">
+                                    <span class="detail-label">Department:</span>
+                                    <span class="detail-value">${data.applicant.department}</span>
+                                </div>
+                                <div class="detail-item">
+                                    <span class="detail-label">Application Date:</span>
+                                    <span class="detail-value">${data.applicant.applicationDate}</span>
+                                </div>
+                                <div class="detail-item">
+                                    <span class="detail-label">Current Status:</span>
+                                    <span class="detail-value status-badge">${data.applicant.currentStatus}</span>
+                                </div>
+                            </div>
                         </div>
-                        <div class="applicant-info-item">
-                            <strong>Middle Initial</strong>
-                            <span>${data.applicant.middleInitial || 'N/A'}</span>
-                        </div>
-                        <div class="applicant-info-item">
-                            <strong>Email</strong>
-                            <span>${data.applicant.email}</span>
-                        </div>
-                        <div class="applicant-info-item">
-                            <strong>Phone</strong>
-                            <span>${data.applicant.phoneNumber}</span>
-                        </div>
-                        <div class="applicant-info-item">
-                            <strong>Birth Date</strong>
-                            <span>${data.applicant.birthDate}</span>
-                        </div>
-                        <div class="applicant-info-item">
-                            <strong>Job Position</strong>
-                            <span>${data.applicant.jobPosition}</span>
-                        </div>
-                        <div class="applicant-info-item">
-                            <strong>Department</strong>
-                            <span>${data.applicant.department}</span>
-                        </div>
-                        <div class="applicant-info-item">
-                            <strong>Application Date</strong>
-                            <span>${data.applicant.applicationDate}</span>
-                        </div>
-                        <div class="applicant-info-item">
-                            <strong>Days in Process</strong>
-                            <span>${data.applicant.daysInProcess} days</span>
-                        </div>
-                        <div class="applicant-info-item">
-                            <strong>Current Status</strong>
-                            <span class="status-badge ${getStatusClass(data.applicant.currentStatus)}">${data.applicant.currentStatus}</span>
-                        </div>
-                        <div class="applicant-info-item">
-                            <strong>HR Screening Approved</strong>
-                            <span class="approval-badge ${data.applicant.hrScreeningApproved.toLowerCase()}">${data.applicant.hrScreeningApproved}</span>
-                        </div>
-                        <div class="applicant-info-item">
-                            <strong>Panel Screening Approved</strong>
-                            <span class="approval-badge ${data.applicant.panelScreeningApproved.toLowerCase()}">${data.applicant.panelScreeningApproved}</span>
-                        </div>
-                        <div class="applicant-info-item">
-                            <strong>Is Hired</strong>
-                            <span class="approval-badge ${data.applicant.isHired.toLowerCase()}">${data.applicant.isHired}</span>
+                        
+                        <div class="detail-group scores">
+                            <h5><i class="fas fa-chart-bar"></i> Evaluation Scores</h5>
+                            <div class="score-breakdown">
+                                <div class="score-item">
+                                    <span class="score-label">Initial Screening:</span>
+                                    <div class="score-bar">
+                                        <div class="score-fill" style="width: ${data.applicant.initialScreeningScore !== 'N/A' ? (data.applicant.initialScreeningScore / 100) * 100 : 0}%"></div>
+                                        <span class="score-text">${data.applicant.initialScreeningScore}</span>
+                                    </div>
+                                </div>
+                                <div class="score-item">
+                                    <span class="score-label">HR Interview:</span>
+                                    <div class="score-bar">
+                                        <div class="score-fill" style="width: ${data.applicant.hrInterviewScore !== 'N/A' ? (data.applicant.hrInterviewScore / 100) * 100 : 0}%"></div>
+                                        <span class="score-text">${data.applicant.hrInterviewScore}</span>
+                                    </div>
+                                </div>
+                                <div class="score-item">
+                                    <span class="score-label">Line Manager:</span>
+                                    <div class="score-bar">
+                                        <div class="score-fill" style="width: ${data.applicant.lineManagerScore !== 'N/A' ? (data.applicant.lineManagerScore / 100) * 100 : 0}%"></div>
+                                        <span class="score-text">${data.applicant.lineManagerScore}</span>
+                                    </div>
+                                </div>
+                                <div class="score-item total">
+                                    <span class="score-label">Total Score:</span>
+                                    <div class="score-bar total">
+                                        <div class="score-fill" style="width: ${data.applicant.totalScore !== 'N/A' ? (data.applicant.totalScore / 300) * 100 : 0}%"></div>
+                                        <span class="score-text total">${data.applicant.totalScore}/300</span>
+                                    </div>
+                                </div>
+                            </div>
                         </div>
                     </div>
                 </div>
-                
-                <div class="data-table-container">
-                    <h4>Status History Timeline</h4>
-                    <table class="data-table">
-                        <thead>
-                            <tr>
-                                <th>Status Update</th>
-                                <th>Date</th>
-                                <th>Notes & Comments</th>
-                            </tr>
-                        </thead>
-                        <tbody>
             `;
-            
-            data.statusHistory.forEach(history => {
+
+            // === RECOMMENDATIONS SECTION ===
+            if (data.intelligence && data.intelligence.recommendations && data.intelligence.recommendations.length > 0) {
                 html += `
-                    <tr>
-                        <td><span class="status-badge ${getStatusClass(history.status)}">${history.status}</span></td>
-                        <td>${history.date}</td>
-                        <td>${history.notes}</td>
-                    </tr>
+                    <div class="recommendations-section">
+                        <h4><i class="fas fa-lightbulb"></i> Recommendations</h4>
+                        <div class="recommendations-list">
                 `;
-            });
-            
-            html += '</tbody></table></div>';
+                
+                data.intelligence.recommendations.forEach(rec => {
+                    html += `
+                        <div class="recommendation-item">
+                            <i class="fas fa-arrow-right"></i>
+                            <span>${rec}</span>
+                        </div>
+                    `;
+                });
+                
+                html += '</div></div>';
+            }
+
+            // === STATUS HISTORY WITH ENHANCED TIMELINE ===
+            if (data.statusHistory && data.statusHistory.length > 0) {
+                html += `
+                    <div class="status-history-section">
+                        <h4><i class="fas fa-history"></i> Detailed Status History</h4>
+                        <div class="history-timeline">
+                `;
+                
+                data.statusHistory.forEach((history, index) => {
+                    const isFirst = index === 0;
+                    const isLast = index === data.statusHistory.length - 1;
+                    
+                    html += `
+                        <div class="history-item ${isFirst ? 'first' : ''} ${isLast ? 'last' : ''}">
+                            <div class="history-marker">
+                                <div class="history-dot"></div>
+                                ${!isLast ? '<div class="history-line"></div>' : ''}
+                            </div>
+                            <div class="history-content">
+                                <div class="history-header">
+                                    <span class="history-status">${history.status}</span>
+                                    <span class="history-date">${history.date}</span>
+                                </div>
+                                <div class="history-notes">${history.notes}</div>
+                            </div>
+                        </div>
+                    `;
+                });
+                
+                html += '</div></div>';
+            }
+
+            // // === INTELLIGENCE SUMMARY ===
+            // html += `
+            //     <div class="intelligence-summary">
+            //         <h4><i class="fas fa-brain"></i> Intelligence Summary</h4>
+            //         <div class="summary-grid">
+            //             <div class="summary-item">
+            //                 <i class="fas fa-shield-alt"></i>
+            //                 <div class="summary-content">
+            //                     <div class="summary-label">Risk Assessment</div>
+            //                     <div class="summary-value risk-${data.applicant.riskLevel.toLowerCase()}">${data.applicant.riskLevel} Risk Level</div>
+            //                 </div>
+            //             </div>
+                        
+            //             <div class="summary-item">
+            //                 <i class="fas fa-bolt"></i>
+            //                 <div class="summary-content">
+            //                     <div class="summary-label">Urgency Level</div>
+            //                     <div class="summary-value urgency-${data.applicant.urgencyLevel.toLowerCase().replace(' ', '-')}">${data.applicant.urgencyLevel}</div>
+            //                 </div>
+            //             </div>
+                        
+            //             <div class="summary-item">
+            //                 <i class="fas fa-star"></i>
+            //                 <div class="summary-content">
+            //                     <div class="summary-label">Quality Rating</div>
+            //                     <div class="summary-value quality-${data.applicant.candidateQuality.toLowerCase().replace(' ', '-')}">${data.applicant.candidateQuality}</div>
+            //                 </div>
+            //             </div>
+                        
+            //             <div class="summary-item">
+            //                 <i class="fas fa-cogs"></i>
+            //                 <div class="summary-content">
+            //                     <div class="summary-label">Process Status</div>
+            //                     <div class="summary-value efficiency-${data.applicant.processEfficiency.toLowerCase().replace(' ', '-')}">${data.applicant.processEfficiency}</div>
+            //                 </div>
+            //             </div>
+            //         </div>
+            //     </div>
+            // `;
         }
         
         else if (reportType === 'timeline') {
-            // Enhanced timeline report display with summary statistics
-            if (data.summaryStats) {
-                html += '<div class="results-summary">';
-                
+    
+            // // === PROCESS HEALTH DASHBOARD ===
+            // if (data.intelligence && data.intelligence.optimizationAnalysis) {
+            //     const health = data.intelligence.optimizationAnalysis;
+            //     html += `
+            //         <div class="process-health-dashboard">
+            //             <div class="health-overview">
+            //                 <div class="health-score-circle health-${health.processHealth.toLowerCase()}">
+            //                     <div class="health-score-value">${health.healthScore}</div>
+            //                     <div class="health-score-label">Health Score</div>
+            //                 </div>
+            //                 <div class="health-status">
+            //                     <h3>Process Health: ${health.processHealth}</h3>
+            //                     <div class="health-indicators">
+            //                         <div class="health-indicator ${health.processEfficiencies.length > 0 ? 'positive' : 'neutral'}">
+            //                             <i class="fas fa-check-circle"></i>
+            //                             <span>${health.processEfficiencies.length} Strengths Identified</span>
+            //                         </div>
+            //                         <div class="health-indicator ${health.criticalIssues.length > 0 ? 'critical' : 'positive'}">
+            //                             <i class="fas ${health.criticalIssues.length > 0 ? 'fa-exclamation-triangle' : 'fa-shield-check'}"></i>
+            //                             <span>${health.criticalIssues.length > 0 ? health.criticalIssues.length + ' Critical Issues' : 'No Critical Issues'}</span>
+            //                         </div>
+            //                     </div>
+            //                 </div>
+            //             </div>
+            //         </div>
+            //     `;
+            // }
+
+            // === CRITICAL ALERTS FOR TIMELINE ISSUES ===
+            if (data.intelligence && (data.intelligence.bottleneckAnalysis.criticalBottleneck || (data.actionItems && data.actionItems.length > 0))) {
                 html += `
-                    <div class="summary-item">
-                        <div class="summary-value">${data.summaryStats.averageMrfToOnboarding} days</div>
-                        <div class="summary-label">Average MRF to Onboarding</div>
-                    </div>
-                    <div class="summary-item">
-                        <div class="summary-value">${data.summaryStats.shortestTimeline} days</div>
-                        <div class="summary-label">Shortest Timeline</div>
-                    </div>
-                    <div class="summary-item">
-                        <div class="summary-value">${data.summaryStats.longestTimeline} days</div>
-                        <div class="summary-label">Longest Timeline</div>
-                    </div>
-                    <div class="summary-item">
-                        <div class="summary-value">${data.summaryStats.targetTimeline} days</div>
-                        <div class="summary-label">Target Timeline</div>
-                    </div>
+                    <div class="timeline-critical-alerts">
+                        <h4><i class="fas fa-exclamation-triangle"></i> Critical Timeline Issues</h4>
+                        <div class="timeline-alerts-container">
                 `;
                 
-                html += '</div>';
+                if (data.intelligence.bottleneckAnalysis.criticalBottleneck) {
+                    const severity = data.intelligence.bottleneckAnalysis.bottleneckSeverity;
+                    html += `
+                        <div class="timeline-alert bottleneck severity-${severity.toLowerCase()}">
+                            <i class="fas fa-roadblock"></i>
+                            <div class="alert-content">
+                                <div class="alert-title">BOTTLENECK DETECTED</div>
+                                <div class="alert-desc">${data.intelligence.bottleneckAnalysis.criticalBottleneck} - ${severity} Severity</div>
+                            </div>
+                        </div>
+                    `;
+                }
+                
+                if (data.actionItems && data.actionItems.length > 0) {
+                    data.actionItems.slice(0, 3).forEach(action => {
+                        html += `
+                            <div class="timeline-alert action-required">
+                                <i class="fas fa-bolt"></i>
+                                <div class="alert-content">
+                                    <div class="alert-title">ACTION REQUIRED</div>
+                                    <div class="alert-desc">${action}</div>
+                                </div>
+                            </div>
+                        `;
+                    });
+                }
+                
+                html += '</div></div>';
             }
 
-            // MRF to Onboarding Breakdown section
-            if (data.summaryStats && data.summaryStats.averageStages) {
+            // === ENHANCED SUMMARY STATISTICS ===
+            if (data.summaryStats) {
                 html += `
-                    <div class="breakdown-section">
-                        <h4>MRF to Onboarding Breakdown</h4>
-                        <div class="data-table-container">
-                            <table class="data-table">
-                                <thead>
-                                    <tr>
-                                        <th>Stage</th>
-                                        <th>Days</th>
-                                    </tr>
-                                </thead>
-                                <tbody>
-                                    <tr>
-                                        <td>MRF to Job Posting</td>
-                                        <td><strong>${data.summaryStats.averageStages.mrfToJobPosting} days</strong></td>
-                                    </tr>
-                                    <tr>
-                                        <td>Job Posting to Initial Interview</td>
-                                        <td><strong>${data.summaryStats.averageStages.jobPostingToInitialInterview} days</strong></td>
-                                    </tr>
-                                    <tr>
-                                        <td>Initial Interview to Final Interview</td>
-                                        <td><strong>${data.summaryStats.averageStages.initialInterviewToFinalInterview} days</strong></td>
-                                    </tr>
-                                    <tr>
-                                        <td>Final Interview to Onboarding</td>
-                                        <td><strong>${data.summaryStats.averageStages.finalInterviewToOnboarding} days</strong></td>
-                                    </tr>
-                                </tbody>
-                            </table>
+                    <div class="timeline-enhanced-summary">
+                        <h4><i class="fas fa-chart-dashboard"></i> Timeline Performance Metrics</h4>
+                        <div class="timeline-metrics-grid">
+                            <div class="timeline-metric primary">
+                                <div class="metric-icon">
+                                    <i class="fas fa-stopwatch"></i>
+                                </div>
+                                <div class="metric-content">
+                                    <div class="metric-value">${data.summaryStats.averageMrfToOnboarding}</div>
+                                    <div class="metric-label">Average Days</div>
+                                    <div class="metric-sublabel">MRF to Onboarding</div>
+                                </div>
+                                <div class="metric-status ${data.summaryStats.averageMrfToOnboarding <= 30 ? 'excellent' : data.summaryStats.averageMrfToOnboarding <= 45 ? 'good' : 'poor'}">
+                                    ${data.summaryStats.averageMrfToOnboarding <= 30 ? 'Excellent' : data.summaryStats.averageMrfToOnboarding <= 45 ? 'Good' : 'Needs Work'}
+                                </div>
+                            </div>
+                            
+                            <div class="timeline-metric success">
+                                <div class="metric-icon">
+                                    <i class="fas fa-rocket"></i>
+                                </div>
+                                <div class="metric-content">
+                                    <div class="metric-value">${data.summaryStats.fastHireRate || 0}%</div>
+                                    <div class="metric-label">Fast Hire Rate</div>
+                                    <div class="metric-sublabel">≤21 days</div>
+                                </div>
+                                <div class="metric-status ${(data.summaryStats.fastHireRate || 0) >= 50 ? 'excellent' : (data.summaryStats.fastHireRate || 0) >= 30 ? 'good' : 'poor'}">
+                                    ${(data.summaryStats.fastHireRate || 0) >= 50 ? 'Excellent' : (data.summaryStats.fastHireRate || 0) >= 30 ? 'Good' : 'Low'}
+                                </div>
+                            </div>
+                            
+                            <div class="timeline-metric warning">
+                                <div class="metric-icon">
+                                    <i class="fas fa-exclamation-circle"></i>
+                                </div>
+                                <div class="metric-content">
+                                    <div class="metric-value">${data.summaryStats.bottleneckSeverity || 'None'}</div>
+                                    <div class="metric-label">Bottleneck Level</div>
+                                    <div class="metric-sublabel">Process Constraints</div>
+                                </div>
+                                <div class="metric-status ${data.summaryStats.bottleneckSeverity === 'Low' || !data.summaryStats.bottleneckSeverity ? 'excellent' : data.summaryStats.bottleneckSeverity === 'Medium' ? 'good' : 'poor'}">
+                                    ${!data.summaryStats.bottleneckSeverity || data.summaryStats.bottleneckSeverity === 'Low' ? 'Healthy' : 'Issues Found'}
+                                </div>
+                            </div>
+                            
+                            <div class="timeline-metric info">
+                                <div class="metric-icon">
+                                    <i class="fas fa-chart-line"></i>
+                                </div>
+                                <div class="metric-content">
+                                    <div class="metric-value">${data.summaryStats.processHealthScore || 0}</div>
+                                    <div class="metric-label">Health Score</div>
+                                    <div class="metric-sublabel">Out of 100</div>
+                                </div>
+                                <div class="metric-status ${(data.summaryStats.processHealthScore || 0) >= 80 ? 'excellent' : (data.summaryStats.processHealthScore || 0) >= 60 ? 'good' : 'poor'}">
+                                    ${(data.summaryStats.processHealthScore || 0) >= 80 ? 'Excellent' : (data.summaryStats.processHealthScore || 0) >= 60 ? 'Good' : 'Poor'}
+                                </div>
+                            </div>
                         </div>
                     </div>
                 `;
             }
-            
-            // Monthly timeline data
+
+            // // === TIMELINE ANALYSIS VISUALIZATION ===
+            // if (data.intelligence && data.intelligence.timelineAnalysis) {
+            //     const ta = data.intelligence.timelineAnalysis;
+            //     html += `
+            //         <div class="timeline-analysis-section">
+            //             <h4><i class="fas fa-chart-bar"></i> Timeline Performance Distribution</h4>
+            //             <div class="timeline-distribution">
+            //                 <div class="timeline-category excellent">
+            //                     <div class="category-header">
+            //                         <i class="fas fa-rocket"></i>
+            //                         <div class="category-info">
+            //                             <div class="category-title">Fast Track</div>
+            //                             <div class="category-desc">≤21 days</div>
+            //                         </div>
+            //                     </div>
+            //                     <div class="category-count">${ta.fast.length}</div>
+            //                     <div class="category-bar">
+            //                         <div class="bar-fill" style="width: ${data.totalHired > 0 ? (ta.fast.length / data.totalHired) * 100 : 0}%"></div>
+            //                     </div>
+            //                 </div>
+                            
+            //                 <div class="timeline-category good">
+            //                     <div class="category-header">
+            //                         <i class="fas fa-clock"></i>
+            //                         <div class="category-info">
+            //                             <div class="category-title">Standard</div>
+            //                             <div class="category-desc">22-45 days</div>
+            //                         </div>
+            //                     </div>
+            //                     <div class="category-count">${ta.standard.length}</div>
+            //                     <div class="category-bar">
+            //                         <div class="bar-fill" style="width: ${data.totalHired > 0 ? (ta.standard.length / data.totalHired) * 100 : 0}%"></div>
+            //                     </div>
+            //                 </div>
+                            
+            //                 <div class="timeline-category warning">
+            //                     <div class="category-header">
+            //                         <i class="fas fa-hourglass-half"></i>
+            //                         <div class="category-info">
+            //                             <div class="category-title">Slow</div>
+            //                             <div class="category-desc">46-75 days</div>
+            //                         </div>
+            //                     </div>
+            //                     <div class="category-count">${ta.slow.length}</div>
+            //                     <div class="category-bar">
+            //                         <div class="bar-fill" style="width: ${data.totalHired > 0 ? (ta.slow.length / data.totalHired) * 100 : 0}%"></div>
+            //                     </div>
+            //                 </div>
+                            
+            //                 <div class="timeline-category critical">
+            //                     <div class="category-header">
+            //                         <i class="fas fa-exclamation-triangle"></i>
+            //                         <div class="category-info">
+            //                             <div class="category-title">Critical</div>
+            //                             <div class="category-desc">75+ days</div>
+            //                         </div>
+            //                     </div>
+            //                     <div class="category-count">${ta.critical.length}</div>
+            //                     <div class="category-bar">
+            //                         <div class="bar-fill" style="width: ${data.totalHired > 0 ? (ta.critical.length / data.totalHired) * 100 : 0}%"></div>
+            //                     </div>
+            //                 </div>
+            //             </div>
+            //         </div>
+            //     `;
+            // }
+
+            // // === BOTTLENECK ANALYSIS ===
+            // if (data.intelligence && data.intelligence.bottleneckAnalysis) {
+            //     const ba = data.intelligence.bottleneckAnalysis;
+            //     html += `
+            //         <div class="bottleneck-analysis">
+            //             <h4><i class="fas fa-search"></i> Bottleneck Analysis</h4>
+            //             <div class="bottleneck-stages">
+            //                 <div class="stage-analysis hr-stage">
+            //                     <div class="stage-header">
+            //                         <i class="fas fa-user-tie"></i>
+            //                         <div class="stage-info">
+            //                             <div class="stage-title">HR Interview Stage</div>
+            //                             <div class="stage-desc">Candidates stuck >14 days</div>
+            //                         </div>
+            //                     </div>
+            //                     <div class="stage-count ${ba.stageAnalysis.hrStage > 5 ? 'high' : ba.stageAnalysis.hrStage > 0 ? 'medium' : 'low'}">
+            //                         ${ba.stageAnalysis.hrStage}
+            //                     </div>
+            //                     <div class="stage-status">
+            //                         ${ba.stageAnalysis.hrStage > 5 ? 'High Concern' : ba.stageAnalysis.hrStage > 0 ? 'Monitor' : 'Healthy'}
+            //                     </div>
+            //                 </div>
+                            
+            //                 <div class="stage-analysis manager-stage">
+            //                     <div class="stage-header">
+            //                         <i class="fas fa-users-cog"></i>
+            //                         <div class="stage-info">
+            //                             <div class="stage-title">Line Manager Stage</div>
+            //                             <div class="stage-desc">Candidates stuck >21 days</div>
+            //                         </div>
+            //                     </div>
+            //                     <div class="stage-count ${ba.stageAnalysis.lineManagerStage > 5 ? 'high' : ba.stageAnalysis.lineManagerStage > 0 ? 'medium' : 'low'}">
+            //                         ${ba.stageAnalysis.lineManagerStage}
+            //                     </div>
+            //                     <div class="stage-status">
+            //                         ${ba.stageAnalysis.lineManagerStage > 5 ? 'High Concern' : ba.stageAnalysis.lineManagerStage > 0 ? 'Monitor' : 'Healthy'}
+            //                     </div>
+            //                 </div>
+                            
+            //                 <div class="stage-analysis screening-stage">
+            //                     <div class="stage-header">
+            //                         <i class="fas fa-filter"></i>
+            //                         <div class="stage-info">
+            //                             <div class="stage-title">Initial Screening</div>
+            //                             <div class="stage-desc">Candidates stuck >7 days</div>
+            //                         </div>
+            //                     </div>
+            //                     <div class="stage-count ${ba.stageAnalysis.initialScreening > 5 ? 'high' : ba.stageAnalysis.initialScreening > 0 ? 'medium' : 'low'}">
+            //                         ${ba.stageAnalysis.initialScreening}
+            //                     </div>
+            //                     <div class="stage-status">
+            //                         ${ba.stageAnalysis.initialScreening > 5 ? 'High Concern' : ba.stageAnalysis.initialScreening > 0 ? 'Monitor' : 'Healthy'}
+            //                     </div>
+            //                 </div>
+            //             </div>
+                        
+            //             ${ba.criticalBottleneck ? `
+            //                 <div class="critical-bottleneck-alert">
+            //                     <i class="fas fa-exclamation-circle"></i>
+            //                     <div class="bottleneck-content">
+            //                         <div class="bottleneck-title">Critical Bottleneck Identified</div>
+            //                         <div class="bottleneck-desc">${ba.criticalBottleneck} requires immediate attention</div>
+            //                     </div>
+            //                 </div>
+            //             ` : ''}
+            //         </div>
+            //     `;
+            // }
+
+            // // === DEPARTMENT COMPARISON ===
+            // if (data.intelligence && data.intelligence.departmentComparison && data.intelligence.departmentComparison.length > 0) {
+            //     html += `
+            //         <div class="department-timeline-comparison">
+            //             <h4><i class="fas fa-building"></i> Department Timeline Efficiency</h4>
+            //             <div class="department-timeline-grid">
+            //     `;
+                
+            //     data.intelligence.departmentComparison.slice(0, 6).forEach(dept => {
+            //         const efficiencyClass = dept.efficiency === 'Excellent' ? 'excellent' : 
+            //                             dept.efficiency === 'Good' ? 'good' : 
+            //                             dept.efficiency === 'Average' ? 'average' : 'poor';
+                    
+            //         html += `
+            //             <div class="dept-timeline-card ${efficiencyClass}">
+            //                 <div class="dept-timeline-header">
+            //                     <h5>${dept.department}</h5>
+            //                     <span class="efficiency-badge ${efficiencyClass}">${dept.efficiency}</span>
+            //                 </div>
+            //                 <div class="dept-timeline-metrics">
+            //                     <div class="timeline-metric-item">
+            //                         <span class="metric-label">Hires</span>
+            //                         <span class="metric-value">${dept.hires}</span>
+            //                     </div>
+            //                     <div class="timeline-metric-item">
+            //                         <span class="metric-label">Avg Days</span>
+            //                         <span class="metric-value">${dept.avgDays}d</span>
+            //                     </div>
+            //                     <div class="timeline-metric-item">
+            //                         <span class="metric-label">Fast Rate</span>
+            //                         <span class="metric-value">${dept.fastHireRate}%</span>
+            //                     </div>
+            //                 </div>
+            //                 <div class="dept-timeline-bar">
+            //                     <div class="timeline-bar-fill ${efficiencyClass}" style="width: ${Math.max(10, 100 - (dept.avgDays - 20))}%"></div>
+            //                 </div>
+            //             </div>
+            //         `;
+            //     });
+                
+            //     html += '</div></div>';
+            // }
+
+            // === KEY INSIGHTS ===
+            if (data.insights && data.insights.length > 0) {
+                html += `
+                    <div class="timeline-insights">
+                        <h4><i class="fas fa-lightbulb"></i> Timeline Intelligence Insights</h4>
+                        <div class="timeline-insights-grid">
+                `;
+                
+                data.insights.forEach(insight => {
+                    const insightType = insight.includes('🚀') || insight.includes('💪') || insight.includes('✅') ? 'positive' : 
+                                    insight.includes('🚨') || insight.includes('⚠️') || insight.includes('📉') ? 'critical' : 
+                                    insight.includes('🔴') || insight.includes('⏰') ? 'warning' : 'info';
+                    
+                    html += `
+                        <div class="timeline-insight-item ${insightType}">
+                            <div class="insight-icon">
+                                <i class="fas ${insightType === 'positive' ? 'fa-check-circle' : 
+                                            insightType === 'critical' ? 'fa-exclamation-triangle' : 
+                                            insightType === 'warning' ? 'fa-clock' : 'fa-info-circle'}"></i>
+                            </div>
+                            <div class="insight-text">${insight}</div>
+                        </div>
+                    `;
+                });
+                
+                html += '</div></div>';
+            }
+
+            // // === OPTIMIZATION RECOMMENDATIONS ===
+            // if (data.recommendations && data.recommendations.length > 0) {
+            //     html += `
+            //         <div class="timeline-optimization">
+            //             <h4><i class="fas fa-cogs"></i> Process Optimization Recommendations</h4>
+            //             <div class="optimization-list">
+            //     `;
+                
+            //     data.recommendations.forEach((rec, index) => {
+            //         html += `
+            //             <div class="optimization-item">
+            //                 <div class="optimization-priority">${index + 1}</div>
+            //                 <div class="optimization-content">
+            //                     <i class="fas fa-arrow-right"></i>
+            //                     <span>${rec}</span>
+            //                 </div>
+            //             </div>
+            //         `;
+            //     });
+                
+            //     html += '</div></div>';
+            // }
+
+            // // === ENHANCED SUMMARY BREAKDOWN ===
+            // if (data.summaryStats && data.summaryStats.averageStages) {
+            //     html += `
+            //         <div class="timeline-breakdown-section">
+            //             <h4><i class="fas fa-sitemap"></i> MRF to Onboarding Stage Breakdown</h4>
+            //             <div class="stages-breakdown">
+            //                 <div class="stage-breakdown-item">
+            //                     <div class="stage-icon">
+            //                         <i class="fas fa-file-alt"></i>
+            //                     </div>
+            //                     <div class="stage-content">
+            //                         <div class="stage-title">MRF to Job Posting</div>
+            //                         <div class="stage-days">${data.summaryStats.averageStages.mrfToJobPosting} days</div>
+            //                         <div class="stage-bar">
+            //                             <div class="stage-fill" style="width: ${(data.summaryStats.averageStages.mrfToJobPosting / 14) * 100}%"></div>
+            //                         </div>
+            //                     </div>
+            //                 </div>
+                            
+            //                 <div class="stage-breakdown-item">
+            //                     <div class="stage-icon">
+            //                         <i class="fas fa-search"></i>
+            //                     </div>
+            //                     <div class="stage-content">
+            //                         <div class="stage-title">Job Posting to Initial Interview</div>
+            //                         <div class="stage-days">${data.summaryStats.averageStages.jobPostingToInitialInterview} days</div>
+            //                         <div class="stage-bar">
+            //                             <div class="stage-fill" style="width: ${(data.summaryStats.averageStages.jobPostingToInitialInterview / 21) * 100}%"></div>
+            //                         </div>
+            //                     </div>
+            //                 </div>
+                            
+            //                 <div class="stage-breakdown-item">
+            //                     <div class="stage-icon">
+            //                         <i class="fas fa-users"></i>
+            //                     </div>
+            //                     <div class="stage-content">
+            //                         <div class="stage-title">Initial to Final Interview</div>
+            //                         <div class="stage-days">${data.summaryStats.averageStages.initialInterviewToFinalInterview} days</div>
+            //                         <div class="stage-bar">
+            //                             <div class="stage-fill" style="width: ${(data.summaryStats.averageStages.initialInterviewToFinalInterview / 15) * 100}%"></div>
+            //                         </div>
+            //                     </div>
+            //                 </div>
+                            
+            //                 <div class="stage-breakdown-item">
+            //                     <div class="stage-icon">
+            //                         <i class="fas fa-user-check"></i>
+            //                     </div>
+            //                     <div class="stage-content">
+            //                         <div class="stage-title">Final Interview to Onboarding</div>
+            //                         <div class="stage-days">${data.summaryStats.averageStages.finalInterviewToOnboarding} days</div>
+            //                         <div class="stage-bar">
+            //                             <div class="stage-fill" style="width: ${(data.summaryStats.averageStages.finalInterviewToOnboarding / 17) * 100}%"></div>
+            //                         </div>
+            //                     </div>
+            //                 </div>
+            //             </div>
+            //         </div>
+            //     `;
+            // }
+
+            // === MONTHLY TIMELINE DATA ===
             if (data.monthlyData && data.monthlyData.length > 0) {
                 html += `
                     <div class="monthly-timeline-section">
-                        <h4>Monthly Timeline Analysis</h4>
-                        <div class="data-table-container">
-                            <table class="data-table">
+                        <h4><i class="fas fa-calendar-alt"></i> Monthly Timeline Analysis</h4>
+                        <div class="monthly-timeline-table">
+                            <table class="timeline-data-table">
                                 <thead>
                                     <tr>
                                         <th>Month</th>
                                         <th>Hires Completed</th>
-                                        <th>Average Days to Hire</th>
+                                        <th>Average Days</th>
+                                        <th>Efficiency</th>
+                                        <th>Performance</th>
                                     </tr>
                                 </thead>
                                 <tbody>
                 `;
                 
                 data.monthlyData.forEach(month => {
+                    const efficiencyClass = month.efficiency === 'Excellent' ? 'excellent' : 
+                                        month.efficiency === 'Good' ? 'good' : 
+                                        month.efficiency === 'Average' ? 'average' : 'poor';
+                    
                     html += `
                         <tr>
                             <td><strong>${month.monthName}</strong></td>
-                            <td><span class="status-badge status-hired">${month.hires}</span></td>
-                            <td>${month.averageDays} days</td>
+                            <td><span class="hire-count">${month.hires}</span></td>
+                            <td><span class="days-value ${month.averageDays <= 30 ? 'fast' : month.averageDays <= 45 ? 'standard' : 'slow'}">${month.averageDays} days</span></td>
+                            <td><span class="efficiency-badge ${efficiencyClass}">${month.efficiency}</span></td>
+                            <td>
+                                <div class="performance-bar">
+                                    <div class="performance-fill ${efficiencyClass}" style="width: ${Math.max(10, 100 - month.averageDays)}%"></div>
+                                </div>
+                            </td>
                         </tr>
                     `;
                 });
                 
                 html += '</tbody></table></div></div>';
             }
-            
-            // Individual timeline details
+
+            // === INDIVIDUAL TIMELINE DETAILS ===
             if (data.timelineData && data.timelineData.length > 0) {
                 html += `
-                    <div class="individual-timelines-section">
-                        <h4>Individual Hiring Timelines</h4>
-                        <div class="data-table-container">
-                            <table class="data-table">
+                    <div class="individual-timelines">
+                        <h4><i class="fas fa-user-clock"></i> Individual Hiring Timelines</h4>
+                        <div class="timeline-details-table">
+                            <table class="enhanced-timeline-table">
                                 <thead>
                                     <tr>
                                         <th>Name</th>
@@ -1823,24 +2743,35 @@
                                         <th>Department</th>
                                         <th>Application Date</th>
                                         <th>Total Days</th>
-                                        <th>Status</th>
+                                        <th>Category</th>
+                                        <th>Efficiency</th>
                                     </tr>
                                 </thead>
                                 <tbody>
                 `;
                 
                 data.timelineData.forEach(timeline => {
-                    const statusClass = getStatusClass(timeline.status);
-                    const daysBadgeClass = timeline.totalDays <= 30 ? 'status-passed' : timeline.totalDays <= 45 ? 'status-pending' : 'status-failed';
+                    const categoryClass = timeline.timelineCategory === 'Fast' ? 'fast' : 
+                                        timeline.timelineCategory === 'Standard' ? 'standard' : 
+                                        timeline.timelineCategory === 'Slow' ? 'slow' : 'critical';
+                    
+                    const efficiencyClass = timeline.efficiencyFlag;
                     
                     html += `
-                        <tr>
-                            <td>${timeline.name}</td>
+                        <tr class="timeline-row ${categoryClass}">
+                            <td><strong>${timeline.name}</strong></td>
                             <td>${timeline.position}</td>
                             <td>${timeline.department}</td>
                             <td>${timeline.applicationDate}</td>
-                            <td><span class="status-badge ${daysBadgeClass}">${timeline.totalDays} days</span></td>
-                            <td><span class="status-badge ${statusClass}">${timeline.status}</span></td>
+                            <td><span class="timeline-days ${categoryClass}">${timeline.totalDays}d</span></td>
+                            <td><span class="category-badge ${categoryClass}">${timeline.timelineCategory}</span></td>
+                            <td>
+                                <div class="efficiency-indicator ${efficiencyClass}">
+                                    <i class="fas ${efficiencyClass === 'excellent' ? 'fa-star' : 
+                                                efficiencyClass === 'good' ? 'fa-thumbs-up' : 
+                                                efficiencyClass === 'average' ? 'fa-minus' : 'fa-exclamation-triangle'}"></i>
+                                </div>
+                            </td>
                         </tr>
                     `;
                 });
@@ -1850,111 +2781,187 @@
         }
 
         else if (reportType === 'mrf-efficiency') {
-            // Clean summary
+            
+            // === EXECUTIVE SUMMARY DASHBOARD ===
             if (data.summary) {
-                html += '<div class="results-summary">';
-                
                 html += `
-                    <div class="summary-item">
-                        <div class="summary-value">${data.summary.totalMRFs}</div>
-                        <div class="summary-label">Total MRFs</div>
-                    </div>
-                    <div class="summary-item">
-                        <div class="summary-value">${data.summary.totalRequired}</div>
-                        <div class="summary-label">Personnel Required</div>
-                    </div>
-                    <div class="summary-item">
-                        <div class="summary-value">${data.summary.totalHired}</div>
-                        <div class="summary-label">Personnel Hired</div>
-                    </div>
-                    <div class="summary-item">
-                        <div class="summary-value">${data.summary.overallFillRate}%</div>
-                        <div class="summary-label">Overall Fill Rate</div>
-                    </div>
-                    <div class="summary-item">
-                        <div class="summary-value">${data.summary.overdueMRFs}</div>
-                        <div class="summary-label">Overdue MRFs</div>
-                    </div>
-                    <div class="summary-item">
-                        <div class="summary-value">${data.summary.avgDaysOpen}</div>
-                        <div class="summary-label">Avg Days Open</div>
+                    <div class="intelligence-dashboard">
+                        <h4><i class="fas fa-chart-line"></i> MRF Efficiency Executive Summary</h4>
+                        <div class="intelligence-cards">
+                            <div class="intel-card">
+                                <div class="intel-icon"><i class="fas fa-clipboard-list"></i></div>
+                                <div class="intel-content">
+                                    <div class="intel-value">${data.summary.totalMRFs}</div>
+                                    <div class="intel-label">Total MRFs</div>
+                                    <div class="intel-sublabel">Under analysis</div>
+                                </div>
+                            </div>
+                            
+                            <div class="intel-card">
+                                <div class="intel-icon"><i class="fas fa-percentage"></i></div>
+                                <div class="intel-content">
+                                    <div class="intel-value">${data.summary.overallFillRate}%</div>
+                                    <div class="intel-label">Overall Fill Rate</div>
+                                    <div class="intel-sublabel">${data.summary.overallFillRate >= 75 ? 'Excellent' : data.summary.overallFillRate >= 60 ? 'Good' : 'Needs Work'}</div>
+                                </div>
+                            </div>
+                            
+                            <div class="intel-card">
+                                <div class="intel-icon"><i class="fas fa-clock"></i></div>
+                                <div class="intel-content">
+                                    <div class="intel-value">${data.summary.avgDaysOpen}</div>
+                                    <div class="intel-label">Avg Days Open</div>
+                                    <div class="intel-sublabel">${data.summary.avgDaysOpen <= 35 ? 'Fast' : data.summary.avgDaysOpen <= 50 ? 'Standard' : 'Slow'}</div>
+                                </div>
+                            </div>
+                            
+                            <div class="intel-card">
+                                <div class="intel-icon"><i class="fas fa-exclamation-triangle"></i></div>
+                                <div class="intel-content">
+                                    <div class="intel-value">${data.summary.overdueMRFs}</div>
+                                    <div class="intel-label">Overdue MRFs</div>
+                                    <div class="intel-sublabel">${data.summary.overdueMRFs === 0 ? 'On Track' : 'Needs Attention'}</div>
+                                </div>
+                            </div>
+                            
+                            <div class="intel-card">
+                                <div class="intel-icon"><i class="fas fa-star"></i></div>
+                                <div class="intel-content">
+                                    <div class="intel-value">${data.summary.avgEfficiencyScore || 0}</div>
+                                    <div class="intel-label">Efficiency Score</div>
+                                    <div class="intel-sublabel">Out of 100</div>
+                                </div>
+                            </div>
+                            
+                            <div class="intel-card">
+                                <div class="intel-icon"><i class="fas fa-shield-alt"></i></div>
+                                <div class="intel-content">
+                                    <div class="intel-value">${data.summary.processHealth || 'Good'}</div>
+                                    <div class="intel-label">Process Health</div>
+                                    <div class="intel-sublabel">Overall status</div>
+                                </div>
+                            </div>
+                        </div>
                     </div>
                 `;
-                
-                html += '</div>';
             }
 
-            // Department Comparison (let them see differences)
+            // // === KEY INSIGHTS ===
+            // if (data.insights && data.insights.length > 0) {
+            //     html += `
+            //         <div class="insights-section">
+            //             <h4><i class="fas fa-lightbulb"></i> MRF Efficiency Insights</h4>
+            //             <div class="insights-grid">
+            //     `;
+                
+            //     data.insights.forEach(insight => {
+            //         const insightType = insight.includes('🎯') || insight.includes('🏆') || insight.includes('✅') ? 'positive' : 
+            //                         insight.includes('📉') || insight.includes('⚠️') || insight.includes('🚨') ? 'warning' : 
+            //                         insight.includes('📈') || insight.includes('🔧') ? 'success' : 'info';
+                    
+            //         html += `
+            //             <div class="insight-item ${insightType}">
+            //                 <div class="insight-text">${insight}</div>
+            //             </div>
+            //         `;
+            //     });
+                
+            //     html += '</div></div>';
+            // }
+
+            // // === CRITICAL ACTION ITEMS ===
+            // if (data.actionItems && data.actionItems.length > 0) {
+            //     html += `
+            //         <div class="action-items-section">
+            //             <h4><i class="fas fa-tasks"></i> Critical Action Items</h4>
+            //             <div class="action-items-list">
+            //     `;
+                
+            //     data.actionItems.forEach(action => {
+            //         html += `
+            //             <div class="action-item urgent">
+            //                 <i class="fas fa-exclamation-triangle"></i>
+            //                 <span>${action}</span>
+            //             </div>
+            //         `;
+            //     });
+                
+            //     html += '</div></div>';
+            // }
+
+            // === DEPARTMENT PERFORMANCE COMPARISON ===
             if (data.departmentComparison && data.departmentComparison.length > 0) {
                 html += `
-                    <div class="data-section">
-                        <h4>Department Comparison</h4>
-                        <div class="data-table-container">
-                            <table class="data-table">
-                                <thead>
-                                    <tr>
-                                        <th>Department</th>
-                                        <th>Total MRFs</th>
-                                        <th>Required</th>
-                                        <th>Hired</th>
-                                        <th>Fill Rate</th>
-                                        <th>Completion Rate</th>
-                                        <th>Avg Days</th>
-                                        <th>Overdue</th>
-                                    </tr>
-                                </thead>
-                                <tbody>
+                    <div class="department-performance">
+                        <h4><i class="fas fa-building"></i> Department Performance Analysis</h4>
+                        <div class="department-cards">
                 `;
                 
-                data.departmentComparison.forEach(dept => {
+                data.departmentComparison.slice(0, 6).forEach(dept => {
+                    const efficiencyClass = dept.performanceGrade === 'A' ? 'excellent' : 
+                                        dept.performanceGrade === 'B' ? 'good' : 
+                                        dept.performanceGrade === 'C' ? 'average' : 'poor';
+                    
                     html += `
-                        <tr>
-                            <td><strong>${dept.department}</strong></td>
-                            <td>${dept.totalMRFs}</td>
-                            <td>${dept.totalRequired}</td>
-                            <td>${dept.totalHired}</td>
-                            <td><strong>${dept.fillRate}%</strong></td>
-                            <td>${dept.completionRate}%</td>
-                            <td>${dept.avgDaysOpen} days</td>
-                            <td>${dept.overdueMRFs}</td>
-                        </tr>
+                        <div class="dept-card ${efficiencyClass}">
+                            <div class="dept-header">
+                                <h5>${dept.department}</h5>
+                                <span class="efficiency-badge ${efficiencyClass}">Grade ${dept.performanceGrade}</span>
+                            </div>
+                            <div class="dept-metrics">
+                                <div class="metric">
+                                    <span class="metric-value">${dept.fillRate}%</span>
+                                    <span class="metric-label">Fill Rate</span>
+                                </div>
+                                <div class="metric">
+                                    <span class="metric-value">${dept.avgDaysOpen}d</span>
+                                    <span class="metric-label">Avg Days</span>
+                                </div>
+                                <div class="metric">
+                                    <span class="metric-value">${dept.overdueMRFs}</span>
+                                    <span class="metric-label">Overdue</span>
+                                </div>
+                            </div>
+                        </div>
                     `;
                 });
                 
-                html += '</tbody></table></div></div>';
+                html += '</div></div>';
             }
 
-            // Line Manager Comparison (let them see who's fast/slow)
+            // === LINE MANAGER PERFORMANCE ===
             if (data.lineManagerComparison && data.lineManagerComparison.length > 0) {
                 html += `
                     <div class="data-section">
-                        <h4>Line Manager Performance</h4>
+                        <h4><i class="fas fa-users-cog"></i> Line Manager Performance</h4>
                         <div class="data-table-container">
                             <table class="data-table">
                                 <thead>
                                     <tr>
                                         <th>Line Manager</th>
                                         <th>Total MRFs</th>
-                                        <th>Required</th>
-                                        <th>Hired</th>
                                         <th>Fill Rate</th>
                                         <th>Avg Days</th>
                                         <th>Overdue</th>
+                                        <th>Performance</th>
                                     </tr>
                                 </thead>
                                 <tbody>
                 `;
                 
-                data.lineManagerComparison.forEach(manager => {
+                data.lineManagerComparison.slice(0, 10).forEach(manager => {
+                    const performanceClass = manager.managerEfficiency === 'High Performer' ? 'status-hired' : 
+                                            manager.managerEfficiency === 'Good Performer' ? 'status-passed' : 
+                                            manager.managerEfficiency === 'Average Performer' ? 'status-pending' : 'status-failed';
+                    
                     html += `
                         <tr>
-                            <td>${manager.lineManager}</td>
+                            <td><strong>${manager.lineManager}</strong></td>
                             <td>${manager.totalMRFs}</td>
-                            <td>${manager.totalRequired}</td>
-                            <td>${manager.totalHired}</td>
                             <td><strong>${manager.fillRate}%</strong></td>
                             <td>${manager.avgDaysOpen} days</td>
                             <td>${manager.overdueMRFs}</td>
+                            <td><span class="status-badge ${performanceClass}">${manager.managerEfficiency}</span></td>
                         </tr>
                     `;
                 });
@@ -1962,11 +2969,32 @@
                 html += '</tbody></table></div></div>';
             }
 
-            // Monthly Trends (let them see changes)
+            // // === OPTIMIZATION RECOMMENDATIONS ===
+            // if (data.optimizations && data.optimizations.length > 0) {
+            //     html += `
+            //         <div class="recommendations-section">
+            //             <h4><i class="fas fa-cogs"></i> Process Optimization Opportunities</h4>
+            //             <div class="recommendations-list">
+            //     `;
+                
+            //     data.optimizations.forEach((opt, index) => {
+            //         html += `
+            //             <div class="recommendation-item">
+            //                 <div class="recommendation-priority">${index + 1}</div>
+            //                 <i class="fas fa-arrow-right"></i>
+            //                 <span>${opt}</span>
+            //             </div>
+            //         `;
+            //     });
+                
+            //     html += '</div></div>';
+            // }
+
+            // === MONTHLY TRENDS ===
             if (data.monthlyData && data.monthlyData.length > 0) {
                 html += `
                     <div class="data-section">
-                        <h4>Monthly Trends</h4>
+                        <h4><i class="fas fa-chart-line"></i> Monthly Trends Analysis</h4>
                         <div class="data-table-container">
                             <table class="data-table">
                                 <thead>
@@ -1985,13 +3013,17 @@
                     const monthlyFillRate = month.personnelRequired > 0 ? 
                         Math.round((month.personnelHired / month.personnelRequired) * 100) : 0;
                     
+                    const fillRateClass = monthlyFillRate >= 80 ? 'status-hired' : 
+                                        monthlyFillRate >= 60 ? 'status-passed' : 
+                                        monthlyFillRate >= 40 ? 'status-pending' : 'status-failed';
+                    
                     html += `
                         <tr>
                             <td><strong>${month.month}</strong></td>
                             <td>${month.mrfsCreated}</td>
                             <td>${month.personnelRequired}</td>
                             <td>${month.personnelHired}</td>
-                            <td><strong>${monthlyFillRate}%</strong></td>
+                            <td><span class="status-badge ${fillRateClass}">${monthlyFillRate}%</span></td>
                         </tr>
                     `;
                 });
@@ -1999,13 +3031,13 @@
                 html += '</tbody></table></div></div>';
             }
 
-            // Individual MRF Details
+            // === INDIVIDUAL MRF DETAILS ===
             if (data.mrfData && data.mrfData.length > 0) {
                 html += `
                     <div class="data-section">
-                        <h4>Individual MRF Details</h4>
+                        <h4><i class="fas fa-list-alt"></i> Individual MRF Performance Details</h4>
                         <div class="data-table-container">
-                            <table class="data-table">
+                            <table class="data-table enhanced">
                                 <thead>
                                     <tr>
                                         <th>MRF ID</th>
@@ -2016,34 +3048,71 @@
                                         <th>Hired</th>
                                         <th>Fill Rate</th>
                                         <th>Days Open</th>
-                                        <th>Days Overdue</th>
                                         <th>Status</th>
+                                        <th>Performance</th>
+                                        <th>Risk Level</th>
                                     </tr>
                                 </thead>
                                 <tbody>
                 `;
                 
                 data.mrfData.forEach(mrf => {
-                    const overdueClass = mrf.isOverdue ? 'style="background-color: #ffebee;"' : '';
+                    const performanceClass = mrf.performanceLevel === 'Excellent' ? 'status-hired' : 
+                                            mrf.performanceLevel === 'Good' ? 'status-passed' : 
+                                            mrf.performanceLevel === 'Average' ? 'status-pending' : 'status-failed';
+                    
+                    const riskClass = mrf.riskLevel === 'Low' ? 'status-passed' : 
+                                    mrf.riskLevel === 'Medium' ? 'status-pending' : 'status-failed';
+                    
+                    const urgencyClass = mrf.urgencyLevel === 'Critical' ? 'status-failed' : 
+                                        mrf.urgencyLevel === 'High' ? 'status-pending' : 'status-passed';
                     
                     html += `
-                        <tr ${overdueClass}>
+                        <tr class="enhanced-row ${mrf.isOverdue ? 'overdue-row' : ''}">
                             <td><strong>${mrf.mrfId}</strong></td>
                             <td>${mrf.positionTitle}</td>
                             <td>${mrf.department}</td>
-                            <td>${mrf.lineManager}</td>
+                            <td>${mrf.lineManager.split('@')[0]}</td>
                             <td>${mrf.personnelRequired}</td>
                             <td>${mrf.personnelHired}</td>
                             <td><strong>${mrf.fillRate}%</strong></td>
-                            <td>${mrf.daysOpen} days</td>
-                            <td>${mrf.daysOverdue > 0 ? mrf.daysOverdue + ' days' : '-'}</td>
+                            <td>
+                                <span class="days-badge ${mrf.daysOpen <= 35 ? 'fast' : mrf.daysOpen <= 50 ? 'standard' : 'slow'}">
+                                    ${mrf.daysOpen}d
+                                </span>
+                            </td>
                             <td>${mrf.status}</td>
+                            <td><span class="status-badge ${performanceClass}">${mrf.performanceLevel}</span></td>
+                            <td>
+                                <span class="status-badge ${riskClass}">${mrf.riskLevel}</span>
+                                ${mrf.urgencyLevel !== 'Normal' ? `<span class="status-badge ${urgencyClass}">${mrf.urgencyLevel}</span>` : ''}
+                            </td>
                         </tr>
                     `;
                 });
                 
                 html += '</tbody></table></div></div>';
             }
+
+            // // === STRATEGIC RECOMMENDATIONS ===
+            // if (data.recommendations && data.recommendations.length > 0) {
+            //     html += `
+            //         <div class="success-metrics">
+            //             <h4><i class="fas fa-clipboard-list"></i> Strategic Recommendations</h4>
+            //             <div class="metrics-list">
+            //     `;
+                
+            //     data.recommendations.forEach(rec => {
+            //         html += `
+            //             <div class="success-metric">
+            //                 <i class="fas fa-lightbulb"></i>
+            //                 <span>${rec}</span>
+            //             </div>
+            //         `;
+            //     });
+                
+            //     html += '</div></div>';
+            // }
         }
         
         resultsDiv.innerHTML = html;
