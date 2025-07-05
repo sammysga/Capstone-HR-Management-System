@@ -1395,6 +1395,27 @@
     }
 }
 
+/* Sort Section Styles */
+.sort-section {
+    display: flex;
+    align-items: center;
+    margin: 10px 0;
+}
+
+.sort-section label {
+    margin-right: 10px;
+    font-weight: bold;
+    color: #124A5C;
+}
+
+.sort-section select {
+    padding: 8px;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    background-color: white;
+    min-width: 250px;
+}
+
     </style>
 </head>
 <body>
@@ -1448,9 +1469,18 @@
     
     <!-- ========== P1 REVIEW SECTIONS ========== -->
     <h2 style="color: #124A5C; margin: 20px 0 15px 0; font-size: 22px; font-weight: bold;">List of Applicants on P1 Review - For Line Manager Endorsement</h2>
-    
-    <!-- P1 Awaiting for Action Section -->
+<!-- P1 Awaiting for Action Section -->
 <h4>Awaiting for Action</h4>
+<!-- Add Sort Section -->
+<div class="sort-section">
+    <label for="p1AwaitingSortOptions">Sort By:</label>
+    <select id="p1AwaitingSortOptions">
+        <option value="combined-desc">Work Setup + Total Score (Best First)</option>
+        <option value="combined-asc">Work Setup + Total Score (Worst First)</option>
+        <option value="name-asc">Name (A-Z)</option>
+        <option value="name-desc">Name (Z-A)</option>
+    </select>
+</div>
 <table class="tracking-table" id="p1AwaitingActionTable">
     <thead>
         <tr>
@@ -1471,6 +1501,16 @@
 
 <!-- P1 Under Line Manager Review Section -->
 <h4>Applicants on P1 Review; Under Line Manager Review</h4>
+<!-- Add Sort Section -->
+<div class="sort-section">
+    <label for="p1LineManagerSortOptions">Sort By:</label>
+    <select id="p1LineManagerSortOptions">
+        <option value="combined-desc">Work Setup + Total Score (Best First)</option>
+        <option value="combined-asc">Work Setup + Total Score (Worst First)</option>
+        <option value="name-asc">Name (A-Z)</option>
+        <option value="name-desc">Name (Z-A)</option>
+    </select>
+</div>
 <table class="tracking-table" id="p1LineManagerReviewTable">
     <thead>
         <tr>
@@ -1488,55 +1528,72 @@
         <!-- Will be populated dynamically -->
     </tbody>
 </table>
+
     <!-- Spacer between P1 and P2 sections -->
     <div style="margin: 40px 0; border-top: 2px solid #124A5C;"></div>
     
     <!-- ========== P2 REVIEW SECTIONS (KEEP EXISTING) ========== -->
     <h2 style="color: #124A5C; margin: 20px 0 15px 0; font-size: 22px; font-weight: bold;">List of Applicants on P2 Review</h2>
     
-    <h4>Awaiting for Action</h4>
-    <table class="tracking-table" id="awaitingActionTable">
-        <thead>
-            <tr>
-                <th>Applicant No.</th>
-                <th>Last Name, First Name</th>
-                <th>Department</th>
-                <th>Position Applied</th>
-                <th>Total Score</th>
-                <th>Applicant Status</th>
-                <th>Actions</th>
-            </tr>
-        </thead>
-        <tbody>
-            <!-- Will be populated dynamically -->
-        </tbody>
-    </table>
+  <!-- Updated P2 Sections in your HTML -->
 
-    <h4>Applicants on <span id="currentPhase2">Review</span> - Declared Results</h4>
-    <div class="sort-section">
-        <label for="sortOptions">Sort By:</label>
-        <select id="sortOptions">
-            <option value="ascending">Score - Ascending</option>
-            <option value="descending">Score - Descending</option>
-            <option value="alphabetical">Alphabetically</option>
-        </select>
-    </div>
-    <table class="tracking-table" id="declaredResultsTable">
-        <thead>
-            <tr>
-                <th>Applicant No.</th>
-                <th>Last Name, First Name</th>
-                <th>Department</th>
-                <th>Position Applied</th>
-                <th>Total Score</th>
-                <th>Applicant Status</th>
-                <th>Actions</th>
-            </tr>
-        </thead>
-        <tbody>
-            <!-- Will be populated dynamically -->
-        </tbody>
-    </table>
+<!-- P2 Awaiting for Action Section -->
+<h4>Awaiting for Action</h4>
+<!-- Add Sort Section for P2 Awaiting -->
+<div class="sort-section">
+    <label for="p2AwaitingSortOptions">Sort By:</label>
+    <select id="p2AwaitingSortOptions">
+        <option value="rating-desc">Total Assessment Rating (Highest First)</option>
+        <option value="rating-asc">Total Assessment Rating (Lowest First)</option>
+        <option value="name-asc">Name (A-Z)</option>
+        <option value="name-desc">Name (Z-A)</option>
+    </select>
+</div>
+<table class="tracking-table" id="awaitingActionTable">
+    <thead>
+        <tr>
+            <th>Applicant No.</th>
+            <th>Last Name, First Name</th>
+            <th>Department</th>
+            <th>Position Applied</th>
+            <th>Total Assessment Rating</th> <!-- Updated from Total Score -->
+            <th>Applicant Status</th>
+            <th>Actions</th>
+        </tr>
+    </thead>
+    <tbody>
+        <!-- Will be populated dynamically -->
+    </tbody>
+</table>
+
+<!-- P2 Declared Results Section -->
+<h4>Applicants on <span id="currentPhase2">Review</span> - Declared Results</h4>
+<!-- Updated Sort Section for P2 Declared Results -->
+<div class="sort-section">
+    <label for="p2DeclaredSortOptions">Sort By:</label>
+    <select id="p2DeclaredSortOptions">
+        <option value="rating-desc">Total Assessment Rating (Highest First)</option>
+        <option value="rating-asc">Total Assessment Rating (Lowest First)</option>
+        <option value="name-asc">Name (A-Z)</option>
+        <option value="name-desc">Name (Z-A)</option>
+    </select>
+</div>
+<table class="tracking-table" id="declaredResultsTable">
+    <thead>
+        <tr>
+            <th>Applicant No.</th>
+            <th>Last Name, First Name</th>
+            <th>Department</th>
+            <th>Position Applied</th>
+            <th>Total Assessment Rating</th> <!-- Updated from Total Score -->
+            <th>Applicant Status</th>
+            <th>Actions</th>
+        </tr>
+    </thead>
+    <tbody>
+        <!-- Will be populated dynamically -->
+    </tbody>
+</table>
 </div>
 <!-- ========== END MODIFIED P1 & P2 APPLICANT STATUS SECTION ========== -->
         <!-- Table for Applicant Data -->
@@ -2668,7 +2725,6 @@ For Review
     </div>
 </div>
 
-<!-- ========== ADDED APPLICANTS DATA SCRIPT ========== -->
 <script id="applicants-data" type="application/json">
     <% if (typeof applicants !== 'undefined') { %>
       <%- JSON.stringify(applicants) %>
@@ -2676,8 +2732,6 @@ For Review
       []
     <% } %>
 </script>
-<!-- ========== END ADDED APPLICANTS DATA SCRIPT ========== -->
-
 
 <script>
     
@@ -5133,6 +5187,683 @@ document.addEventListener('DOMContentLoaded', function () {
         document.getElementById('applicantIdDisplay').textContent = 'No Applicant ID found in URL.';
     }
 });
+
+
+// Add event listeners for P1 sorting dropdowns
+document.addEventListener('DOMContentLoaded', function() {
+    // P1 Awaiting Action Sort
+    const p1AwaitingSortSelect = document.getElementById('p1AwaitingSortOptions');
+    if (p1AwaitingSortSelect) {
+        p1AwaitingSortSelect.addEventListener('change', function() {
+            const sortBy = this.value;
+            console.log(`🔄 P1 Awaiting sort changed to: ${sortBy}`);
+            sortP1AwaitingActionTable(sortBy);
+        });
+    }
+    
+    // P1 Line Manager Review Sort
+    const p1LineManagerSortSelect = document.getElementById('p1LineManagerSortOptions');
+    if (p1LineManagerSortSelect) {
+        p1LineManagerSortSelect.addEventListener('change', function() {
+            const sortBy = this.value;
+            console.log(`🔄 P1 Line Manager sort changed to: ${sortBy}`);
+            sortP1LineManagerReviewTable(sortBy);
+        });
+    }
+});
+
+// Function to sort P1 Awaiting Action table
+function sortP1AwaitingActionTable(sortBy) {
+    console.log(`📊 Sorting P1 Awaiting Action table by: ${sortBy}`);
+    
+    const table = document.getElementById('p1AwaitingActionTable');
+    if (!table) {
+        console.warn('P1 Awaiting Action table not found');
+        return;
+    }
+    
+    const tbody = table.querySelector('tbody');
+    const rows = Array.from(tbody.querySelectorAll('tr')).filter(row => 
+        !row.querySelector('td[colspan]') && !row.classList.contains('section-header-row')
+    );
+    
+    console.log(`Found ${rows.length} rows to sort in P1 Awaiting Action table`);
+    
+    // Sort the rows
+    rows.sort((a, b) => compareP1Rows(a, b, sortBy));
+    
+    // Clear and repopulate table
+    tbody.innerHTML = '';
+    rows.forEach(row => tbody.appendChild(row));
+    
+    console.log(`✅ P1 Awaiting Action table sorted by ${sortBy}`);
+}
+
+// Function to sort P1 Line Manager Review table
+function sortP1LineManagerReviewTable(sortBy) {
+    console.log(`📊 Sorting P1 Line Manager Review table by: ${sortBy}`);
+    
+    const table = document.getElementById('p1LineManagerReviewTable');
+    if (!table) {
+        console.warn('P1 Line Manager Review table not found');
+        return;
+    }
+    
+    const tbody = table.querySelector('tbody');
+    const rows = Array.from(tbody.querySelectorAll('tr')).filter(row => 
+        !row.querySelector('td[colspan]') && !row.classList.contains('section-header-row')
+    );
+    
+    console.log(`Found ${rows.length} rows to sort in P1 Line Manager Review table`);
+    
+    // Sort the rows
+    rows.sort((a, b) => compareP1Rows(a, b, sortBy));
+    
+    // Clear and repopulate table
+    tbody.innerHTML = '';
+    rows.forEach(row => tbody.appendChild(row));
+    
+    console.log(`✅ P1 Line Manager Review table sorted by ${sortBy}`);
+}
+
+// Enhanced compareP1Rows function to handle data extraction
+function compareP1Rows(a, b, sortBy) {
+    console.log(`Comparing P1 rows with sortBy: ${sortBy}`);
+    
+    switch (sortBy) {
+        case 'combined-desc':
+            // Work Setup Passed first, then highest total score
+            const aWorkSetupPassed = getWorkSetupStatus(a);
+            const bWorkSetupPassed = getWorkSetupStatus(b);
+            
+            // Primary sort: Work Setup (Passed before Failed)
+            if (aWorkSetupPassed !== bWorkSetupPassed) {
+                return bWorkSetupPassed ? 1 : -1; // Passed comes first
+            }
+            
+            // Secondary sort: Total Score (highest first within each group)
+            const aScore = getTotalScore(a);
+            const bScore = getTotalScore(b);
+            return bScore - aScore; // Descending
+            
+        case 'combined-asc':
+            // Work Setup Failed first, then lowest total score
+            const aWorkSetupPassedAsc = getWorkSetupStatus(a);
+            const bWorkSetupPassedAsc = getWorkSetupStatus(b);
+            
+            // Primary sort: Work Setup (Failed before Passed)
+            if (aWorkSetupPassedAsc !== bWorkSetupPassedAsc) {
+                return aWorkSetupPassedAsc ? 1 : -1; // Failed comes first
+            }
+            
+            // Secondary sort: Total Score (lowest first within each group)
+            const aScoreAsc = getTotalScore(a);
+            const bScoreAsc = getTotalScore(b);
+            return aScoreAsc - bScoreAsc; // Ascending
+            
+        case 'name-asc':
+            const aName = getName(a);
+            const bName = getName(b);
+            console.log(`Comparing names: "${aName}" vs "${bName}"`);
+            const result = aName.localeCompare(bName, undefined, { numeric: true, sensitivity: 'base' });
+            console.log(`Name comparison result: ${result}`);
+            return result;
+            
+        case 'name-desc':
+            const aNameDesc = getName(a);
+            const bNameDesc = getName(b);
+            console.log(`Comparing names (desc): "${aNameDesc}" vs "${bNameDesc}"`);
+            const resultDesc = bNameDesc.localeCompare(aNameDesc, undefined, { numeric: true, sensitivity: 'base' });
+            console.log(`Name comparison result (desc): ${resultDesc}`);
+            return resultDesc;
+            
+        default:
+            return 0;
+    }
+}
+
+// Helper function to get work setup status from row
+function getWorkSetupStatus(row) {
+    // Try to get from data attribute first
+    const workSetupPassed = row.getAttribute('data-worksetup-passed');
+    if (workSetupPassed !== null) {
+        return workSetupPassed === 'true';
+    }
+    
+    // Fallback: read from work setup cell (column 6)
+    const workSetupCell = row.querySelector('td:nth-child(6)');
+    if (workSetupCell) {
+        const cellText = workSetupCell.textContent.trim().toLowerCase();
+        return cellText.includes('passed');
+    }
+    
+    return false; // Default to failed if can't determine
+}
+
+// Helper function to get total score from row
+function getTotalScore(row) {
+    // Try to get from data attribute first
+    const totalScore = row.getAttribute('data-total-score');
+    if (totalScore !== null && totalScore !== '') {
+        const score = parseFloat(totalScore);
+        return isNaN(score) ? 0 : score;
+    }
+    
+    // Fallback: read from score cell (column 5)
+    const scoreCell = row.querySelector('td:nth-child(5)');
+    if (scoreCell) {
+        const scoreText = scoreCell.textContent.trim();
+        const score = parseFloat(scoreText);
+        return isNaN(score) ? 0 : score;
+    }
+    
+    return 0; // Default score
+}
+
+// Helper function to get name from row
+function getName(row) {
+    const nameCell = row.querySelector('td:nth-child(2)');
+    if (nameCell) {
+        // Get the HTML content and split by <br> tags first
+        let nameContent = nameCell.innerHTML || '';
+        
+        // Split by <br> tag and get the first part (name)
+        const namePart = nameContent.split('<br>')[0].trim();
+        
+        // Remove any remaining HTML tags and get clean text
+        const tempDiv = document.createElement('div');
+        tempDiv.innerHTML = namePart;
+        const cleanName = tempDiv.textContent || tempDiv.innerText || '';
+        
+        console.log(`Extracted name: "${cleanName}" from cell content: "${nameContent}"`);
+        return cleanName.trim();
+    }
+    return '';
+}
+
+// Updated updateP1AwaitingActionTable function to apply default sorting
+function updateP1AwaitingActionTable(awaitingRows) {
+    console.log(`Populating P1 awaiting action table with ${awaitingRows.length} rows`);
+    
+    const p1AwaitingTable = document.getElementById('p1AwaitingActionTable');
+    if (!p1AwaitingTable) {
+        console.error("❌ P1 awaiting action table not found");
+        return;
+    }
+    
+    const tbody = p1AwaitingTable.querySelector('tbody');
+    if (!tbody) {
+        console.error("❌ Tbody not found in P1 awaiting action table");
+        return;
+    }
+    
+    tbody.innerHTML = '';
+    
+    if (awaitingRows.length > 0) {
+        awaitingRows.forEach((rowData, idx) => {
+            console.log(`Processing P1 awaiting row ${idx + 1}: ${rowData.name}`);
+            
+            const newRow = createP1TableRow(rowData, 'awaiting');
+            tbody.appendChild(newRow);
+            
+            // Enhance row with work setup data after creation
+            if (rowData.userId) {
+                newRow.setAttribute('data-userid', rowData.userId);
+                enhanceRowWithWorkSetupDataFixed(newRow);
+            }
+            
+            console.log(`✅ Added P1 awaiting row ${idx + 1}`);
+        });
+        
+        // Apply default sorting after population
+        setTimeout(() => {
+            const sortSelect = document.getElementById('p1AwaitingSortOptions');
+            if (sortSelect && sortSelect.value) {
+                sortP1AwaitingActionTable(sortSelect.value);
+            }
+        }, 1000);
+        
+        console.log(`✅ Successfully populated P1 awaiting action table with ${awaitingRows.length} rows`);
+    } else {
+        const messageRow = document.createElement('tr');
+        const messageCell = document.createElement('td');
+        messageCell.setAttribute('colspan', '8');
+        messageCell.className = 'text-center no-data-message';
+        messageCell.style.cssText = `
+            padding: 30px;
+            background-color: #f8f9fa;
+            color: #6c757d;
+            font-style: italic;
+            font-size: 16px;
+            border-left: 4px solid #007bff;
+        `;
+        messageCell.textContent = 'No P1 applicants awaiting for action found.';
+        messageRow.appendChild(messageCell);
+        tbody.appendChild(messageRow);
+        
+        console.log("❌ No P1 awaiting rows - added no data message");
+    }
+}
+
+// Updated updateP1LineManagerReviewTable function to apply default sorting
+function updateP1LineManagerReviewTable(lineManagerRows) {
+    console.log(`Populating P1 line manager review table with ${lineManagerRows.length} rows`);
+    
+    const p1LineManagerTable = document.getElementById('p1LineManagerReviewTable');
+    if (!p1LineManagerTable) {
+        console.error("❌ P1 line manager review table not found");
+        return;
+    }
+    
+    const tbody = p1LineManagerTable.querySelector('tbody');
+    if (!tbody) {
+        console.error("❌ Tbody not found in P1 line manager review table");
+        return;
+    }
+    
+    tbody.innerHTML = '';
+    
+    if (lineManagerRows.length > 0) {
+        lineManagerRows.forEach((rowData, idx) => {
+            console.log(`Processing P1 line manager row ${idx + 1}: ${rowData.name}`);
+            
+            const newRow = createP1TableRow(rowData, 'linemanager');
+            tbody.appendChild(newRow);
+            
+            // Enhance row with work setup data after creation
+            if (rowData.userId) {
+                newRow.setAttribute('data-userid', rowData.userId);
+                enhanceRowWithWorkSetupDataFixed(newRow);
+            }
+            
+            console.log(`✅ Added P1 line manager row ${idx + 1}`);
+        });
+        
+        // Apply default sorting after population
+        setTimeout(() => {
+            const sortSelect = document.getElementById('p1LineManagerSortOptions');
+            if (sortSelect && sortSelect.value) {
+                sortP1LineManagerReviewTable(sortSelect.value);
+            }
+        }, 1000);
+        
+        console.log(`✅ Successfully populated P1 line manager review table with ${lineManagerRows.length} rows`);
+    } else {
+        const messageRow = document.createElement('tr');
+        const messageCell = document.createElement('td');
+        messageCell.setAttribute('colspan', '8');
+        messageCell.className = 'text-center no-data-message';
+        messageCell.style.cssText = `
+            padding: 30px;
+            background-color: #f8f9fa;
+            color: #6c757d;
+            font-style: italic;
+            font-size: 16px;
+            border-left: 4px solid #007bff;
+        `;
+        messageCell.textContent = 'No P1 applicants under line manager review found.';
+        messageRow.appendChild(messageCell);
+        tbody.appendChild(messageRow);
+        
+        console.log("❌ No P1 line manager rows - added no data message");
+    }
+}
+
+// Make functions globally available
+window.sortP1AwaitingActionTable = sortP1AwaitingActionTable;
+window.sortP1LineManagerReviewTable = sortP1LineManagerReviewTable;
+window.getWorkSetupStatus = getWorkSetupStatus;
+window.getTotalScore = getTotalScore;
+window.getName = getName;
+
+console.log("✅ P1 Table Sorting functionality loaded");
+
+
+// Add event listeners for P2 sorting dropdowns
+document.addEventListener('DOMContentLoaded', function() {
+    // P2 Awaiting Action Sort
+    const p2AwaitingSortSelect = document.getElementById('p2AwaitingSortOptions');
+    if (p2AwaitingSortSelect) {
+        p2AwaitingSortSelect.addEventListener('change', function() {
+            const sortBy = this.value;
+            console.log(`🔄 P2 Awaiting sort changed to: ${sortBy}`);
+            sortP2AwaitingActionTable(sortBy);
+        });
+    }
+    
+    // P2 Declared Results Sort
+    const p2DeclaredSortSelect = document.getElementById('p2DeclaredSortOptions');
+    if (p2DeclaredSortSelect) {
+        p2DeclaredSortSelect.addEventListener('change', function() {
+            const sortBy = this.value;
+            console.log(`🔄 P2 Declared Results sort changed to: ${sortBy}`);
+            sortP2DeclaredResultsTable(sortBy);
+        });
+    }
+});
+
+// Function to sort P2 Awaiting Action table
+function sortP2AwaitingActionTable(sortBy) {
+    console.log(`📊 Sorting P2 Awaiting Action table by: ${sortBy}`);
+    
+    const table = document.getElementById('awaitingActionTable');
+    if (!table) {
+        console.warn('P2 Awaiting Action table not found');
+        return;
+    }
+    
+    const tbody = table.querySelector('tbody');
+    const rows = Array.from(tbody.querySelectorAll('tr')).filter(row => 
+        !row.querySelector('td[colspan]') && !row.classList.contains('section-header-row')
+    );
+    
+    console.log(`Found ${rows.length} rows to sort in P2 Awaiting Action table`);
+    
+    // Sort the rows
+    rows.sort((a, b) => compareP2Rows(a, b, sortBy));
+    
+    // Clear and repopulate table
+    tbody.innerHTML = '';
+    rows.forEach(row => tbody.appendChild(row));
+    
+    console.log(`✅ P2 Awaiting Action table sorted by ${sortBy}`);
+}
+
+// Function to sort P2 Declared Results table
+function sortP2DeclaredResultsTable(sortBy) {
+    console.log(`📊 Sorting P2 Declared Results table by: ${sortBy}`);
+    
+    const table = document.getElementById('declaredResultsTable');
+    if (!table) {
+        console.warn('P2 Declared Results table not found');
+        return;
+    }
+    
+    const tbody = table.querySelector('tbody');
+    const rows = Array.from(tbody.querySelectorAll('tr')).filter(row => 
+        !row.querySelector('td[colspan]') && !row.classList.contains('section-header-row')
+    );
+    
+    console.log(`Found ${rows.length} rows to sort in P2 Declared Results table`);
+    
+    // Sort the rows
+    rows.sort((a, b) => compareP2Rows(a, b, sortBy));
+    
+    // Clear and repopulate table
+    tbody.innerHTML = '';
+    rows.forEach(row => tbody.appendChild(row));
+    
+    console.log(`✅ P2 Declared Results table sorted by ${sortBy}`);
+}
+
+// P2 row comparison function
+function compareP2Rows(a, b, sortBy) {
+    console.log(`Comparing P2 rows with sortBy: ${sortBy}`);
+    
+    switch (sortBy) {
+        case 'rating-desc':
+            // Total Assessment Rating (highest first)
+            const aRatingDesc = getP2TotalRating(a);
+            const bRatingDesc = getP2TotalRating(b);
+            console.log(`Rating comparison (desc): ${aRatingDesc} vs ${bRatingDesc}`);
+            return bRatingDesc - aRatingDesc; // Descending
+            
+        case 'rating-asc':
+            // Total Assessment Rating (lowest first)
+            const aRatingAsc = getP2TotalRating(a);
+            const bRatingAsc = getP2TotalRating(b);
+            console.log(`Rating comparison (asc): ${aRatingAsc} vs ${bRatingAsc}`);
+            return aRatingAsc - bRatingAsc; // Ascending
+            
+        case 'name-asc':
+            const aName = getP2Name(a);
+            const bName = getP2Name(b);
+            console.log(`P2 Name comparison (asc): "${aName}" vs "${bName}"`);
+            return aName.localeCompare(bName, undefined, { numeric: true, sensitivity: 'base' });
+            
+        case 'name-desc':
+            const aNameDesc = getP2Name(a);
+            const bNameDesc = getP2Name(b);
+            console.log(`P2 Name comparison (desc): "${aNameDesc}" vs "${bNameDesc}"`);
+            return bNameDesc.localeCompare(aNameDesc, undefined, { numeric: true, sensitivity: 'base' });
+            
+        default:
+            return 0;
+    }
+}
+
+// Helper function to get total assessment rating from P2 row
+function getP2TotalRating(row) {
+    // Try to get from data attribute first
+    const totalScore = row.getAttribute('data-score') || row.getAttribute('data-total-score');
+    if (totalScore !== null && totalScore !== '') {
+        const score = parseFloat(totalScore);
+        return isNaN(score) ? 0 : score;
+    }
+    
+    // Fallback: read from rating cell (column 5 for P2)
+    const ratingCell = row.querySelector('td:nth-child(5)');
+    if (ratingCell) {
+        const ratingText = ratingCell.textContent.trim();
+        const rating = parseFloat(ratingText);
+        return isNaN(rating) ? 0 : rating;
+    }
+    
+    return 0; // Default rating
+}
+
+// Helper function to get name from P2 row
+function getP2Name(row) {
+    const nameCell = row.querySelector('td:nth-child(2)');
+    if (nameCell) {
+        // Get the HTML content and split by <br> tags first
+        let nameContent = nameCell.innerHTML || '';
+        
+        // Split by <br> tag and get the first part (name)
+        const namePart = nameContent.split('<br>')[0].trim();
+        
+        // Remove any remaining HTML tags and get clean text
+        const tempDiv = document.createElement('div');
+        tempDiv.innerHTML = namePart;
+        const cleanName = tempDiv.textContent || tempDiv.innerText || '';
+        
+        console.log(`P2 Extracted name: "${cleanName}" from cell content`);
+        return cleanName.trim();
+    }
+    return '';
+}
+
+// Updated createTableRowP2 function to use "Total Assessment Rating"
+function createTableRowP2(rowData, isForDeclaredResults = false, isForAwaitingAction = false) {
+    const newRow = document.createElement('tr');
+    
+    // Add applicantId as data attribute
+    if (rowData.applicantId) {
+        newRow.setAttribute('data-applicantid', rowData.applicantId);
+    }
+    
+    // Add total score data attribute for sorting
+    if (rowData.totalScore) {
+        newRow.setAttribute('data-score', rowData.totalScore);
+    }
+    
+    // Create cells from stored data
+    if (rowData.cells && rowData.cells.length >= 5) {
+        // Applicant No
+        const cell1 = document.createElement('td');
+        cell1.innerHTML = rowData.cells[0];
+        newRow.appendChild(cell1);
+        
+        // Name
+        const cell2 = document.createElement('td');
+        cell2.innerHTML = rowData.cells[1];
+        newRow.appendChild(cell2);
+        
+        // Department
+        const cell3 = document.createElement('td');
+        cell3.innerHTML = rowData.cells[2];
+        newRow.appendChild(cell3);
+        
+        // Position
+        const cell4 = document.createElement('td');
+        cell4.innerHTML = rowData.cells[3];
+        newRow.appendChild(cell4);
+        
+        // Total Assessment Rating (updated from Total Score)
+        const cell5 = document.createElement('td');
+        cell5.textContent = rowData.totalScore || 'N/A';
+        cell5.style.fontWeight = 'bold';
+        cell5.style.color = '#333';
+        newRow.appendChild(cell5);
+        
+        // Status
+        const cell6 = document.createElement('td');
+        const statusMatch = rowData.cells[4].match(/<span><strong>Status:<\/strong>\s*([^<]+)<\/span>/);
+        const status = statusMatch ? statusMatch[1] : 'Unknown';
+        cell6.textContent = status;
+        newRow.appendChild(cell6);
+        
+        // Add action column based on table type
+        if (isForAwaitingAction) {
+            // Add View Evaluation and Pass/Reject buttons for awaiting action
+            const actionCell = document.createElement('td');
+            actionCell.innerHTML = `
+                <div style="display: flex; flex-direction: column; gap: 5px;">
+                    <a href="/hr/view-evaluation/${rowData.applicantId}" target="_blank">
+                        <button class="btn-view-evaluation" style="background-color: white; color: black; border: 1px solid #124A5C; padding: 6px 12px; border-radius: 4px; width: 100%; font-size: 14px; transition: background-color 0.3s ease, color 0.3s ease; cursor: pointer;"
+                            onmouseover="this.style.backgroundColor='#124A5C'; this.style.color='white';"
+                            onmouseout="this.style.backgroundColor='white'; this.style.color='black';">
+                            View Evaluation
+                        </button>
+                    </a>
+                    <div style="display: flex; gap: 5px;">
+                        <button 
+                            class="btn-pass" 
+                            onclick="p2passApplicant('${rowData.applicantId}')"
+                            style="background-color: #27ae60; color: white; border: none; padding: 6px 12px; border-radius: 4px; cursor: pointer; font-size: 14px; flex: 1;">
+                            Pass
+                        </button>
+                        <button 
+                            class="btn-reject" 
+                            onclick="p2rejectApplicant('${rowData.applicantId}')"
+                            style="background-color: #e74c3c; color: white; border: none; padding: 6px 12px; border-radius: 4px; cursor: pointer; font-size: 14px; flex: 1;">
+                            Reject
+                        </button>
+                    </div>
+                </div>
+            `;
+            newRow.appendChild(actionCell);
+        } else if (isForDeclaredResults) {
+            // Add Toggle Status button for declared results
+            const toggleCell = document.createElement('td');
+            toggleCell.innerHTML = `
+                <button 
+                    class="btn-toggle-status" 
+                    data-applicantid="${rowData.applicantId}"
+                    onclick="toggleP2ApplicantStatus(this)"
+                >
+                    ${status.includes('PASSED') ? 'Passed' : 'Failed'}
+                </button>
+            `;
+            newRow.appendChild(toggleCell);
+        }
+    }
+    
+    return newRow;
+}
+
+// Updated updateAwaitingActionTableP2 function with default sorting
+function updateAwaitingActionTableP2(awaitingRows) {
+    const awaitingActionTable = document.getElementById('awaitingActionTable');
+    if (!awaitingActionTable) return;
+    
+    const awaitingTbody = awaitingActionTable.querySelector('tbody');
+    if (!awaitingTbody) return;
+    
+    // Empty the tbody first
+    awaitingTbody.innerHTML = '';
+    
+    if (awaitingRows.length > 0) {
+        // Add the section header
+        const headerRow = document.createElement('tr');
+        headerRow.classList.add('section-header-row');
+        awaitingTbody.appendChild(headerRow);
+        
+        // Add each row with Pass/Reject buttons
+        awaitingRows.forEach((rowData) => {
+            const newRow = createTableRowP2(rowData, false, true); // third parameter for showing action buttons
+            awaitingTbody.appendChild(newRow);
+        });
+        
+        // Apply default sorting after population
+        setTimeout(() => {
+            const sortSelect = document.getElementById('p2AwaitingSortOptions');
+            if (sortSelect && sortSelect.value) {
+                sortP2AwaitingActionTable(sortSelect.value);
+            }
+        }, 500);
+        
+        console.log(`✅ P2 Awaiting Action table populated with ${awaitingRows.length} rows`);
+    } else {
+        // Display no data message
+        const messageRow = document.createElement('tr');
+        messageRow.innerHTML = `<td colspan="7" class="no-data-message">No applicants awaiting P2 review.</td>`;
+        awaitingTbody.appendChild(messageRow);
+    }
+}
+
+// Updated updateDeclaredResultsTableP2 function with default sorting
+function updateDeclaredResultsTableP2(declaredRows) {
+    const declaredResultsTable = document.getElementById('declaredResultsTable');
+    if (!declaredResultsTable) return;
+    
+    const declaredTbody = declaredResultsTable.querySelector('tbody');
+    if (!declaredTbody) return;
+    
+    // Empty the tbody first
+    declaredTbody.innerHTML = '';
+    
+    if (declaredRows.length > 0) {
+        // Add the section header
+        const headerRow = document.createElement('tr');
+        headerRow.classList.add('section-header-row');
+        declaredTbody.appendChild(headerRow);
+        
+        // Add each row with Toggle Status button
+        declaredRows.forEach((rowData) => {
+            const newRow = createTableRowP2(rowData, true);
+            declaredTbody.appendChild(newRow);
+        });
+        
+        // Setup toggle buttons
+        setupToggleStatusButtonsP2();
+        
+        // Apply default sorting after population
+        setTimeout(() => {
+            const sortSelect = document.getElementById('p2DeclaredSortOptions');
+            if (sortSelect && sortSelect.value) {
+                sortP2DeclaredResultsTable(sortSelect.value);
+            }
+        }, 500);
+        
+        console.log(`✅ P2 Declared Results table populated with ${declaredRows.length} rows`);
+    } else {
+        // Display no data message
+        const messageRow = document.createElement('tr');
+        messageRow.innerHTML = `<td colspan="7" class="no-data-message">No P2 applicants with declared results.</td>`;
+        declaredTbody.appendChild(messageRow);
+    }
+}
+
+// Make functions globally available
+window.sortP2AwaitingActionTable = sortP2AwaitingActionTable;
+window.sortP2DeclaredResultsTable = sortP2DeclaredResultsTable;
+window.compareP2Rows = compareP2Rows;
+window.getP2TotalRating = getP2TotalRating;
+window.getP2Name = getP2Name;
+
+console.log("✅ P2 Tables Sorting with Total Assessment Rating functionality loaded");
+
 
 // Enhanced function to open initial screening modal
 function hrInitialScreeningModal(userId, lastName, firstName, birthday, email, phoneNo, scores, verdict, degreeUrl, certUrl, resumeUrl) {
