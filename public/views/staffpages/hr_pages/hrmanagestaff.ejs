@@ -907,107 +907,170 @@
             });
         
         // Handle form submission
-        document.getElementById('newStaffForm').addEventListener('submit', async function(event) {
-            event.preventDefault(); // Prevent default form submission
-            
-            // Show loading state
-            const submitButton = this.querySelector('button[type="submit"]');
-            const originalButtonText = submitButton.innerHTML;
-            submitButton.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Saving...';
-            submitButton.disabled = true;
-            
-            const formData = new FormData(this);
-            
-            // Get departmentId and check if it's selected
-            const departmentId = formData.get('department');
-            if (!departmentId) {
-                alert('Please select a department');
-                submitButton.innerHTML = originalButtonText;
-                submitButton.disabled = false;
-                return;
-            }
-            
-            // Get jobId and check if it's selected correctly
-            const jobId = document.getElementById('jobTitle').value;
-            if (!jobId || jobId === 'undefined' || jobId === '') {
-                alert('Please select a valid job title.');
-                submitButton.innerHTML = originalButtonText;
-                submitButton.disabled = false;
-                return;
-            }
-            
-            // Validate password option
-            const passwordOption = formData.get('passwordOption');
-            if (passwordOption === 'custom' && !formData.get('customPassword')) {
-                alert('Please enter a custom password');
-                submitButton.innerHTML = originalButtonText;
-                submitButton.disabled = false;
-                return;
-            }
-            
-            if (passwordOption === 'random' && !formData.get('generatedPassword')) {
-                alert('Please generate a random password');
-                submitButton.innerHTML = originalButtonText;
-                submitButton.disabled = false;
-                return;
-            }
-            
-            // Log data for debugging
-            console.log('Form data before submission:', {
-                departmentId,
-                jobId,
+// Updated form submission handler (replace the existing one in your HTML)
+document.getElementById('newStaffForm').addEventListener('submit', async function(event) {
+    event.preventDefault(); // Prevent default form submission
+    
+    // Show loading state
+    const submitButton = this.querySelector('button[type="submit"]');
+    const originalButtonText = submitButton.innerHTML;
+    submitButton.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Saving & Sending Email...';
+    submitButton.disabled = true;
+    
+    const formData = new FormData(this);
+    
+    // Get departmentId and check if it's selected
+    const departmentId = formData.get('department');
+    if (!departmentId) {
+        alert('Please select a department');
+        submitButton.innerHTML = originalButtonText;
+        submitButton.disabled = false;
+        return;
+    }
+    
+    // Get jobId and check if it's selected correctly
+    const jobId = document.getElementById('jobTitle').value;
+    if (!jobId || jobId === 'undefined' || jobId === '') {
+        alert('Please select a valid job title.');
+        submitButton.innerHTML = originalButtonText;
+        submitButton.disabled = false;
+        return;
+    }
+    
+    // Validate password option
+    const passwordOption = formData.get('passwordOption');
+    if (passwordOption === 'custom' && !formData.get('customPassword')) {
+        alert('Please enter a custom password');
+        submitButton.innerHTML = originalButtonText;
+        submitButton.disabled = false;
+        return;
+    }
+    
+    if (passwordOption === 'random' && !formData.get('generatedPassword')) {
+        alert('Please generate a random password');
+        submitButton.innerHTML = originalButtonText;
+        submitButton.disabled = false;
+        return;
+    }
+    
+    // Validate email format
+    const email = formData.get('email');
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(email)) {
+        alert('Please enter a valid email address');
+        submitButton.innerHTML = originalButtonText;
+        submitButton.disabled = false;
+        return;
+    }
+    
+    // Log data for debugging
+    console.log('Form data before submission:', {
+        departmentId,
+        jobId,
+        lastName: formData.get('lastName'),
+        firstName: formData.get('firstName'),
+        email: formData.get('email'),
+        role: formData.get('role'),
+        passwordOption: formData.get('passwordOption'),
+        customPassword: formData.get('customPassword'),
+        generatedPassword: formData.get('generatedPassword')
+    });
+    
+    try {
+        const response = await fetch('/hr/api/add-staff', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({
                 lastName: formData.get('lastName'),
                 firstName: formData.get('firstName'),
                 email: formData.get('email'),
+                departmentId,
+                jobId,  // Ensure jobId is passed here
                 role: formData.get('role'),
                 passwordOption: formData.get('passwordOption'),
                 customPassword: formData.get('customPassword'),
                 generatedPassword: formData.get('generatedPassword')
-            });
-            
-            try {
-                const response = await fetch('/hr/api/add-staff', {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json'
-                    },
-                    body: JSON.stringify({
-                        lastName: formData.get('lastName'),
-                        firstName: formData.get('firstName'),
-                        email: formData.get('email'),
-                        departmentId,
-                        jobId,  // Ensure jobId is passed here
-                        role: formData.get('role'),
-                        passwordOption: formData.get('passwordOption'),
-                        customPassword: formData.get('customPassword'),
-                        generatedPassword: formData.get('generatedPassword')
-                    })
-                });
-                
-                if (!response.ok) {
-                    throw new Error('Network response was not ok');
-                }
-                
-                const result = await response.json();
-                console.log('Staff added successfully:', result);
-                
-                // Show success message and reload page
-                alert('Staff member added successfully!');
-                window.location.reload();
-                
-                // Close modal and reset the form
-                closeModal();
-                document.getElementById('newStaffForm').reset();
-            } catch (error) {
-                console.error('Error adding new staff:', error);
-                alert('Failed to add new staff member. Please try again.');
-                
-                // Reset button state
-                submitButton.innerHTML = originalButtonText;
-                submitButton.disabled = false;
-            }
+            })
         });
         
+        if (!response.ok) {
+            throw new Error('Network response was not ok');
+        }
+        
+        const result = await response.json();
+        console.log('Staff added successfully:', result);
+        
+        // Show appropriate success message based on email status
+        let successMessage = 'Staff member added successfully!';
+        if (result.emailSent) {
+            successMessage += '\n\nA welcome email with login details has been sent to their personal email address.';
+        } else if (result.emailSent === false) {
+            successMessage += '\n\nNote: Welcome email could not be sent. Please provide the login details manually.';
+            console.warn('Email sending failed:', result.emailError);
+        }
+        
+        alert(successMessage);
+        
+        // Show additional confirmation dialog for email status
+        if (result.emailSent) {
+            const emailConfirmation = confirm(
+                `✅ Welcome email sent successfully to ${email}\n\n` +
+                'The new staff member will receive:\n' +
+                '• Their login credentials\n' +
+                '• Account details\n' +
+                '• Instructions for first login\n\n' +
+                'Click OK to continue or Cancel to view this message again.'
+            );
+        }
+        
+        // Reload page to show the new staff member
+        window.location.reload();
+        
+        // Close modal and reset the form
+        closeModal();
+        document.getElementById('newStaffForm').reset();
+        
+    } catch (error) {
+        console.error('Error adding new staff:', error);
+        alert('Failed to add new staff member. Please try again.\n\nError: ' + error.message);
+        
+        // Reset button state
+        submitButton.innerHTML = originalButtonText;
+        submitButton.disabled = false;
+    }
+});
+
+// Additional helper function to validate email in real-time
+document.getElementById('email').addEventListener('blur', function() {
+    const email = this.value;
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    
+    if (email && !emailRegex.test(email)) {
+        this.style.borderColor = '#dc3545';
+        this.style.backgroundColor = '#f8d7da';
+        
+        // Show error message
+        let errorMsg = this.parentNode.querySelector('.email-error');
+        if (!errorMsg) {
+            errorMsg = document.createElement('small');
+            errorMsg.className = 'email-error text-danger';
+            errorMsg.textContent = 'Please enter a valid email address';
+            this.parentNode.appendChild(errorMsg);
+        }
+    } else {
+        this.style.borderColor = '';
+        this.style.backgroundColor = '';
+        
+        // Remove error message
+        const errorMsg = this.parentNode.querySelector('.email-error');
+        if (errorMsg) {
+            errorMsg.remove();
+        }
+    }
+});
+
         // Close modal when clicking outside of it
         window.onclick = function(event) {
             const modal = document.getElementById('staffModal');

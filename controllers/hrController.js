@@ -8,9 +8,18 @@ const applicantController = require('../controllers/applicantController');
 const { check } = require('express-validator');
 const { getEmailTemplateData } = require('../utils/emailService');
 const { sendEmail } = require('../utils/emailService');
+const nodemailer = require('nodemailer');
 
-
-
+// Configure nodemailer transporter
+const transporter = nodemailer.createTransport({
+    host: process.env.EMAIL_HOST,
+    port: process.env.EMAIL_PORT,
+    secure: false, // true for 465, false for other ports
+    auth: {
+        user: process.env.EMAIL_USER,
+        pass: process.env.EMAIL_PASS
+    }
+});
 
 async function fileUpload(req, uploadType = 'normal') {
     return new Promise((resolve, reject) => {
@@ -857,6 +866,195 @@ async function sendP2EmailWithTemplate(email, templateType, applicantName, jobTi
     }
 }
 
+// Function to send welcome email to new staff
+async function sendWelcomeEmail(staffData) {
+    const { email, firstName, lastName, userRole, department, jobTitle, password } = staffData;
+    
+    const mailOptions = {
+        from: {
+            name: 'HR Department',
+            address: process.env.EMAIL_USER
+        },
+        to: email,
+        subject: 'Welcome to the Company ABC Team - Your Account Details',
+        html: `
+            <!DOCTYPE html>
+            <html>
+            <head>
+                <style>
+                    body {
+                        font-family: 'Arial', sans-serif;
+                        line-height: 1.6;
+                        color: #333;
+                        max-width: 600px;
+                        margin: 0 auto;
+                        padding: 20px;
+                    }
+                    .header {
+                        background-color: #2385B0;
+                        color: white;
+                        padding: 20px;
+                        text-align: center;
+                        border-radius: 8px 8px 0 0;
+                    }
+                    .content {
+                        background-color: #f9f9f9;
+                        padding: 30px;
+                        border-radius: 0 0 8px 8px;
+                        border: 1px solid #ddd;
+                        border-top: none;
+                    }
+                    .welcome-text {
+                        font-size: 18px;
+                        margin-bottom: 20px;
+                    }
+                    .details-box {
+                        background-color: white;
+                        padding: 20px;
+                        border-radius: 6px;
+                        border-left: 4px solid #2385B0;
+                        margin: 20px 0;
+                    }
+                    .detail-row {
+                        display: flex;
+                        margin: 10px 0;
+                        padding: 8px 0;
+                        border-bottom: 1px solid #eee;
+                    }
+                    .detail-label {
+                        font-weight: bold;
+                        width: 140px;
+                        color: #2385B0;
+                    }
+                    .detail-value {
+                        flex: 1;
+                    }
+                    .password-highlight {
+                        background-color: #fff3cd;
+                        padding: 15px;
+                        border-radius: 4px;
+                        border-left: 4px solid #ffc107;
+                        margin: 20px 0;
+                    }
+                    .password-text {
+                        font-family: 'Courier New', monospace;
+                        font-size: 16px;
+                        font-weight: bold;
+                        color: #856404;
+                        background-color: white;
+                        padding: 8px 12px;
+                        border-radius: 4px;
+                        display: inline-block;
+                        margin-top: 8px;
+                    }
+                    .instructions {
+                        background-color: #d4edda;
+                        padding: 15px;
+                        border-radius: 4px;
+                        border-left: 4px solid #28a745;
+                        margin: 20px 0;
+                    }
+                    .footer {
+                        text-align: center;
+                        margin-top: 30px;
+                        padding-top: 20px;
+                        border-top: 1px solid #ddd;
+                        color: #666;
+                        font-size: 14px;
+                    }
+                    .button {
+                        display: inline-block;
+                        background-color: #2385B0;
+                        color: white;
+                        padding: 12px 24px;
+                        text-decoration: none;
+                        border-radius: 4px;
+                        margin: 15px 0;
+                    }
+                </style>
+            </head>
+            <body>
+                <div class="header">
+                    <h1>Welcome to the Company ABC Team!</h1>
+                </div>
+                
+                <div class="content">
+                    <div class="welcome-text">
+                        Dear ${firstName} ${lastName},
+                    </div>
+                    
+                    <p>We're excited to welcome you to our team! Your staff account has been successfully created. Below are your account details and login information.</p>
+                    
+                    <div class="details-box">
+                        <h3 style="margin-top: 0; color: #2385B0;">Your Account Details</h3>
+                        
+                        <div class="detail-row">
+                            <div class="detail-label">Full Name:</div>
+                            <div class="detail-value">${firstName} ${lastName}</div>
+                        </div>
+                        
+                        <div class="detail-row">
+                            <div class="detail-label">Email:</div>
+                            <div class="detail-value">${email}</div>
+                        </div>
+                        
+                        <div class="detail-row">
+                            <div class="detail-label">Department:</div>
+                            <div class="detail-value">${department}</div>
+                        </div>
+                        
+                        <div class="detail-row">
+                            <div class="detail-label">Job Title:</div>
+                            <div class="detail-value">${jobTitle}</div>
+                        </div>
+                        
+                        <div class="detail-row">
+                            <div class="detail-label">Role:</div>
+                            <div class="detail-value">${userRole}</div>
+                        </div>
+                    </div>
+                    
+                    <div class="password-highlight">
+                        <strong>⚠️ Important - Your Login Password:</strong>
+                        <div class="password-text">${password}</div>
+                        <p style="margin-bottom: 0; font-size: 14px;">
+                            <strong>Please save this password securely.</strong> You'll need it to log into your account.
+                        </p>
+                    </div>
+                    
+                    <div class="instructions">
+                        <h4 style="margin-top: 0; color: #155724;">Next Steps:</h4>
+                        <ol style="margin-bottom: 0;">
+                            <li>Save your login credentials in a secure location</li>
+                            <li>Use your email address and the password above to log in</li>
+                            <li>Change your password after your first login for security</li>
+                            <li>Contact HR if you have any questions or issues accessing your account</li>
+                        </ol>
+                    </div>
+                    
+                    <p>If you have any questions or need assistance, please don't hesitate to contact our HR department.</p>
+                    
+                    <p>We look forward to working with you!</p>
+                    
+                    <div class="footer">
+                        <p><strong>Company ABC HR Department</strong><br>
+                        This is an automated message. Please do not reply to this email.</p>
+                    </div>
+                </div>
+            </body>
+            </html>
+        `
+    };
+
+    try {
+        const info = await transporter.sendMail(mailOptions);
+        console.log('Welcome email sent successfully:', info.messageId);
+        return { success: true, messageId: info.messageId };
+    } catch (error) {
+        console.error('Error sending welcome email:', error);
+        return { success: false, error: error.message };
+    }
+}
 
 const hrController = {
     getHRDashboard: async function(req, res) {
@@ -4476,87 +4674,133 @@ updateJobOffer: async function(req, res) {
             res.redirect('/staff/login');
         }
     },
+addNewStaff: async function(req, res) {
+    if (req.session.user && req.session.user.userRole === 'HR') {
+        const { departmentId, jobId, lastName, firstName, email, role, passwordOption, customPassword, generatedPassword } = req.body;
 
-    addNewStaff: async function(req, res) {
-        if (req.session.user && req.session.user.userRole === 'HR') {
-            const { departmentId, jobId, lastName, firstName, email, role, passwordOption, customPassword, generatedPassword } = req.body;
-    
-            console.log('Request Body:', req.body);
-            console.log('Password Option:', passwordOption);
-            console.log('Custom Password:', customPassword);
-            console.log('Generated Password:', generatedPassword);
-    
-            try {
-                // Handle password option
-                let password;
-                if (passwordOption === 'custom') {
-                    password = customPassword;
-                } else if (passwordOption === 'random') {  // Corrected this line
-                    password = generatedPassword;
-                } else {
-                    throw new Error('Invalid password option');
-                }
-    
-                // Check if password is provided
-                if (!password) {
-                    throw new Error('Password is required');
-                }
-    
-                console.log('Password before hashing:', password);
-    
-                // Hash the password
-                const hashedPassword = await bcrypt.hash(password, 10);
-                console.log('Hashed Password:', hashedPassword);
-    
-                // Insert into useraccounts table
-                const { data: userData, error: userError } = await supabase
-                    .from('useraccounts')
-                    .insert([{
-                        userPass: hashedPassword,
-                        userRole: role,
-                        userIsDisabled: false,
-                        userEmail: email,
-                        userStaffOgPass: password // Store the actual password
-                    }])
-                    .select()
-                    .single();
-    
-                if (userError) {
-                    console.error('User Insert Error:', userError);
-                    throw userError;
-                }
-    
-                const userId = userData.userId;
-    
-                // Insert into staffaccounts table
-                const { data: staffData, error: staffError } = await supabase
-                    .from('staffaccounts')
-                    .insert([{
-                        userId,
-                        departmentId,
-                        jobId,
-                        lastName,
-                        firstName
-                    }])
-                    .select()
-                    .single();
-    
-                if (staffError) {
-                    console.error('Staff Insert Error:', staffError);
-                    throw staffError;
-                }
-    
-                res.status(200).json({ message: 'Staff added successfully.' });
-                console.log('Staff data:', staffData);
-    
-            } catch (error) {
-                console.error('Error adding staff:', error.message);
-                res.status(500).json({ error: `Error adding staff. Please try again. ${error.message}` });
+        console.log('Request Body:', req.body);
+        console.log('Password Option:', passwordOption);
+        console.log('Custom Password:', customPassword);
+        console.log('Generated Password:', generatedPassword);
+
+        try {
+            // Handle password option
+            let password;
+            if (passwordOption === 'custom') {
+                password = customPassword;
+            } else if (passwordOption === 'random') {
+                password = generatedPassword;
+            } else {
+                throw new Error('Invalid password option');
             }
-        } else {
-            res.status(403).json({ error: 'Unauthorized access' });
+
+            // Check if password is provided
+            if (!password) {
+                throw new Error('Password is required');
+            }
+
+            console.log('Password before hashing:', password);
+
+            // Hash the password
+            const hashedPassword = await bcrypt.hash(password, 10);
+            console.log('Hashed Password:', hashedPassword);
+
+            // Insert into useraccounts table
+            const { data: userData, error: userError } = await supabase
+                .from('useraccounts')
+                .insert([{
+                    userPass: hashedPassword,
+                    userRole: role,
+                    userIsDisabled: false,
+                    userEmail: email,
+                    userStaffOgPass: password // Store the actual password
+                }])
+                .select()
+                .single();
+
+            if (userError) {
+                console.error('User Insert Error:', userError);
+                throw userError;
+            }
+
+            const userId = userData.userId;
+
+            // Insert into staffaccounts table
+            const { data: staffData, error: staffError } = await supabase
+                .from('staffaccounts')
+                .insert([{
+                    userId,
+                    departmentId,
+                    jobId,
+                    lastName,
+                    firstName
+                }])
+                .select()
+                .single();
+
+            if (staffError) {
+                console.error('Staff Insert Error:', staffError);
+                throw staffError;
+            }
+
+            // Fetch department and job title names for the email
+            const { data: department, error: deptError } = await supabase
+                .from('departments')
+                .select('deptName')
+                .eq('departmentId', departmentId)
+                .single();
+
+            const { data: jobPosition, error: jobError } = await supabase
+                .from('jobpositions')
+                .select('jobTitle')
+                .eq('jobId', jobId)
+                .single();
+
+            if (deptError || jobError) {
+                console.error('Error fetching department/job data:', deptError || jobError);
+                // Continue with staff creation even if we can't fetch names
+            }
+
+            // Prepare email data
+            const emailData = {
+                email: email,
+                firstName: firstName,
+                lastName: lastName,
+                userRole: role,
+                department: department ? department.deptName : 'Unknown Department',
+                jobTitle: jobPosition ? jobPosition.jobTitle : 'Unknown Job Title',
+                password: password
+            };
+
+            // Send welcome email
+            console.log('Sending welcome email to:', email);
+            const emailResult = await sendWelcomeEmail(emailData);
+            
+            if (emailResult.success) {
+                console.log('Welcome email sent successfully');
+                res.status(200).json({ 
+                    message: 'Staff added successfully and welcome email sent.',
+                    emailSent: true 
+                });
+            } else {
+                console.error('Failed to send welcome email:', emailResult.error);
+                res.status(200).json({ 
+                    message: 'Staff added successfully, but failed to send welcome email.',
+                    emailSent: false,
+                    emailError: emailResult.error
+                });
+            }
+
+            console.log('Staff data:', staffData);
+
+        } catch (error) {
+            console.error('Error adding staff:', error.message);
+            res.status(500).json({ error: `Error adding staff. Please try again. ${error.message}` });
         }
-    },
+    } else {
+        res.status(403).json({ error: 'Unauthorized access' });
+    }
+},
 
     // Leave Request functionality
     getLeaveRequestForm: async function(req, res) {
