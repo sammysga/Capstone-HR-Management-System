@@ -2775,14 +2775,30 @@ function startP2GmailIntegrationFlow() {
 }
 
 
+// P2 pass function (for table buttons)
 function p2passApplicant(applicantId) {
-    console.log(`🟢 [P2 Pass] Starting pass action for applicantId: ${applicantId}`);
+    console.log(`🟢 [P2 Pass] Function called for applicantId: ${applicantId}`);
     
     if (!applicantId) {
         console.error('❌ [P2 Pass] Missing applicantId');
         alert("Error: Invalid Applicant ID");
         return;
     }
+
+    // Show confirmation dialog
+    if (!confirm("Are you sure you want to pass this P2 applicant? This action cannot be undone.")) {
+        return;
+    }
+
+    // Show loading state
+    const passButtons = document.querySelectorAll(`button[onclick*="p2passApplicant('${applicantId}'"]`);
+    passButtons.forEach(button => {
+        button.disabled = true;
+        button.textContent = 'Processing...';
+        button.style.backgroundColor = '#6c757d';
+    });
+
+    console.log("📡 [P2 Pass] Sending pass request for applicantId:", applicantId);
 
     // Make API call to update status
     fetch('/hr/markAsP2Passed', {
@@ -2820,18 +2836,41 @@ function p2passApplicant(applicantId) {
     .catch(error => {
         console.error("❌ [P2 Pass] Network error:", error);
         alert("Failed to update applicant status.");
+    })
+    .finally(() => {
+        // Reset button states
+        passButtons.forEach(button => {
+            button.disabled = false;
+            button.textContent = 'Pass';
+            button.style.backgroundColor = '#27ae60';
+        });
     });
 }
 
-// Function to handle P2 reject action from awaiting table
+// P2 reject function (for table buttons)
 function p2rejectApplicant(applicantId) {
-    console.log(`🔴 [P2 Reject] Starting reject action for applicantId: ${applicantId}`);
+    console.log(`🔴 [P2 Reject] Function called for applicantId: ${applicantId}`);
     
     if (!applicantId) {
         console.error('❌ [P2 Reject] Missing applicantId');
         alert("Error: Invalid Applicant ID");
         return;
     }
+
+    // Show confirmation dialog
+    if (!confirm("Are you sure you want to reject this P2 applicant? This action cannot be undone.")) {
+        return;
+    }
+
+    // Show loading state
+    const rejectButtons = document.querySelectorAll(`button[onclick*="p2rejectApplicant('${applicantId}'"]`);
+    rejectButtons.forEach(button => {
+        button.disabled = true;
+        button.textContent = 'Processing...';
+        button.style.backgroundColor = '#6c757d';
+    });
+
+    console.log("📡 [P2 Reject] Sending reject request for applicantId:", applicantId);
 
     // Make API call to update status
     fetch('/hr/markAsP2Failed', {
@@ -2869,6 +2908,14 @@ function p2rejectApplicant(applicantId) {
     .catch(error => {
         console.error("❌ [P2 Reject] Network error:", error);
         alert("Failed to update applicant status.");
+    })
+    .finally(() => {
+        // Reset button states
+        rejectButtons.forEach(button => {
+            button.disabled = false;
+            button.textContent = 'Reject';
+            button.style.backgroundColor = '#e74c3c';
+        });
     });
 }
 
@@ -5010,6 +5057,7 @@ function goToP2ReviewFilter() {
     document.getElementById("filter-review").click();
 }
 
+// Make sure to call this function when P2 review filter is activated
 function updateSectionHeaderButtonsP2() {
     console.log("🔧 [P2 Header] Updating section header buttons for P2");
     
@@ -5027,15 +5075,17 @@ function updateSectionHeaderButtonsP2() {
     const p2Button = document.createElement('button');
     p2Button.id = 'finalizeP2Button';
     p2Button.textContent = 'Finalize P2 Review';
-    p2Button.style.padding = '10px 15px';
-    p2Button.style.fontSize = '16px';
-    p2Button.style.fontWeight = 'bold';
-    p2Button.style.border = 'none';
-    p2Button.style.backgroundColor = '#124A5C';
-    p2Button.style.color = 'white';
-    p2Button.style.borderRadius = '4px';
-    p2Button.style.cursor = 'pointer';
-    p2Button.style.transition = 'background-color 0.3s ease';
+    p2Button.style.cssText = `
+        padding: 10px 15px;
+        font-size: 16px;
+        font-weight: bold;
+        border: none;
+        background-color: #124A5C;
+        color: white;
+        border-radius: 4px;
+        cursor: pointer;
+        transition: background-color 0.3s ease;
+    `;
     
     p2Button.addEventListener('mouseover', function() {
         this.style.backgroundColor = '#B4E3E3';
@@ -5062,7 +5112,6 @@ function updateSectionHeaderButtonsP2() {
     rightSection.appendChild(p2Button);
     console.log("✅ [P2 Header] Added Finalize P2 Review button");
 }
-
 // =========================
 // EXISTING FUNCTIONS (KEEPING ALL ORIGINAL FUNCTIONALITY)
 // =========================
@@ -6019,41 +6068,6 @@ function displayUploadedDocument(fileUrl, linkId, previewId) {
         docPreview.innerHTML = ""; // No preview for other file types
     }
 }
-// Enhanced confirm function for initial screening
-function confirmHRInitialScreeningModal() {
-    console.log("🔄 Enhanced confirm function called");
-    
-    const userId = document.getElementById("userId").value;
-    
-    // Check if this is being called from a P1 pass action
-    if (window.p1ActionType === 'pass' && window.p1ActionUserId === userId) {
-        console.log("🟢 [P1 Pass] Confirming pass action via modal");
-        
-        if (isReuploadRequested) {
-            // Handle document reupload request - no verification checkbox needed
-            handleDocumentReuploadRequest(userId);
-        } else {
-            // Normal confirmation process - requires verification checkbox
-            const checkbox = document.getElementById("hr-verification-checkbox");
-            const comments = document.getElementById("hr-verification-comments").value;
-            
-            if (!checkbox.checked) {
-                alert("Please confirm that the applicant is eligible for endorsement by checking the verification checkbox.");
-                return;
-            }
-            
-            // Call the normal confirmation which will pass the applicant
-            handleNormalConfirmation(userId, comments);
-        }
-        
-        // Clear the action flags
-        window.p1ActionType = null;
-        window.p1ActionUserId = null;
-    } else {
-        // Call the original confirmation function
-        confirmHRInitialScreeningModal();
-    }
-}
 
 // Function to handle document reupload request
 function handleDocumentReuploadRequest(userId) {  // Remove comments parameter
@@ -6134,75 +6148,8 @@ function handleNormalConfirmation(userId, comments) {
         alert("Failed to update applicant status.");
     });
 }
-// Function to handle final modal confirmation
-function confirmFinalHRModal() {
-    const userId = document.getElementById("final-userId").value;
-    const checkbox = document.getElementById("final-hr-verification-checkbox");
-    const comments = document.getElementById("final-hr-verification-comments").value;
-    
-    if (!checkbox.checked) {
-        alert("Please confirm that the applicant is eligible for endorsement by checking the verification checkbox.");
-        return;
-    }
-    
-    const requestData = {
-        userId: userId,
-        hrComments: comments
-    };
-    
-    fetch('/hr/applicant-tracker-jobposition/P1AwaitingforLineManager', {
-        method: 'POST',
-        headers: {
-            'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(requestData),
-    })
-    .then(response => response.json())
-    .then(data => {
-        if (data.success) {
-            alert("Successfully updated applicant status!");
-            document.getElementById('hrInitialScreeningDecisionModal').style.display = 'none';
-            location.reload();
-        } else {
-            alert("Error updating applicant status: " + data.message);
-        }
-    })
-    .catch(error => {
-        console.error("Error:", error);
-        alert("Failed to update applicant status.");
-    });
-}
 
-// Function to reject from final modal
-function rejectFinalHRModal() {
-    const userId = document.getElementById("final-userId").value;
-    
-    if (!confirm("Are you sure you want to reject this applicant? This action cannot be undone.")) {
-        return;
-    }
-    
-    fetch('/hr/applicant-tracker-jobposition/P1HRFailed', {
-        method: 'POST',
-        headers: {
-            'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ userId }),
-    })
-    .then(response => response.json())
-    .then(data => {
-        if (data.success) {
-            alert("Successfully updated applicant status to P1 - HR FAILED!");
-            document.getElementById('hrInitialScreeningDecisionModal').style.display = 'none';
-            location.reload();
-        } else {
-            alert("Error updating applicant status: " + data.message);
-        }
-    })
-    .catch(error => {
-        console.error("Error:", error);
-        alert("Failed to update applicant status.");
-    });
-}
+
 
 // Function to determine which modal to show based on applicant status
 function showAppropriateModal(userId, lastName, firstName, birthday, email, phoneNo, scores, verdict, degreeUrl, certUrl, resumeUrl, applicantStatus) {
@@ -7142,9 +7089,6 @@ window.redirectToReviewFilter = redirectToReviewFilter;
 window.openP1EvaluationModal = openP1EvaluationModal;
 window.fetchApplicantDataAndShowModal = fetchApplicantDataAndShowModal;
 window.fetchFromServer = fetchFromServer;
-
-
-// Update section header buttons for P1 and P2 - Fixed positioning with debugging
 function updateSectionHeaderButtonsP1AndP2() {
     console.log("🔧 [P1&P2 Header] Updating section header buttons for P1 and P2");
     
@@ -7182,39 +7126,6 @@ function updateSectionHeaderButtonsP1AndP2() {
     console.log("🔍 [Debug] P1 Header found:", p1Header ? p1Header.textContent : "NOT FOUND");
     console.log("🔍 [Debug] P2 Header found:", p2Header ? p2Header.textContent : "NOT FOUND");
     
-    if (!p1Header && !p2Header) {
-        console.warn("⚠️ [P1&P2 Header] Neither P1 nor P2 section headers found");
-        // Fallback: try to use the old container method
-        const rightSection = document.querySelector('#finalizeButtonContainer');
-        if (rightSection) {
-            console.log("🔄 [Fallback] Using original container method");
-            // Clear existing buttons
-            rightSection.innerHTML = '';
-            
-            // Add both buttons to the container
-            // const p1Button = createButton('finalizeP1Button', 'Finalize P1 Review', function() {
-            //     console.log("🎯 [P1 Button] Finalize P1 Review button clicked");
-            //     alert("P1 Review finalization - to be implemented");
-            // });
-            
-            const p2Button = createButton('finalizeP2Button', 'Finalize P2 Review', function() {
-                console.log("🎯 [P2 Button] Finalize P2 Review button clicked");
-                if (checkAllP2ApplicantsMarked()) {
-                    console.log("✅ [P2 Button] All P2 applicants marked, showing modal");
-                    document.getElementById('notifyApplicantsModal').style.display = 'block';
-                } else {
-                    console.warn("⚠️ [P2 Button] Not all P2 applicants marked");
-                    alert("Not all P2 applicants have been marked as passed or failed. Please make a decision for all applicants first.");
-                }
-            });
-            
-            rightSection.appendChild(p1Button);
-            rightSection.appendChild(p2Button);
-            console.log("✅ [Fallback] Added both buttons to container");
-            return;
-        }
-    }
-    
     // Helper function to create buttons
     function createButton(id, text, clickHandler) {
         const button = document.createElement('button');
@@ -7233,11 +7144,50 @@ function updateSectionHeaderButtonsP1AndP2() {
             margin-left: 20px;
             vertical-align: middle;
         `;
+        
+        // Add hover effects
+        button.addEventListener('mouseover', function() {
+            this.style.backgroundColor = '#B4E3E3';
+            this.style.color = '#124A5C';
+        });
+        
+        button.addEventListener('mouseout', function() {
+            this.style.backgroundColor = '#124A5C';
+            this.style.color = 'white';
+        });
+        
         button.addEventListener('click', clickHandler);
         return button;
     }
     
-    // Create and place P1 button
+    if (!p1Header && !p2Header) {
+        console.warn("⚠️ [P1&P2 Header] Neither P1 nor P2 section headers found");
+        // Fallback: try to use the old container method
+        const rightSection = document.querySelector('#finalizeButtonContainer');
+        if (rightSection) {
+            console.log("🔄 [Fallback] Using original container method");
+            // Clear existing buttons
+            rightSection.innerHTML = '';
+            
+            // Add P2 button to the container (P1 button commented out in original code)
+            const p2Button = createButton('finalizeP2Button', 'Finalize P2 Review', function() {
+                console.log("🎯 [P2 Button] Finalize P2 Review button clicked");
+                if (checkAllP2ApplicantsMarked()) {
+                    console.log("✅ [P2 Button] All P2 applicants marked, showing modal");
+                    document.getElementById('notifyApplicantsModal').style.display = 'block';
+                } else {
+                    console.warn("⚠️ [P2 Button] Not all P2 applicants marked");
+                    alert("Not all P2 applicants have been marked as passed or failed. Please make a decision for all applicants first.");
+                }
+            });
+            
+            rightSection.appendChild(p2Button);
+            console.log("✅ [Fallback] Added P2 button to container");
+            return;
+        }
+    }
+    
+    // Create and place P1 button (if P1 header exists and you want P1 functionality)
     if (p1Header) {
         // Remove existing P1 button if it exists
         const existingP1Button = document.getElementById('finalizeP1Button');
@@ -7245,10 +7195,12 @@ function updateSectionHeaderButtonsP1AndP2() {
             existingP1Button.remove();
         }
         
-        // const p1Button = createButton('finalizeP1Button', 'Finalize P1 Review', function() {
-        //     console.log("🎯 [P1 Button] Finalize P1 Review button clicked");
-        //     alert("P1 Review finalization - to be implemented");
-        // });
+        // Uncomment this if you want P1 finalize button
+        /*
+        const p1Button = createButton('finalizeP1Button', 'Finalize P1 Review', function() {
+            console.log("🎯 [P1 Button] Finalize P1 Review button clicked");
+            alert("P1 Review finalization - to be implemented");
+        });
         
         // Make the header container flexible if it isn't already
         p1Header.style.display = 'flex';
@@ -7258,6 +7210,7 @@ function updateSectionHeaderButtonsP1AndP2() {
         // Append button to P1 header
         p1Header.appendChild(p1Button);
         console.log("✅ [P1&P2 Header] Added P1 finalize button next to P1 header");
+        */
     }
     
     // Create and place P2 button
@@ -8365,54 +8318,194 @@ document.querySelectorAll('.collapsible-header').forEach(header => {
         }
     });
 });
-
-function rejectHRInitialScreeningModal() {
-    const userIdElement = document.getElementById("userId");
-    if (!userIdElement) {
-        alert("Error: userId is missing. Please try again.");
+// Fixed confirm function for initial screening (P1)
+function confirmHRInitialScreeningModal() {
+    console.log("🔄 Fixed confirm function called");
+    
+    const userId = document.getElementById("userId").value;
+    
+    if (!userId || userId === "undefined") {
+        console.error("❌ Missing or invalid userId:", userId);
+        alert("Error: Invalid User ID. Cannot process confirmation.");
         return;
     }
-
-    const userIdRaw = userIdElement.value.trim();
-    console.log("User ID (raw):", userIdRaw);
-
-    const userId = parseInt(userIdRaw, 10);
-    console.log("User ID (parsed):", userId);
-
-    if (isNaN(userId)) {
-        alert("Error: User ID is invalid. Please try again.");
-        return;
-    }
-
-    // Confirm reject action
-    if (confirm("Are you sure you want to reject this applicant? This action cannot be undone.")) {
-        fetch('/hr/applicant-tracker-jobposition/P1HRFailed', {
-            method: 'POST', 
-            headers: {
-                'Content-Type': 'application/json',
-            },
-            body: JSON.stringify({ userId }), // Only send userId
-        })
-        .then(response => response.json())
-        .then(data => {
-            console.log("Server Response:", data);
-
-            if (data.success) {
-                const modal = document.getElementById('hrInitialScreeningModalHtml');
-                if (modal) {
-                    modal.style.display = 'none';
-                }
-                alert("Successfully updated applicant status to P1 - HR FAILED!");
-                location.reload(); // Reload the page to reflect the changes
-            } else {
-                alert("Error updating applicant status: " + data.message);
+    
+    // Check if this is being called from a P1 pass action
+    if (window.p1ActionType === 'pass' && window.p1ActionUserId === userId) {
+        console.log("🟢 [P1 Pass] Confirming pass action via modal");
+        
+        if (isReuploadRequested) {
+            // Handle document reupload request - no verification checkbox needed
+            handleDocumentReuploadRequest(userId);
+        } else {
+            // Normal confirmation process - requires verification checkbox
+            const checkbox = document.getElementById("hr-verification-checkbox");
+            const comments = document.getElementById("hr-verification-comments").value;
+            
+            if (!checkbox.checked) {
+                alert("Please confirm that the applicant is eligible for endorsement by checking the verification checkbox.");
+                return;
             }
-        })
-        .catch(error => {
-            console.error("Fetch Error:", error);
-            alert("Failed to update applicant status.");
-        });
+            
+            // Call the normal confirmation which will pass the applicant
+            handleNormalConfirmation(userId, comments);
+        }
+        
+        // Clear the action flags
+        window.p1ActionType = null;
+        window.p1ActionUserId = null;
+    } else {
+        // ✅ FIXED: Handle normal confirmation without recursion
+        console.log("🔄 Normal P1 confirmation process");
+        
+        if (isReuploadRequested) {
+            // Handle document reupload request
+            handleDocumentReuploadRequest(userId);
+        } else {
+            // Normal confirmation process
+            const checkbox = document.getElementById("hr-verification-checkbox");
+            const comments = document.getElementById("hr-verification-comments").value;
+            
+            if (!checkbox.checked) {
+                alert("Please confirm that the applicant is eligible for endorsement by checking the verification checkbox.");
+                return;
+            }
+            
+            // Call the normal confirmation
+            handleNormalConfirmation(userId, comments);
+        }
     }
+}
+
+// Fixed confirm function for final decision modal (P1)
+function confirmFinalHRModal() {
+    console.log("🔄 Final HR modal confirm function called");
+    
+    const userId = document.getElementById("final-userId").value;
+    const checkbox = document.getElementById("final-hr-verification-checkbox");
+    const comments = document.getElementById("final-hr-verification-comments").value;
+    
+    if (!userId || userId === "undefined") {
+        console.error("❌ Missing or invalid userId:", userId);
+        alert("Error: Invalid User ID. Cannot process confirmation.");
+        return;
+    }
+    
+    if (!checkbox.checked) {
+        alert("Please confirm that the applicant is eligible for endorsement by checking the verification checkbox.");
+        return;
+    }
+    
+    const requestData = {
+        userId: userId,
+        hrComments: comments
+    };
+    
+    console.log("📡 [Final Modal] Sending P1 confirmation request:", requestData);
+    
+    fetch('/hr/applicant-tracker-jobposition/P1AwaitingforLineManager', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(requestData),
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            alert("✅ Successfully updated applicant status!");
+            document.getElementById('hrInitialScreeningDecisionModal').style.display = 'none';
+            location.reload();
+        } else {
+            alert("❌ Error updating applicant status: " + data.message);
+        }
+    })
+    .catch(error => {
+        console.error("❌ Error:", error);
+        alert("Failed to update applicant status.");
+    });
+}
+
+// Fixed reject function for initial screening modal (P1)
+function rejectHRInitialScreeningModal() {
+    console.log("🔴 Reject HR initial screening modal called");
+    
+    const userId = document.getElementById("userId").value;
+    
+    if (!userId || userId === "undefined") {
+        console.error("❌ Missing or invalid userId:", userId);
+        alert("Error: Invalid User ID. Cannot process rejection.");
+        return;
+    }
+    
+    if (!confirm("Are you sure you want to reject this applicant? This action cannot be undone.")) {
+        return;
+    }
+    
+    console.log("📡 [P1 Reject] Sending rejection request for userId:", userId);
+    
+    fetch('/hr/applicant-tracker-jobposition/P1HRFailed', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ userId: parseInt(userId) }),
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            alert("✅ Successfully updated applicant status to P1 - HR FAILED!");
+            document.getElementById('hrInitialScreeningModalHtml').style.display = 'none';
+            location.reload();
+        } else {
+            alert("❌ Error updating applicant status: " + data.message);
+        }
+    })
+    .catch(error => {
+        console.error("❌ Error:", error);
+        alert("Failed to update applicant status.");
+    });
+}
+
+// Fixed reject function for final decision modal (P1)
+function rejectFinalHRModal() {
+    console.log("🔴 Reject final HR modal called");
+    
+    const userId = document.getElementById("final-userId").value;
+    
+    if (!userId || userId === "undefined") {
+        console.error("❌ Missing or invalid userId:", userId);
+        alert("Error: Invalid User ID. Cannot process rejection.");
+        return;
+    }
+    
+    if (!confirm("Are you sure you want to reject this applicant? This action cannot be undone.")) {
+        return;
+    }
+    
+    console.log("📡 [P1 Final Reject] Sending rejection request for userId:", userId);
+    
+    fetch('/hr/applicant-tracker-jobposition/P1HRFailed', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ userId: parseInt(userId) }),
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            alert("✅ Successfully updated applicant status to P1 - HR FAILED!");
+            document.getElementById('hrInitialScreeningDecisionModal').style.display = 'none';
+            location.reload();
+        } else {
+            alert("❌ Error updating applicant status: " + data.message);
+        }
+    })
+    .catch(error => {
+        console.error("❌ Error:", error);
+        alert("Failed to update applicant status.");
+    });
 }
 
 

@@ -1101,10 +1101,7 @@ table.tracking-table tbody:empty::after {
             For Review
         </button>
     <% } else if (applicant.applicantStatus === 'P2 - Awaiting for HR Evaluation') { %>
-        <!-- For Evaluation Button -->
-        <a href="/hr/evaluation-form/<%= applicant.applicantId %>">
-            <button class="btn-evaluation">For Evaluation</button>
-        </a>
+
     <% } else if (applicant.applicantStatus && applicant.applicantStatus.startsWith('P1 - Awaiting for Line Manager Action')) { %>
         <!-- Approve Button for Line Manager Action -->
         <button 
@@ -9264,7 +9261,12 @@ function createP1DeclaredRowEnhanced(rowData) {
 function createP1AwaitingStatusCellEnhanced(rowData) {
   const userId = rowData.userId || '';
   
-  console.log(`Creating P1 status cell for userId: ${userId}`);
+  console.log(`🔧 Creating P1 status cell for userId: ${userId}`);
+  
+  if (!userId) {
+    console.error("❌ Missing userId in createP1AwaitingStatusCellEnhanced");
+    return `<span style="color: red;">Error: Missing User ID</span>`;
+  }
   
   return `
     <span><strong>Status:</strong> P1 - Awaiting for Line Manager Action; HR PASSED</span>
@@ -9280,14 +9282,14 @@ function createP1AwaitingStatusCellEnhanced(rowData) {
         <button
           class="btn-review"
           onclick="passApplicant('${userId}')"
-          style="background-color: #28a745; color: white; margin-right: 5px; min-width: 70px;"
+          style="background-color: #28a745; color: white; margin-right: 5px; min-width: 70px; padding: 8px 16px; border: none; border-radius: 4px; cursor: pointer;"
         >
           Pass
         </button>
         <button 
           class="btn-review" 
-          onclick="rejectApplicant()"
-          style="background-color: #dc3545; color: white; min-width: 70px;"
+          onclick="rejectApplicant('${userId}')"
+          style="background-color: #dc3545; color: white; min-width: 70px; padding: 8px 16px; border: none; border-radius: 4px; cursor: pointer;"
         >
           Reject
         </button>
@@ -9296,14 +9298,8 @@ function createP1AwaitingStatusCellEnhanced(rowData) {
   `;
 }
 async function viewEvaluationModal(userId) {
-  console.log(`Fetching assessment data for userId: ${userId}`);
+  console.log(`🔍 viewEvaluationModal called with userId: ${userId}`);
   
-  if (!userId || userId === 'undefined') {
-    console.error("Invalid userId passed to viewEvaluationModal:", userId);
-    alert("Error: Invalid User ID. Cannot display applicant details.");
-    return;
-  }
-
   try {
     // Show loading state
     const loadingModal = document.createElement('div');
@@ -9329,11 +9325,13 @@ async function viewEvaluationModal(userId) {
     const combinedData = data.combinedData;
     console.log('✅ Fetched assessment data:', combinedData);
     
-    // Set userId for modal functions
+    // FIXED: Set all necessary IDs for modal functions
     document.getElementById('userId').value = userId;
+    document.getElementById('applicantId').value = combinedData.applicantId || userId;
+    document.getElementById('jobId').value = combinedData.jobId || '';
     
     // Set applicant details
-    document.getElementById('applicant-name').textContent = `${combinedData.lastName || combinedData.firstName}, ${combinedData.firstName || ''}`;
+    document.getElementById('applicant-name').textContent = `${combinedData.lastName || ''}, ${combinedData.firstName || ''}`;
     document.getElementById('applicant-birthday').textContent = combinedData.birthDate || 'N/A';
     document.getElementById('applicant-email').textContent = combinedData.email || 'N/A';
     document.getElementById('applicant-contact').textContent = combinedData.phoneNo || 'N/A';
@@ -9359,8 +9357,11 @@ async function viewEvaluationModal(userId) {
     displayUploadedDocument(cleanCertUrl, "cert-doc", "cert-preview");
     displayUploadedDocument(cleanResumeUrl, "resume-doc", "resume-preview");
     
-    // FIXED: Handle additional documents
+    // Handle additional documents
     await handleAdditionalDocuments(userId);
+
+    // FIXED: Setup modal buttons with proper event listeners
+    setupModalButtons(userId);
 
     // Show the modal
     document.getElementById('lineManagerInitialScreeningModalHtml').style.display = 'block';
@@ -9370,6 +9371,189 @@ async function viewEvaluationModal(userId) {
     alert('Error fetching assessment data: ' + error.message);
   }
 }
+
+function setupModalButtons(userId) {
+  console.log(`🔧 Setting up modal buttons for userId: ${userId}`);
+  
+  // Get the buttons
+  const passButton = document.getElementById('passButton');
+  const rejectButton = document.getElementById('rejectButton');
+  const backButton = document.querySelector('#lineManagerInitialScreeningModalHtml #backButton');
+  
+  // Remove any existing event listeners by cloning and replacing
+  if (passButton) {
+    const newPassButton = passButton.cloneNode(true);
+    passButton.parentNode.replaceChild(newPassButton, passButton);
+    
+    newPassButton.addEventListener('click', function() {
+      console.log(`✅ Pass button clicked for userId: ${userId}`);
+      passApplicantFromModal(userId);
+    });
+  }
+  
+  if (rejectButton) {
+    const newRejectButton = rejectButton.cloneNode(true);
+    rejectButton.parentNode.replaceChild(newRejectButton, rejectButton);
+    
+    newRejectButton.addEventListener('click', function() {
+      console.log(`❌ Reject button clicked for userId: ${userId}`);
+      rejectApplicantFromModal(userId);
+    });
+  }
+  
+  if (backButton) {
+    const newBackButton = backButton.cloneNode(true);
+    backButton.parentNode.replaceChild(newBackButton, backButton);
+    
+    newBackButton.addEventListener('click', function() {
+      console.log(`🔙 Back button clicked`);
+      closeModal('lineManagerInitialScreeningModalHtml');
+    });
+  }
+}
+
+
+
+// ============================================================================
+// FIXED: Pass Applicant from Modal
+// ============================================================================
+
+function passApplicantFromModal(userId) {
+  console.log(`✅ passApplicantFromModal called with userId: ${userId}`);
+  
+  // Check if verification checkbox is checked
+  const verificationCheckbox = document.getElementById('lineManagerVerificationCheckbox');
+  if (!verificationCheckbox || !verificationCheckbox.checked) {
+    alert("Please check the verification checkbox to confirm you have reviewed the applicant's documents.");
+    return;
+  }
+  
+  // Get comments
+  const comments = document.getElementById('lineManagerComments').value || '';
+  
+  console.log(`🚀 Sending pass request for userId: ${userId}`);
+  
+  fetch('/linemanager/applicant-tracker-jobposition/markAsP1Passed', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify({ 
+      userId: userId,
+      comments: comments 
+    }),
+  })
+  .then(response => {
+    console.log(`📡 Pass API response status: ${response.status}`);
+    return response.json();
+  })
+  .then(data => {
+    console.log('📡 Pass API response data:', data);
+    
+    if (data.success) {
+      // Close the modal
+      document.getElementById('lineManagerInitialScreeningModalHtml').style.display = 'none';
+      
+      // Track pending changes
+      if (!window.pendingStatusChanges) {
+        window.pendingStatusChanges = {};
+      }
+      window.pendingStatusChanges[userId] = 'PASSED';
+      
+      // Refresh the view
+      setTimeout(() => {
+        const activeFilter = document.querySelector(".filter-button.active");
+        if (activeFilter) {
+          activeFilter.click();
+        } else {
+          document.getElementById("filter-all").click();
+        }
+      }, 300);
+      
+      alert("Successfully marked applicant as PASSED! The applicant will be notified when you finalize the review.");
+      
+    } else {
+      console.error(`❌ Pass API error: ${data.message}`);
+      alert("Error updating applicant status: " + (data.message || "Unknown error"));
+    }
+  })
+  .catch(error => {
+    console.error("❌ Pass Network error:", error);
+    alert("Failed to update applicant status.");
+  });
+}
+
+// ============================================================================
+// FIXED: Reject Applicant from Modal
+// ============================================================================
+
+function rejectApplicantFromModal(userId) {
+  console.log(`❌ rejectApplicantFromModal called with userId: ${userId}`);
+  
+
+  
+  // Check if verification checkbox is checked
+  const verificationCheckbox = document.getElementById('lineManagerVerificationCheckbox');
+  if (!verificationCheckbox || !verificationCheckbox.checked) {
+    alert("Please check the verification checkbox to confirm you have reviewed the applicant's documents.");
+    return;
+  }
+
+  // Get comments
+  const comments = document.getElementById('lineManagerComments').value || '';
+  
+  console.log(`🚀 Sending reject request for userId: ${userId}`);
+  
+  fetch('/linemanager/applicant-tracker-jobposition/markAsP1Failed', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify({ 
+      userId: userId,
+      comments: comments 
+    }),
+  })
+  .then(response => {
+    console.log(`📡 Reject API response status: ${response.status}`);
+    return response.json();
+  })
+  .then(data => {
+    console.log('📡 Reject API response data:', data);
+    
+    if (data.success) {
+      // Close the modal
+      document.getElementById('lineManagerInitialScreeningModalHtml').style.display = 'none';
+      
+      // Track pending changes
+      if (!window.pendingStatusChanges) {
+        window.pendingStatusChanges = {};
+      }
+      window.pendingStatusChanges[userId] = 'FAILED';
+      
+      // Refresh the view
+      setTimeout(() => {
+        const activeFilter = document.querySelector(".filter-button.active");
+        if (activeFilter) {
+          activeFilter.click();
+        } else {
+          document.getElementById("filter-all").click();
+        }
+      }, 300);
+      
+      alert("Successfully marked applicant as FAILED! The applicant will be notified when you finalize the review.");
+      
+    } else {
+      console.error(`❌ Reject API error: ${data.message}`);
+      alert("Error updating applicant status: " + (data.message || "Unknown error"));
+    }
+  })
+  .catch(error => {
+    console.error("❌ Reject Network error:", error);
+    alert("Failed to update applicant status.");
+  });
+}
+
 
 // function to handle additional documents
 async function handleAdditionalDocuments(userId) {
@@ -12577,12 +12761,18 @@ function changeApplicantStatus(userId) {
     statusCell.innerHTML = `<span><strong>Status:</strong> ${currentStatus}</span>`;
   });
 }
-function passApplicant(userId) {
-  if (!userId) {
-    alert("Error: Invalid User ID");
-    return;
-  }
 
+
+// ============================================================================
+// UPDATED: Original passApplicant function for table buttons
+// ============================================================================
+
+function passApplicant(userId) {
+  console.log(`✅ passApplicant (table button) called with userId: ${userId}`);
+  
+  
+  console.log(`🚀 Sending pass request for userId: ${userId}`);
+  
   fetch('/linemanager/applicant-tracker-jobposition/markAsP1Passed', {
     method: 'POST',
     headers: {
@@ -12590,11 +12780,14 @@ function passApplicant(userId) {
     },
     body: JSON.stringify({ userId: userId }),
   })
-  .then(response => response.json())
+  .then(response => {
+    console.log(`📡 Pass API response status: ${response.status}`);
+    return response.json();
+  })
   .then(data => {
+    console.log('📡 Pass API response data:', data);
+    
     if (data.success) {
-      document.getElementById('lineManagerInitialScreeningModalHtml').style.display = 'none';
-      
       if (!window.pendingStatusChanges) {
         window.pendingStatusChanges = {};
       }
@@ -12609,23 +12802,37 @@ function passApplicant(userId) {
         }
       }, 300);
       
-      alert("Successfully marked applicant status as PASSED! The applicant will be notified when you finalize the review.");
+      alert("Successfully marked applicant as PASSED! The applicant will be notified when you finalize the review.");
+      
     } else {
-      alert("Error updating applicant status: " + (data.message || "Unknown error"));
+      console.error(`❌ Pass API error: ${data.message}`);
+      // alert("Error updating applicant status: " + (data.message || "Unknown error"));
     }
   })
   .catch(error => {
-    console.error("Error:", error);
+    console.error("❌ Pass Network error:", error);
     alert("Failed to update applicant status.");
   });
 }
 
-function rejectApplicant() {
-  const userId = document.getElementById('userId').value;
+// ============================================================================
+// UPDATED: Original rejectApplicant function for table buttons
+// ============================================================================
+
+function rejectApplicant(userId) {
+  console.log(`❌ rejectApplicant (table button) called with userId: ${userId}`);
+  
+  // If called from table button, get userId from the button's data attribute
   if (!userId) {
-    alert("Error: Invalid User ID");
-    return;
+    // Try to get userId from modal if available
+    const userIdInput = document.getElementById('userId');
+    if (userIdInput) {
+      userId = userIdInput.value;
+    }
   }
+  
+  
+  console.log(`🚀 Sending reject request for userId: ${userId}`);
   
   fetch('/linemanager/applicant-tracker-jobposition/markAsP1Failed', {
     method: 'POST',
@@ -12634,10 +12841,19 @@ function rejectApplicant() {
     },
     body: JSON.stringify({ userId: userId }),
   })
-  .then(response => response.json())
+  .then(response => {
+    console.log(`📡 Reject API response status: ${response.status}`);
+    return response.json();
+  })
   .then(data => {
+    console.log('📡 Reject API response data:', data);
+    
     if (data.success) {
-      document.getElementById('lineManagerInitialScreeningModalHtml').style.display = 'none';
+      // Close modal if open
+      const modal = document.getElementById('lineManagerInitialScreeningModalHtml');
+      if (modal) {
+        modal.style.display = 'none';
+      }
       
       if (!window.pendingStatusChanges) {
         window.pendingStatusChanges = {};
@@ -12653,16 +12869,28 @@ function rejectApplicant() {
         }
       }, 300);
       
-      alert("Successfully marked applicant status as FAILED! The applicant will be notified when you finalize the review.");
+      alert("Successfully marked applicant as FAILED! The applicant will be notified when you finalize the review.");
       
     } else {
-      alert("Error updating applicant status: " + (data.message || "Unknown error"));
+      console.error(`❌ Reject API error: ${data.message}`);
+      // alert("Error updating applicant status: " + (data.message || "Unknown error"));
     }
   })
   .catch(error => {
-    console.error("Error:", error);
+    console.error("❌ Reject Network error:", error);
     alert("Failed to update applicant status.");
   });
+}
+
+// ============================================================================
+// HELPER: Close Modal Function
+// ============================================================================
+
+function closeModal(modalId) {
+  const modal = document.getElementById(modalId);
+  if (modal) {
+    modal.style.display = 'none';
+  }
 }
 
 function p3passApplicant(userId) {
@@ -13019,7 +13247,7 @@ function updateFinalizeButtonVisibility(buttonContainerId, shouldShow) {
 // ============================
 
 function handleEvaluationFilter(onboardingHeader, onboardingTable, allMainRows) {
-  console.log("Handling For Evaluation filter - Looking for P3 - Awaiting for Line Manager Evaluation");
+  console.log("=== FIXED For Evaluation Filter - Looking for For Evaluation buttons (excluding P2) ===");
   
   if (onboardingHeader) onboardingHeader.style.display = 'none';
   if (onboardingTable) onboardingTable.style.display = 'none';
@@ -13039,40 +13267,58 @@ function handleEvaluationFilter(onboardingHeader, onboardingTable, allMainRows) 
   evaluationSection.style.display = 'block';
   
   const evaluationRows = [];
-  console.log(`Analyzing ${allMainRows.length} rows for P3 evaluation criteria...`);
+  console.log(`Analyzing ${allMainRows.length} rows for For Evaluation criteria...`);
   
   allMainRows.forEach((row, index) => {
     const statusCell = row.querySelector('td:nth-child(5)');
-    if (!statusCell) return;
+    const actionsCell = row.querySelector('td:last-child');
     
+    if (!statusCell || !actionsCell) return;
+    
+    // Extract status text from multiple sources
+    let statusText = '';
+    
+    // Method 1: Check span element
     const statusSpan = statusCell.querySelector('span');
-    const statusText = statusSpan ? statusSpan.textContent.trim() : '';
-    
-    const targetStatus = 'P3 - Awaiting for Line Manager Evaluation';
-    
-    let hasP3EvaluationStatus = false;
-    if (statusText === targetStatus) {
-      hasP3EvaluationStatus = true;
+    if (statusSpan) {
+      statusText = statusSpan.textContent.replace(/Status:\s*/g, '').trim();
     }
     
-    if (!hasP3EvaluationStatus) {
+    // Method 2: Check data attributes
+    if (!statusText) {
+      statusText = row.getAttribute('data-status') || '';
+    }
+    
+    // Method 3: Parse from cell text
+    if (!statusText) {
+      const cellText = statusCell.textContent.replace(/Status:\s*/g, '').trim();
+      const statusMatch = cellText.match(/^([^]*?)(?:\s*(?:For Review|For Evaluation|Send Job Offer|Approve))/);
+      statusText = statusMatch ? statusMatch[1].trim() : cellText.split('\n')[0].trim();
+    }
+    
+    console.log(`Row ${index + 1}: Status = "${statusText}"`);
+    
+    // CRITICAL: Exclude P2 statuses completely
+    if (statusText.includes('P2')) {
+      console.log(`❌ Excluding P2 status: ${statusText}`);
       return;
     }
     
-    const lastCell = row.querySelector('td:last-child');
-    if (!lastCell) return;
-    
+    // Check for "For Evaluation" button in multiple ways
     let hasForEvaluationButton = false;
     
-    const allButtons = Array.from(lastCell.querySelectorAll('button'));
+    // Method 1: Check button text content
+    const allButtons = Array.from(actionsCell.querySelectorAll('button'));
     allButtons.forEach((button) => {
       const buttonText = button.textContent.trim();
       if (buttonText === 'For Evaluation') {
         hasForEvaluationButton = true;
+        console.log(`✅ Found "For Evaluation" button in row ${index + 1}`);
       }
     });
     
-    const allLinks = Array.from(lastCell.querySelectorAll('a'));
+    // Method 2: Check links with buttons
+    const allLinks = Array.from(actionsCell.querySelectorAll('a'));
     allLinks.forEach((link) => {
       const href = link.getAttribute('href') || '';
       const linkButton = link.querySelector('button');
@@ -13080,32 +13326,53 @@ function handleEvaluationFilter(onboardingHeader, onboardingTable, allMainRows) 
       
       if (linkText === 'For Evaluation') {
         hasForEvaluationButton = true;
+        console.log(`✅ Found "For Evaluation" link button in row ${index + 1}`);
       }
       
+      // Check for evaluation/interview form URLs
       if (href.includes('/evaluation-form/') || href.includes('/interview-form/')) {
         hasForEvaluationButton = true;
+        console.log(`✅ Found evaluation form link in row ${index + 1}: ${href}`);
       }
     });
     
-    const evalButtons = lastCell.querySelectorAll('.btn-evaluation');
+    // Method 3: Check for specific CSS classes
+    const evalButtons = actionsCell.querySelectorAll('.btn-evaluation');
     if (evalButtons.length > 0) {
       hasForEvaluationButton = true;
+      console.log(`✅ Found .btn-evaluation class in row ${index + 1}`);
     }
     
-    const lastCellText = lastCell.textContent;
-    if (lastCellText.includes('For Evaluation')) {
+    // Method 4: Check cell text content
+    const actionsCellText = actionsCell.textContent;
+    if (actionsCellText.includes('For Evaluation')) {
       hasForEvaluationButton = true;
+      console.log(`✅ Found "For Evaluation" in actions text for row ${index + 1}`);
     }
     
-    if (hasP3EvaluationStatus && hasForEvaluationButton) {
+    // Method 5: Check for P3 evaluation status specifically
+    const targetP3Status = 'P3 - Awaiting for Line Manager Evaluation';
+    if (statusText === targetP3Status) {
+      hasForEvaluationButton = true;
+      console.log(`✅ Found exact P3 evaluation status in row ${index + 1}`);
+    }
+    
+    // FINAL CHECK: Must have For Evaluation button AND not be P2
+    if (hasForEvaluationButton && !statusText.includes('P2')) {
       const rowData = extractRowDataForEvaluation(row, index);
       if (rowData) {
         evaluationRows.push(rowData);
+        console.log(`✅ Added to evaluation: ${rowData.name} (Status: ${statusText})`);
       }
+    } else if (statusText.includes('P2')) {
+      console.log(`❌ Excluded P2 row ${index + 1}: ${statusText}`);
+    } else {
+      console.log(`❌ No For Evaluation button found in row ${index + 1} (Status: ${statusText})`);
     }
   });
   
-  console.log(`Found ${evaluationRows.length} rows matching evaluation criteria`);
+  console.log(`\n=== EVALUATION FILTER RESULTS ===`);
+  console.log(`Found ${evaluationRows.length} rows with For Evaluation buttons (excluding P2)`);
   
   populateEvaluationSection(evaluationRows);
   
@@ -13117,6 +13384,7 @@ function handleEvaluationFilter(onboardingHeader, onboardingTable, allMainRows) 
   
   highlightActiveFilter('forevaluation');
 }
+
 
 function handleOnboardingFilter(applicantStatusSection, onboardingHeader, onboardingTable, allOnboardingRows) {
   console.log("Handling For Onboarding filter - checking for onboarding statuses");
@@ -13564,12 +13832,6 @@ function lineManagerInitialScreeningModal(userId, lastName, firstName, birthday,
     scores, verdict, 
     degreeUrl, certUrl, resumeUrl 
   });
-
-  if (!userId || userId === "undefined") {
-    console.error("Invalid userId passed to modal:", userId);
-    alert("Error: Invalid User ID. Cannot display applicant details.");
-    return;
-  }
 
   document.getElementById('userId').value = userId;
 
