@@ -2,7 +2,7 @@
 
 ## Overview
 
-This project enhances Prime Infrastructure Capital, Inc.'s HR operations by automating processes and improving efficiency. The system integrates five key modules:
+This project enhances Company ABC Capital, Inc.'s HR operations by automating processes and improving efficiency. The system integrates five key modules:
 
 1. **Recruitment**: Streamlines hiring with AI-driven candidate evaluation.
 2. **Employee Records**: Centralizes and manages employee information.

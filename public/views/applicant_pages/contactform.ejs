@@ -430,10 +430,16 @@
             <section class="contact-form">
                 <h2 class="form-title">Contact Us</h2>
                 
-                <% if (typeof success !== 'undefined' && success) { %>
+                <% if (success) { %>
                     <div class="form-success">
                         <i class="fas fa-check-circle"></i>
                         Thank you for your message! We'll get back to you soon.
+                    </div>
+                <% } %>
+                
+                <% if (errors.general) { %>
+                    <div class="form-error" style="margin-bottom: 20px; justify-content: center;">
+                        <%= errors.general %>
                     </div>
                 <% } %>
                 
@@ -442,8 +448,8 @@
                         <div class="form-group">
                             <label for="firstName" class="required-field">First Name</label>
                             <input type="text" class="form-control" name="firstName" id="firstName" 
-                                   value="<%= typeof formData !== 'undefined' ? formData.firstName || '' : '' %>" required>
-                            <% if (typeof errors !== 'undefined' && errors.firstName) { %>
+                                   value="<%= formData.firstName || '' %>" required>
+                            <% if (errors.firstName) { %>
                                 <p class="form-error"><%= errors.firstName %></p>
                             <% } %>
                         </div>
@@ -451,8 +457,8 @@
                         <div class="form-group">
                             <label for="lastName" class="required-field">Last Name</label>
                             <input type="text" class="form-control" name="lastName" id="lastName" 
-                                   value="<%= typeof formData !== 'undefined' ? formData.lastName || '' : '' %>" required>
-                            <% if (typeof errors !== 'undefined' && errors.lastName) { %>
+                                   value="<%= formData.lastName || '' %>" required>
+                            <% if (errors.lastName) { %>
                                 <p class="form-error"><%= errors.lastName %></p>
                             <% } %>
                         </div>
@@ -460,8 +466,8 @@
                         <div class="form-group full-width">
                             <label for="email" class="required-field">Email Address</label>
                             <input type="email" class="form-control" name="email" id="email" 
-                                   value="<%= typeof formData !== 'undefined' ? formData.email || '' : '' %>" required>
-                            <% if (typeof errors !== 'undefined' && errors.email) { %>
+                                   value="<%= formData.email || '' %>" required>
+                            <% if (errors.email) { %>
                                 <p class="form-error"><%= errors.email %></p>
                             <% } %>
                         </div>
@@ -470,12 +476,12 @@
                             <label for="inquiry" class="required-field">Inquiry Type</label>
                             <select class="form-control" name="inquiry" id="inquiry" required>
                                 <option value="">Please select...</option>
-                                <option value="general" <%= typeof formData !== 'undefined' && formData.inquiry === 'general' ? 'selected' : '' %>>General Inquiry</option>
-                                <option value="support" <%= typeof formData !== 'undefined' && formData.inquiry === 'support' ? 'selected' : '' %>>Technical Support</option>
-                                <option value="feedback" <%= typeof formData !== 'undefined' && formData.inquiry === 'feedback' ? 'selected' : '' %>>Feedback</option>
-                                <option value="business" <%= typeof formData !== 'undefined' && formData.inquiry === 'business' ? 'selected' : '' %>>Business Opportunity</option>
+                                <option value="general" <%= formData.inquiry === 'general' ? 'selected' : '' %>>General Inquiry</option>
+                                <option value="support" <%= formData.inquiry === 'support' ? 'selected' : '' %>>Technical Support</option>
+                                <option value="feedback" <%= formData.inquiry === 'feedback' ? 'selected' : '' %>>Feedback</option>
+                                <option value="business" <%= formData.inquiry === 'business' ? 'selected' : '' %>>Business Opportunity</option>
                             </select>
-                            <% if (typeof errors !== 'undefined' && errors.inquiry) { %>
+                            <% if (errors.inquiry) { %>
                                 <p class="form-error"><%= errors.inquiry %></p>
                             <% } %>
                         </div>
@@ -483,16 +489,16 @@
                         <div class="form-group full-width">
                             <label for="subject" class="required-field">Subject</label>
                             <input type="text" class="form-control" name="subject" id="subject" 
-                                   value="<%= typeof formData !== 'undefined' ? formData.subject || '' : '' %>" required>
-                            <% if (typeof errors !== 'undefined' && errors.subject) { %>
+                                   value="<%= formData.subject || '' %>" required>
+                            <% if (errors.subject) { %>
                                 <p class="form-error"><%= errors.subject %></p>
                             <% } %>
                         </div>
                         
                         <div class="form-group full-width">
                             <label for="message" class="required-field">Message</label>
-                            <textarea class="form-control" name="message" id="message" required><%= typeof formData !== 'undefined' ? formData.message || '' : '' %></textarea>
-                            <% if (typeof errors !== 'undefined' && errors.message) { %>
+                            <textarea class="form-control" name="message" id="message" required><%= formData.message || '' %></textarea>
+                            <% if (errors.message) { %>
                                 <p class="form-error"><%= errors.message %></p>
                             <% } %>
                         </div>

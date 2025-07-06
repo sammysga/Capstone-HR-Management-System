@@ -5,6 +5,7 @@ const staffLoginController = require('../controllers/staffloginController');
 const hrController = require('../controllers/hrController');
 const employeeController = require('../controllers/employeeController');
 const lineManagerController = require('../controllers/lineManagerController');
+const contactController = require('../controllers/contactUsController');
 const fileUpload = require('express-fileupload');  // Make sure you've installed express-fileupload
 const { hr } = require('date-fns/locale');
 // Middleware to parse incoming request bodies
@@ -28,6 +29,8 @@ router.get('/applicant/logout', applicantController.getLogoutButton);
 router.get('/about', applicantController.getAboutPage);
 router.get('/jobrecruitment', applicantController.getJobRecruitment);
 router.get('/contactform', applicantController.getContactForm);
+router.get('/contact', contactController.getContactForm);
+router.post('/contact', contactController.contactValidationRules(), contactController.handleContactForm);
 router.get('/job-details/:jobId', applicantController.getJobDetailsTitle);
 // router.get('/chatbothome', applicantController.getChatbotPage);
 //router.get('/employeechatbothome', applicantController.getInternalApplicantChatbotPage);

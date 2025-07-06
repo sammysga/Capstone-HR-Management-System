@@ -3,6 +3,7 @@ const bcrypt = require('bcrypt');
 const path = require('path');  // Add this line
 const fs = require('fs');  // Add this line
 
+const contactController = require('../controllers/contactUsController');
 
 
 const applicantController = {
@@ -283,7 +284,19 @@ getJobDetailsTitle: async function(req, res) {
     },
     
     getContactForm: async function(req, res) {
-        res.render('applicant_pages/contactform', { errors: {} }); 
+        try {
+        // Import the contact controller
+        const contactController = require('./contactUsController');
+        
+        // Use the contact controller's method
+        contactController.getContactForm(req, res);
+    } catch (error) {
+        console.error('Error loading contact form:', error);
+        res.status(500).json({
+            success: false,
+            message: 'Error loading contact form'
+        });
+    }
     },
     // getChatbotPage: async function(req, res) {
     //     res.render('applicant_pages/chatbot', { errors: {} }); 
