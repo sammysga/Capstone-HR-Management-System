@@ -8,7 +8,7 @@
     <link rel="stylesheet" href="/css/hr_pages.css">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <!-- Bootstrap CSS -->
-    <!-- <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css"> -->
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
     <!-- Bootstrap Select CSS -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-select/1.13.1/css/bootstrap-select.min.css">
     <!-- Font Awesome -->
@@ -1005,7 +1005,7 @@ document.getElementById('newStaffForm').addEventListener('submit', async functio
         // Show appropriate success message based on email status
         let successMessage = 'Staff member added successfully!';
         if (result.emailSent) {
-            successMessage += '\n\nA welcome email with login details has been sent to their personal email address.';
+            successMessage += '\n\nA welcome email with login details has been sent to their email address.';
         } else if (result.emailSent === false) {
             successMessage += '\n\nNote: Welcome email could not be sent. Please provide the login details manually.';
             console.warn('Email sending failed:', result.emailError);
