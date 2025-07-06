@@ -7300,9 +7300,6 @@ sendAutomatedEmail: async function(req, res) {
                     phoneNo,
                     birthDate,
                     applicantStatus,
-                    initialScreeningScore,
-                    hrInterviewFormScore,
-                    lineManagerFormEvalScore,
                     created_at,
                     userId,
                     jobId,
@@ -7328,6 +7325,44 @@ sendAutomatedEmail: async function(req, res) {
             if (error) {
                 console.error('❌ [HR Applicants Report] Error fetching applicants:', error);
                 return res.status(500).json({ success: false, message: 'Error fetching applicants data: ' + error.message });
+            }
+
+            // Fetch scores from assessment tables
+            const userIds = applicants.map(a => a.userId);
+
+            const [initialScores, hrScores, panelScores] = await Promise.all([
+                supabase.from('applicant_initialscreening_assessment')
+                    .select('userId, totalScore')
+                    .in('userId', userIds),
+                supabase.from('applicant_hrscreening_assessment')
+                    .select('applicantUserid, totalAssessmentRating')
+                    .in('applicantUserid', userIds),
+                supabase.from('applicant_panelscreening_assessment')
+                    .select('applicantUserId, totalAssessmentRating')
+                    .in('applicantUserId', userIds)
+            ]);
+
+            // Create score lookup maps
+            const initialScoreMap = new Map();
+            const hrScoreMap = new Map();
+            const panelScoreMap = new Map();
+
+            if (initialScores.data) {
+                initialScores.data.forEach(score => {
+                    initialScoreMap.set(score.userId, score.totalScore);
+                });
+            }
+
+            if (hrScores.data) {
+                hrScores.data.forEach(score => {
+                    hrScoreMap.set(score.applicantUserid, score.totalAssessmentRating);
+                });
+            }
+
+            if (panelScores.data) {
+                panelScores.data.forEach(score => {
+                    panelScoreMap.set(score.applicantUserId, score.totalAssessmentRating);
+                });
             }
 
             console.log(`✅ [HR Applicants Report] Found ${applicants.length} applicants`);
@@ -7484,7 +7519,10 @@ sendAutomatedEmail: async function(req, res) {
 
             // KEEP your existing processedApplicants logic but add intelligence flags
             const processedApplicants = applicants.map(applicant => {
-                const totalScore = (applicant.initialScreeningScore || 0) + (applicant.hrInterviewFormScore || 0) + (applicant.lineManagerFormEvalScore || 0);
+                const initialScore = initialScoreMap.get(applicant.userId) || 0;
+                const hrScore = hrScoreMap.get(applicant.userId) || 0;
+                const panelScore = panelScoreMap.get(applicant.userId) || 0;
+                const totalScore = initialScore + hrScore + panelScore;
                 const daysSinceApplication = Math.floor((new Date() - new Date(applicant.created_at)) / (1000 * 60 * 60 * 24));
                 
                 // NEW: Intelligence flags
@@ -7511,9 +7549,9 @@ sendAutomatedEmail: async function(req, res) {
                             day: '2-digit' 
                         }) : 'N/A',
                     status: applicant.applicantStatus || 'Pending',
-                    initialScreeningScore: applicant.initialScreeningScore || 'N/A',
-                    hrInterviewScore: applicant.hrInterviewFormScore || 'N/A',
-                    lineManagerScore: applicant.lineManagerFormEvalScore || 'N/A',
+                    initialScreeningScore: initialScore || 'N/A',
+                    hrInterviewScore: hrScore || 'N/A',
+                    lineManagerScore: panelScore || 'N/A',
                     totalScore: totalScore > 0 ? totalScore : 'N/A',
                     daysInProcess: daysSinceApplication,
                     intelligenceFlags: flags // NEW
@@ -7624,9 +7662,6 @@ getApplicantAssessment: async function(req, res) {
                     phoneNo,
                     applicantStatus,
                     created_at,
-                    initialScreeningScore,
-                    hrInterviewFormScore,
-                    lineManagerFormEvalScore,
                     userId,
                     jobId,
                     departmentId,
@@ -7660,6 +7695,44 @@ getApplicantAssessment: async function(req, res) {
                     status.toLowerCase().includes('onboarding');
             });
 
+            // Fetch scores from assessment tables for hirees only
+            const hireedUserIds = hirees.map(h => h.userId);
+
+            const [initialScores, hrScores, panelScores] = await Promise.all([
+                supabase.from('applicant_initialscreening_assessment')
+                    .select('userId, totalScore')
+                    .in('userId', hireedUserIds),
+                supabase.from('applicant_hrscreening_assessment')
+                    .select('applicantUserid, totalAssessmentRating')
+                    .in('applicantUserid', hireedUserIds),
+                supabase.from('applicant_panelscreening_assessment')
+                    .select('applicantUserId, totalAssessmentRating')
+                    .in('applicantUserId', hireedUserIds)
+            ]);
+
+            // Create score lookup maps
+            const initialScoreMap = new Map();
+            const hrScoreMap = new Map();
+            const panelScoreMap = new Map();
+
+            if (initialScores.data) {
+                initialScores.data.forEach(score => {
+                    initialScoreMap.set(score.userId, score.totalScore);
+                });
+            }
+
+            if (hrScores.data) {
+                hrScores.data.forEach(score => {
+                    hrScoreMap.set(score.applicantUserid, score.totalAssessmentRating);
+                });
+            }
+
+            if (panelScores.data) {
+                panelScores.data.forEach(score => {
+                    panelScoreMap.set(score.applicantUserId, score.totalAssessmentRating);
+                });
+            }
+
             console.log(`✅ [HR Hirees Report] Found ${hirees.length} hirees for intelligence analysis`);
 
             // === BUSINESS INTELLIGENCE ANALYSIS ===
@@ -7667,19 +7740,31 @@ getApplicantAssessment: async function(req, res) {
             // 1. Hiring Quality Analysis
             const qualityAnalysis = {
                 excellentHires: hirees.filter(h => {
-                    const total = (h.initialScreeningScore || 0) + (h.hrInterviewFormScore || 0) + (h.lineManagerFormEvalScore || 0);
+                    const initialScore = initialScoreMap.get(h.userId) || 0;
+                    const hrScore = hrScoreMap.get(h.userId) || 0;
+                    const panelScore = panelScoreMap.get(h.userId) || 0;
+                    const total = initialScore + hrScore + panelScore;
                     return total >= 270; // 90%+ of 300 max score
                 }),
                 goodHires: hirees.filter(h => {
-                    const total = (h.initialScreeningScore || 0) + (h.hrInterviewFormScore || 0) + (h.lineManagerFormEvalScore || 0);
+                    const initialScore = initialScoreMap.get(h.userId) || 0;
+                    const hrScore = hrScoreMap.get(h.userId) || 0;
+                    const panelScore = panelScoreMap.get(h.userId) || 0;
+                    const total = initialScore + hrScore + panelScore;
                     return total >= 210 && total < 270; // 70-89%
                 }),
                 averageHires: hirees.filter(h => {
-                    const total = (h.initialScreeningScore || 0) + (h.hrInterviewFormScore || 0) + (h.lineManagerFormEvalScore || 0);
+                    const initialScore = initialScoreMap.get(h.userId) || 0;
+                    const hrScore = hrScoreMap.get(h.userId) || 0;
+                    const panelScore = panelScoreMap.get(h.userId) || 0;
+                    const total = initialScore + hrScore + panelScore;
                     return total >= 150 && total < 210; // 50-69%
                 }),
                 riskHires: hirees.filter(h => {
-                    const total = (h.initialScreeningScore || 0) + (h.hrInterviewFormScore || 0) + (h.lineManagerFormEvalScore || 0);
+                    const initialScore = initialScoreMap.get(h.userId) || 0;
+                    const hrScore = hrScoreMap.get(h.userId) || 0;
+                    const panelScore = panelScoreMap.get(h.userId) || 0;
+                    const total = initialScore + hrScore + panelScore;
                     return total > 0 && total < 150; // Below 50%
                 })
             };
@@ -7735,7 +7820,10 @@ getApplicantAssessment: async function(req, res) {
                 dept.daysToHire.push(days);
                 
                 // Calculate scores
-                const totalScore = (hiree.initialScreeningScore || 0) + (hiree.hrInterviewFormScore || 0) + (hiree.lineManagerFormEvalScore || 0);
+                const initialScore = initialScoreMap.get(hiree.userId) || 0;
+                const hrScore = hrScoreMap.get(hiree.userId) || 0;
+                const panelScore = panelScoreMap.get(hiree.userId) || 0;
+                const totalScore = initialScore + hrScore + panelScore;
                 if (totalScore > 0) dept.scores.push(totalScore);
             });
 
@@ -7795,11 +7883,14 @@ getApplicantAssessment: async function(req, res) {
 
             // 7. Performance Score Analysis
             const scoreAnalysis = {
-                avgInitialScore: hirees.length > 0 ? Math.round(hirees.reduce((sum, h) => sum + (h.initialScreeningScore || 0), 0) / hirees.length) : 0,
-                avgHRScore: hirees.length > 0 ? Math.round(hirees.reduce((sum, h) => sum + (h.hrInterviewFormScore || 0), 0) / hirees.length) : 0,
-                avgLineManagerScore: hirees.length > 0 ? Math.round(hirees.reduce((sum, h) => sum + (h.lineManagerFormEvalScore || 0), 0) / hirees.length) : 0,
+                avgInitialScore: hirees.length > 0 ? Math.round(hirees.reduce((sum, h) => sum + (initialScoreMap.get(h.userId) || 0), 0) / hirees.length) : 0,
+                avgHRScore: hirees.length > 0 ? Math.round(hirees.reduce((sum, h) => sum + (hrScoreMap.get(h.userId) || 0), 0) / hirees.length) : 0,
+                avgLineManagerScore: hirees.length > 0 ? Math.round(hirees.reduce((sum, h) => sum + (panelScoreMap.get(h.userId) || 0), 0) / hirees.length) : 0,
                 avgTotalScore: hirees.length > 0 ? Math.round(hirees.reduce((sum, h) => {
-                    return sum + ((h.initialScreeningScore || 0) + (h.hrInterviewFormScore || 0) + (h.lineManagerFormEvalScore || 0));
+                    const initialScore = initialScoreMap.get(h.userId) || 0;
+                    const hrScore = hrScoreMap.get(h.userId) || 0;
+                    const panelScore = panelScoreMap.get(h.userId) || 0;
+                    return sum + (initialScore + hrScore + panelScore);
                 }, 0) / hirees.length) : 0
             };
 
@@ -7905,7 +7996,10 @@ getApplicantAssessment: async function(req, res) {
 
             // Helper function to calculate hire quality score
             const calculateHireQuality = (hiree) => {
-                const total = (hiree.initialScreeningScore || 0) + (hiree.hrInterviewFormScore || 0) + (hiree.lineManagerFormEvalScore || 0);
+                const initialScore = initialScoreMap.get(hiree.userId) || 0;
+                const hrScore = hrScoreMap.get(hiree.userId) || 0;
+                const panelScore = panelScoreMap.get(hiree.userId) || 0;
+                const total = initialScore + hrScore + panelScore;
                 if (total >= 270) return 'Excellent';
                 if (total >= 210) return 'Good';
                 if (total >= 150) return 'Average';
@@ -7915,7 +8009,10 @@ getApplicantAssessment: async function(req, res) {
 
             // Process hirees data with intelligence flags
             const processedHirees = hirees.map((hiree, index) => {
-                const totalScore = (hiree.initialScreeningScore || 0) + (hiree.hrInterviewFormScore || 0) + (hiree.lineManagerFormEvalScore || 0);
+                const initialScore = initialScoreMap.get(hiree.userId) || 0;
+                const hrScore = hrScoreMap.get(hiree.userId) || 0;
+                const panelScore = panelScoreMap.get(hiree.userId) || 0;
+                const totalScore = initialScore + hrScore + panelScore;
                 const daysToHire = Math.floor((new Date() - new Date(hiree.created_at)) / (1000 * 60 * 60 * 24));
                 const quality = calculateHireQuality(hiree);
                 
@@ -8014,9 +8111,6 @@ getApplicantAssessment: async function(req, res) {
                     phoneNo,
                     birthDate,
                     applicantStatus,
-                    initialScreeningScore,
-                    hrInterviewFormScore,
-                    lineManagerFormEvalScore,
                     created_at,
                     userId,
                     jobId,
@@ -8079,21 +8173,41 @@ getApplicantAssessment: async function(req, res) {
             // Exactly one match found
             const applicant = matchingApplicants[0];
 
+            // Fetch scores from assessment tables for this specific applicant
+            const [initialScore, hrScore, panelScore] = await Promise.all([
+                supabase.from('applicant_initialscreening_assessment')
+                    .select('totalScore')
+                    .eq('userId', applicant.userId)
+                    .single(),
+                supabase.from('applicant_hrscreening_assessment')
+                    .select('totalAssessmentRating')
+                    .eq('applicantUserid', applicant.userId)
+                    .single(),
+                supabase.from('applicant_panelscreening_assessment')
+                    .select('totalAssessmentRating')
+                    .eq('applicantUserId', applicant.userId)
+                    .single()
+            ]);
+
+            // Extract scores with fallbacks
+            const applicantInitialScore = initialScore.data?.totalScore || 0;
+            const applicantHRScore = hrScore.data?.totalAssessmentRating || 0;
+            const applicantPanelScore = panelScore.data?.totalAssessmentRating || 0;
+
             // === INTELLIGENT STATUS ANALYSIS ===
             
             // Calculate processing metrics
             const applicationDate = new Date(applicant.created_at);
             const currentDate = new Date();
             const daysInProcess = Math.floor((currentDate - applicationDate) / (1000 * 60 * 60 * 24));
-            const totalScore = (applicant.initialScreeningScore || 0) + (applicant.hrInterviewFormScore || 0) + (applicant.lineManagerFormEvalScore || 0);
+            const totalScore = applicantInitialScore + applicantHRScore + applicantPanelScore;
 
             // Status progression analysis
             const statusProgression = {
                 hrScreeningApproved: () => {
                     const status = (applicant.applicantStatus || '').toLowerCase();
-                    const hrScore = applicant.hrInterviewFormScore;
                     
-                    if (status.includes('passed hr') || status.includes('p1 passed') || (hrScore && hrScore > 0)) {
+                    if (status.includes('passed hr') || status.includes('p1 passed') || (applicantHRScore && applicantHRScore > 0)) {
                         return 'Yes';
                     }
                     if (status.includes('failed hr') || status.includes('p1 failed')) {
@@ -8103,9 +8217,8 @@ getApplicantAssessment: async function(req, res) {
                 },
                 panelScreeningApproved: () => {
                     const status = (applicant.applicantStatus || '').toLowerCase();
-                    const lineManagerScore = applicant.lineManagerFormEvalScore;
                     
-                    if (status.includes('passed panel') || status.includes('p2 passed') || status.includes('line manager passed') || (lineManagerScore && lineManagerScore > 0)) {
+                    if (status.includes('passed panel') || status.includes('p2 passed') || status.includes('line manager passed') || (applicantPanelScore && applicantPanelScore > 0)) {
                         return 'Yes';
                     }
                     if (status.includes('failed panel') || status.includes('p2 failed') || status.includes('line manager failed')) {
@@ -8337,9 +8450,9 @@ getApplicantAssessment: async function(req, res) {
                 isHired: statusProgression.finalStatus(),
                 
                 // Scores
-                initialScreeningScore: applicant.initialScreeningScore || 'N/A',
-                hrInterviewScore: applicant.hrInterviewFormScore || 'N/A',
-                lineManagerScore: applicant.lineManagerFormEvalScore || 'N/A',
+                initialScreeningScore: applicantInitialScore || 'N/A',
+                hrInterviewScore: applicantHRScore || 'N/A',
+                lineManagerScore: applicantPanelScore || 'N/A',
                 totalScore: totalScore > 0 ? totalScore : 'N/A',
                 
                 // Intelligence metrics
@@ -8523,9 +8636,6 @@ getApplicantAssessment: async function(req, res) {
                     jobId,
                     departmentId,
                     userId,
-                    initialScreeningScore,
-                    hrInterviewFormScore,
-                    lineManagerFormEvalScore,
                     jobpositions!inner(jobTitle),
                     departments!inner(deptName)
                 `)
@@ -8558,6 +8668,44 @@ getApplicantAssessment: async function(req, res) {
             });
 
             console.log(`📊 [HR Timeline Report] Analyzing ${hiredApplicants.length} hired candidates for timeline intelligence`);
+
+            // Fetch scores from assessment tables for hired applicants only
+            const hiredUserIds = hiredApplicants.map(h => h.userId);
+
+            const [initialScores, hrScores, panelScores] = await Promise.all([
+                supabase.from('applicant_initialscreening_assessment')
+                    .select('userId, totalScore')
+                    .in('userId', hiredUserIds),
+                supabase.from('applicant_hrscreening_assessment')
+                    .select('applicantUserid, totalAssessmentRating')
+                    .in('applicantUserid', hiredUserIds),
+                supabase.from('applicant_panelscreening_assessment')
+                    .select('applicantUserId, totalAssessmentRating')
+                    .in('applicantUserId', hiredUserIds)
+            ]);
+
+            // Create score lookup maps
+            const initialScoreMap = new Map();
+            const hrScoreMap = new Map();
+            const panelScoreMap = new Map();
+
+            if (initialScores.data) {
+                initialScores.data.forEach(score => {
+                    initialScoreMap.set(score.userId, score.totalScore);
+                });
+            }
+
+            if (hrScores.data) {
+                hrScores.data.forEach(score => {
+                    hrScoreMap.set(score.applicantUserid, score.totalAssessmentRating);
+                });
+            }
+
+            if (panelScores.data) {
+                panelScores.data.forEach(score => {
+                    panelScoreMap.set(score.applicantUserId, score.totalAssessmentRating);
+                });
+            }
 
             // === BUSINESS INTELLIGENCE ANALYSIS ===
 
@@ -8605,7 +8753,10 @@ getApplicantAssessment: async function(req, res) {
                 if (days <= 30) dept.fastHires++;
                 if (days > 60) dept.slowHires++;
                 
-                const totalScore = (applicant.initialScreeningScore || 0) + (applicant.hrInterviewFormScore || 0) + (applicant.lineManagerFormEvalScore || 0);
+                const initialScore = initialScoreMap.get(applicant.userId) || 0;
+                const hrScore = hrScoreMap.get(applicant.userId) || 0;
+                const panelScore = panelScoreMap.get(applicant.userId) || 0;
+                const totalScore = initialScore + hrScore + panelScore;
                 if (totalScore > 0) dept.scores.push(totalScore);
             });
 

@@ -1416,7 +1416,7 @@ window.notifications = <%- JSON.stringify(notifications || []) %>;
                             </div>
                         </form>
                         
-                        <div class="report-results" id="lm-leave-requests-report-results"></div>
+                        <div class="report-results" id="lm-leave-report-results"></div>
                     </div>
                 </div>
             </div>
@@ -1699,10 +1699,18 @@ window.notifications = <%- JSON.stringify(notifications || []) %>;
         document.addEventListener('DOMContentLoaded', function() {
 
         // Define global variables with safe defaults
-        let attendanceLogs = [];
-        let allLeaves = [];
-        let approvedLeaves = [];
-        let notifications = [];
+        // Get real data from server-side variables
+        let attendanceLogs = window.attendanceLogs || [];
+        let allLeaves = window.allLeaves || [];
+        let approvedLeaves = window.approvedLeaves || [];
+        let notifications = window.notifications || [];
+
+        // Debug log to see what data we actually have
+        console.log('📊 Dashboard Data Loaded:');
+        console.log('- Attendance Logs:', attendanceLogs.length);
+        console.log('- All Leaves:', allLeaves.length);
+        console.log('- Approved Leaves:', approvedLeaves.length);
+        console.log('- Notifications:', notifications.length);
 
         // Try to get data from server-side variables if they exist
         try {
@@ -1714,13 +1722,7 @@ window.notifications = <%- JSON.stringify(notifications || []) %>;
             console.log('Using default empty data arrays');
         }
 
-        // Mock data for demonstration (remove this when you have real data)
-        if (attendanceLogs.length === 0) {
-            attendanceLogs = [
-                { firstName: 'John', lastName: 'Smith', department: 'Engineering', timeIn: '09:00', timeOut: '18:00', city: 'Office', activeWorkingHours: '8.0', date: '2025-06-18', jobTitle: 'Software Engineer' },
-                { firstName: 'Jane', lastName: 'Doe', department: 'Engineering', timeIn: '09:15', timeOut: '17:45', city: 'Office', activeWorkingHours: '7.5', date: '2025-06-18', jobTitle: 'Senior Developer' }
-            ];
-        }
+        console.log('Using real attendance data:', attendanceLogs.length, 'records');
 
             // Function to ensure consistent chart dimensions
             function setupChartDimensions() {
@@ -1736,42 +1738,46 @@ window.notifications = <%- JSON.stringify(notifications || []) %>;
             
             // Calculate KPI values
             function calculateKPIs() {
-                // Calculate total team members
+                // Calculate total team members from real attendance data
                 const uniqueMembers = new Set();
-                attendanceLogs.forEach(log => {
-                    uniqueMembers.add(`${log.firstName} ${log.lastName}`);
-                });
-                document.getElementById('team-members-count').textContent = uniqueMembers.size;
-                
-                // Calculate average working hours
-                if (attendanceLogs && attendanceLogs.length) {
-                    let totalHours = 0;
-                    let validLogs = 0;
-                    
+                if (attendanceLogs && attendanceLogs.length > 0) {
                     attendanceLogs.forEach(log => {
-                        if (log.activeWorkingHours && !isNaN(parseFloat(log.activeWorkingHours))) {
-                            totalHours += parseFloat(log.activeWorkingHours);
-                            validLogs++;
+                        if (log.firstName && log.lastName) {
+                            uniqueMembers.add(`${log.firstName} ${log.lastName}`);
                         }
                     });
-                    
-                    if (validLogs > 0) {
-                        const avgHours = (totalHours / validLogs).toFixed(1);
-                        document.getElementById('avg-working-hours').textContent = `${avgHours} hrs`;
-                    } else {
-                        document.getElementById('avg-working-hours').textContent = 'N/A';
+                }
+                document.getElementById('team-members-count').textContent = uniqueMembers.size || 0;
+                
+                // Calculate average working hours with better filtering
+                let totalHours = 0;
+                let validLogs = 0;
+
+                attendanceLogs.forEach(log => {
+                    if (log.activeWorkingHours && !isNaN(parseFloat(log.activeWorkingHours))) {
+                        const hours = parseFloat(log.activeWorkingHours);
+                        if (hours > 0 && hours <= 24) { // Reasonable working hours
+                            totalHours += hours;
+                            validLogs++;
+                        }
                     }
+                });
+
+                if (validLogs > 0) {
+                    const avgHours = (totalHours / validLogs).toFixed(1);
+                    document.getElementById('avg-working-hours').textContent = `${avgHours} hrs`;
+                    console.log(`Average working hours: ${avgHours} from ${validLogs} valid logs`);
                 } else {
-                    document.getElementById('avg-working-hours').textContent = 'N/A';
+                    document.getElementById('avg-working-hours').textContent = '0.0 hrs';
+                    console.log('No valid working hours data found');
                 }
                 
                 // Count pending leave requests
-                if (allLeaves && allLeaves.length) {
-                    const pendingLeaves = allLeaves.filter(leave => leave.status === 'Pending for Approval').length;
-                    document.getElementById('pending-leaves').textContent = pendingLeaves;
-                } else {
-                    document.getElementById('pending-leaves').textContent = '0';
-                }
+                const pendingLeaves = allLeaves.filter(leave => 
+                    leave.status === 'Pending for Approval' || leave.status === 'Pending'
+                ).length;
+                console.log('Pending leaves found:', pendingLeaves);
+                document.getElementById('pending-leaves').textContent = pendingLeaves
                 
                 // Count pending approvals
                 const pendingApprovals = notifications.filter(
@@ -2206,17 +2212,23 @@ window.notifications = <%- JSON.stringify(notifications || []) %>;
 
              // Display manager's department
             function displayManagerDepartment() {
-                // Get department from attendance logs or other available data
+                // Get department from attendance logs - find the most common department
                 if (attendanceLogs && attendanceLogs.length > 0) {
-                    const managerDepartment = attendanceLogs[0].department || 'Unknown Department';
+                    const departmentCounts = {};
+                    attendanceLogs.forEach(log => {
+                        if (log.department && log.department !== 'N/A') {
+                            departmentCounts[log.department] = (departmentCounts[log.department] || 0) + 1;
+                        }
+                    });
+                    
+                    // Find the most common department
+                    const mostCommonDept = Object.keys(departmentCounts).reduce((a, b) => 
+                        departmentCounts[a] > departmentCounts[b] ? a : b, 'Your Department'
+                    );
+                    
                     const departmentBadge = document.getElementById('manager-department');
                     if (departmentBadge) {
-                        departmentBadge.textContent = managerDepartment;
-                    }
-                } else {
-                    const departmentBadge = document.getElementById('manager-department');
-                    if (departmentBadge) {
-                        departmentBadge.textContent = 'Your Department';
+                        departmentBadge.textContent = mostCommonDept;
                     }
                 }
             }
@@ -2923,7 +2935,7 @@ window.notifications = <%- JSON.stringify(notifications || []) %>;
                     if (reportType === 'daily-attendance' || reportType === 'employee-report') {
                         displayAttendanceReportResults(resultsDiv, data, reportType);
                     } else if (reportType === 'leave-report') {
-                         displayDepartmentLeaveRequestsReport(resultsDiv, data);
+                        displayDepartmentLeaveRequestsReport(resultsDiv, data);
                     }
                     
                     console.log(`✅ [Line Manager] ${reportType} department report displayed successfully`);
@@ -3122,6 +3134,8 @@ window.notifications = <%- JSON.stringify(notifications || []) %>;
 
         // Department-specific leave report display
         function displayDepartmentLeaveRequestsReport(resultsDiv, data) {
+            console.log('📊 Displaying department leave requests report:', data); // Add this debug line
+            
             if (!resultsDiv) {
                 console.error('❌ Results div not found');
                 return;
@@ -3129,49 +3143,69 @@ window.notifications = <%- JSON.stringify(notifications || []) %>;
             
             resultsDiv.style.display = 'block';
             
-            // Fallback to simple display
+            // Calculate statistics if not provided
+            let statistics = data.statistics;
+            if (!statistics && data.leaveRequests) {
+                statistics = calculateLeaveRequestsStatistics(data.leaveRequests);
+            }
+            
             resultsDiv.innerHTML = `
-                <div class="results-header">
-                    <h5>Department Leave Requests Report</h5>
-                    <span class="report-date">${data.startDate} to ${data.endDate}</span>
-                </div>
-                
-                <div class="results-summary">
-                    <div class="summary-stat">
-                        <div class="summary-stat-value">${data.statistics?.totalRequests || 0}</div>
-                        <div class="summary-stat-label">Total Team Requests</div>
+                <div class="leave-requests-report-container">
+                    <div class="leave-report-header">
+                        <h3 class="leave-report-title">Department Leave Requests Report</h3>
+                        <p class="leave-report-subtitle">${data.department || 'Your Department'}</p>
+                        <p class="leave-report-date">Period: ${data.startDate} to ${data.endDate}</p>
                     </div>
-                    <div class="summary-stat">
-                        <div class="summary-stat-value">${data.statistics?.approvedRequests || 0}</div>
-                        <div class="summary-stat-label">Approved</div>
+                    
+                    <div class="leave-summary-section">
+                        <h4 class="leave-summary-title">
+                            <i class="fas fa-chart-bar"></i>
+                            Department Leave Summary
+                        </h4>
+                        
+                        <div class="leave-summary-stats">
+                            <div class="leave-summary-stat">
+                                <span class="leave-summary-stat-value">${statistics?.totalRequests || 0}</span>
+                                <span class="leave-summary-stat-label">Total Team Requests</span>
+                            </div>
+                            <div class="leave-summary-stat">
+                                <span class="leave-summary-stat-value">${statistics?.pendingRequests || 0}</span>
+                                <span class="leave-summary-stat-label">Pending Your Approval</span>
+                            </div>
+                        </div>
                     </div>
-                    <div class="summary-stat">
-                        <div class="summary-stat-value">${data.statistics?.pendingRequests || 0}</div>
-                        <div class="summary-stat-label">Pending Your Approval</div>
+                    
+                    <div class="leave-detailed-section">
+                        <h4 class="leave-detailed-title">
+                            <i class="fas fa-list"></i>
+                            Detailed Leave Requests
+                        </h4>
+                        
+                        ${data.leaveRequests && data.leaveRequests.length > 0 ? `
+                            <div class="leave-department-table-container">
+                                <table class="leave-department-table">
+                                    <thead>
+                                        <tr>
+                                            <th>Team Member</th>
+                                            <th>Leave Type</th>
+                                            <th>From Date</th>
+                                            <th>Until Date</th>
+                                            <th>Duration</th>
+                                            <th>Status</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        ${generateDepartmentLeaveTableRows(data)}
+                                    </tbody>
+                                </table>
+                            </div>
+                        ` : `
+                            <div class="leave-no-data">
+                                <i class="fas fa-calendar-times"></i>
+                                <p>No leave requests found for your department in the selected period.</p>
+                            </div>
+                        `}
                     </div>
-                    <div class="summary-stat">
-                        <div class="summary-stat-value">${data.statistics?.rejectedRequests || 0}</div>
-                        <div class="summary-stat-label">Rejected</div>
-                    </div>
-                </div>
-                
-                <div class="data-table-container">
-                    <table class="data-table">
-                        <thead>
-                            <tr>
-                                <th>Team Member</th>
-                                <th>Leave Type</th>
-                                <th>From Date</th>
-                                <th>Until Date</th>
-                                <th>Duration</th>
-                                <th>Status</th>
-                                <th>Remaining Balance</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            ${generateDepartmentLeaveTableRows(data)}
-                        </tbody>
-                    </table>
                 </div>
             `;
         }
