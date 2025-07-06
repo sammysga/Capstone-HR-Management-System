@@ -1744,6 +1744,82 @@
     }
 }
 
+
+/* Department Response Stats Styles */
+.department-response-stats {
+    animation: slideInFromTop 0.5s ease-out;
+}
+
+.department-response-stats h5 {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.department-response-stats .status-complete {
+    background-color: #d4edda;
+    color: #155724;
+    border-left-color: #28a745;
+}
+
+.department-response-stats .status-incomplete {
+    background-color: #f8d7da;
+    color: #721c24;
+    border-left-color: #dc3545;
+}
+
+/* Modal Animations */
+@keyframes slideInFromTop {
+    from {
+        opacity: 0;
+        transform: translateY(-20px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+#departmentBlockingModal {
+    animation: fadeIn 0.3s ease-out;
+}
+
+#departmentBlockingModal > div {
+    animation: slideInModal 0.3s ease-out;
+}
+
+@keyframes fadeIn {
+    from { opacity: 0; }
+    to { opacity: 1; }
+}
+
+@keyframes slideInModal {
+    from {
+        opacity: 0;
+        transform: scale(0.8) translateY(-50px);
+    }
+    to {
+        opacity: 1;
+        transform: scale(1) translateY(0);
+    }
+}
+
+/* Button Loading States */
+.step.checking {
+    opacity: 0.7;
+    cursor: wait !important;
+}
+
+.step.checking .step-icon {
+    animation: pulse 1.5s infinite;
+}
+
+@keyframes pulse {
+    0% { opacity: 1; }
+    50% { opacity: 0.5; }
+    100% { opacity: 1; }
+}
+
     
     </style>
 </head>
@@ -3122,6 +3198,11 @@ let isSearchMode = false;
 let currentQuarter = null;
 let currentYear = new Date().getFullYear();
 let currentUserId = '<%= user.userId %>';
+
+let departmentValidationStatus = {
+    midYear: { canProceed: false, stats: null },
+    finalYear: { canProceed: false, stats: null }
+};
 
 // Enhanced debug function
 function debugCategoryState() {
@@ -4596,6 +4677,290 @@ document.addEventListener('DOMContentLoaded', function() {
     
     console.log("Enhanced performance tracker with Final-Year IDP support initialized successfully.");
 });
+
+async function checkDepartmentResponseRates(userId, quarters, idpType) {
+    console.log(`Checking department response rates for ${idpType} (${quarters})`);
+    
+    try {
+        const url = `/linemanager/check-department-response-rate/${userId}?quarters=${quarters}&year=${new Date().getFullYear()}`;
+        console.log('Making request to:', url);
+        
+        const response = await fetch(url);
+        console.log('Response status:', response.status);
+        
+        if (!response.ok) {
+            const errorText = await response.text();
+            console.error('Server error response:', errorText);
+            throw new Error(`Server responded with status ${response.status}: ${errorText}`);
+        }
+        
+        const result = await response.json();
+        console.log('Server response:', result);
+        
+        if (result.success) {
+            departmentValidationStatus[idpType] = {
+                canProceed: result.data.canProceed,
+                stats: result.data
+            };
+            
+            console.log(`Department validation for ${idpType}:`, result.data);
+            return result.data;
+        } else {
+            throw new Error(result.message || 'Validation check failed');
+        }
+    } catch (error) {
+        console.error(`Error checking department response rates for ${idpType}:`, error);
+        
+        // Return a safe fallback object
+        return { 
+            canProceed: false, 
+            stats: null, 
+            error: error.message,
+            departmentName: 'Unknown Department',
+            totalStaff: 0,
+            responseStats: {},
+            blockingMessage: `Error checking department status: ${error.message}`
+        };
+    }
+}
+
+
+
+// Function to display department response statistics
+function displayDepartmentResponseStats(stats, containerId) {
+    const container = document.getElementById(containerId);
+    if (!container || !stats) return;
+    
+    let statsHTML = '<div class="department-response-stats" style="margin: 20px 0; padding: 15px; background-color: #f8f9fa; border-radius: 8px; border-left: 4px solid #17a2b8;">';
+    
+    statsHTML += `
+        <h5 style="margin: 0 0 15px 0; color: #17a2b8; font-size: 16px;">
+            <i class="fas fa-users"></i> Department Response Statistics
+        </h5>
+        <div style="margin-bottom: 15px;">
+            <strong>Department:</strong> ${stats.departmentName || 'Your Department'} 
+            <span style="color: #666;">(${stats.totalStaff} active members)</span>
+        </div>
+    `;
+    
+    // Display stats for each quarter
+    Object.entries(stats.responseStats).forEach(([quarter, data]) => {
+        const statusColor = data.isComplete ? '#28a745' : '#dc3545';
+        const statusIcon = data.isComplete ? 'check-circle' : 'exclamation-triangle';
+        const statusText = data.isComplete ? 'Complete' : 'Incomplete';
+        
+        statsHTML += `
+            <div style="margin-bottom: 15px; padding: 12px; background-color: white; border-radius: 6px; border-left: 4px solid ${statusColor};">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
+                    <div>
+                        <strong>${quarter} Feedback Completion:</strong>
+                    </div>
+                    <div style="color: ${statusColor}; font-weight: bold;">
+                        <i class="fas fa-${statusIcon}"></i> ${statusText}
+                    </div>
+                </div>
+                
+                <div style="display: flex; justify-content: space-between; align-items: center;">
+                    <span>Members with completed feedback: <strong>${data.staffWithResponses}/${data.totalStaff}</strong></span>
+                    <span style="background-color: ${statusColor}; color: white; padding: 2px 8px; border-radius: 12px; font-size: 12px; font-weight: bold;">
+                        ${data.responseRate}%
+                    </span>
+                </div>
+                
+                ${!data.isComplete ? `
+                    <div style="margin-top: 8px; padding: 8px; background-color: #fff3cd; border-radius: 4px; font-size: 13px; color: #856404;">
+                        <i class="fas fa-info-circle"></i> 
+                        ${data.totalStaff - data.staffWithResponses} member(s) still need to receive feedback responses for ${quarter}
+                    </div>
+                ` : ''}
+            </div>
+        `;
+    });
+    
+    // Overall status
+    if (stats.canProceed) {
+        statsHTML += `
+            <div style="margin-top: 15px; padding: 12px; background-color: #d4edda; color: #155724; border-radius: 6px; border-left: 4px solid #28a745;">
+                <i class="fas fa-check-circle"></i> <strong>Ready to Proceed:</strong> All department members have completed required feedback.
+            </div>
+        `;
+    } else {
+        statsHTML += `
+            <div style="margin-top: 15px; padding: 12px; background-color: #f8d7da; color: #721c24; border-radius: 6px; border-left: 4px solid #dc3545;">
+                <i class="fas fa-exclamation-triangle"></i> <strong>Cannot Proceed:</strong> 
+                <div style="margin-top: 8px; font-size: 14px;">${stats.blockingMessage}</div>
+            </div>
+        `;
+    }
+    
+    statsHTML += '</div>';
+    container.innerHTML = statsHTML;
+}
+
+// Function to show blocking modal
+function showDepartmentBlockingModal(stats, idpType) {
+    console.log('showDepartmentBlockingModal called with:', { stats, idpType });
+    
+    // Handle null/undefined stats
+    if (!stats) {
+        console.error('Stats is null or undefined, showing generic error modal');
+        showGenericErrorModal(idpType);
+        return;
+    }
+    
+    // Remove existing modal
+    const existingModal = document.getElementById('departmentBlockingModal');
+    if (existingModal) {
+        existingModal.remove();
+    }
+    
+    const modal = document.createElement('div');
+    modal.id = 'departmentBlockingModal';
+    modal.style.cssText = `
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background-color: rgba(0, 0, 0, 0.5);
+        z-index: 10000;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    `;
+    
+    const quarters = idpType === 'midYear' ? 'Q1 and Q2' : 'Q3 and Q4';
+    
+    // Safe access to responseStats
+    const responseStats = stats.responseStats || {};
+    const hasResponseStats = Object.keys(responseStats).length > 0;
+    
+    modal.innerHTML = `
+        <div style="background: white; border-radius: 12px; padding: 30px; max-width: 550px; width: 90%; box-shadow: 0 10px 30px rgba(0,0,0,0.3); max-height: 80vh; overflow-y: auto;">
+            <div style="text-align: center; margin-bottom: 20px;">
+                <i class="fas fa-${stats.error ? 'exclamation-triangle' : 'users-slash'}" style="font-size: 48px; color: #dc3545; margin-bottom: 15px;"></i>
+                <h3 style="margin: 0; color: #dc3545;">${stats.error ? 'System Error' : 'Department Feedback Required'}</h3>
+            </div>
+            
+            <div style="background-color: #f8f9fa; border-radius: 8px; padding: 20px; margin-bottom: 20px;">
+                ${stats.error ? `
+                    <p style="margin: 0 0 15px 0; font-size: 16px; color: #dc3545;">
+                        <strong>Error checking department status:</strong>
+                    </p>
+                    <p style="margin: 0 0 15px 0; background-color: #f8d7da; padding: 10px; border-radius: 4px; color: #721c24;">
+                        ${stats.blockingMessage || stats.error}
+                    </p>
+                ` : `
+                    <p style="margin: 0 0 15px 0; font-size: 16px;">
+                        <strong>${idpType === 'midYear' ? 'Mid-Year' : 'Final-Year'} IDP is currently unavailable.</strong>
+                    </p>
+                    <p style="margin: 0 0 15px 0;">
+                        All <strong>${stats.totalStaff || 0}</strong> members in your department 
+                        ${stats.departmentName ? `(<strong>${stats.departmentName}</strong>)` : ''} 
+                        must complete ${quarters} feedback before anyone can proceed with their IDP.
+                    </p>
+                `}
+                
+                ${hasResponseStats ? `
+                    <div style="background-color: white; border-radius: 6px; padding: 15px; margin-top: 15px;">
+                        <h5 style="margin: 0 0 15px 0; color: #17a2b8;">
+                            <i class="fas fa-chart-bar"></i> Current Department Status:
+                        </h5>
+                        ${Object.entries(responseStats).map(([quarter, data]) => `
+                            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; padding: 8px; background-color: ${data.isComplete ? '#d4edda' : '#f8d7da'}; border-radius: 4px;">
+                                <div>
+                                    <strong>${quarter}:</strong> ${data.staffWithResponses || 0}/${data.totalStaff || 0} members completed
+                                </div>
+                                <div style="display: flex; align-items: center; gap: 8px;">
+                                    <span style="color: ${data.isComplete ? '#155724' : '#721c24'}; font-weight: bold;">
+                                        ${data.responseRate || 0}%
+                                    </span>
+                                    <i class="fas fa-${data.isComplete ? 'check-circle' : 'exclamation-triangle'}" 
+                                       style="color: ${data.isComplete ? '#28a745' : '#dc3545'};"></i>
+                                </div>
+                            </div>
+                        `).join('')}
+                    </div>
+                ` : ''}
+            </div>
+            
+            <div style="text-align: center;">
+                <button onclick="this.parentElement.parentElement.parentElement.remove()" 
+                        style="background-color: #6c757d; color: white; border: none; padding: 12px 24px; border-radius: 6px; cursor: pointer; font-size: 16px; margin-right: 10px;">
+                    <i class="fas fa-times"></i> Close
+                </button>
+                <button onclick="window.location.reload()" 
+                        style="background-color: #17a2b8; color: white; border: none; padding: 12px 24px; border-radius: 6px; cursor: pointer; font-size: 16px;">
+                    <i class="fas fa-sync"></i> Refresh Page
+                </button>
+            </div>
+        </div>
+    `;
+    
+    document.body.appendChild(modal);
+    
+    // Close on backdrop click
+    modal.addEventListener('click', function(e) {
+        if (e.target === modal) {
+            modal.remove();
+        }
+    });
+}
+
+// Generic error modal for when stats is null
+function showGenericErrorModal(idpType) {
+    const modal = document.createElement('div');
+    modal.id = 'departmentBlockingModal';
+    modal.style.cssText = `
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background-color: rgba(0, 0, 0, 0.5);
+        z-index: 10000;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    `;
+    
+    modal.innerHTML = `
+        <div style="background: white; border-radius: 12px; padding: 30px; max-width: 400px; width: 90%; box-shadow: 0 10px 30px rgba(0,0,0,0.3);">
+            <div style="text-align: center; margin-bottom: 20px;">
+                <i class="fas fa-exclamation-triangle" style="font-size: 48px; color: #dc3545; margin-bottom: 15px;"></i>
+                <h3 style="margin: 0; color: #dc3545;">System Error</h3>
+            </div>
+            
+            <div style="background-color: #f8f9fa; border-radius: 8px; padding: 20px; margin-bottom: 20px;">
+                <p style="margin: 0 0 15px 0;">
+                    Unable to check department feedback status at this time.
+                </p>
+                <p style="margin: 0;">
+                    Please ensure the backend route is properly configured and try again.
+                </p>
+            </div>
+            
+            <div style="text-align: center;">
+                <button onclick="this.parentElement.parentElement.parentElement.remove()" 
+                        style="background-color: #6c757d; color: white; border: none; padding: 12px 24px; border-radius: 6px; cursor: pointer; font-size: 16px; margin-right: 10px;">
+                    <i class="fas fa-times"></i> Close
+                </button>
+                <button onclick="window.location.reload()" 
+                        style="background-color: #17a2b8; color: white; border: none; padding: 12px 24px; border-radius: 6px; cursor: pointer; font-size: 16px;">
+                    <i class="fas fa-sync"></i> Refresh Page
+                </button>
+            </div>
+        </div>
+    `;
+    
+    document.body.appendChild(modal);
+    
+    modal.addEventListener('click', function(e) {
+        if (e.target === modal) {
+            modal.remove();
+        }
+    });
+}
 
 function testExportNow() {
     console.log('🧪 Running export test...');
@@ -8280,8 +8645,8 @@ function filterAnswers() {
         card.style.display = showCard ? 'block' : 'none';
     });
 }
-
-function navigateToMidYearIDP() {
+// Enhanced Mid-Year IDP navigation with validation
+async function navigateToMidYearIDP() {
     const midYearIDPButton = document.getElementById("midYearIDP");
     
     if (!midYearIDPButton || !midYearIDPButton.classList.contains('accessible')) {
@@ -8289,50 +8654,80 @@ function navigateToMidYearIDP() {
         return;
     }
     
-    console.log("Navigating to Mid-Year IDP with Q1-Q2 feedback...");
+    console.log("Checking Mid-Year IDP department validation...");
     
-    hideAllSections();
+    // Show loading state
+    const originalButtonContent = midYearIDPButton.innerHTML;
+    midYearIDPButton.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Checking...';
+    midYearIDPButton.disabled = true;
     
-    const midYearIDPForm = document.getElementById("midYearIDPForm");
-    if (!midYearIDPForm) {
-        console.error("Mid-Year IDP form not found.");
-        return;
-    }
-    
-    midYearIDPForm.style.display = "block";
-    midYearIDPForm.classList.remove("fade-out");
-    midYearIDPForm.classList.add("fade-in");
-    
-    // FIXED: Ensure we reset form to Mid-Year context
-    resetFormToMidYearContext();
-    
-    // Load Mid-Year feedback aggregates (Q1-Q2)
-    loadMidYearFeedbackAggregates();
-    
-    // Handle view-only mode
-    const isViewOnly = viewState && viewState.viewOnlyStatus && viewState.viewOnlyStatus.midyearidp;
-    
-    if (isViewOnly) {
-        if (window.savedMidYearIDPData) {
-            createViewOnlyMidYearIDPWithCategories(window.savedMidYearIDPData);
-        } else if (viewState && viewState.midYearData) {
-            createViewOnlyMidYearIDPWithCategories(viewState.midYearData);
+    try {
+        // Check department response rates for Q1 and Q2
+        const validationResult = await checkDepartmentResponseRates(userId, 'Q1,Q2', 'midYear');
+        
+        // Reset button
+        midYearIDPButton.innerHTML = originalButtonContent;
+        midYearIDPButton.disabled = false;
+        
+        if (!validationResult.canProceed) {
+            console.log("Mid-Year IDP blocked - showing modal");
+            showDepartmentBlockingModal(validationResult, 'midYear');
+            return;
+        }
+        
+        console.log("Department validation passed - proceeding to Mid-Year IDP");
+        
+        // Proceed with normal Mid-Year IDP navigation
+        hideAllSections();
+        
+        const midYearIDPForm = document.getElementById("midYearIDPForm");
+        if (!midYearIDPForm) {
+            console.error("Mid-Year IDP form not found.");
+            return;
+        }
+        
+        midYearIDPForm.style.display = "block";
+        midYearIDPForm.classList.remove("fade-out");
+        midYearIDPForm.classList.add("fade-in");
+        
+        // Add department stats display
+        const statsContainer = document.getElementById('midYearDepartmentStats') || createStatsContainer('midYearDepartmentStats');
+        displayDepartmentResponseStats(validationResult, 'midYearDepartmentStats');
+        
+        // Continue with existing Mid-Year IDP logic
+        resetFormToMidYearContext();
+        loadMidYearFeedbackAggregates();
+        
+        const isViewOnly = viewState && viewState.viewOnlyStatus && viewState.viewOnlyStatus.midyearidp;
+        
+        if (isViewOnly) {
+            if (window.savedMidYearIDPData) {
+                createViewOnlyMidYearIDPWithCategories(window.savedMidYearIDPData);
+            } else if (viewState && viewState.midYearData) {
+                createViewOnlyMidYearIDPWithCategories(viewState.midYearData);
+            } else {
+                loadMidYearIDPDataWithCategories(userId).then(() => {
+                    if (window.savedMidYearIDPData) {
+                        createViewOnlyMidYearIDPWithCategories(window.savedMidYearIDPData);
+                    }
+                });
+            }
         } else {
-            loadMidYearIDPDataWithCategories(userId).then(() => {
-                if (window.savedMidYearIDPData) {
-                    createViewOnlyMidYearIDPWithCategories(window.savedMidYearIDPData);
-                }
-            });
+            enableMidYearIDPForm();
+            if (typeof initializeTrainingCategories === 'function') {
+                initializeTrainingCategories();
+            }
         }
-    } else {
-        enableMidYearIDPForm();
-        if (typeof initializeTrainingCategories === 'function') {
-            initializeTrainingCategories();
-        }
+        
+        midYearIDPForm.scrollIntoView({ behavior: "smooth" });
+        console.log("Navigated to Mid-Year IDP form with department validation.");
+        
+    } catch (error) {
+        console.error("Error during Mid-Year IDP validation:", error);
+        midYearIDPButton.innerHTML = originalButtonContent;
+        midYearIDPButton.disabled = false;
+        alert("Error checking department status. Please try again.");
     }
-    
-    midYearIDPForm.scrollIntoView({ behavior: "smooth" });
-    console.log("Navigated to Mid-Year IDP form.");
 }
 
 function resetFormHeadersToMidYear() {
@@ -11732,79 +12127,115 @@ function updateFinalYearTrainingLegendWithTop5() {
     console.log("✅ Updated Final-Year training legend with Q3-Q4 top 5 areas");
     console.log("=== FINAL-YEAR Q3-Q4 TOP 5 DEVELOPMENT AREAS UPDATE COMPLETE ===");
 }
-
-function navigateToFinalYearIDP() {
+async function navigateToFinalYearIDP() {
     const finalYearIDPButton = document.getElementById("finalYearIDP");
     
-    // Check if the button is accessible
     if (!finalYearIDPButton || !finalYearIDPButton.classList.contains('accessible')) {
         alert("You must complete the previous steps first.");
         return;
     }
     
-    console.log("=== NAVIGATING TO FINAL-YEAR IDP WITH Q3-Q4 FEEDBACK ===");
-    console.log("Loading Final-Year IDP with Q3-Q4 feedback...");
+    console.log("Checking Final-Year IDP department validation...");
     
-    // Hide other sections
-    hideAllSections();
+    // Show loading state
+    const originalButtonContent = finalYearIDPButton.innerHTML;
+    finalYearIDPButton.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Checking...';
+    finalYearIDPButton.disabled = true;
     
-    // Show the Final-Year IDP form (reusing Mid-Year form structure)
-    const midYearIDPForm = document.getElementById("midYearIDPForm");
-    if (!midYearIDPForm) {
-        console.error("IDP form not found.");
-        return;
+    try {
+        // Check department response rates for Q3 and Q4
+        const validationResult = await checkDepartmentResponseRates(userId, 'Q3,Q4', 'finalYear');
+        
+        // Reset button
+        finalYearIDPButton.innerHTML = originalButtonContent;
+        finalYearIDPButton.disabled = false;
+        
+        if (!validationResult.canProceed) {
+            console.log("Final-Year IDP blocked - showing modal");
+            showDepartmentBlockingModal(validationResult, 'finalYear');
+            return;
+        }
+        
+        console.log("Department validation passed - proceeding to Final-Year IDP");
+        
+        // Proceed with normal Final-Year IDP navigation
+        hideAllSections();
+        
+        const midYearIDPForm = document.getElementById("midYearIDPForm");
+        if (!midYearIDPForm) {
+            console.error("IDP form not found.");
+            return;
+        }
+        
+        midYearIDPForm.style.display = "block";
+        midYearIDPForm.classList.remove("fade-out");
+        midYearIDPForm.classList.add("fade-in");
+        
+        // Add department stats display
+        const statsContainer = document.getElementById('finalYearDepartmentStats') || createStatsContainer('finalYearDepartmentStats');
+        displayDepartmentResponseStats(validationResult, 'finalYearDepartmentStats');
+        
+        // Continue with existing Final-Year IDP logic
+        updateFormForFinalYear();
+        preventMidYearOverwrite();
+        
+        setTimeout(() => {
+            loadFinalYearFeedbackAggregates();
+        }, 100);
+        
+        const isViewOnly = viewState && viewState.viewOnlyStatus && viewState.viewOnlyStatus.finalyearidp;
+        
+        if (isViewOnly) {
+            hideProgressBarIfCompleted();
+            loadFinalYearIDPDataWithCategories(userId).then(() => {
+                if (window.savedFinalYearIDPData) {
+                    createViewOnlyFinalYearIDPWithCategories(window.savedFinalYearIDPData);
+                } else {
+                    console.error("Failed to load Final-Year IDP data");
+                    alert("Error loading Final-Year IDP data. Please refresh the page.");
+                }
+            });
+        } else {
+            enableFinalYearIDPForm();
+            if (typeof initializeTrainingCategories === 'function') {
+                initializeTrainingCategories();
+            }
+        }
+        
+        midYearIDPForm.scrollIntoView({ behavior: "smooth" });
+        console.log("Navigated to Final-Year IDP form with department validation.");
+        
+    } catch (error) {
+        console.error("Error during Final-Year IDP validation:", error);
+        finalYearIDPButton.innerHTML = originalButtonContent;
+        finalYearIDPButton.disabled = false;
+        alert("Error checking department status. Please try again.");
+    }
+}
+
+// Helper function to create stats container
+function createStatsContainer(containerId) {
+    const existingContainer = document.getElementById(containerId);
+    if (existingContainer) {
+        return existingContainer;
     }
     
-    midYearIDPForm.style.display = "block";
-    midYearIDPForm.classList.remove("fade-out");
-    midYearIDPForm.classList.add("fade-in");
+    const container = document.createElement('div');
+    container.id = containerId;
     
-    // CRITICAL: Set form to Final-Year context FIRST
-    updateFormForFinalYear();
-    
-    // CRITICAL: Protect against Mid-Year overwrites
-    preventMidYearOverwrite();
-    
-    // CRITICAL: Load Final-Year feedback aggregates (Q3-Q4 ONLY) - Wait for form update
-    setTimeout(() => {
-        loadFinalYearFeedbackAggregates();
-    }, 100);
-    
-    // ENHANCED: Check if Final-Year IDP is completed and handle accordingly
-    const isViewOnly = viewState && viewState.viewOnlyStatus && viewState.viewOnlyStatus.finalyearidp;
-    
-    console.log("Final-Year IDP completion status:", isViewOnly ? "Completed (View-Only)" : "Not Completed (Editable)");
-    
-    if (isViewOnly) {
-        console.log("✅ Final-Year IDP already completed - setting up view-only mode...");
-        
-        // Hide progress bar for completed IDP
-        hideProgressBarIfCompleted();
-        
-        // Load and display existing Final-Year IDP data
-        loadFinalYearIDPDataWithCategories(userId).then(() => {
-            if (window.savedFinalYearIDPData) {
-                createViewOnlyFinalYearIDPWithCategories(window.savedFinalYearIDPData);
-            } else {
-                console.error("Failed to load Final-Year IDP data");
-                alert("Error loading Final-Year IDP data. Please refresh the page.");
-            }
-        });
+    // Insert before the IDP progress section
+    const progressSection = document.querySelector('.idp-progress');
+    if (progressSection) {
+        progressSection.parentNode.insertBefore(container, progressSection);
     } else {
-        console.log("📝 Final-Year IDP not completed - setting up edit mode...");
-        
-        // Enable form for editing
-        enableFinalYearIDPForm();
-        
-        // Initialize training categories functionality for new input
-        if (typeof initializeTrainingCategories === 'function') {
-            initializeTrainingCategories();
+        // Fallback: insert at the beginning of the form
+        const form = document.getElementById('midYearIDPForm');
+        if (form) {
+            form.insertBefore(container, form.firstChild);
         }
     }
     
-    midYearIDPForm.scrollIntoView({ behavior: "smooth" });
-    console.log("=== FINAL-YEAR IDP NAVIGATION COMPLETE ===");
-    console.log(`Navigated to Final-Year IDP form. Status: ${isViewOnly ? "Completed (View-Only)" : "Not Completed (Editable)"}`);
+    return container;
 }
 
 async function loadFinalYearFeedbackAggregates() {

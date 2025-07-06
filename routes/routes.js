@@ -291,6 +291,9 @@ router.get('/linemanager/get-feedback-questionnaire/:userId', lineManagerControl
 // Route for saving feedback questionnaire
 router.post('/linemanager/save-feedback-questionnaire/:userId', lineManagerController.save360Questionnaire);
 
+// get responserate
+router.get('/linemanager/check-department-response-rate/:userId', lineManagerController.checkDepartmentResponseRate);
+
 router.post('/linemanager/records-performance-tracker/questionnaire/:userId', lineManagerController.save360Questionnaire);
 router.post('/linemanager/offboarding/update', lineManagerController.updateOffboardingRequest);
 

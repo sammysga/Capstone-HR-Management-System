@@ -13370,6 +13370,175 @@ save360Questionnaire: async function(req, res) {
         }
     }
 },
+
+checkDepartmentResponseRate: async function (req, res) {
+try {
+        const { userId } = req.params;
+        const { quarters } = req.query; // e.g., "Q1,Q2" or "Q3,Q4"
+        const year = req.query.year || new Date().getFullYear();
+        
+        console.log(`[DEPT VALIDATION] Checking for user ${userId}, quarters: ${quarters}, year: ${year}`);
+        
+        // Get user's department with department name
+        const { data: userData, error: userError } = await supabase
+            .from('staffaccounts')
+            .select(`
+                departmentId, 
+                firstName, 
+                lastName, 
+                userId,
+                departments!inner (deptName)
+            `)
+            .eq('userId', userId)
+            .single();
+            
+        if (userError || !userData) {
+            console.error('[DEPT VALIDATION] User lookup error:', userError);
+            return res.status(404).json({
+                success: false,
+                message: 'User not found',
+                error: userError?.message
+            });
+        }
+        
+        const departmentId = userData.departmentId;
+        const departmentName = userData.departments?.deptName || 'Unknown Department';
+        
+        console.log(`[DEPT VALIDATION] User ${userId} belongs to department ${departmentId} (${departmentName})`);
+        
+        // Get all active staff in the same department
+        const { data: departmentStaff, error: deptError } = await supabase
+            .from('staffaccounts')
+            .select(`
+                userId, 
+                firstName, 
+                lastName,
+                useraccounts!inner (userIsDisabled)
+            `)
+            .eq('departmentId', departmentId)
+            .eq('useraccounts.userIsDisabled', false);
+            
+        if (deptError) {
+            console.error('[DEPT VALIDATION] Department staff lookup error:', deptError);
+            return res.status(500).json({
+                success: false,
+                message: 'Error fetching department staff',
+                error: deptError.message
+            });
+        }
+        
+        const totalStaff = departmentStaff?.length || 0;
+        const quarterList = quarters.split(',').map(q => q.trim());
+        
+        console.log(`[DEPT VALIDATION] Found ${totalStaff} active staff members in department ${departmentName}`);
+        
+        let departmentResponseStats = {};
+        
+        // Check each quarter
+        for (const quarter of quarterList) {
+            console.log(`[DEPT VALIDATION] Checking ${quarter} responses...`);
+            
+            const feedbackTable = `feedbacks_${quarter}`;
+            const feedbackIdField = `feedbackq${quarter.replace('Q', '')}_Id`;
+            
+            const departmentUserIds = departmentStaff.map(staff => staff.userId);
+            
+            // Get all feedback records for this quarter, year, and department users
+            const { data: feedbackRecords, error: feedbackError } = await supabase
+                .from(feedbackTable)
+                .select(`${feedbackIdField}, userId, quarter, year`)
+                .in('userId', departmentUserIds)
+                .eq('year', year)
+                .eq('quarter', quarter);
+                
+            if (feedbackError) {
+                console.error(`[DEPT VALIDATION] Error fetching ${quarter} feedback records:`, feedbackError);
+                // Don't continue, but don't fail completely - set empty stats
+                departmentResponseStats[quarter] = {
+                    staffWithResponses: 0,
+                    totalStaff: totalStaff,
+                    responseRate: 0,
+                    isComplete: false,
+                    error: feedbackError.message
+                };
+                continue;
+            }
+            
+            console.log(`[DEPT VALIDATION] Found ${feedbackRecords?.length || 0} feedback records for ${quarter}`);
+            
+            let staffWithResponses = 0;
+            
+            if (feedbackRecords && feedbackRecords.length > 0) {
+                // Check each feedback record for responses
+                for (const record of feedbackRecords) {
+                    const { data: responses, error: responseError } = await supabase
+                        .from('feedbacks_answers')
+                        .select('reviewerUserId')
+                        .eq(feedbackIdField, record[feedbackIdField])
+                        .not('reviewerUserId', 'is', null)
+                        .limit(1); // Just check if at least one exists
+                        
+                    if (!responseError && responses && responses.length > 0) {
+                        staffWithResponses++;
+                    }
+                }
+            }
+            
+            const responseRate = totalStaff > 0 ? Math.round((staffWithResponses / totalStaff) * 100) : 0;
+            const isComplete = responseRate === 100;
+            
+            console.log(`[DEPT VALIDATION] ${quarter}: ${staffWithResponses}/${totalStaff} (${responseRate}%) - ${isComplete ? 'COMPLETE' : 'INCOMPLETE'}`);
+            
+            departmentResponseStats[quarter] = {
+                staffWithResponses,
+                totalStaff,
+                responseRate,
+                isComplete
+            };
+        }
+        
+        // Check if all required quarters are complete
+        const allQuartersComplete = quarterList.every(quarter => 
+            departmentResponseStats[quarter]?.isComplete === true
+        );
+        
+        const incompleteQuarters = quarterList.filter(quarter => 
+            !departmentResponseStats[quarter]?.isComplete
+        );
+        
+        const blockingMessage = allQuartersComplete ? null : 
+            `Department feedback incomplete for ${incompleteQuarters.join(' and ')}. All ${totalStaff} department members must complete their feedback questionnaires.`;
+        
+        console.log(`[DEPT VALIDATION] Final result: ${allQuartersComplete ? 'CAN PROCEED' : 'BLOCKED'}`);
+        
+        const result = {
+            success: true,
+            data: {
+                departmentId,
+                departmentName,
+                totalStaff,
+                responseStats: departmentResponseStats,
+                allQuartersComplete,
+                canProceed: allQuartersComplete,
+                blockingMessage,
+                quarters: quarterList,
+                year: parseInt(year)
+            }
+        };
+        
+        console.log('[DEPT VALIDATION] Sending response:', JSON.stringify(result, null, 2));
+        res.json(result);
+        
+    } catch (error) {
+        console.error('[DEPT VALIDATION] Server error:', error);
+        res.status(500).json({
+            success: false,
+            message: 'Server error checking department response rate',
+            error: error.message
+        });
+    }
+},
+
     getOffboardingRequestsDash: async function (req, res) {
         try {
             const userId = req.session.user ? req.session.user.userId : null;
