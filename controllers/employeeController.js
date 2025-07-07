@@ -3687,6 +3687,360 @@ fixFeedbackAnswerRelationships: async function(feedbackId, feedbackIdField, quar
 },
 
 
+getAvailableFeedbackPeriods: async function(req, res) {
+    const currentUserId = req.session?.user?.userId;
+    
+    console.log(`[DEBUG] === getAvailableFeedbackPeriods START ===`);
+    console.log(`[DEBUG] Current User ID: ${currentUserId}`);
+    
+    if (!currentUserId) {
+        return res.status(401).json({
+            success: false,
+            message: 'Authentication required'
+        });
+    }
+    
+    try {
+        // Get current user's department
+        const { data: userData, error: userError } = await supabase
+            .from('staffaccounts')
+            .select(`
+                departmentId,
+                firstName,
+                lastName,
+                departments (deptName)
+            `)
+            .eq('userId', currentUserId)
+            .single();
+            
+        if (userError || !userData) {
+            console.error("[DEBUG] Error fetching user data:", userError);
+            return res.status(500).json({
+                success: false,
+                message: 'Error fetching user information',
+                debug: userError?.message
+            });
+        }
+        
+        const departmentId = userData.departmentId;
+        console.log(`[DEBUG] Line manager: ${userData.firstName} ${userData.lastName}`);
+        console.log(`[DEBUG] Department ID: ${departmentId}, Name: ${userData.departments?.deptName}`);
+        
+        // Get today's date for debugging
+        const today = new Date();
+        const todayStr = today.toISOString().split('T')[0];
+        console.log(`[DEBUG] Today's date: ${todayStr}`);
+        
+        const feedbackTables = [
+            { table: 'feedbacks_Q1', quarter: 'Q1', idField: 'feedbackq1_Id' },
+            { table: 'feedbacks_Q2', quarter: 'Q2', idField: 'feedbackq2_Id' },
+            { table: 'feedbacks_Q3', quarter: 'Q3', idField: 'feedbackq3_Id' },
+            { table: 'feedbacks_Q4', quarter: 'Q4', idField: 'feedbackq4_Id' }
+        ];
+        
+        const allPeriods = [];
+        const currentYear = new Date().getFullYear();
+        
+        // First, let's check what's in each table for debugging
+        console.log(`[DEBUG] === DEBUGGING TABLE CONTENTS ===`);
+        
+        for (const { table, quarter, idField } of feedbackTables) {
+            console.log(`[DEBUG] === Checking ${quarter} (${table}) ===`);
+            
+            try {
+                // Step 1: Check if table exists and get ALL records for debugging
+                const { data: allRecords, error: allRecordsError } = await supabase
+                    .from(table)
+                    .select(`
+                        ${idField},
+                        userId,
+                        setStartDate,
+                        setEndDate,
+                        quarter,
+                        year,
+                        created_at
+                    `)
+                    .order('setStartDate', { ascending: true });
+                    
+                if (allRecordsError) {
+                    if (allRecordsError.code === '42P01') {
+                        console.log(`[DEBUG] Table ${table} does not exist, skipping`);
+                        continue;
+                    } else {
+                        console.error(`[DEBUG] Error querying ${table}:`, allRecordsError);
+                        continue;
+                    }
+                }
+                
+                console.log(`[DEBUG] Found ${allRecords?.length || 0} total records in ${table}`);
+                
+                if (allRecords && allRecords.length > 0) {
+                    console.log(`[DEBUG] Sample records from ${table}:`);
+                    allRecords.slice(0, 3).forEach((record, idx) => {
+                        console.log(`[DEBUG]   Record ${idx + 1}:`, {
+                            id: record[idField],
+                            userId: record.userId,
+                            startDate: record.setStartDate,
+                            endDate: record.setEndDate,
+                            quarter: record.quarter,
+                            year: record.year
+                        });
+                    });
+                }
+                
+                // Step 2: Get department staff for this department
+                const { data: deptStaff, error: deptStaffError } = await supabase
+                    .from('staffaccounts')
+                    .select('userId, firstName, lastName, departmentId')
+                    .eq('departmentId', departmentId)
+                    .neq('userId', currentUserId);
+                    
+                if (deptStaffError) {
+                    console.error(`[DEBUG] Error fetching department staff:`, deptStaffError);
+                    continue;
+                }
+                
+                console.log(`[DEBUG] Department ${departmentId} has ${deptStaff?.length || 0} staff members (excluding line manager)`);
+                if (deptStaff && deptStaff.length > 0) {
+                    console.log(`[DEBUG] Department staff IDs: [${deptStaff.map(s => s.userId).join(', ')}]`);
+                }
+                
+                // Step 3: Filter records by department staff
+                const deptStaffIds = deptStaff?.map(s => s.userId) || [];
+                const relevantRecords = allRecords?.filter(record => 
+                    deptStaffIds.includes(record.userId)
+                ) || [];
+                
+                console.log(`[DEBUG] Found ${relevantRecords.length} records for department staff in ${table}`);
+                
+                if (relevantRecords.length > 0) {
+                    console.log(`[DEBUG] Relevant records for department:`);
+                    relevantRecords.forEach((record, idx) => {
+                        const staffMember = deptStaff.find(s => s.userId === record.userId);
+                        console.log(`[DEBUG]   ${idx + 1}. ${staffMember?.firstName} ${staffMember?.lastName} (${record.userId}): ${record.setStartDate} - ${record.setEndDate} (Year: ${record.year})`);
+                    });
+                }
+                
+                // Step 4: Check which records are active (today between start and end date)
+                const activeRecords = relevantRecords.filter(record => {
+                    const startDate = new Date(record.setStartDate);
+                    const endDate = new Date(record.setEndDate);
+                    const todayDate = new Date(todayStr);
+                    
+                    const isActive = todayDate >= startDate && todayDate <= endDate;
+                    const isCurrentYear = record.year == currentYear;
+                    const isCorrectQuarter = record.quarter === quarter;
+                    
+                    console.log(`[DEBUG]     Checking record ${record[idField]}: Start: ${record.setStartDate}, End: ${record.setEndDate}, Year: ${record.year}, Quarter: ${record.quarter}`);
+                    console.log(`[DEBUG]       - Date active: ${isActive} (${todayStr} between ${record.setStartDate} and ${record.setEndDate})`);
+                    console.log(`[DEBUG]       - Current year: ${isCurrentYear} (${record.year} == ${currentYear})`);
+                    console.log(`[DEBUG]       - Correct quarter: ${isCorrectQuarter} (${record.quarter} === ${quarter})`);
+                    
+                    return isActive && isCurrentYear && isCorrectQuarter;
+                });
+                
+                console.log(`[DEBUG] Found ${activeRecords.length} ACTIVE records for ${quarter}`);
+                
+                if (activeRecords.length > 0) {
+                    console.log(`[DEBUG] Active records for ${quarter}:`);
+                    activeRecords.forEach((record, idx) => {
+                        const staffMember = deptStaff.find(s => s.userId === record.userId);
+                        console.log(`[DEBUG]   ${idx + 1}. ${staffMember?.firstName} ${staffMember?.lastName} (${record.userId}): ${record.setStartDate} - ${record.setEndDate}`);
+                    });
+                    
+                    // Now process these active records for the response
+                    // Group by period
+                    const periodGroups = {};
+                    
+                    activeRecords.forEach(record => {
+                        const periodKey = `${record.setStartDate}-${record.setEndDate}`;
+                        
+                        if (!periodGroups[periodKey]) {
+                            periodGroups[periodKey] = {
+                                startDate: record.setStartDate,
+                                endDate: record.setEndDate,
+                                quarter: quarter,
+                                year: record.year,
+                                employees: []
+                            };
+                        }
+                        
+                        const staffMember = deptStaff.find(s => s.userId === record.userId);
+                        if (staffMember) {
+                            periodGroups[periodKey].employees.push({
+                                userId: record.userId,
+                                feedbackId: record[idField],
+                                firstName: staffMember.firstName,
+                                lastName: staffMember.lastName,
+                                fullName: `${staffMember.lastName}, ${staffMember.firstName}`,
+                                hasCompleteData: false,
+                                feedbackSubmitted: false
+                            });
+                        }
+                    });
+                    
+                    // Check data completeness for each period
+                    for (const [periodKey, periodData] of Object.entries(periodGroups)) {
+                        console.log(`[DEBUG] === Checking data completeness for period: ${periodKey} ===`);
+                        
+                        const employeesWithCompleteData = [];
+                        
+                        for (const employee of periodData.employees) {
+                            console.log(`[DEBUG] Checking data for ${employee.fullName} (${employee.userId})`);
+                            
+                            try {
+                                // Check objectives
+                                const { data: objectivesData, error: objectivesError } = await supabase
+                                    .from('feedbacks_questions-objectives')
+                                    .select('feedback_qObjectivesId')
+                                    .eq(idField, employee.feedbackId);
+                                    
+                                // Check skills
+                                const { data: skillsData, error: skillsError } = await supabase
+                                    .from('feedbacks_questions-skills')
+                                    .select('feedback_qSkillsId')
+                                    .eq(idField, employee.feedbackId);
+                                
+                                const hasObjectives = !objectivesError && objectivesData && objectivesData.length > 0;
+                                const hasSkills = !skillsError && skillsData && skillsData.length > 0;
+                                const hasCompleteData = hasObjectives && hasSkills;
+                                
+                                console.log(`[DEBUG]   ${employee.fullName}: Objectives: ${hasObjectives ? '✅' : '❌'} (${objectivesData?.length || 0}), Skills: ${hasSkills ? '✅' : '❌'} (${skillsData?.length || 0}), Complete: ${hasCompleteData}`);
+                                
+                                if (hasCompleteData) {
+                                    // Check if feedback already submitted by this line manager
+                                    const { data: submittedFeedback, error: submittedError } = await supabase
+                                        .from('feedbacks_answers')
+                                        .select('feedbackId_answerId')
+                                        .eq(idField, employee.feedbackId)
+                                        .eq('reviewerUserId', currentUserId)
+                                        .limit(1);
+                                        
+                                    const feedbackSubmitted = !submittedError && submittedFeedback && submittedFeedback.length > 0;
+                                    
+                                    console.log(`[DEBUG]   ${employee.fullName}: Feedback submitted: ${feedbackSubmitted ? '✅' : '❌'}`);
+                                    
+                                    employeesWithCompleteData.push({
+                                        ...employee,
+                                        hasCompleteData: true,
+                                        feedbackSubmitted: feedbackSubmitted,
+                                        objectivesCount: objectivesData?.length || 0,
+                                        skillsCount: skillsData?.length || 0
+                                    });
+                                }
+                                
+                            } catch (employeeCheckError) {
+                                console.error(`[DEBUG] Error checking employee ${employee.userId}:`, employeeCheckError);
+                            }
+                        }
+                        
+                        if (employeesWithCompleteData.length > 0) {
+                            // Calculate period status
+                            const today = new Date();
+                            const startDate = new Date(periodData.startDate);
+                            const endDate = new Date(periodData.endDate);
+                            
+                            // Set time to start of day for accurate comparison
+                            today.setHours(0, 0, 0, 0);
+                            startDate.setHours(0, 0, 0, 0);
+                            endDate.setHours(23, 59, 59, 999);
+                            
+                            let status = 'upcoming';
+                            let daysRemaining = null;
+                            
+                            if (today >= startDate && today <= endDate) {
+                                status = 'active';
+                                daysRemaining = Math.ceil((endDate - today) / (1000 * 60 * 60 * 24));
+                            } else if (today > endDate) {
+                                status = 'expired';
+                            } else {
+                                status = 'upcoming';
+                                daysRemaining = Math.ceil((startDate - today) / (1000 * 60 * 60 * 24));
+                            }
+                            
+                            const completedCount = employeesWithCompleteData.filter(emp => emp.feedbackSubmitted).length;
+                            const totalCount = employeesWithCompleteData.length;
+                            
+                            const period = {
+                                quarter: quarter,
+                                startDate: periodData.startDate,
+                                endDate: periodData.endDate,
+                                year: periodData.year,
+                                status: status,
+                                daysRemaining: daysRemaining,
+                                employees: employeesWithCompleteData,
+                                participantCount: totalCount,
+                                completedCount: completedCount,
+                                completionPercentage: totalCount > 0 ? Math.round((completedCount / totalCount) * 100) : 0,
+                                formattedStartDate: startDate.toLocaleDateString('en-US', {
+                                    weekday: 'short',
+                                    year: 'numeric',
+                                    month: 'short',
+                                    day: 'numeric'
+                                }),
+                                formattedEndDate: endDate.toLocaleDateString('en-US', {
+                                    weekday: 'short',
+                                    year: 'numeric',
+                                    month: 'short',
+                                    day: 'numeric'
+                                })
+                            };
+                            
+                            allPeriods.push(period);
+                            console.log(`[DEBUG] ✅ Added period ${quarter} with ${totalCount} employees (${completedCount} completed, status: ${status})`);
+                        } else {
+                            console.log(`[DEBUG] ❌ Period ${periodKey} has no employees with complete data`);
+                        }
+                    }
+                }
+                
+            } catch (tableError) {
+                console.error(`[DEBUG] Error processing ${table}:`, tableError);
+                continue;
+            }
+        }
+        
+        // Sort periods - active first, then by start date
+        allPeriods.sort((a, b) => {
+            if (a.status === 'active' && b.status !== 'active') return -1;
+            if (b.status === 'active' && a.status !== 'active') return 1;
+            return new Date(a.startDate) - new Date(b.startDate);
+        });
+        
+        console.log(`[DEBUG] === FINAL SUMMARY ===`);
+        console.log(`[DEBUG] Total periods found: ${allPeriods.length}`);
+        allPeriods.forEach((period, index) => {
+            console.log(`[DEBUG] ${index + 1}. ${period.quarter} ${period.year}: ${period.completedCount}/${period.participantCount} completed (${period.status})`);
+        });
+        
+        return res.json({
+            success: true,
+            periods: allPeriods,
+            todayDate: todayStr,
+            lineManager: {
+                name: `${userData.firstName} ${userData.lastName}`,
+                department: userData.departments?.deptName
+            },
+            debug: {
+                processedQuarters: feedbackTables.length,
+                foundPeriods: allPeriods.length,
+                departmentId: departmentId,
+                currentYear: currentYear,
+                currentUserId: currentUserId,
+                todayDate: todayStr
+            }
+        });
+        
+    } catch (error) {
+        console.error('[DEBUG] Critical error in getAvailableFeedbackPeriods:', error);
+        return res.status(500).json({
+            success: false,
+            message: 'An error occurred while fetching feedback periods.',
+            error: error.message,
+            stack: process.env.NODE_ENV === 'development' ? error.stack : undefined
+        });
+    }
+},
 getQuestionnaireData: async function (req, res) {
     const currentUserId = req.session?.user?.userId;
     const targetUserId = req.query.userId;
@@ -3936,15 +4290,34 @@ getQuestionnaireData: async function (req, res) {
     }
 },
 
-// Modify the submitFeedback method to properly store feedback answers
+// Replace your submitFeedback function with this updated version:
+
 submitFeedback: async function(req, res) {
     const currentUserId = req.session?.user?.userId;
-    const { userId, quarter, feedbackResponses } = req.body;
+    const { feedbackId, userId, quarter, reviewerUserId, feedbackResponses } = req.body;
+    
+    console.log("=== submitFeedback called ===");
+    console.log("📝 Current User ID:", currentUserId);
+    console.log("📝 Request body:", req.body);
     
     if (!currentUserId || !userId || !quarter || !feedbackResponses) {
+        console.error("❌ Missing required data:", {
+            currentUserId: !!currentUserId,
+            userId: !!userId,
+            quarter: !!quarter,
+            feedbackResponses: !!feedbackResponses
+        });
+        
         return res.status(400).json({
             success: false,
-            message: 'Missing required data for feedback submission'
+            message: 'Missing required data for feedback submission',
+            debug: {
+                hasCurrentUserId: !!currentUserId,
+                hasUserId: !!userId,
+                hasQuarter: !!quarter,
+                hasFeedbackResponses: !!feedbackResponses,
+                receivedKeys: Object.keys(req.body)
+            }
         });
     }
     
@@ -3952,6 +4325,8 @@ submitFeedback: async function(req, res) {
         // Get feedback table info
         const feedbackTable = `feedbacks_${quarter}`;
         const feedbackIdField = `feedbackq${quarter.substring(1)}_Id`;
+        
+        console.log(`📋 Using table: ${feedbackTable}, ID field: ${feedbackIdField}`);
         
         // Get the feedback record
         const { data: feedbackData, error: feedbackError } = await supabase
@@ -3962,364 +4337,204 @@ submitFeedback: async function(req, res) {
             .single();
             
         if (feedbackError || !feedbackData) {
+            console.error("❌ Feedback record not found:", feedbackError);
             return res.status(404).json({
                 success: false,
-                message: 'Feedback record not found'
+                message: 'Feedback record not found',
+                debug: {
+                    table: feedbackTable,
+                    userId: userId,
+                    quarter: quarter,
+                    error: feedbackError?.message
+                }
             });
         }
         
-        const feedbackId = feedbackData[feedbackIdField];
+        const actualFeedbackId = feedbackData[feedbackIdField];
+        console.log(`✅ Found feedback record with ID: ${actualFeedbackId}`);
         
         // Check if already submitted
         const { data: existingSubmission, error: existingError } = await supabase
             .from('feedbacks_answers')
             .select('feedbackId_answerId')
-            .eq(feedbackIdField, feedbackId)
+            .eq(feedbackIdField, actualFeedbackId)
             .eq('reviewerUserId', currentUserId)
             .limit(1);
             
         if (existingSubmission && existingSubmission.length > 0) {
+            console.log("⚠️ Feedback already submitted");
             return res.status(409).json({
                 success: false,
                 message: 'Feedback already submitted for this user and quarter'
             });
         }
         
+        console.log("✅ No existing submission found, proceeding with submission");
+        
         // Create main feedback answer record
+        const answerInsertData = {
+            [feedbackIdField]: actualFeedbackId,
+            reviewerUserId: currentUserId,
+            userId: userId,
+            reviewDate: new Date().toISOString().split('T')[0],
+            remarks: feedbackResponses.generalRemarks || null
+        };
+        
+        console.log("📝 Inserting main answer record:", answerInsertData);
+        
         const { data: answerRecord, error: answerError } = await supabase
             .from('feedbacks_answers')
-            .insert({
-                [feedbackIdField]: feedbackId,
-                reviewerUserId: currentUserId,
-                userId: userId, // Note: this field name might need correction in DB
-                reviewDate: new Date().toISOString().split('T')[0],
-                remarks: feedbackResponses.generalRemarks || null
-            })
+            .insert(answerInsertData)
             .select('feedbackId_answerId')
             .single();
             
         if (answerError || !answerRecord) {
-            console.error('Error creating feedback answer record:', answerError);
+            console.error('❌ Error creating feedback answer record:', answerError);
             return res.status(500).json({
                 success: false,
-                message: 'Error saving feedback submission'
+                message: 'Error saving feedback submission',
+                debug: {
+                    answerError: answerError?.message,
+                    insertData: answerInsertData
+                }
             });
         }
         
         const answerId = answerRecord.feedbackId_answerId;
+        console.log(`✅ Created main answer record with ID: ${answerId}`);
+        
+        let objectivesInserted = 0;
+        let skillsInserted = 0;
         
         // Save objective responses
         if (feedbackResponses.objectives && feedbackResponses.objectives.length > 0) {
-            const objectiveAnswers = feedbackResponses.objectives.map(obj => ({
-                feedback_answerObjectivesId: answerId,
-                feedback_qObjectivesId: obj.questionId,
-                objectiveQualInput: obj.qualitativeResponse,
-                objectiveQuantInput: obj.quantitativeRating
-            }));
+            console.log(`📋 Processing ${feedbackResponses.objectives.length} objective responses`);
             
-            const { error: objError } = await supabase
-                .from('feedbacks_answers-objectives')
-                .insert(objectiveAnswers);
+            // First, get the objective question IDs from the feedbacks_questions-objectives table
+            const { data: objectiveQuestions, error: objQuestionsError } = await supabase
+                .from('feedbacks_questions-objectives')
+                .select('feedback_qObjectivesId, objectiveId')
+                .eq(feedbackIdField, actualFeedbackId);
                 
-            if (objError) {
-                console.error('Error saving objective answers:', objError);
-                // You might want to rollback the main answer record here
+            if (objQuestionsError) {
+                console.error('❌ Error fetching objective questions:', objQuestionsError);
+            } else {
+                console.log(`📋 Found ${objectiveQuestions?.length || 0} objective questions in database`);
+                
+                const objectiveAnswers = [];
+                
+                feedbackResponses.objectives.forEach((obj, index) => {
+                    // Find the corresponding question ID
+                    const questionRecord = objectiveQuestions?.find(q => q.objectiveId == obj.objectiveId);
+                    
+                    if (questionRecord) {
+                        objectiveAnswers.push({
+                            feedback_answerObjectivesId: answerId,
+                            feedback_qObjectivesId: questionRecord.feedback_qObjectivesId,
+                            objectiveQualInput: obj.qualitativeResponse,
+                            objectiveQuantInput: obj.quantitativeRating
+                        });
+                        console.log(`  ✅ Mapped objective ${obj.objectiveId} to question ${questionRecord.feedback_qObjectivesId}`);
+                    } else {
+                        console.log(`  ⚠️ No question found for objective ${obj.objectiveId}`);
+                    }
+                });
+                
+                if (objectiveAnswers.length > 0) {
+                    console.log(`📝 Inserting ${objectiveAnswers.length} objective answers`);
+                    
+                    const { data: insertedObjectives, error: objError } = await supabase
+                        .from('feedbacks_answers-objectives')
+                        .insert(objectiveAnswers)
+                        .select('feedback_answerObjectivesId');
+                        
+                    if (objError) {
+                        console.error('❌ Error saving objective answers:', objError);
+                    } else {
+                        objectivesInserted = insertedObjectives?.length || 0;
+                        console.log(`✅ Inserted ${objectivesInserted} objective answers`);
+                    }
+                }
             }
         }
         
         // Save skill responses
         if (feedbackResponses.skills && feedbackResponses.skills.length > 0) {
-            const skillAnswers = feedbackResponses.skills.map(skill => ({
-                feedback_answerSkillsId: answerId,
-                feedback_qSkillsId: skill.questionId,
-                skillsQualInput: skill.qualitativeResponse,
-                skillsQuantInput: skill.quantitativeRating
-            }));
+            console.log(`🛠️ Processing ${feedbackResponses.skills.length} skill responses`);
             
-            const { error: skillError } = await supabase
-                .from('feedbacks_answers-skills')
-                .insert(skillAnswers);
+            // Get the skill question IDs from the feedbacks_questions-skills table
+            const { data: skillQuestions, error: skillQuestionsError } = await supabase
+                .from('feedbacks_questions-skills')
+                .select('feedback_qSkillsId, jobReqSkillId')
+                .eq(feedbackIdField, actualFeedbackId);
                 
-            if (skillError) {
-                console.error('Error saving skill answers:', skillError);
-                // You might want to rollback here as well
+            if (skillQuestionsError) {
+                console.error('❌ Error fetching skill questions:', skillQuestionsError);
+            } else {
+                console.log(`🛠️ Found ${skillQuestions?.length || 0} skill questions in database`);
+                
+                const skillAnswers = [];
+                
+                feedbackResponses.skills.forEach((skill, index) => {
+                    // Find the corresponding question ID
+                    const questionRecord = skillQuestions?.find(q => q.jobReqSkillId == skill.skillId);
+                    
+                    if (questionRecord) {
+                        skillAnswers.push({
+                            feedback_answerSkillsId: answerId,
+                            feedback_qSkillsId: questionRecord.feedback_qSkillsId,
+                            skillsQualInput: skill.qualitativeResponse,
+                            skillsQuantInput: skill.quantitativeRating
+                        });
+                        console.log(`  ✅ Mapped skill ${skill.skillId} to question ${questionRecord.feedback_qSkillsId}`);
+                    } else {
+                        console.log(`  ⚠️ No question found for skill ${skill.skillId}`);
+                    }
+                });
+                
+                if (skillAnswers.length > 0) {
+                    console.log(`📝 Inserting ${skillAnswers.length} skill answers`);
+                    
+                    const { data: insertedSkills, error: skillError } = await supabase
+                        .from('feedbacks_answers-skills')
+                        .insert(skillAnswers)
+                        .select('feedback_answerSkillsId');
+                        
+                    if (skillError) {
+                        console.error('❌ Error saving skill answers:', skillError);
+                    } else {
+                        skillsInserted = insertedSkills?.length || 0;
+                        console.log(`✅ Inserted ${skillsInserted} skill answers`);
+                    }
+                }
             }
         }
+        
+        console.log(`✅ Feedback submission complete:`, {
+            answerId: answerId,
+            objectivesInserted: objectivesInserted,
+            skillsInserted: skillsInserted
+        });
         
         return res.json({
             success: true,
             message: 'Feedback submitted successfully',
-            answerId: answerId
-        });
-        
-    } catch (error) {
-        console.error('Error in submitFeedback:', error);
-        return res.status(500).json({
-            success: false,
-            message: 'Server error while submitting feedback'
-        });
-    }
-},
-// Add this function to your employee controller
-getAvailableFeedbackPeriods: async function(req, res) {
-    const currentUserId = req.session?.user?.userId;
-    
-    if (!currentUserId) {
-        return res.status(401).json({
-            success: false,
-            message: 'Authentication required'
-        });
-    }
-    
-    try {
-        console.log(`[${new Date().toISOString()}] Fetching available feedback periods for employee: ${currentUserId}`);
-        
-        // Get today's date in Philippines timezone
-        const today = new Date();
-        const options = { timeZone: 'Asia/Manila', year: 'numeric', month: '2-digit', day: '2-digit' };
-        const formatter = new Intl.DateTimeFormat('en-US', options);
-        const parts = formatter.formatToParts(today);
-        const todayString = `${parts.find(part => part.type === 'year').value}-${parts.find(part => part.type === 'month').value}-${parts.find(part => part.type === 'day').value}`;
-        
-        console.log(`Today's date (PHT): ${todayString}`);
-        
-        const feedbackTables = ['feedbacks_Q1', 'feedbacks_Q2', 'feedbacks_Q3', 'feedbacks_Q4'];
-        const availablePeriods = [];
-        
-        // Get user's department ID
-        const { data: userDept, error: userDeptError } = await supabase
-            .from('staffaccounts')
-            .select('departmentId')
-            .eq('userId', currentUserId)
-            .single();
-            
-        if (userDeptError) {
-            console.error("Error fetching user department:", userDeptError);
-            return res.status(500).json({
-                success: false,
-                message: 'Error fetching user information'
-            });
-        }
-        
-        const departmentId = userDept?.departmentId;
-        console.log(`User's department ID: ${departmentId}`);
-        
-        // Get department feedback stats
-        const departmentStats = await this.getDepartmentFeedbackStats(departmentId);
-        console.log(`Department stats:`, departmentStats);
-        
-        for (const feedbackTable of feedbackTables) {
-            try {
-                console.log(`Checking feedback table: ${feedbackTable}...`);
-                
-                // Check if table exists
-                const { error: tableCheckError } = await supabase
-                    .from(feedbackTable)
-                    .select('count')
-                    .limit(1);
-                    
-                if (tableCheckError && tableCheckError.code === '42P01') {
-                    console.log(`Table ${feedbackTable} does not exist yet, skipping`);
-                    continue;
-                }
-                
-                // Get all feedback periods from this table in the same department
-                const { data: feedbackPeriods, error: periodsError } = await supabase
-                    .from(feedbackTable)
-                    .select(`
-                        feedbackq1_Id,
-                        feedbackq2_Id, 
-                        feedbackq3_Id,
-                        feedbackq4_Id,
-                        userId,
-                        setStartDate,
-                        setEndDate,
-                        quarter,
-                        year,
-                        created_at,
-                        staffaccounts!inner (
-                            firstName,
-                            lastName,
-                            departmentId,
-                            jobpositions (jobTitle)
-                        )
-                    `)
-                    .eq('staffaccounts.departmentId', departmentId)
-                    .order('setStartDate', { ascending: true });
-                    
-                if (periodsError) {
-                    console.error(`Error fetching periods from ${feedbackTable}:`, periodsError);
-                    continue;
-                }
-                
-                if (feedbackPeriods && feedbackPeriods.length > 0) {
-                    const quarter = feedbackTable.split('_')[1];
-                    const quarterNum = quarter.substring(1);
-                    const idField = `feedbackq${quarterNum}_Id`;
-                    
-                    console.log(`Processing ${feedbackPeriods.length} feedback periods in ${quarter}`);
-                    
-                    // Group by period dates to avoid duplicates
-                    const uniquePeriods = {};
-                    
-                    feedbackPeriods.forEach(period => {
-                        const periodKey = `${period.setStartDate}-${period.setEndDate}-${quarter}`;
-                        
-                        if (!uniquePeriods[periodKey]) {
-                            const startDate = new Date(period.setStartDate);
-                            const endDate = new Date(period.setEndDate);
-                            const todayDate = new Date(todayString);
-                            
-                            // Determine status
-                            let status = 'upcoming';
-                            let daysRemaining = null;
-                            
-                            if (todayDate >= startDate && todayDate <= endDate) {
-                                status = 'active';
-                                daysRemaining = Math.ceil((endDate - todayDate) / (1000 * 60 * 60 * 24));
-                            } else if (todayDate > endDate) {
-                                status = 'expired';
-                            } else {
-                                // Upcoming
-                                daysRemaining = Math.ceil((startDate - todayDate) / (1000 * 60 * 60 * 24));
-                            }
-                            
-                            uniquePeriods[periodKey] = {
-                                quarter: quarter,
-                                startDate: period.setStartDate,
-                                endDate: period.setEndDate,
-                                year: period.year,
-                                status: status,
-                                daysRemaining: daysRemaining,
-                                participantCount: 0, // Will be calculated
-                                completedCount: 0,   // Will be calculated
-                                employees: [],       // Will be populated
-                                formattedStartDate: startDate.toLocaleDateString('en-US', {
-                                    weekday: 'short',
-                                    year: 'numeric',
-                                    month: 'short',
-                                    day: 'numeric'
-                                }),
-                                formattedEndDate: endDate.toLocaleDateString('en-US', {
-                                    weekday: 'short',
-                                    year: 'numeric',
-                                    month: 'short',
-                                    day: 'numeric'
-                                })
-                            };
-                        }
-                    });
-                    
-                    // For each unique period, get employee details and completion status
-                    for (const [periodKey, periodInfo] of Object.entries(uniquePeriods)) {
-                        // Get employees in this period
-                        const periodEmployees = feedbackPeriods.filter(fp => 
-                            fp.setStartDate === periodInfo.startDate && 
-                            fp.setEndDate === periodInfo.endDate
-                        );
-                        
-                        const employeesWithCompleteData = [];
-                        
-                        for (const employee of periodEmployees) {
-                            const empUserId = employee.userId;
-                            const feedbackId = employee[idField];
-                            
-                            // Check if employee has complete feedback data (objectives + skills)
-                            const { data: objectivesData, error: objectivesError } = await supabase
-                                .from('feedbacks_questions-objectives')
-                                .select('feedback_qObjectivesId')
-                                .eq(idField, feedbackId);
-                                
-                            const { data: skillsData, error: skillsError } = await supabase
-                                .from('feedbacks_questions-skills')
-                                .select('feedback_qSkillsId')
-                                .eq(idField, feedbackId);
-                                
-                            const hasObjectives = !objectivesError && objectivesData && objectivesData.length > 0;
-                            const hasSkills = !skillsError && skillsData && skillsData.length > 0;
-                            const hasCompleteData = hasObjectives && hasSkills;
-                            
-                            if (hasCompleteData) {
-                                // Check if current user has submitted feedback for this employee
-                                const { data: submittedFeedback, error: submittedError } = await supabase
-                                    .from('feedbacks_answers')
-                                    .select('feedbackId_answerId')
-                                    .eq(idField, feedbackId)
-                                    .eq('reviewerUserId', currentUserId)
-                                    .eq('userId', empUserId)
-                                    .limit(1);
-                                    
-                                const feedbackSubmitted = !submittedError && submittedFeedback && submittedFeedback.length > 0;
-                                
-                                employeesWithCompleteData.push({
-                                    userId: empUserId,
-                                    feedbackId: feedbackId,
-                                    firstName: employee.staffaccounts?.firstName,
-                                    lastName: employee.staffaccounts?.lastName,
-                                    jobTitle: employee.staffaccounts?.jobpositions?.jobTitle || 'Employee',
-                                    fullName: `${employee.staffaccounts?.lastName}, ${employee.staffaccounts?.firstName}`,
-                                    hasCompleteData: true,
-                                    feedbackSubmitted: feedbackSubmitted,
-                                    objectivesCount: objectivesData?.length || 0,
-                                    skillsCount: skillsData?.length || 0
-                                });
-                            }
-                        }
-                        
-                        if (employeesWithCompleteData.length > 0) {
-                            // Count completed vs total
-                            const completedCount = employeesWithCompleteData.filter(emp => emp.feedbackSubmitted).length;
-                            const totalCount = employeesWithCompleteData.length;
-                            
-                            periodInfo.employees = employeesWithCompleteData;
-                            periodInfo.participantCount = totalCount;
-                            periodInfo.completedCount = completedCount;
-                            periodInfo.completionPercentage = totalCount > 0 ? Math.round((completedCount / totalCount) * 100) : 0;
-                            
-                            // Get department stats for this quarter
-                            const quarterStats = departmentStats.completedQuarters.find(q => q.quarter === quarter);
-                            periodInfo.departmentEmployeesWithFeedback = quarterStats ? quarterStats.employeeCount : 0;
-                            periodInfo.totalDepartmentEmployees = departmentStats.totalEmployees;
-                            
-                            availablePeriods.push(periodInfo);
-                            console.log(`  ✅ Added period with ${totalCount} employees (${completedCount} completed by current user)`);
-                        }
-                    }
-                }
-                
-            } catch (tableError) {
-                console.log(`Error processing ${feedbackTable}:`, tableError);
-                continue;
+            answerId: answerId,
+            details: {
+                objectivesInserted: objectivesInserted,
+                skillsInserted: skillsInserted
             }
-        }
-        
-        // Sort periods: active first, then by start date
-        availablePeriods.sort((a, b) => {
-            if (a.status === 'active' && b.status !== 'active') return -1;
-            if (b.status === 'active' && a.status !== 'active') return 1;
-            return new Date(a.startDate) - new Date(b.startDate);
-        });
-        
-        console.log(`Found ${availablePeriods.length} feedback periods`);
-        
-        return res.json({
-            success: true,
-            periods: availablePeriods,
-            todayDate: todayString,
-            departmentStats: departmentStats
         });
         
     } catch (error) {
-        console.error('Error in getAvailableFeedbackPeriods:', error);
+        console.error('❌ Error in submitFeedback:', error);
         return res.status(500).json({
             success: false,
-            message: 'An error occurred while fetching feedback periods.',
+            message: 'Server error while submitting feedback',
             error: error.message
         });
     }
 },
-
-
 // ============================
 // TRAINING MODULE CONTROLLER FUNCTIONS
 // ============================

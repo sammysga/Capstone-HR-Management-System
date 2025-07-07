@@ -735,7 +735,7 @@ document.addEventListener('DOMContentLoaded', function() {
     let submittedFeedbacks = {}; // Will store the userId of members with submitted feedback
     let totalCompleted = 0;
     
-    // Load feedback periods function
+     // Load feedback periods function
     async function loadFeedbackPeriods() {
         console.log('🔍 Starting loadFeedbackPeriods...');
         
@@ -1631,110 +1631,184 @@ document.addEventListener('DOMContentLoaded', function() {
             }
         }
     }
+    // Replace the handleFormSubmission function in your frontend with this fixed version:
+
+function handleFormSubmission(event) {
+    event.preventDefault();
+    console.log("📝 Form submission started");
     
-    // Handle form submission
-    function handleFormSubmission(event) {
-        event.preventDefault();
-        console.log("📝 Form submission started");
-        
-        // Validate the form
-        if (!validateForm()) {
-            console.log("❌ Form validation failed");
-            return;
+    // Validate the form
+    if (!validateForm()) {
+        console.log("❌ Form validation failed");
+        return;
+    }
+    
+    // Get form data
+    const formData = new FormData(event.target);
+    const formDataObj = {};
+    
+    // Convert FormData to object
+    for (let [key, value] of formData.entries()) {
+        if (key.includes('[') && key.includes(']')) {
+            const parsedKey = parseFormDataKey(key);
+            setNestedValue(formDataObj, parsedKey, value);
+        } else {
+            formDataObj[key] = value;
         }
-        
-        // Get form data
-        const formData = new FormData(event.target);
-        const formDataObj = {};
-        
-        // Convert FormData to object
-        for (let [key, value] of formData.entries()) {
-            if (key.includes('[') && key.includes(']')) {
-                const parsedKey = parseFormDataKey(key);
-                setNestedValue(formDataObj, parsedKey, value);
-            } else {
-                formDataObj[key] = value;
-            }
+    }
+    
+    // Clean up arrays
+    ['objectives', 'hardSkills', 'softSkills'].forEach(key => {
+        if (formDataObj[key]) {
+            formDataObj[key] = Object.values(formDataObj[key]);
         }
-        
-        // Clean up arrays
-        ['objectives', 'hardSkills', 'softSkills'].forEach(key => {
-            if (formDataObj[key]) {
-                formDataObj[key] = Object.values(formDataObj[key]);
-            }
-        });
-        
-        console.log("📤 Submitting form data:", formDataObj);
-        
-        // Show submitting state
-        const submitButton = document.querySelector('#feedback-form button[type="submit"]');
-        if (submitButton) {
-            submitButton.disabled = true;
-            submitButton.innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i> Submitting...';
+    });
+    
+    console.log("📤 Raw form data:", formDataObj);
+    
+    // Transform the data to match backend expectations
+    const submitData = {
+        feedbackId: formDataObj.feedbackId,
+        quarter: formDataObj.quarter,
+        userId: formDataObj.userId,
+        reviewerUserId: formDataObj.reviewerUserId,
+        feedbackResponses: {
+            generalRemarks: null, // Add this if you have a general remarks field
+            objectives: [],
+            skills: []
         }
-        
-        // Submit data
-        fetch('/employee/api/submitFeedback', {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json'
-            },
-            body: JSON.stringify(formDataObj)
-        })
-        .then(response => response.json())
-        .then(data => {
-            console.log("📨 Submission response:", data);
-            
-            if (data.success) {
-                submittedFeedbacks[selectedMemberId] = true;
-                totalCompleted++;
-                updateProgressBar();
-                
-                questionnaireContainer.innerHTML = `
-                    <div class="bg-green-100 border border-green-400 text-green-700 px-4 py-3 rounded">
-                        <p>✅ Feedback submitted successfully!</p>
-                    </div>
-                `;
-                
-                if (statusIndicator) {
-                    statusIndicator.className = 'status-indicator status-submitted';
-                    statusIndicator.innerHTML = `
-                        <i class="fas fa-check-circle"></i>
-                        Feedback has been submitted
-                    `;
-                }
-                
-                // Reload feedback periods to update counts
-                loadFeedbackPeriods();
-                
-                setTimeout(() => {
-                    staffDropdown.value = '';
-                    statusIndicator.style.display = 'none';
-                    questionnaireContainer.innerHTML = `
-                        <div class="h-full flex items-center justify-center bg-gray-50 rounded-lg p-8 border border-dashed border-gray-300">
-                            <p class="text-gray-500 text-center">Select a department member to begin the 360 feedback process</p>
-                        </div>
-                    `;
-                }, 2000);
-            } else {
-                throw new Error(data.message || 'Failed to submit feedback');
-            }
-        })
-        .catch(error => {
-            console.error("❌ Submission error:", error);
-            
-            const errorDiv = document.createElement('div');
-            errorDiv.className = 'bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded mt-4';
-            errorDiv.innerHTML = `<p>${error.message}</p>`;
-            event.target.appendChild(errorDiv);
-            
-            if (submitButton) {
-                submitButton.disabled = false;
-                submitButton.innerHTML = '<i class="fas fa-save mr-2"></i> Submit Feedback';
+    };
+    
+    // Process objectives
+    if (formDataObj.objectives && formDataObj.objectives.length > 0) {
+        formDataObj.objectives.forEach((objective, index) => {
+            if (objective.quantitative && objective.qualitative && objective.objectiveId) {
+                submitData.feedbackResponses.objectives.push({
+                    questionId: objective.objectiveId, // This should map to the feedback question ID
+                    objectiveId: objective.objectiveId,
+                    quantitativeRating: parseInt(objective.quantitative),
+                    qualitativeResponse: objective.qualitative.trim()
+                });
             }
         });
     }
     
+    // Process hard skills
+    if (formDataObj.hardSkills && formDataObj.hardSkills.length > 0) {
+        formDataObj.hardSkills.forEach((skill, index) => {
+            if (skill.quantitative && skill.qualitative && skill.skillId) {
+                submitData.feedbackResponses.skills.push({
+                    questionId: skill.skillId, // This should map to the feedback question ID
+                    skillId: skill.skillId,
+                    skillType: 'Hard',
+                    quantitativeRating: parseInt(skill.quantitative),
+                    qualitativeResponse: skill.qualitative.trim()
+                });
+            }
+        });
+    }
+    
+    // Process soft skills
+    if (formDataObj.softSkills && formDataObj.softSkills.length > 0) {
+        formDataObj.softSkills.forEach((skill, index) => {
+            if (skill.quantitative && skill.qualitative && skill.skillId) {
+                submitData.feedbackResponses.skills.push({
+                    questionId: skill.skillId, // This should map to the feedback question ID
+                    skillId: skill.skillId,
+                    skillType: 'Soft',
+                    quantitativeRating: parseInt(skill.quantitative),
+                    qualitativeResponse: skill.qualitative.trim()
+                });
+            }
+        });
+    }
+    
+    console.log("📤 Transformed submit data:", submitData);
+    
+    // Validate that we have the required data
+    if (!submitData.feedbackId || !submitData.quarter || !submitData.userId || !submitData.reviewerUserId) {
+        console.error("❌ Missing required fields:", {
+            feedbackId: !!submitData.feedbackId,
+            quarter: !!submitData.quarter,
+            userId: !!submitData.userId,
+            reviewerUserId: !!submitData.reviewerUserId
+        });
+        
+        const errorDiv = document.createElement('div');
+        errorDiv.className = 'bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded mt-4';
+        errorDiv.innerHTML = `<p>Missing required data for submission. Please try again.</p>`;
+        event.target.appendChild(errorDiv);
+        return;
+    }
+    
+    // Show submitting state
+    const submitButton = document.querySelector('#feedback-form button[type="submit"]');
+    if (submitButton) {
+        submitButton.disabled = true;
+        submitButton.innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i> Submitting...';
+    }
+    
+    // Submit data
+    fetch('/employee/api/submitFeedback', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json'
+        },
+        body: JSON.stringify(submitData)
+    })
+    .then(response => response.json())
+    .then(data => {
+        console.log("📨 Submission response:", data);
+        
+        if (data.success) {
+            submittedFeedbacks[selectedMemberId] = true;
+            totalCompleted++;
+            updateProgressBar();
+            
+            questionnaireContainer.innerHTML = `
+                <div class="bg-green-100 border border-green-400 text-green-700 px-4 py-3 rounded">
+                    <p>✅ Feedback submitted successfully!</p>
+                </div>
+            `;
+            
+            if (statusIndicator) {
+                statusIndicator.className = 'status-indicator status-submitted';
+                statusIndicator.innerHTML = `
+                    <i class="fas fa-check-circle"></i>
+                    Feedback has been submitted
+                `;
+            }
+            
+            // Reload feedback periods to update counts
+            loadFeedbackPeriods();
+            
+            setTimeout(() => {
+                staffDropdown.value = '';
+                statusIndicator.style.display = 'none';
+                questionnaireContainer.innerHTML = `
+                    <div class="h-full flex items-center justify-center bg-gray-50 rounded-lg p-8 border border-dashed border-gray-300">
+                        <p class="text-gray-500 text-center">Select a department member to begin the 360 feedback process</p>
+                    </div>
+                `;
+            }, 2000);
+        } else {
+            throw new Error(data.message || 'Failed to submit feedback');
+        }
+    })
+    .catch(error => {
+        console.error("❌ Submission error:", error);
+        
+        const errorDiv = document.createElement('div');
+        errorDiv.className = 'bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded mt-4';
+        errorDiv.innerHTML = `<p>${error.message}</p>`;
+        event.target.appendChild(errorDiv);
+        
+        if (submitButton) {
+            submitButton.disabled = false;
+            submitButton.innerHTML = '<i class="fas fa-save mr-2"></i> Submit Feedback';
+        }
+    });
+}
     // Form validation function
     function validateForm() {
         let isValid = true;
