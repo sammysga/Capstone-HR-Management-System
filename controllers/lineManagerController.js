@@ -13370,9 +13370,8 @@ save360Questionnaire: async function(req, res) {
         }
     }
 },
-
 checkDepartmentResponseRate: async function (req, res) {
-try {
+    try {
         const { userId } = req.params;
         const { quarters } = req.query; // e.g., "Q1,Q2" or "Q3,Q4"
         const year = req.query.year || new Date().getFullYear();
@@ -13406,17 +13405,18 @@ try {
         
         console.log(`[DEPT VALIDATION] User ${userId} belongs to department ${departmentId} (${departmentName})`);
         
-        // Get all active staff in the same department
+        // Get all active staff in the same department with allowed roles
         const { data: departmentStaff, error: deptError } = await supabase
             .from('staffaccounts')
             .select(`
                 userId, 
                 firstName, 
                 lastName,
-                useraccounts!inner (userIsDisabled)
+                useraccounts!inner (userIsDisabled, userRole)
             `)
             .eq('departmentId', departmentId)
-            .eq('useraccounts.userIsDisabled', false);
+            .eq('useraccounts.userIsDisabled', false)
+            .in('useraccounts.userRole', ['HR', 'Employee', 'Line Manager']);
             
         if (deptError) {
             console.error('[DEPT VALIDATION] Department staff lookup error:', deptError);
@@ -13443,58 +13443,137 @@ try {
             
             const departmentUserIds = departmentStaff.map(staff => staff.userId);
             
-            // Get all feedback records for this quarter, year, and department users
-            const { data: feedbackRecords, error: feedbackError } = await supabase
-                .from(feedbackTable)
-                .select(`${feedbackIdField}, userId, quarter, year`)
-                .in('userId', departmentUserIds)
-                .eq('year', year)
-                .eq('quarter', quarter);
+            try {
+                // Get all feedback records for this quarter, year, and department users
+                const { data: feedbackRecords, error: feedbackError } = await supabase
+                    .from(feedbackTable)
+                    .select(`${feedbackIdField}, userId`)
+                    .in('userId', departmentUserIds)
+                    .eq('year', year)
+                    .eq('quarter', quarter);
+                    
+                if (feedbackError) {
+                    console.error(`[DEPT VALIDATION] Error fetching ${quarter} feedback records:`, feedbackError);
+                    departmentResponseStats[quarter] = {
+                        staffWithResponses: 0,
+                        totalStaff: totalStaff,
+                        responseRate: 0,
+                        isComplete: false,
+                        error: feedbackError.message
+                    };
+                    continue;
+                }
                 
-            if (feedbackError) {
-                console.error(`[DEPT VALIDATION] Error fetching ${quarter} feedback records:`, feedbackError);
-                // Don't continue, but don't fail completely - set empty stats
+                console.log(`[DEPT VALIDATION] Checking ${quarter} responses - counting department staff who provided reviews...`);
+                
+                let staffWithResponses = 0;
+                
+                try {
+                    // Get all feedback answers for this quarter where reviewerUserId is from our department
+                    const { data: feedbackAnswers, error: answersError } = await supabase
+                        .from('feedbacks_answers')
+                        .select(`
+                            feedbackId_answerId,
+                            reviewerUserId,
+                            userId,
+                            ${feedbackIdField}
+                        `)
+                        .not(feedbackIdField, 'is', null)
+                        .not('reviewerUserId', 'is', null)
+                        .in('reviewerUserId', departmentUserIds); // Filter by department users as reviewers
+                        
+                    if (answersError) {
+                        console.error(`[DEPT VALIDATION] Error fetching feedback answers for ${quarter}:`, answersError);
+                        departmentResponseStats[quarter] = {
+                            staffWithResponses: 0,
+                            totalStaff: totalStaff,
+                            responseRate: 0,
+                            isComplete: false,
+                            error: answersError.message
+                        };
+                        continue;
+                    }
+                    
+                    console.log(`[DEPT VALIDATION] ${quarter}: Found ${feedbackAnswers?.length || 0} feedback answers from department reviewers`);
+                    
+                    if (feedbackAnswers && feedbackAnswers.length > 0) {
+                        // Get the feedback IDs to verify they're from the correct quarter/year
+                        const feedbackIds = [...new Set(feedbackAnswers.map(answer => answer[feedbackIdField]))];
+                        
+                        // Verify these feedback records are from the correct quarter and year
+                        const { data: quarterFeedbacks, error: quarterError } = await supabase
+                            .from(feedbackTable)
+                            .select(`${feedbackIdField}, userId, quarter, year`)
+                            .in(feedbackIdField, feedbackIds)
+                            .eq('quarter', quarter)
+                            .eq('year', year);
+                            
+                        if (quarterError) {
+                            console.error(`[DEPT VALIDATION] Error fetching ${quarter} feedback records:`, quarterError);
+                            continue;
+                        }
+                        
+                        console.log(`[DEPT VALIDATION] ${quarter}: Found ${quarterFeedbacks?.length || 0} matching feedback records`);
+                        
+                        if (quarterFeedbacks && quarterFeedbacks.length > 0) {
+                            // Get valid feedback IDs (those that match quarter/year)
+                            const validFeedbackIds = quarterFeedbacks.map(fb => fb[feedbackIdField]);
+                            
+                            // Filter feedback answers to only include those with valid feedback IDs
+                            const validFeedbackAnswers = feedbackAnswers.filter(answer => 
+                                validFeedbackIds.includes(answer[feedbackIdField])
+                            );
+                            
+                            // Count unique department staff who have provided reviews
+                            const departmentReviewers = new Set();
+                            validFeedbackAnswers.forEach(answer => {
+                                departmentReviewers.add(answer.reviewerUserId);
+                            });
+                            
+                            staffWithResponses = departmentReviewers.size;
+                            
+                            console.log(`[DEPT VALIDATION] ${quarter}: Valid feedback IDs: ${validFeedbackIds.join(', ')}`);
+                            console.log(`[DEPT VALIDATION] ${quarter}: Valid feedback answers: ${validFeedbackAnswers.length}`);
+                            console.log(`[DEPT VALIDATION] ${quarter}: Department staff who provided reviews: ${Array.from(departmentReviewers).join(', ')}`);
+                            console.log(`[DEPT VALIDATION] ${quarter}: ${staffWithResponses} unique department staff have provided reviews`);
+                            
+                            // Detailed logging for debugging
+                            const reviewDetails = validFeedbackAnswers.map(answer => 
+                                `reviewer:${answer.reviewerUserId} reviewed:${answer.userId} feedbackId:${answer[feedbackIdField]}`
+                            );
+                            console.log(`[DEPT VALIDATION] ${quarter}: Review details: ${reviewDetails.join(', ')}`);
+                        }
+                    } else {
+                        console.log(`[DEPT VALIDATION] ${quarter}: No feedback answers found from department reviewers`);
+                    }
+                    
+                } catch (quarterError) {
+                    console.error(`[DEPT VALIDATION] Unexpected error processing ${quarter}:`, quarterError);
+                    staffWithResponses = 0;
+                }
+                
+                const responseRate = totalStaff > 0 ? Math.round((staffWithResponses / totalStaff) * 100) : 0;
+                const isComplete = responseRate === 100;
+                
+                console.log(`[DEPT VALIDATION] ${quarter}: ${staffWithResponses}/${totalStaff} (${responseRate}%) - ${isComplete ? 'COMPLETE' : 'INCOMPLETE'}`);
+                
+                departmentResponseStats[quarter] = {
+                    staffWithResponses,
+                    totalStaff,
+                    responseRate,
+                    isComplete
+                };
+                
+            } catch (quarterError) {
+                console.error(`[DEPT VALIDATION] Unexpected error processing ${quarter}:`, quarterError);
                 departmentResponseStats[quarter] = {
                     staffWithResponses: 0,
                     totalStaff: totalStaff,
                     responseRate: 0,
                     isComplete: false,
-                    error: feedbackError.message
+                    error: quarterError.message
                 };
-                continue;
             }
-            
-            console.log(`[DEPT VALIDATION] Found ${feedbackRecords?.length || 0} feedback records for ${quarter}`);
-            
-            let staffWithResponses = 0;
-            
-            if (feedbackRecords && feedbackRecords.length > 0) {
-                // Check each feedback record for responses
-                for (const record of feedbackRecords) {
-                    const { data: responses, error: responseError } = await supabase
-                        .from('feedbacks_answers')
-                        .select('reviewerUserId')
-                        .eq(feedbackIdField, record[feedbackIdField])
-                        .not('reviewerUserId', 'is', null)
-                        .limit(1); // Just check if at least one exists
-                        
-                    if (!responseError && responses && responses.length > 0) {
-                        staffWithResponses++;
-                    }
-                }
-            }
-            
-            const responseRate = totalStaff > 0 ? Math.round((staffWithResponses / totalStaff) * 100) : 0;
-            const isComplete = responseRate === 100;
-            
-            console.log(`[DEPT VALIDATION] ${quarter}: ${staffWithResponses}/${totalStaff} (${responseRate}%) - ${isComplete ? 'COMPLETE' : 'INCOMPLETE'}`);
-            
-            departmentResponseStats[quarter] = {
-                staffWithResponses,
-                totalStaff,
-                responseRate,
-                isComplete
-            };
         }
         
         // Check if all required quarters are complete
@@ -13538,7 +13617,6 @@ try {
         });
     }
 },
-
     getOffboardingRequestsDash: async function (req, res) {
         try {
             const userId = req.session.user ? req.session.user.userId : null;
@@ -13697,281 +13775,130 @@ try {
         });
     },
 
-   // Enhanced checkFeedbackStatus with better error handling
-checkFeedbackStatus: async function(req, res) {
-    const { userId, quarter } = req.query;
-    const reviewerUserId = req.session?.user?.userId;
+// // Modify the submitFeedback method to properly store feedback answers
+// submitFeedback: async function(req, res) {
+//     const currentUserId = req.session?.user?.userId;
+//     const { userId, quarter, feedbackResponses } = req.body;
     
-    if (!userId || !quarter || !reviewerUserId) {
-        return res.status(400).json({
-            success: false,
-            message: 'Missing required parameters: userId, quarter, and reviewerUserId are required'
-        });
-    }
+//     if (!currentUserId || !userId || !quarter || !feedbackResponses) {
+//         return res.status(400).json({
+//             success: false,
+//             message: 'Missing required data for feedback submission'
+//         });
+//     }
     
-    try {
-        // Get the correct table and field names
-        const feedbackTable = `feedbacks_${quarter}`;
-        const feedbackIdField = `feedbackq${quarter.substring(1)}_Id`;
+//     try {
+//         // Get feedback table info
+//         const feedbackTable = `feedbacks_${quarter}`;
+//         const feedbackIdField = `feedbackq${quarter.substring(1)}_Id`;
         
-        // Get feedback data for the user
-        const { data: feedbackData, error: feedbackError } = await supabase
-            .from(feedbackTable)
-            .select(`userId, ${feedbackIdField}`)
-            .eq('userId', userId)
-            .eq('quarter', quarter)
-            .single();
+//         // Get the feedback record
+//         const { data: feedbackData, error: feedbackError } = await supabase
+//             .from(feedbackTable)
+//             .select(`${feedbackIdField}`)
+//             .eq('userId', userId)
+//             .eq('quarter', quarter)
+//             .single();
             
-        if (feedbackError || !feedbackData) {
-            return res.status(404).json({
-                success: false,
-                message: `No ${quarter} feedback data found for this user`
-            });
-        }
+//         if (feedbackError || !feedbackData) {
+//             return res.status(404).json({
+//                 success: false,
+//                 message: 'Feedback record not found'
+//             });
+//         }
         
-        const feedbackId = feedbackData[feedbackIdField];
+//         const feedbackId = feedbackData[feedbackIdField];
         
-        if (!feedbackId) {
-            return res.status(404).json({
-                success: false,
-                message: `Feedback ID not found for ${quarter}`
-            });
-        }
-        
-        // Check if the reviewer has already submitted feedback
-        const { data: reviewData, error: reviewError } = await supabase
-            .from('feedbacks_answers')
-            .select('feedbackId_answerId, reviewDate')
-            .eq(feedbackIdField, feedbackId)
-            .eq('reviewerUserId', reviewerUserId);
+//         // Check if already submitted
+//         const { data: existingSubmission, error: existingError } = await supabase
+//             .from('feedbacks_answers')
+//             .select('feedbackId_answerId')
+//             .eq(feedbackIdField, feedbackId)
+//             .eq('reviewerUserId', currentUserId)
+//             .limit(1);
             
-        if (reviewError) {
-            console.error('Error checking review status:', reviewError);
-            return res.status(500).json({
-                success: false,
-                message: 'Error checking review status'
-            });
-        }
+//         if (existingSubmission && existingSubmission.length > 0) {
+//             return res.status(409).json({
+//                 success: false,
+//                 message: 'Feedback already submitted for this user and quarter'
+//             });
+//         }
         
-        const submitted = reviewData && reviewData.length > 0;
-        
-        return res.json({
-            success: true,
-            submitted,
-            submissionDate: submitted ? reviewData[0].reviewDate : null,
-            feedbackId: feedbackId
-        });
-        
-    } catch (error) {
-        console.error('Error in checkFeedbackStatus:', error);
-        return res.status(500).json({
-            success: false,
-            message: 'Server error while checking feedback status'
-        });
-    }
-},
-
-getDepartmentFeedbackStats: async function(departmentId) {
-    try {
-        console.log('🔍 Getting department feedback stats for department:', departmentId);
-        
-        // Get all employees in department
-        const { data: employees, error: empError } = await supabase
-            .from('staffaccounts')
-            .select('userId')
-            .eq('departmentId', departmentId);
-
-        if (empError) {
-            console.error('Error fetching department employees:', empError);
-            return { totalEmployees: 0, employeesWithFeedback: 0, completedQuarters: [] };
-        }
-
-        console.log('📊 Found employees in department:', employees?.length || 0);
-        
-        const employeeIds = employees?.map(emp => emp.userId) || [];
-        const currentYear = new Date().getFullYear();
-        const quarters = ['Q1', 'Q2', 'Q3', 'Q4'];
-        
-        let totalEmployeesWithFeedback = new Set(); // Use Set to avoid duplicates
-        const completedQuarters = [];
-
-        // Check each quarter for feedback completion
-        for (const quarter of quarters) {
-            const feedbackTable = `feedbacks_${quarter}`;
+//         // Create main feedback answer record
+//         const { data: answerRecord, error: answerError } = await supabase
+//             .from('feedbacks_answers')
+//             .insert({
+//                 [feedbackIdField]: feedbackId,
+//                 reviewerUserId: currentUserId,
+//                 userId: userId, // Note: this field name might need correction in DB
+//                 reviewDate: new Date().toISOString().split('T')[0],
+//                 remarks: feedbackResponses.generalRemarks || null
+//             })
+//             .select('feedbackId_answerId')
+//             .single();
             
-            try {
-                console.log(`🔍 Checking table: ${feedbackTable} for year: ${currentYear}`);
+//         if (answerError || !answerRecord) {
+//             console.error('Error creating feedback answer record:', answerError);
+//             return res.status(500).json({
+//                 success: false,
+//                 message: 'Error saving feedback submission'
+//             });
+//         }
+        
+//         const answerId = answerRecord.feedbackId_answerId;
+        
+//         // Save objective responses
+//         if (feedbackResponses.objectives && feedbackResponses.objectives.length > 0) {
+//             const objectiveAnswers = feedbackResponses.objectives.map(obj => ({
+//                 feedback_answerObjectivesId: answerId,
+//                 feedback_qObjectivesId: obj.questionId,
+//                 objectiveQualInput: obj.qualitativeResponse,
+//                 objectiveQuantInput: obj.quantitativeRating
+//             }));
+            
+//             const { error: objError } = await supabase
+//                 .from('feedbacks_answers-objectives')
+//                 .insert(objectiveAnswers);
                 
-                const { data: quarterFeedback, error: quarterError } = await supabase
-                    .from(feedbackTable)
-                    .select('userId')
-                    .in('userId', employeeIds)
-                    .eq('quarter', quarter)
-                    .eq('year', currentYear);
-
-                if (quarterError) {
-                    console.log(`⚠️ Error or table doesn't exist: ${feedbackTable}`, quarterError);
-                    continue;
-                }
-
-                if (quarterFeedback && quarterFeedback.length > 0) {
-                    console.log(`✅ Found ${quarterFeedback.length} feedback records in ${quarter}`);
-                    
-                    completedQuarters.push({
-                        quarter: quarter,
-                        employeeCount: quarterFeedback.length
-                    });
-                    
-                    // Add unique employee IDs to our set
-                    quarterFeedback.forEach(fb => totalEmployeesWithFeedback.add(fb.userId));
-                } else {
-                    console.log(`📝 No feedback found for ${quarter} ${currentYear}`);
-                }
-            } catch (tableError) {
-                console.log(`❌ Table ${feedbackTable} might not exist:`, tableError.message);
-            }
-        }
-
-        const stats = {
-            totalEmployees: employees?.length || 0,
-            employeesWithFeedback: totalEmployeesWithFeedback.size,
-            completedQuarters: completedQuarters,
-            currentYear: currentYear
-        };
+//             if (objError) {
+//                 console.error('Error saving objective answers:', objError);
+//                 // You might want to rollback the main answer record here
+//             }
+//         }
         
-        console.log('📈 Final stats:', stats);
-        return stats;
-
-    } catch (error) {
-        console.error('❌ Error getting department feedback stats:', error);
-        return { totalEmployees: 0, employeesWithFeedback: 0, completedQuarters: [] };
-    }
-},
-
-// Modify the submitFeedback method to properly store feedback answers
-submitFeedback: async function(req, res) {
-    const currentUserId = req.session?.user?.userId;
-    const { userId, quarter, feedbackResponses } = req.body;
-    
-    if (!currentUserId || !userId || !quarter || !feedbackResponses) {
-        return res.status(400).json({
-            success: false,
-            message: 'Missing required data for feedback submission'
-        });
-    }
-    
-    try {
-        // Get feedback table info
-        const feedbackTable = `feedbacks_${quarter}`;
-        const feedbackIdField = `feedbackq${quarter.substring(1)}_Id`;
-        
-        // Get the feedback record
-        const { data: feedbackData, error: feedbackError } = await supabase
-            .from(feedbackTable)
-            .select(`${feedbackIdField}`)
-            .eq('userId', userId)
-            .eq('quarter', quarter)
-            .single();
+//         // Save skill responses
+//         if (feedbackResponses.skills && feedbackResponses.skills.length > 0) {
+//             const skillAnswers = feedbackResponses.skills.map(skill => ({
+//                 feedback_answerSkillsId: answerId,
+//                 feedback_qSkillsId: skill.questionId,
+//                 skillsQualInput: skill.qualitativeResponse,
+//                 skillsQuantInput: skill.quantitativeRating
+//             }));
             
-        if (feedbackError || !feedbackData) {
-            return res.status(404).json({
-                success: false,
-                message: 'Feedback record not found'
-            });
-        }
-        
-        const feedbackId = feedbackData[feedbackIdField];
-        
-        // Check if already submitted
-        const { data: existingSubmission, error: existingError } = await supabase
-            .from('feedbacks_answers')
-            .select('feedbackId_answerId')
-            .eq(feedbackIdField, feedbackId)
-            .eq('reviewerUserId', currentUserId)
-            .limit(1);
-            
-        if (existingSubmission && existingSubmission.length > 0) {
-            return res.status(409).json({
-                success: false,
-                message: 'Feedback already submitted for this user and quarter'
-            });
-        }
-        
-        // Create main feedback answer record
-        const { data: answerRecord, error: answerError } = await supabase
-            .from('feedbacks_answers')
-            .insert({
-                [feedbackIdField]: feedbackId,
-                reviewerUserId: currentUserId,
-                userId: userId, // Note: this field name might need correction in DB
-                reviewDate: new Date().toISOString().split('T')[0],
-                remarks: feedbackResponses.generalRemarks || null
-            })
-            .select('feedbackId_answerId')
-            .single();
-            
-        if (answerError || !answerRecord) {
-            console.error('Error creating feedback answer record:', answerError);
-            return res.status(500).json({
-                success: false,
-                message: 'Error saving feedback submission'
-            });
-        }
-        
-        const answerId = answerRecord.feedbackId_answerId;
-        
-        // Save objective responses
-        if (feedbackResponses.objectives && feedbackResponses.objectives.length > 0) {
-            const objectiveAnswers = feedbackResponses.objectives.map(obj => ({
-                feedback_answerObjectivesId: answerId,
-                feedback_qObjectivesId: obj.questionId,
-                objectiveQualInput: obj.qualitativeResponse,
-                objectiveQuantInput: obj.quantitativeRating
-            }));
-            
-            const { error: objError } = await supabase
-                .from('feedbacks_answers-objectives')
-                .insert(objectiveAnswers);
+//             const { error: skillError } = await supabase
+//                 .from('feedbacks_answers-skills')
+//                 .insert(skillAnswers);
                 
-            if (objError) {
-                console.error('Error saving objective answers:', objError);
-                // You might want to rollback the main answer record here
-            }
-        }
+//             if (skillError) {
+//                 console.error('Error saving skill answers:', skillError);
+//                 // You might want to rollback here as well
+//             }
+//         }
         
-        // Save skill responses
-        if (feedbackResponses.skills && feedbackResponses.skills.length > 0) {
-            const skillAnswers = feedbackResponses.skills.map(skill => ({
-                feedback_answerSkillsId: answerId,
-                feedback_qSkillsId: skill.questionId,
-                skillsQualInput: skill.qualitativeResponse,
-                skillsQuantInput: skill.quantitativeRating
-            }));
-            
-            const { error: skillError } = await supabase
-                .from('feedbacks_answers-skills')
-                .insert(skillAnswers);
-                
-            if (skillError) {
-                console.error('Error saving skill answers:', skillError);
-                // You might want to rollback here as well
-            }
-        }
+//         return res.json({
+//             success: true,
+//             message: 'Feedback submitted successfully',
+//             answerId: answerId
+//         });
         
-        return res.json({
-            success: true,
-            message: 'Feedback submitted successfully',
-            answerId: answerId
-        });
-        
-    } catch (error) {
-        console.error('Error in submitFeedback:', error);
-        return res.status(500).json({
-            success: false,
-            message: 'Server error while submitting feedback'
-        });
-    }
-},
+//     } catch (error) {
+//         console.error('Error in submitFeedback:', error);
+//         return res.status(500).json({
+//             success: false,
+//             message: 'Server error while submitting feedback'
+//         });
+//     }
+// },
 
 
 
@@ -14817,15 +14744,14 @@ staffFeedbackList: async function (req, res) {
         });
     }
 },
-
 getQuestionnaireData: async function (req, res) {
     const currentUserId = req.session?.user?.userId;
     const targetUserId = req.query.userId;
     const quarter = req.query.quarter || 'Q1';
     
     console.log("=== getQuestionnaireData called ===");
-    console.log("🔍 Current User ID:", currentUserId);
-    console.log("🔍 Target User ID:", targetUserId);
+    console.log("🔍 Current User ID (Line Manager):", currentUserId);
+    console.log("🔍 Target User ID (Employee):", targetUserId);
     console.log("🔍 Quarter:", quarter);
     
     if (!currentUserId || !targetUserId) {
@@ -14842,7 +14768,7 @@ getQuestionnaireData: async function (req, res) {
         
         console.log(`📋 Using table: ${quarterTable}, ID field: ${idField}`);
         
-        // Fetch feedback data for the target user
+        // Fetch feedback data for the target user (employee being reviewed)
         const { data: feedbackData, error: feedbackError } = await supabase
             .from(quarterTable)
             .select(`
@@ -14854,7 +14780,7 @@ getQuestionnaireData: async function (req, res) {
                 year,
                 jobId
             `)
-            .eq('userId', targetUserId)
+            .eq('userId', targetUserId)  // This should be the EMPLOYEE being reviewed
             .eq('quarter', quarter)
             .order('created_at', { ascending: false })
             .limit(1);
@@ -14870,7 +14796,7 @@ getQuestionnaireData: async function (req, res) {
         const feedback = feedbackData[0];
         const feedbackId = feedback[idField];
 
-        console.log(`✅ Found feedback record with ID ${feedbackId}`);
+        console.log(`✅ Found feedback record with ID ${feedbackId} for employee ${targetUserId}`);
         
         // Fetch user details for additional information
         const { data: userData, error: userError } = await supabase
@@ -15028,18 +14954,20 @@ getQuestionnaireData: async function (req, res) {
             }
         }
 
-        // Check if feedback is already submitted by this reviewer
+        // Check if feedback is already submitted by THIS LINE MANAGER for this employee
         const { data: existingFeedback, error: existingFeedbackError } = await supabase
             .from('feedbacks_answers')
             .select('feedbackId_answerId')
             .eq(idField, feedbackId)
-            .eq('reviewerUserId', currentUserId)
+            .eq('reviewerUserId', currentUserId)  // Check if THIS line manager already submitted
             .limit(1);
             
         const isSubmitted = existingFeedback && existingFeedback.length > 0;
-        console.log(`📝 Feedback already submitted by this reviewer: ${isSubmitted}`);
+        console.log(`📝 Feedback already submitted by line manager ${currentUserId}: ${isSubmitted}`);
 
         console.log("\n📊 Final questionnaire data summary:");
+        console.log(`  Employee: ${targetUserId}`);
+        console.log(`  Line Manager: ${currentUserId}`);
         console.log(`  Objectives: ${objectives.length}`);
         console.log(`  Hard Skills: ${hardSkills.length}`);
         console.log(`  Soft Skills: ${softSkills.length}`);
@@ -15067,6 +14995,8 @@ checkFeedbackStatus: async function(req, res) {
     const { userId, quarter } = req.query;
     const reviewerUserId = req.session?.user?.userId;
     
+    console.log(`Checking feedback status: Employee=${userId}, Reviewer=${reviewerUserId}, Quarter=${quarter}`);
+    
     if (!userId || !quarter || !reviewerUserId) {
         return res.status(400).json({
             success: false,
@@ -15081,10 +15011,11 @@ checkFeedbackStatus: async function(req, res) {
         const { data: feedbackData, error: feedbackError } = await supabase
             .from(`feedbacks_${quarter}`)
             .select(`userId, ${feedbackIdField}`)
-            .eq('userId', userId)
+            .eq('userId', userId)  // This is the EMPLOYEE being reviewed
             .single();
             
         if (feedbackError || !feedbackData) {
+            console.log(`No feedback data found for employee ${userId} in ${quarter}`);
             return res.status(404).json({
                 success: false,
                 message: 'Feedback data not found'
@@ -15092,23 +15023,26 @@ checkFeedbackStatus: async function(req, res) {
         }
         
         const feedbackId = feedbackData[feedbackIdField];
+        console.log(`Found feedback ID ${feedbackId} for employee ${userId}`);
         
-        // Now check if the reviewer has already submitted feedback for this user
+        // Check if THIS reviewer (line manager) has already submitted feedback for this employee
         const { data: reviewData, error: reviewError } = await supabase
-            .from(`feedbacks_reviewer_${quarter}`)
-            .select('reviewerId')
-            .eq(`feedbackq${quarter.substring(1)}_Id`, feedbackId)
-            .eq('reviewerId', reviewerUserId);
+            .from('feedbacks_answers')
+            .select('feedbackId_answerId')
+            .eq(feedbackIdField, feedbackId)
+            .eq('reviewerUserId', reviewerUserId);  // Check if THIS line manager submitted
             
         if (reviewError) {
+            console.error('Error checking review status:', reviewError);
             return res.status(500).json({
                 success: false,
                 message: 'Error checking review status'
             });
         }
         
-        // If review data exists, feedback has been submitted
+        // If review data exists, feedback has been submitted by this line manager
         const submitted = reviewData && reviewData.length > 0;
+        console.log(`Line manager ${reviewerUserId} submitted feedback for employee ${userId}: ${submitted}`);
         
         return res.json({
             success: true,
@@ -15123,6 +15057,232 @@ checkFeedbackStatus: async function(req, res) {
     }
 },
 
+// Updated submitFeedback function
+submitFeedback: async function (req, res) {
+    const currentUserId = req.session?.user?.userId;  // This is the LINE MANAGER
+    const { 
+        feedbackId, 
+        quarter,
+        userId,  // This is the TARGET user (employee being reviewed)
+        objectives = [], 
+        hardSkills = [], 
+        softSkills = [] 
+    } = req.body;
+    
+    console.log("Submit feedback request received:", {
+        lineManagerId: currentUserId,     // The person submitting the feedback
+        employeeId: userId,               // The person being reviewed
+        quarter,
+        feedbackId,
+        objectivesCount: objectives.length,
+        hardSkillsCount: hardSkills.length,
+        softSkillsCount: softSkills.length
+    });
+    
+    if (!currentUserId || !feedbackId || !quarter || !userId) {
+        return res.status(400).json({ 
+            success: false, 
+            message: 'Missing required parameters.'
+        });
+    }
+    
+    try {
+        // Determine which feedback ID field to use based on quarter
+        const quarterNum = quarter.charAt(1);
+        const idField = `feedbackq${quarterNum}_Id`;
+        
+        // Check if feedback was already submitted by THIS line manager for this employee
+        const { data: existingFeedback, error: existingFeedbackError } = await supabase
+            .from('feedbacks_answers')
+            .select('feedbackId_answerId')
+            .eq(idField, feedbackId)
+            .eq('reviewerUserId', currentUserId)  // Check by line manager (reviewer)
+            .eq('userId', userId)                 // For this specific employee
+            .limit(1);
+            
+        if (existingFeedbackError) {
+            console.error("Error checking existing feedback:", existingFeedbackError);
+        } else if (existingFeedback && existingFeedback.length > 0) {
+            console.log("Feedback already submitted by this line manager for this employee");
+            return res.json({
+                success: false,
+                message: 'You have already submitted feedback for this employee.'
+            });
+        }
+        
+        // Insert feedback answers record
+        const { data: answerData, error: answerError } = await supabase
+            .from('feedbacks_answers')
+            .insert({
+                [idField]: feedbackId,
+                reviewerUserId: currentUserId,  // This is the LINE MANAGER providing feedback
+                userId: userId,                 // This is the EMPLOYEE being reviewed
+                reviewDate: new Date().toISOString().split('T')[0],
+                created_at: new Date()
+            })
+            .select();
+            
+        if (answerError || !answerData || answerData.length === 0) {
+            console.error("Error inserting feedback answer:", answerError);
+            return res.status(500).json({ 
+                success: false, 
+                message: 'Error saving feedback answer.'
+            });
+        }
+        
+        const feedbackAnswerId = answerData[0].feedbackId_answerId;
+        console.log(`✅ Created feedback answer record with ID ${feedbackAnswerId}`);
+        console.log(`   Line Manager: ${currentUserId}`);
+        console.log(`   Employee: ${userId}`);
+        console.log(`   Feedback ID: ${feedbackId}`);
+        
+        // Also insert into the reviewer tracking table
+        try {
+            const { error: reviewerError } = await supabase
+                .from(`feedbacks_reviewer_${quarter}`)
+                .insert({
+                    [idField]: feedbackId,
+                    reviewerId: currentUserId,  // Line manager who provided the feedback
+                    reviewDate: new Date().toISOString().split('T')[0],
+                    created_at: new Date()
+                });
+                
+            if (reviewerError) {
+                console.error("Error inserting reviewer record:", reviewerError);
+                // Don't fail the entire operation for this
+            } else {
+                console.log("✅ Successfully recorded reviewer entry");
+            }
+        } catch (reviewerInsertError) {
+            console.error("Error with reviewer table:", reviewerInsertError);
+            // Continue with the rest of the process
+        }
+        
+        // Get question-objective relationships for this feedback
+        const { data: qObjectives, error: qObjError } = await supabase
+            .from('feedbacks_questions-objectives')
+            .select('feedback_qObjectivesId, objectiveId')
+            .eq(idField, feedbackId);
+            
+        if (qObjError) {
+            console.error("Error fetching question-objectives:", qObjError);
+        }
+        
+        // Process objective answers
+        if (objectives.length > 0 && qObjectives && qObjectives.length > 0) {
+            console.log(`Processing ${objectives.length} objectives`);
+            
+            try {
+                const objectiveMap = {};
+                qObjectives.forEach(qObj => {
+                    objectiveMap[qObj.objectiveId] = qObj.feedback_qObjectivesId;
+                });
+                
+                const objectiveAnswers = objectives
+                    .filter(obj => objectiveMap[obj.objectiveId])
+                    .map(obj => ({
+                        feedback_answerObjectivesId: feedbackAnswerId,
+                        feedback_qObjectivesId: objectiveMap[obj.objectiveId],
+                        objectiveQuantInput: parseInt(obj.quantitative) || 0,
+                        objectiveQualInput: obj.qualitative || '',
+                        created_at: new Date()
+                    }));
+                
+                if (objectiveAnswers.length > 0) {
+                    const { error: objAnswerError } = await supabase
+                        .from('feedbacks_answers-objectives')
+                        .insert(objectiveAnswers);
+                        
+                    if (objAnswerError) {
+                        console.error("Error inserting objective answers:", objAnswerError);
+                        return res.status(500).json({ 
+                            success: false, 
+                            message: 'Error saving objective feedback.'
+                        });
+                    }
+                    
+                    console.log(`✅ Saved ${objectiveAnswers.length} objective answers`);
+                }
+            } catch (insertError) {
+                console.error("Error processing objective answers:", insertError);
+                return res.status(500).json({ 
+                    success: false, 
+                    message: 'Error processing objective feedback.'
+                });
+            }
+        }
+        
+        // Get question-skills relationships
+        const { data: qSkills, error: qSkillsError } = await supabase
+            .from('feedbacks_questions-skills')
+            .select('feedback_qSkillsId, jobReqSkillId')
+            .eq(idField, feedbackId);
+            
+        if (qSkillsError) {
+            console.error("Error fetching question-skills:", qSkillsError);
+        }
+        
+        // Process skills answers
+        if (qSkills && qSkills.length > 0) {
+            const allSkills = [...hardSkills, ...softSkills];
+            console.log(`Processing ${allSkills.length} total skills`);
+            
+            try {
+                const skillMap = {};
+                qSkills.forEach(qSkill => {
+                    skillMap[qSkill.jobReqSkillId] = qSkill.feedback_qSkillsId;
+                });
+                
+                const skillAnswers = allSkills
+                    .filter(skill => skillMap[skill.skillId])
+                    .map(skill => ({
+                        feedback_answerSkillsId: feedbackAnswerId,
+                        feedback_qSkillsId: skillMap[skill.skillId],
+                        skillsQuantInput: parseInt(skill.quantitative) || 0,
+                        skillsQualInput: skill.qualitative || '',
+                        created_at: new Date()
+                    }));
+                
+                if (skillAnswers.length > 0) {
+                    const { error: skillAnswerError } = await supabase
+                        .from('feedbacks_answers-skills')
+                        .insert(skillAnswers);
+                        
+                    if (skillAnswerError) {
+                        console.error("Error inserting skill answers:", skillAnswerError);
+                        return res.status(500).json({ 
+                            success: false, 
+                            message: 'Error saving skills feedback.'
+                        });
+                    }
+                    
+                    console.log(`✅ Saved ${skillAnswers.length} skill answers`);
+                }
+            } catch (insertError) {
+                console.error("Error processing skill answers:", insertError);
+                return res.status(500).json({ 
+                    success: false, 
+                    message: 'Error processing skills feedback.'
+                });
+            }
+        }
+        
+        console.log(`✅ Successfully submitted feedback from line manager ${currentUserId} for employee ${userId}`);
+        
+        return res.json({
+            success: true,
+            message: 'Feedback submitted successfully.'
+        });
+        
+    } catch (error) {
+        console.error('Error in submitFeedback:', error);
+        return res.status(500).json({ 
+            success: false, 
+            message: 'An error occurred while submitting feedback.',
+            error: error.message
+        });
+    }
+},
 
 // Function to fix the relationship between feedback answers and detailed responses
 fixFeedbackAnswerRelationships: async function(feedbackId, feedbackIdField, quarter) {
@@ -15181,229 +15341,21 @@ fixFeedbackAnswerRelationships: async function(feedbackId, feedbackIdField, quar
     }
 },
 
-// API endpoint to get questionnaire data for a specific staff member
-getQuestionnaireData: async function (req, res) {
-    const currentUserId = req.session?.user?.userId;
-    const targetUserId = req.query.userId;
-    const quarter = req.query.quarter || 'Q1';
-    
-    if (!currentUserId || !targetUserId) {
-        return res.status(400).json({ 
-            success: false, 
-            message: 'User IDs are required.'
-        });
-    }
-    
-    try {
-        // Get table name and ID field based on quarter
-        const quarterTable = `feedbacks_${quarter}`;
-        const idField = `feedback${quarter.toLowerCase()}_Id`;
-        
-        // Fetch feedback data for the target user
-        const { data: feedbackData, error: feedbackError } = await supabase
-            .from(quarterTable)
-            .select(`
-                userId, 
-                setStartDate, 
-                setEndDate, 
-                ${idField},
-                quarter,
-                year,
-                jobId
-            `)
-            .eq('userId', targetUserId)
-            .eq('quarter', quarter)
-            .order('created_at', { ascending: false })
-            .limit(1);
-
-        if (feedbackError || !feedbackData || feedbackData.length === 0) {
-            console.error(`Error fetching feedback data:`, feedbackError);
-            return res.status(404).json({ 
-                success: false, 
-                message: 'No feedback data found for this user.'
-            });
-        }
-
-        const feedback = feedbackData[0];
-        const feedbackId = feedback[idField];
-
-        console.log(`Found feedback record with ID ${feedbackId}`);
-        
-        // Fetch user details for additional information
-        const { data: userData, error: userError } = await supabase
-            .from('staffaccounts')
-            .select(`
-                departments (deptName),
-                jobpositions (jobTitle),
-                jobId
-            `)
-            .eq('userId', targetUserId)
-            .single();
-            
-        if (userError) {
-            console.error("Error fetching user data:", userError);
-        } else if (userData) {
-            feedback.deptName = userData.departments?.deptName;
-            feedback.jobTitle = userData.jobpositions?.jobTitle;
-            if (!feedback.jobId && userData.jobId) {
-                feedback.jobId = userData.jobId;
-            }
-        }
-
-        feedback.id = feedbackId;
-        
-        // Fetch objectives for this feedback using the correct ID field
-        const { data: objectivesData, error: objectivesError } = await supabase
-            .from('feedbacks_questions-objectives')
-            .select(`
-                feedback_qObjectivesId,
-                objectiveId,
-                objectiveQualiQuestion,
-                ${idField}
-            `)
-            .eq(idField, feedbackId);
-            
-        if (objectivesError) {
-            console.error("Error fetching objectives:", objectivesError);
-            return res.status(500).json({ 
-                success: false, 
-                message: 'Error fetching objectives data.'
-            });
-        }
-
-        console.log(`Found ${objectivesData?.length || 0} objectives`);
-        
-        // Get detailed objective information
-        let objectives = [];
-        if (objectivesData && objectivesData.length > 0) {
-            const objectiveIds = objectivesData.map(obj => obj.objectiveId);
-            
-            const { data: objectiveDetails, error: objectiveDetailsError } = await supabase
-                .from('objectivesettings_objectives')
-                .select('*')
-                .in('objectiveId', objectiveIds);
-                
-            if (objectiveDetailsError) {
-                console.error("Error fetching objective details:", objectiveDetailsError);
-            } else if (objectiveDetails) {
-                console.log(`Found ${objectiveDetails.length} objective details`);
-                
-                objectives = objectivesData.map(obj => {
-                    const detail = objectiveDetails.find(d => d.objectiveId === obj.objectiveId);
-                    return {
-                        ...obj,
-                        ...detail,
-                        objectiveDescription: detail?.objectiveDescrpt,
-                        description: detail?.objectiveDescrpt,
-                        kpi: detail?.objectiveKPI,
-                        target: detail?.objectiveTarget,
-                        uom: detail?.objectiveUOM,
-                        weight: detail?.objectiveAssignedWeight
-                    };
-                });
-            } else {
-                objectives = objectivesData;
-            }
-        }
-        
-        // Get job ID for skills fetching
-        let jobId = feedback.jobId;
-        if (!jobId && userData) {
-            jobId = userData.jobId;
-        }
-        
-        if (!jobId) {
-            const { data: jobData, error: jobError } = await supabase
-                .from('staffaccounts')
-                .select('jobId')
-                .eq('userId', targetUserId)
-                .single();
-                
-            if (jobError) {
-                console.error("Error fetching job ID:", jobError);
-            } else if (jobData) {
-                jobId = jobData.jobId;
-            }
-        }
-        
-        if (!jobId) {
-            console.error("No job ID found for user", targetUserId);
-            return res.status(500).json({ 
-                success: false, 
-                message: 'Error fetching job data.'
-            });
-        }
-        
-        console.log(`Using jobId: ${jobId} to fetch skills`);
-        
-        // Fetch all skills for this job
-        const { data: skillsData, error: skillsError } = await supabase
-            .from('jobreqskills')
-            .select('*')
-            .eq('jobId', jobId);
-            
-        if (skillsError) {
-            console.error("Error fetching skills:", skillsError);
-            return res.status(500).json({ 
-                success: false, 
-                message: 'Error fetching skills data.'
-            });
-        }
-
-        console.log(`Found ${skillsData?.length || 0} total skills`);
-
-        // Separate hard and soft skills
-        const hardSkills = skillsData?.filter(skill => skill.jobReqSkillType === 'Hard') || [];
-        const softSkills = skillsData?.filter(skill => skill.jobReqSkillType === 'Soft') || [];
-        
-        console.log(`Hard skills: ${hardSkills.length}, Soft skills: ${softSkills.length}`);
-
-        // Check if feedback is already submitted by this reviewer
-        const { data: existingFeedback, error: existingFeedbackError } = await supabase
-            .from('feedbacks_answers')
-            .select('feedbackId_answerId')
-            .eq(idField, feedbackId)
-            .eq('reviewerUserId', currentUserId)
-            .limit(1);
-            
-        const isSubmitted = existingFeedback && existingFeedback.length > 0;
-        console.log(`Feedback already submitted by this reviewer: ${isSubmitted}`);
-
-        return res.json({
-            success: true,
-            feedback,
-            objectives,
-            hardSkills,
-            softSkills,
-            isSubmitted
-        });
-        
-    } catch (error) {
-        console.error('Error in getQuestionnaireData:', error);
-        return res.status(500).json({ 
-            success: false, 
-            message: 'An error occurred while fetching questionnaire data.'
-        });
-    }
-},
-
-
-
 // API endpoint to submit feedback
 submitFeedback: async function (req, res) {
     const currentUserId = req.session?.user?.userId;
     const { 
         feedbackId, 
         quarter,
-        userId, 
+        userId, // This is the TARGET user (employee being reviewed)
         objectives = [], 
         hardSkills = [], 
         softSkills = [] 
     } = req.body;
     
     console.log("Submit feedback request received:", {
-        reviewerUserId: currentUserId,
-        targetUserId: userId,
+        reviewerUserId: currentUserId, // This should be the line manager
+        targetUserId: userId,          // This is the employee being reviewed
         quarter,
         feedbackId,
         objectivesCount: objectives.length,
@@ -15419,17 +15371,16 @@ submitFeedback: async function (req, res) {
     }
     
     try {
-        // Determine which feedback ID field to use based on quarter (q1, q2, q3, q4)
-        // The schema shows feedbackq1_Id, feedbackq2_Id, etc.
-        const quarterNum = quarter.charAt(1); // Extract the number from "Q1", "Q2", etc.
+        // Determine which feedback ID field to use based on quarter
+        const quarterNum = quarter.charAt(1);
         const idField = `feedbackq${quarterNum}_Id`;
         
-        // Check if feedback was already submitted
+        // Check if feedback was already submitted by THIS reviewer (line manager)
         const { data: existingFeedback, error: existingFeedbackError } = await supabase
             .from('feedbacks_answers')
             .select('feedbackId_answerId')
             .eq(idField, feedbackId)
-            .eq('reviewerUserId', currentUserId)
+            .eq('reviewerUserId', currentUserId) // Check by reviewer, not target user
             .limit(1);
             
         if (existingFeedbackError) {
@@ -15442,13 +15393,13 @@ submitFeedback: async function (req, res) {
             });
         }
         
-        // Insert feedback answers record
+        // Insert feedback answers record - FIXED: Use currentUserId for the reviewer
         const { data: answerData, error: answerError } = await supabase
             .from('feedbacks_answers')
             .insert({
                 [idField]: feedbackId,
-                reviewerUserId: currentUserId,
-                userId: userId, // Note: following the schema's 'userId' spelling
+                reviewerUserId: currentUserId,  // This is the line manager answering
+                userId: userId,                 // This is the employee being reviewed
                 reviewDate: new Date().toISOString().split('T')[0],
                 created_at: new Date()
             })
@@ -15465,7 +15416,29 @@ submitFeedback: async function (req, res) {
         const feedbackAnswerId = answerData[0].feedbackId_answerId;
         console.log(`Created feedback answer record with ID ${feedbackAnswerId}`);
         
-        // First, get all the question-objective relationships for this quarter/feedback
+        // Also insert into the reviewer tracking table
+        try {
+            const { error: reviewerError } = await supabase
+                .from(`feedbacks_reviewer_${quarter}`)
+                .insert({
+                    [idField]: feedbackId,
+                    reviewerId: currentUserId,  // Line manager who provided the feedback
+                    reviewDate: new Date().toISOString().split('T')[0],
+                    created_at: new Date()
+                });
+                
+            if (reviewerError) {
+                console.error("Error inserting reviewer record:", reviewerError);
+                // Don't fail the entire operation for this
+            } else {
+                console.log("Successfully recorded reviewer entry");
+            }
+        } catch (reviewerInsertError) {
+            console.error("Error with reviewer table:", reviewerInsertError);
+            // Continue with the rest of the process
+        }
+        
+        // Get question-objective relationships for this feedback
         const { data: qObjectives, error: qObjError } = await supabase
             .from('feedbacks_questions-objectives')
             .select('feedback_qObjectivesId, objectiveId')
@@ -15475,21 +15448,20 @@ submitFeedback: async function (req, res) {
             console.error("Error fetching question-objectives:", qObjError);
         }
         
-        // Process objective answers with proper relationship IDs
+        // Process objective answers
         if (objectives.length > 0 && qObjectives && qObjectives.length > 0) {
             console.log(`Processing ${objectives.length} objectives`);
             
             try {
-                // Map objective IDs to their corresponding question-objective IDs
                 const objectiveMap = {};
                 qObjectives.forEach(qObj => {
                     objectiveMap[qObj.objectiveId] = qObj.feedback_qObjectivesId;
                 });
                 
-                // Prepare objective answers with correct relationship IDs
                 const objectiveAnswers = objectives
-                    .filter(obj => objectiveMap[obj.objectiveId]) // Only include objectives with relationships
+                    .filter(obj => objectiveMap[obj.objectiveId])
                     .map(obj => ({
+                        feedback_answerObjectivesId: feedbackAnswerId, // Link to the main answer record
                         feedback_qObjectivesId: objectiveMap[obj.objectiveId],
                         objectiveQuantInput: parseInt(obj.quantitative) || 0,
                         objectiveQualInput: obj.qualitative || '',
@@ -15510,8 +15482,6 @@ submitFeedback: async function (req, res) {
                     }
                     
                     console.log(`Saved ${objectiveAnswers.length} objective answers`);
-                } else {
-                    console.log("No objective answers to save - missing relationships");
                 }
             } catch (insertError) {
                 console.error("Error processing objective answers:", insertError);
@@ -15522,7 +15492,7 @@ submitFeedback: async function (req, res) {
             }
         }
         
-        // Get all the question-skills relationships for this quarter/feedback
+        // Get question-skills relationships
         const { data: qSkills, error: qSkillsError } = await supabase
             .from('feedbacks_questions-skills')
             .select('feedback_qSkillsId, jobReqSkillId')
@@ -15532,22 +15502,21 @@ submitFeedback: async function (req, res) {
             console.error("Error fetching question-skills:", qSkillsError);
         }
         
-        // Combined skills processing for both hard and soft skills
+        // Process skills answers
         if (qSkills && qSkills.length > 0) {
             const allSkills = [...hardSkills, ...softSkills];
             console.log(`Processing ${allSkills.length} total skills`);
             
             try {
-                // Map skill IDs to their corresponding question-skill IDs
                 const skillMap = {};
                 qSkills.forEach(qSkill => {
                     skillMap[qSkill.jobReqSkillId] = qSkill.feedback_qSkillsId;
                 });
                 
-                // Prepare skill answers with correct relationship IDs
                 const skillAnswers = allSkills
-                    .filter(skill => skillMap[skill.skillId]) // Only include skills with relationships
+                    .filter(skill => skillMap[skill.skillId])
                     .map(skill => ({
+                        feedback_answerSkillsId: feedbackAnswerId, // Link to the main answer record
                         feedback_qSkillsId: skillMap[skill.skillId],
                         skillsQuantInput: parseInt(skill.quantitative) || 0,
                         skillsQualInput: skill.qualitative || '',
@@ -15568,8 +15537,6 @@ submitFeedback: async function (req, res) {
                     }
                     
                     console.log(`Saved ${skillAnswers.length} skill answers`);
-                } else {
-                    console.log("No skill answers to save - missing relationships");
                 }
             } catch (insertError) {
                 console.error("Error processing skill answers:", insertError);
@@ -15580,7 +15547,8 @@ submitFeedback: async function (req, res) {
             }
         }
         
-        // Return success response
+        console.log(`✅ Successfully submitted feedback from reviewer ${currentUserId} for employee ${userId}`);
+        
         return res.json({
             success: true,
             message: 'Feedback submitted successfully.'
@@ -15595,6 +15563,281 @@ submitFeedback: async function (req, res) {
         });
     }
 },
+// Fixed function to get all available feedback periods with employee details
+getAvailableFeedbackPeriods: async function(req, res) {
+    const currentUserId = req.session?.user?.userId;
+    
+    if (!currentUserId) {
+        return res.status(401).json({
+            success: false,
+            message: 'Authentication required'
+        });
+    }
+    
+    try {
+        console.log(`[${new Date().toISOString()}] Fetching available feedback periods for line manager: ${currentUserId}`);
+        
+        // Get today's date in Philippines timezone
+        const today = new Date();
+        const options = { timeZone: 'Asia/Manila', year: 'numeric', month: '2-digit', day: '2-digit' };
+        const formatter = new Intl.DateTimeFormat('en-US', options);
+        const parts = formatter.formatToParts(today);
+        const todayString = `${parts.find(part => part.type === 'year').value}-${parts.find(part => part.type === 'month').value}-${parts.find(part => part.type === 'day').value}`;
+        
+        console.log(`Today's date (PHT): ${todayString}`);
+        
+        // Get current user's department
+        const { data: userData, error: userError } = await supabase
+            .from('staffaccounts')
+            .select(`
+                departmentId,
+                firstName,
+                lastName,
+                departments (deptName)
+            `)
+            .eq('userId', currentUserId)
+            .single();
+            
+        if (userError || !userData) {
+            console.error("Error fetching user data:", userError);
+            return res.status(500).json({
+                success: false,
+                message: 'Error fetching user information'
+            });
+        }
+        
+        const departmentId = userData.departmentId;
+        console.log(`Line manager: ${userData.firstName} ${userData.lastName}`);
+        console.log(`Department: ${userData.departments?.deptName} (ID: ${departmentId})`);
+        
+        const feedbackTables = ['feedbacks_Q1', 'feedbacks_Q2', 'feedbacks_Q3', 'feedbacks_Q4'];
+        const allPeriods = [];
+        
+        for (const feedbackTable of feedbackTables) {
+            try {
+                const quarter = feedbackTable.split('_')[1];
+                const quarterNum = quarter.substring(1);
+                const idField = `feedbackq${quarterNum}_Id`;
+                
+                console.log(`\n=== Processing ${quarter} ===`);
+                
+                // Check if table exists
+                const { error: tableCheckError } = await supabase
+                    .from(feedbackTable)
+                    .select('count')
+                    .limit(1);
+                    
+                if (tableCheckError && tableCheckError.code === '42P01') {
+                    console.log(`Table ${feedbackTable} does not exist yet, skipping`);
+                    continue;
+                }
+                
+                // Get all feedback records for employees in the same department
+                const { data: feedbackRecords, error: feedbackError } = await supabase
+                    .from(feedbackTable)
+                    .select(`
+                        ${idField},
+                        userId,
+                        setStartDate,
+                        setEndDate,
+                        quarter,
+                        year,
+                        created_at,
+                        staffaccounts!inner (
+                            firstName,
+                            lastName,
+                            departmentId,
+                            jobpositions (jobTitle)
+                        )
+                    `)
+                    .eq('staffaccounts.departmentId', departmentId)
+                    .neq('userId', currentUserId) // Exclude the line manager themselves
+                    .order('setStartDate', { ascending: true });
+                    
+                if (feedbackError) {
+                    console.error(`Error fetching feedback records from ${feedbackTable}:`, feedbackError);
+                    continue;
+                }
+                
+                if (!feedbackRecords || feedbackRecords.length === 0) {
+                    console.log(`No feedback records found in ${quarter} for department ${departmentId}`);
+                    continue;
+                }
+                
+                console.log(`Found ${feedbackRecords.length} feedback records in ${quarter}`);
+                
+                // Group records by period (start/end dates)
+                const periodGroups = {};
+                
+                feedbackRecords.forEach(record => {
+                    const periodKey = `${record.setStartDate}-${record.setEndDate}`;
+                    
+                    if (!periodGroups[periodKey]) {
+                        periodGroups[periodKey] = {
+                            startDate: record.setStartDate,
+                            endDate: record.setEndDate,
+                            quarter: quarter,
+                            year: record.year,
+                            employees: []
+                        };
+                    }
+                    
+                    // Check if this employee has complete feedback data
+                    periodGroups[periodKey].employees.push({
+                        userId: record.userId,
+                        feedbackId: record[idField],
+                        firstName: record.staffaccounts?.firstName,
+                        lastName: record.staffaccounts?.lastName,
+                        jobTitle: record.staffaccounts?.jobpositions?.jobTitle || 'Employee',
+                        fullName: `${record.staffaccounts?.lastName}, ${record.staffaccounts?.firstName}`,
+                        hasCompleteData: false, // Will be checked later
+                        feedbackSubmitted: false // Will be checked later
+                    });
+                });
+                
+                // For each period group, check which employees have complete feedback data
+                for (const [periodKey, periodData] of Object.entries(periodGroups)) {
+                    console.log(`\nChecking period: ${periodData.startDate} to ${periodData.endDate}`);
+                    
+                    const employeesWithCompleteData = [];
+                    
+                    for (const employee of periodData.employees) {
+                        console.log(`  Checking employee: ${employee.fullName} (ID: ${employee.userId})`);
+                        
+                        // Check if employee has objectives
+                        const { data: objectivesData, error: objectivesError } = await supabase
+                            .from('feedbacks_questions-objectives')
+                            .select('feedback_qObjectivesId')
+                            .eq(idField, employee.feedbackId);
+                            
+                        // Check if employee has skills
+                        const { data: skillsData, error: skillsError } = await supabase
+                            .from('feedbacks_questions-skills')
+                            .select('feedback_qSkillsId')
+                            .eq(idField, employee.feedbackId);
+                            
+                        const hasObjectives = !objectivesError && objectivesData && objectivesData.length > 0;
+                        const hasSkills = !skillsError && skillsData && skillsData.length > 0;
+                        const hasCompleteData = hasObjectives && hasSkills;
+                        
+                        console.log(`    Objectives: ${hasObjectives ? '✅' : '❌'} (${objectivesData?.length || 0})`);
+                        console.log(`    Skills: ${hasSkills ? '✅' : '❌'} (${skillsData?.length || 0})`);
+                        console.log(`    Complete: ${hasCompleteData ? '✅' : '❌'}`);
+                        
+                        if (hasCompleteData) {
+                            // Check if line manager has already submitted feedback for this employee
+                            const { data: submittedFeedback, error: submittedError } = await supabase
+                                .from('feedbacks_answers')
+                                .select('feedbackId_answerId')
+                                .eq(idField, employee.feedbackId)
+                                .eq('reviewerUserId', currentUserId) // Check if THIS line manager submitted
+                                .eq('userId', employee.userId) // For this specific employee
+                                .limit(1);
+                                
+                            const feedbackSubmitted = !submittedError && submittedFeedback && submittedFeedback.length > 0;
+                            
+                            console.log(`    Feedback submitted by line manager: ${feedbackSubmitted ? '✅' : '❌'}`);
+                            
+                            employeesWithCompleteData.push({
+                                ...employee,
+                                hasCompleteData: true,
+                                feedbackSubmitted: feedbackSubmitted,
+                                objectivesCount: objectivesData?.length || 0,
+                                skillsCount: skillsData?.length || 0
+                            });
+                        }
+                    }
+                    
+                    if (employeesWithCompleteData.length > 0) {
+                        // Calculate period status
+                        const startDate = new Date(periodData.startDate);
+                        const endDate = new Date(periodData.endDate);
+                        const todayDate = new Date(todayString);
+                        
+                        let status = 'upcoming';
+                        let daysRemaining = null;
+                        
+                        if (todayDate >= startDate && todayDate <= endDate) {
+                            status = 'active';
+                            daysRemaining = Math.ceil((endDate - todayDate) / (1000 * 60 * 60 * 24));
+                        } else if (todayDate > endDate) {
+                            status = 'expired';
+                        } else {
+                            daysRemaining = Math.ceil((startDate - todayDate) / (1000 * 60 * 60 * 24));
+                        }
+                        
+                        // Count completed vs total
+                        const completedCount = employeesWithCompleteData.filter(emp => emp.feedbackSubmitted).length;
+                        const totalCount = employeesWithCompleteData.length;
+                        
+                        allPeriods.push({
+                            quarter: quarter,
+                            startDate: periodData.startDate,
+                            endDate: periodData.endDate,
+                            year: periodData.year,
+                            status: status,
+                            daysRemaining: daysRemaining,
+                            employees: employeesWithCompleteData,
+                            participantCount: totalCount,
+                            completedCount: completedCount,
+                            completionPercentage: totalCount > 0 ? Math.round((completedCount / totalCount) * 100) : 0,
+                            formattedStartDate: startDate.toLocaleDateString('en-US', {
+                                weekday: 'short',
+                                year: 'numeric',
+                                month: 'short',
+                                day: 'numeric'
+                            }),
+                            formattedEndDate: endDate.toLocaleDateString('en-US', {
+                                weekday: 'short',
+                                year: 'numeric',
+                                month: 'short',
+                                day: 'numeric'
+                            })
+                        });
+                        
+                        console.log(`  ✅ Added period with ${totalCount} employees (${completedCount} completed)`);
+                    }
+                }
+                
+            } catch (tableError) {
+                console.error(`Error processing ${feedbackTable}:`, tableError);
+                continue;
+            }
+        }
+        
+        // Sort periods: active first, then by start date
+        allPeriods.sort((a, b) => {
+            if (a.status === 'active' && b.status !== 'active') return -1;
+            if (b.status === 'active' && a.status !== 'active') return 1;
+            return new Date(a.startDate) - new Date(b.startDate);
+        });
+        
+        console.log(`\n📊 FINAL SUMMARY:`);
+        console.log(`Total periods found: ${allPeriods.length}`);
+        allPeriods.forEach((period, index) => {
+            console.log(`  ${index + 1}. ${period.quarter} ${period.year}: ${period.completedCount}/${period.participantCount} completed (${period.status})`);
+        });
+        
+        return res.json({
+            success: true,
+            periods: allPeriods,
+            todayDate: todayString,
+            lineManager: {
+                name: `${userData.firstName} ${userData.lastName}`,
+                department: userData.departments?.deptName
+            }
+        });
+        
+    } catch (error) {
+        console.error('Error in getAvailableFeedbackPeriods:', error);
+        return res.status(500).json({
+            success: false,
+            message: 'An error occurred while fetching feedback periods.',
+            error: error.message
+        });
+    }
+},
+
 generatePDFReport: async function(data) {
         return new Promise((resolve, reject) => {
             try {

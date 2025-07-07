@@ -295,7 +295,7 @@ router.get('/linemanager/get-feedback-questionnaire/:userId', lineManagerControl
 router.post('/linemanager/save-feedback-questionnaire/:userId', lineManagerController.save360Questionnaire);
 
 // get responserate
-// router.get('/linemanager/check-department-response-rate/:userId', lineManagerController.checkDepartmentResponseRate);
+router.get('/linemanager/check-department-response-rate/:userId', lineManagerController.checkDepartmentResponseRate);
 
 router.post('/linemanager/records-performance-tracker/questionnaire/:userId', lineManagerController.save360Questionnaire);
 router.post('/linemanager/offboarding/update', lineManagerController.updateOffboardingRequest);
@@ -370,9 +370,9 @@ router.get('/employee/api/get360Feedback', employeeController.get360FeedbackToas
 
 router.get('/employee/staffFeedbackList', employeeController.staffFeedbackList);
 router.get('/employee/api/getQuestionnaireData', employeeController.getQuestionnaireData);
-router.get('/api/getQuestionnaireData', employeeController.getQuestionnaireData);
 router.post('/employee/api/submitFeedback', employeeController.submitFeedback);
 router.get('/employee/api/checkFeedbackStatus', employeeController.checkFeedbackStatus);
+router.get('/employee/api/getAvailableFeedbackPeriods', employeeController.getAvailableFeedbackPeriods);
 
 router.get('/api/linemanager/notifications', lineManagerController.getLineManagerNotifications);
 router.get('/api/get360FeedbackToast', lineManagerController.get360FeedbackToast);
@@ -381,6 +381,7 @@ router.get('/linemanager/staffFeedbackList', lineManagerController.staffFeedback
 router.get('/linemanager/api/checkFeedbackStatus', lineManagerController.checkFeedbackStatus);
 router.get('/linemanager/api/getQuestionnaireData', lineManagerController.getQuestionnaireData);
 router.post('/linemanager/api/submitFeedback', lineManagerController.submitFeedback);
+router.get('/linemanager/api/getAvailableFeedbackPeriods', lineManagerController.getAvailableFeedbackPeriods);
 
 
 router.use((error, req, res, next) => {

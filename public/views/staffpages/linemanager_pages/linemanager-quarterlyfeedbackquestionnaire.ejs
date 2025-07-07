@@ -8,8 +8,6 @@
     <link rel="stylesheet" href="/css/recordsandperformancetracker.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
     <style>
-
-
         /* Global font styling */
         body, button, input, select, textarea {
             font-family: 'Inter', sans-serif;
@@ -76,6 +74,8 @@
             box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
             overflow: hidden;
             transition: box-shadow 0.3s ease;
+            background-color: white;
+            margin-bottom: 24px;
         }
         
         .card:hover {
@@ -92,6 +92,11 @@
             font-weight: 600;
             color: #1e40af;
             font-size: 1.1rem;
+            margin: 0;
+        }
+        
+        .card-content {
+            padding: 16px;
         }
         
         /* Better table styling */
@@ -200,7 +205,6 @@
             transition: width 0.6s cubic-bezier(0.4, 0, 0.2, 1);
         }
 
-
         /* Select dropdown styling */
         .staff-select-container {
             margin-bottom: 24px;
@@ -221,63 +225,12 @@
             padding: 8px;
         }
         
-        .status-indicator {
-            margin-top: 10px;
-            padding: 12px 16px;
-            border-radius: 8px;
-            font-weight: 500;
-            display: flex;
-            align-items: center;
-            box-shadow: 0 2px 4px rgba(0,0,0,0.05);
-        }
-        
-        .status-indicator i {
-            margin-right: 8px;
-        }
-        
-        .status-pending {
-            background-color: #fff4e5;
-            color: #e67e22;
-            border-left: 4px solid #e67e22;
-        }
-        
-        .status-submitted {
-            background-color: #e7f5e8;
-            color: #27ae60;
-            border-left: 4px solid #27ae60;
-        }
-        
         .submission-info {
             margin-top: 8px;
             display: flex;
             justify-content: space-between;
             font-size: 0.85rem;
             color: #666;
-        }
-        
-        /* Card styling */
-        .card {
-            background-color: white;
-            border-radius: 8px;
-            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-            overflow: hidden;
-            margin-bottom: 24px;
-        }
-        
-        .card-header {
-            padding: 16px;
-            border-bottom: 1px solid #eaeaea;
-            background-color: #f9f9f9;
-        }
-        
-        .card-title {
-            margin: 0;
-            font-size: 1.2rem;
-            color: #124A5C;
-        }
-        
-        .card-content {
-            padding: 16px;
         }
         
         /* Responsive grid */
@@ -330,336 +283,311 @@
         .rating:hover > input:checked ~ label:before {
             opacity: 0.4;
         }
-        
-        /* Additional styles to match your template */
-        .bg-blue-50 {
-            background-color: #f0f7ff;
-        }
-        
-        .text-gray-500 {
-            color: #6b7280;
-        }
-        
-        .text-center {
-            text-align: center;
-        }
-        
-        .text-green-600 {
-            color: #16a34a;
-        }
-        
-        .text-green-700 {
-            color: #15803d;
-        }
-        
-        .text-gray-900 {
-            color: #111827;
-        }
-        
-        .bg-gray-50 {
-            background-color: #f9fafb;
-        }
-        
-        .bg-green-100 {
-            background-color: #dcfce7;
-        }
-        
-        .border {
+
+        /* Feedback Periods Styling */
+        .periods-container {
+            max-height: 400px;
+            overflow-y: auto;
             border: 1px solid #e5e7eb;
-        }
-        
-        .border-green-400 {
-            border-color: #4ade80;
-        }
-        
-        .border-red-400 {
-            border-color: #f87171;
-        }
-        
-        .bg-red-100 {
-            background-color: #fee2e2;
-        }
-        
-        .text-red-700 {
-            color: #b91c1c;
-        }
-        
-        .rounded {
-            border-radius: 0.25rem;
-        }
-        
-        .rounded-lg {
             border-radius: 0.5rem;
         }
         
-        .rounded-md {
-            border-radius: 0.375rem;
-        }
-        
-        .p-2 {
-            padding: 0.5rem;
-        }
-        
-        .p-4 {
+        .period-item {
             padding: 1rem;
+            border-bottom: 1px solid #f3f4f6;
+            transition: background-color 0.2s ease;
         }
         
-        .p-6 {
-            padding: 1.5rem;
+        .period-item:last-child {
+            border-bottom: none;
         }
         
-        .p-8 {
-            padding: 2rem;
+        .period-item:hover {
+            background-color: #f9fafb;
         }
         
-        .px-3 {
-            padding-left: 0.75rem;
-            padding-right: 0.75rem;
-        }
-        
-        .px-4 {
-            padding-left: 1rem;
-            padding-right: 1rem;
-        }
-        
-        .px-6 {
-            padding-left: 1.5rem;
-            padding-right: 1.5rem;
-        }
-        
-        .py-2 {
-            padding-top: 0.5rem;
-            padding-bottom: 0.5rem;
-        }
-        
-        .py-3 {
-            padding-top: 0.75rem;
-            padding-bottom: 0.75rem;
-        }
-        
-        .py-4 {
-            padding-top: 1rem;
-            padding-bottom: 1rem;
-        }
-        
-        .mb-1 {
-            margin-bottom: 0.25rem;
-        }
-        
-        .mb-2 {
+        .period-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
             margin-bottom: 0.5rem;
         }
         
-        .mb-4 {
-            margin-bottom: 1rem;
-        }
-        
-        .mb-6 {
-            margin-bottom: 1.5rem;
-        }
-        
-        .mb-8 {
-            margin-bottom: 2rem;
-        }
-        
-        .mt-2 {
-            margin-top: 0.5rem;
-        }
-        
-        .mt-4 {
-            margin-top: 1rem;
-        }
-        
-        .mt-6 {
-            margin-top: 1.5rem;
-        }
-        
-        .mr-2 {
-            margin-right: 0.5rem;
-        }
-        
-        .ml-2 {
-            margin-left: 0.5rem;
-        }
-        
-        .my-6 {
-            margin-top: 1.5rem;
-            margin-bottom: 1.5rem;
-        }
-        
-        .text-xs {
-            font-size: 0.75rem;
-        }
-        
-        .text-sm {
-            font-size: 0.875rem;
-        }
-        
-        .text-xl {
-            font-size: 1.25rem;
-        }
-        
-        .text-3xl {
-            font-size: 1.875rem;
-        }
-        
-        .font-medium {
-            font-weight: 500;
-        }
-        
-        .font-semibold {
+        .period-quarter {
             font-weight: 600;
+            font-size: 1.1rem;
+            color: #1e40af;
         }
         
-        .font-bold {
-            font-weight: 700;
-        }
-        
-        .uppercase {
+        .period-status {
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.75rem;
+            font-weight: 500;
             text-transform: uppercase;
-        }
-        
-        .tracking-wider {
             letter-spacing: 0.05em;
         }
         
-        .whitespace-nowrap {
-            white-space: nowrap;
+        .status-active {
+            background-color: #dcfce7;
+            color: #16a34a;
         }
         
-        .text-blue-900 {
-            color: #1e3a8a;
+        .status-upcoming {
+            background-color: #dbeafe;
+            color: #2563eb;
         }
         
-        .bg-blue-600 {
-            background-color: #2563eb;
+        .status-expired {
+            background-color: #fee2e2;
+            color: #dc2626;
         }
         
-        .hover\:bg-blue-700:hover {
-            background-color: #1d4ed8;
+        .period-dates {
+            font-size: 0.875rem;
+            color: #6b7280;
+            margin-bottom: 0.5rem;
         }
         
-        .flex {
+        .period-info {
             display: flex;
-        }
-        
-        .flex-1 {
-            flex: 1 1 0%;
-        }
-        
-        .flex-col {
-            flex-direction: column;
-        }
-        
-        .items-center {
+            justify-content: space-between;
             align-items: center;
+            font-size: 0.875rem;
+            color: #6b7280;
         }
         
-        .justify-center {
-            justify-content: center;
+        .period-progress {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
         }
         
-        .justify-end {
-            justify-content: flex-end;
+        .period-countdown {
+            font-weight: 500;
+            color: #f59e0b;
         }
         
-        .gap-4 {
-            gap: 1rem;
+        .period-countdown.urgent {
+            color: #dc2626;
+        }
+
+        /* Questionnaire periods section styling */
+        .questionnaire-periods {
+            background-color: #f8fafc;
+            border: 1px solid #e2e8f0;
+            border-radius: 0.75rem;
+            padding: 1.5rem;
+            margin-bottom: 1.5rem;
         }
         
-        .gap-6 {
-            gap: 1.5rem;
+        .questionnaire-periods h4 {
+            color: #1e40af;
+            font-weight: 600;
+            margin-bottom: 1rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
         }
         
-        .space-y-2 > * + * {
+        .period-card {
+            background: white;
+            border: 1px solid #e5e7eb;
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 0.75rem;
+            transition: all 0.2s ease;
+        }
+        
+        .period-card:hover {
+            border-color: #3b82f6;
+            box-shadow: 0 2px 4px rgba(59, 130, 246, 0.1);
+        }
+        
+        .period-card:last-child {
+            margin-bottom: 0;
+        }
+        
+        .period-notification {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            padding: 0.75rem;
+            border-radius: 0.5rem;
             margin-top: 0.5rem;
+            font-size: 0.875rem;
         }
         
-        .grid-cols-1 {
-            grid-template-columns: repeat(1, minmax(0, 1fr));
+        .notification-upcoming {
+            background-color: #dbeafe;
+            color: #1e40af;
+            border-left: 4px solid #3b82f6;
         }
         
-        .grid-cols-2 {
-            grid-template-columns: repeat(2, minmax(0, 1fr));
+        .notification-active {
+            background-color: #dcfce7;
+            color: #16a34a;
+            border-left: 4px solid #22c55e;
         }
         
-        .divide-y > * + * {
-            border-top-width: 1px;
+        .notification-deadline {
+            background-color: #fef3c7;
+            color: #d97706;
+            border-left: 4px solid #f59e0b;
         }
         
-        .divide-gray-200 > * + * {
-            border-color: #e5e7eb;
+        .notification-urgent {
+            background-color: #fee2e2;
+            color: #dc2626;
+            border-left: 4px solid #ef4444;
+        }
+
+        /* Active periods special styling */
+        .active-periods-section {
+            margin-bottom: 1.5rem;
         }
         
-        .border-gray-200 {
-            border-color: #e5e7eb;
+        .active-period {
+            background-color: #f0fdf4 !important;
+            border: 2px solid #22c55e;
+            border-radius: 0.75rem;
+            box-shadow: 0 4px 6px -1px rgba(34, 197, 94, 0.1);
         }
         
-        .border-dashed {
-            border-style: dashed;
+        .active-period:hover {
+            background-color: #ecfdf5 !important;
+            box-shadow: 0 10px 15px -3px rgba(34, 197, 94, 0.2);
         }
         
-        .border-gray-300 {
-            border-color: #d1d5db;
+        .available-employees {
+            border-top: 1px solid #d1fae5;
+            padding-top: 0.75rem;
         }
         
-        .overflow-x-auto {
-            overflow-x: auto;
+        .employee-list {
+            max-height: 120px;
+            overflow-y: auto;
         }
         
-        .min-w-full {
-            min-width: 100%;
+        .employee-tag {
+            transition: all 0.2s ease;
+            border: 1px solid #bfdbfe;
         }
         
-        .h-full {
-            height: 100%;
+        .employee-tag:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 2px 4px rgba(59, 130, 246, 0.2);
         }
         
-        .w-full {
-            width: 100%;
+        .other-periods-section {
+            opacity: 0.8;
         }
         
-        .animate-spin {
-            animation: spin 1s linear infinite;
+        .other-periods-section .period-item {
+            background-color: #f8fafc;
         }
-        
-        @keyframes spin {
-            from {
-                transform: rotate(0deg);
-            }
-            to {
-                transform: rotate(360deg);
-            }
-        }
-        
-        .w-12 {
-            width: 3rem;
-        }
-        
-        .h-12 {
-            height: 3rem;
-        }
-        
-        .border-4 {
-            border-width: 4px;
-        }
-        
-        .border-t-4 {
-            border-top-width: 4px;
-        }
-        
-        .border-t-blue-500 {
-            border-top-color: #3b82f6;
-        }
-        
-        .border-gray-200 {
-            border-color: #e5e7eb;
-        }
-        
-        .rounded-full {
-            border-radius: 9999px;
-        }
-        
+
+        /* Additional utility classes matching existing style */
+        .bg-blue-50 { background-color: #f0f7ff; }
+        .text-gray-500 { color: #6b7280; }
+        .text-center { text-align: center; }
+        .text-green-600 { color: #16a34a; }
+        .text-green-700 { color: #15803d; }
+        .text-gray-900 { color: #111827; }
+        .bg-gray-50 { background-color: #f9fafb; }
+        .bg-green-100 { background-color: #dcfce7; }
+        .border { border: 1px solid #e5e7eb; }
+        .border-green-400 { border-color: #4ade80; }
+        .border-red-400 { border-color: #f87171; }
+        .bg-red-100 { background-color: #fee2e2; }
+        .text-red-700 { color: #b91c1c; }
+        .rounded { border-radius: 0.25rem; }
+        .rounded-lg { border-radius: 0.5rem; }
+        .rounded-md { border-radius: 0.375rem; }
+        .p-2 { padding: 0.5rem; }
+        .p-4 { padding: 1rem; }
+        .p-5 { padding: 1.25rem; }
+        .p-6 { padding: 1.5rem; }
+        .p-8 { padding: 2rem; }
+        .px-3 { padding-left: 0.75rem; padding-right: 0.75rem; }
+        .px-4 { padding-left: 1rem; padding-right: 1rem; }
+        .px-6 { padding-left: 1.5rem; padding-right: 1.5rem; }
+        .py-2 { padding-top: 0.5rem; padding-bottom: 0.5rem; }
+        .py-3 { padding-top: 0.75rem; padding-bottom: 0.75rem; }
+        .py-4 { padding-top: 1rem; padding-bottom: 1rem; }
+        .py-8 { padding-top: 2rem; padding-bottom: 2rem; }
+        .mb-1 { margin-bottom: 0.25rem; }
+        .mb-2 { margin-bottom: 0.5rem; }
+        .mb-3 { margin-bottom: 0.75rem; }
+        .mb-4 { margin-bottom: 1rem; }
+        .mb-6 { margin-bottom: 1.5rem; }
+        .mb-8 { margin-bottom: 2rem; }
+        .mt-1 { margin-top: 0.25rem; }
+        .mt-2 { margin-top: 0.5rem; }
+        .mt-4 { margin-top: 1rem; }
+        .mt-6 { margin-top: 1.5rem; }
+        .mt-8 { margin-top: 2rem; }
+        .mr-1 { margin-right: 0.25rem; }
+        .mr-2 { margin-right: 0.5rem; }
+        .mr-8 { margin-right: 2rem; }
+        .ml-2 { margin-left: 0.5rem; }
+        .ml-6 { margin-left: 1.5rem; }
+        .my-6 { margin-top: 1.5rem; margin-bottom: 1.5rem; }
+        .text-xs { font-size: 0.75rem; }
+        .text-sm { font-size: 0.875rem; }
+        .text-lg { font-size: 1.125rem; }
+        .text-xl { font-size: 1.25rem; }
+        .text-2xl { font-size: 1.5rem; }
+        .text-3xl { font-size: 1.875rem; }
+        .text-4xl { font-size: 2.25rem; }
+        .font-medium { font-weight: 500; }
+        .font-semibold { font-weight: 600; }
+        .font-bold { font-weight: 700; }
+        .uppercase { text-transform: uppercase; }
+        .tracking-wider { letter-spacing: 0.05em; }
+        .whitespace-nowrap { white-space: nowrap; }
+        .text-blue-900 { color: #1e3a8a; }
+        .bg-blue-600 { background-color: #2563eb; }
+        .hover\:bg-blue-700:hover { background-color: #1d4ed8; }
+        .flex { display: flex; }
+        .flex-1 { flex: 1 1 0%; }
+        .flex-col { flex-direction: column; }
+        .items-start { align-items: flex-start; }
+        .items-center { align-items: center; }
+        .justify-center { justify-content: center; }
+        .justify-end { justify-content: flex-end; }
+        .justify-between { justify-content: space-between; }
+        .gap-4 { gap: 1rem; }
+        .gap-6 { gap: 1.5rem; }
+        .space-y-1 > * + * { margin-top: 0.25rem; }
+        .space-y-2 > * + * { margin-top: 0.5rem; }
+        .grid-cols-1 { grid-template-columns: repeat(1, minmax(0, 1fr)); }
+        .grid-cols-2 { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+        .divide-y > * + * { border-top-width: 1px; }
+        .divide-gray-200 > * + * { border-color: #e5e7eb; }
+        .border-gray-200 { border-color: #e5e7eb; }
+        .border-gray-300 { border-color: #d1d5db; }
+        .border-yellow-300 { border-color: #fde047; }
+        .border-dashed { border-style: dashed; }
+        .overflow-x-auto { overflow-x: auto; }
+        .min-w-full { min-width: 100%; }
+        .h-full { height: 100%; }
+        .w-full { width: 100%; }
+        .animate-spin { animation: spin 1s linear infinite; }
+        @keyframes spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
+        .w-12 { width: 3rem; }
+        .h-12 { height: 3rem; }
+        .border-4 { border-width: 4px; }
+        .border-t-4 { border-top-width: 4px; }
+        .border-t-blue-500 { border-top-color: #3b82f6; }
+        .rounded-full { border-radius: 9999px; }
+        .mx-auto { margin-left: auto; margin-right: auto; }
+        .text-yellow-500 { color: #eab308; }
+        .text-gray-300 { color: #d1d5db; }
+        .text-gray-600 { color: #4b5563; }
+        .text-gray-700 { color: #374151; }
+        .bg-yellow-50 { background-color: #fefce8; }
+        .list-disc { list-style-type: disc; }
     </style>
 </head>
 <body>
@@ -689,75 +617,96 @@
                     </div>
                 </div>
             </div>
-<div id="no-quarter-data-message" class="card mt-4 bg-yellow-50 border border-yellow-300" style="display: none;">
-    <div class="card-content p-5">
-<div class="flex items-start">
-    <i class="fas fa-exclamation-circle text-yellow-500 text-2xl mr-8 p-2 mt-1"></i>
-    <div class="flex-1">
-        <h3 class="font-semibold text-lg mb-2">No Data Available</h3>
-                <p class="text-gray-700 mb-3">
-                    There are no 360° feedback questionnaires available for <span id="no-data-quarter" class="font-medium"></span>. This could mean:
-                </p>
-                <ul class="list-disc ml-6 mt-2 space-y-1 text-gray-700">
-                    <li>No feedback periods have been set up for this quarter</li>
-                    <li>No employees have objectives and skills data for this quarter</li>
-                </ul>
-            </div>
-        </div>
-    </div>
-</div>
 
-
-        </div>
-
-<div class="grid">
-    <!-- Quarter Select Dropdown -->
-    <div>
-<!-- Quarter Select Dropdown -->
-<div class="card mb-4">
-    <div class="card-header bg-blue-50">
-        <h2 class="card-title">Select Quarter</h2>
-    </div>
-    <div class="card-content">
-        <div class="staff-select-container">
-            <select id="quarter-dropdown" class="staff-dropdown">
-                <option value="Q1" <%= quarter === 'Q1' ? 'selected' : '' %>>Q1</option>
-                <option value="Q2" <%= quarter === 'Q2' ? 'selected' : '' %>>Q2</option>
-                <option value="Q3" <%= quarter === 'Q3' ? 'selected' : '' %>>Q3</option>
-                <option value="Q4" <%= quarter === 'Q4' ? 'selected' : '' %>>Q4</option>
-            </select>
-        </div>
-    </div>
-</div>
-    
-        <!-- Staff Members Select Dropdown -->
-        <div class="card">
-            <div class="card-header bg-blue-50">
-                <h2 class="card-title">Department Members</h2>
-            </div>
-            <div class="card-content">
-                <div class="staff-select-container">
-                    <select id="staff-dropdown" class="staff-dropdown">
-                        <option value="">-- Select a department member --</option>
-                        <% staffList.forEach(function(member) { %>
-                            <option value="<%= member.userId %>" 
-                                data-name="<%= member.lastName %>, <%= member.firstName %>"
-                                data-job="<%= member.jobTitle %>"
-                                data-quarters="<%= JSON.stringify(member.availableQuarters || {}) %>">
-                                <%= member.lastName %>, <%= member.firstName %> - <%= member.jobTitle %>
-                            </option>
-                        <% }); %>
-                    </select>
+            <!-- Available Feedback Periods -->
+            <div class="card mt-4">
+                <div class="card-header bg-blue-50">
+                    <h2 class="card-title">
+                        <i class="fas fa-calendar-alt mr-2"></i>
+                        Available Feedback Periods
+                    </h2>
                 </div>
-                
-                <!-- Status indicator - Initially hidden -->
-                <div id="status-indicator" style="display: none;"></div>
+                <div class="card-content">
+                    <div id="periods-loading" class="text-center py-4">
+                        <div class="w-12 h-12 border-4 border-t-4 border-t-blue-500 border-gray-200 rounded-full animate-spin mx-auto"></div>
+                        <p class="mt-2 text-gray-600">Loading feedback periods...</p>
+                    </div>
+                    <div id="periods-container" class="periods-container" style="display: none;">
+                        <!-- Periods will be loaded here -->
+                    </div>
+                    <div id="no-periods-message" class="text-center py-8 text-gray-500" style="display: none;">
+                        <i class="fas fa-calendar-times text-4xl mb-4 text-gray-300"></i>
+                        <p>No feedback periods available at this time.</p>
+                    </div>
+                </div>
+            </div>
+
+            <div id="no-quarter-data-message" class="card mt-4 bg-yellow-50 border border-yellow-300" style="display: none;">
+                <div class="card-content p-5">
+                    <div class="flex items-start">
+                        <i class="fas fa-exclamation-circle text-yellow-500 text-2xl mr-8 p-2 mt-1"></i>
+                        <div class="flex-1">
+                            <h3 class="font-semibold text-lg mb-2">No Data Available</h3>
+                            <p class="text-gray-700 mb-3">
+                                There are no 360° feedback questionnaires available for <span id="no-data-quarter" class="font-medium"></span>. This could mean:
+                            </p>
+                            <ul class="list-disc ml-6 mt-2 space-y-1 text-gray-700">
+                                <li>No feedback periods have been set up for this quarter</li>
+                                <li>No employees have objectives and skills data for this quarter</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
             </div>
         </div>
-    </div>
 
-    <!-- Questionnaire Form -->
-    <div id="questionnaire-container">
+        <div class="grid">
+            <!-- Quarter Select Dropdown -->
+            <div>
+                <div class="card mb-4">
+                    <div class="card-header bg-blue-50">
+                        <h2 class="card-title">Select Quarter</h2>
+                    </div>
+                    <div class="card-content">
+                        <div class="staff-select-container">
+                            <select id="quarter-dropdown" class="staff-dropdown">
+                                <option value="Q1" <%= quarter === 'Q1' ? 'selected' : '' %>>Q1</option>
+                                <option value="Q2" <%= quarter === 'Q2' ? 'selected' : '' %>>Q2</option>
+                                <option value="Q3" <%= quarter === 'Q3' ? 'selected' : '' %>>Q3</option>
+                                <option value="Q4" <%= quarter === 'Q4' ? 'selected' : '' %>>Q4</option>
+                            </select>
+                        </div>
+                    </div>
+                </div>
+        
+                <!-- Staff Members Select Dropdown -->
+                <div class="card">
+                    <div class="card-header bg-blue-50">
+                        <h2 class="card-title">Department Members</h2>
+                    </div>
+                    <div class="card-content">
+                        <div class="staff-select-container">
+                            <select id="staff-dropdown" class="staff-dropdown">
+                                <option value="">-- Select a department member --</option>
+                                <% staffList.forEach(function(member) { %>
+                                    <option value="<%= member.userId %>" 
+                                        data-name="<%= member.lastName %>, <%= member.firstName %>"
+                                        data-job="<%= member.jobTitle %>"
+                                        data-quarters="<%= JSON.stringify(member.availableQuarters || {}) %>">
+                                        <%= member.lastName %>, <%= member.firstName %> - <%= member.jobTitle %>
+                                    </option>
+                                <% }); %>
+                            </select>
+                        </div>
+                        
+                        <!-- Status indicator - Initially hidden -->
+                        <div id="status-indicator" style="display: none;"></div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Questionnaire Form -->
+            <div id="questionnaire-container">
                 <div class="h-full flex items-center justify-center bg-gray-50 rounded-lg p-8 border border-dashed border-gray-300">
                     <p class="text-gray-500 text-center">Select a department member to begin the 360 feedback process</p>
                 </div>
@@ -781,41 +730,363 @@ document.addEventListener('DOMContentLoaded', function() {
     
     let activeQuarter = '<%= quarter %>';
     let selectedMemberId = null;
-    let submittedFeedbacks = {}; // Will store the userId of members with submitted feedback
+    let submittedFeedbacks = {};
     let totalCompleted = 0;
+    
+    // Load feedback periods function
+    async function loadFeedbackPeriods() {
+        console.log('🔍 Starting loadFeedbackPeriods...');
+        
+        const periodsLoading = document.getElementById('periods-loading');
+        const periodsContainer = document.getElementById('periods-container');
+        const noPeriodsMessage = document.getElementById('no-periods-message');
+        
+        try {
+            console.log('📡 Making API call to /linemanager/api/getAvailableFeedbackPeriods');
+            
+            const response = await fetch('/linemanager/api/getAvailableFeedbackPeriods');
+            
+            console.log('📡 Response status:', response.status);
+            console.log('📡 Response ok:', response.ok);
+            
+            if (!response.ok) {
+                throw new Error(`HTTP error! status: ${response.status}`);
+            }
+            
+            const data = await response.json();
+            console.log('📊 Received data:', data);
+            
+            periodsLoading.style.display = 'none';
+            
+            if (data.success && data.periods && data.periods.length > 0) {
+                console.log(`✅ Found ${data.periods.length} periods`);
+                periodsContainer.style.display = 'block';
+                noPeriodsMessage.style.display = 'none';
+                
+                // Separate active and non-active periods
+                const activePeriods = data.periods.filter(period => period.status === 'active');
+                const otherPeriods = data.periods.filter(period => period.status !== 'active');
+                
+                console.log(`📊 Active periods: ${activePeriods.length}, Other periods: ${otherPeriods.length}`);
+                
+                let periodsHTML = '';
+                
+                // Display active periods first with special styling
+                if (activePeriods.length > 0) {
+                    periodsHTML += `
+                        <div class="active-periods-section">
+                            <h4 class="text-lg font-semibold text-green-700 mb-3 flex items-center">
+                                <i class="fas fa-play-circle mr-2"></i>
+                                Active Questionnaires - Action Required!
+                            </h4>
+                    `;
+                    
+                    activePeriods.forEach(period => {
+                        console.log(`📋 Processing active period: ${period.quarter}`, period);
+                        
+                        const urgentClass = period.daysRemaining <= 3 ? 'urgent' : '';
+                        
+                        // Generate employee list
+                        let employeeListHTML = '';
+                        if (period.employees && period.employees.length > 0) {
+                            const pendingEmployees = period.employees.filter(emp => !emp.feedbackSubmitted);
+                            const completedEmployees = period.employees.filter(emp => emp.feedbackSubmitted);
+                            
+                            console.log(`  👥 Employees - Pending: ${pendingEmployees.length}, Completed: ${completedEmployees.length}`);
+                            
+                            if (pendingEmployees.length > 0) {
+                                employeeListHTML += `
+                                    <div class="available-employees mt-3">
+                                        <p class="text-sm font-medium text-red-700 mb-2">
+                                            <i class="fas fa-clock mr-1"></i>
+                                            Pending Feedback (${pendingEmployees.length}):
+                                        </p>
+                                        <div class="employee-list flex flex-wrap gap-2 mb-3">
+                                `;
+                                
+                                pendingEmployees.forEach(emp => {
+                                    employeeListHTML += `
+                                        <span class="employee-tag bg-orange-100 text-orange-800 px-3 py-1 rounded-full text-xs font-medium cursor-pointer hover:bg-orange-200 transition-colors border border-orange-300"
+                                              onclick="selectEmployee('${emp.userId}', '${emp.fullName}', '${period.quarter}')"
+                                              title="Click to provide feedback for ${emp.fullName}">
+                                            <i class="fas fa-user mr-1"></i>
+                                            ${emp.fullName} - ${emp.jobTitle}
+                                            <small class="ml-1 text-orange-600">(${emp.objectivesCount || 0} obj, ${emp.skillsCount || 0} skills)</small>
+                                        </span>
+                                    `;
+                                });
+                                
+                                employeeListHTML += `</div></div>`;
+                            }
+                            
+                            if (completedEmployees.length > 0) {
+                                employeeListHTML += `
+                                    <div class="completed-employees mt-3">
+                                        <p class="text-sm font-medium text-green-700 mb-2">
+                                            <i class="fas fa-check-circle mr-1"></i>
+                                            Completed Feedback (${completedEmployees.length}):
+                                        </p>
+                                        <div class="employee-list flex flex-wrap gap-2">
+                                `;
+                                
+                                completedEmployees.forEach(emp => {
+                                    employeeListHTML += `
+                                        <span class="employee-tag bg-green-100 text-green-800 px-3 py-1 rounded-full text-xs font-medium border border-green-300"
+                                              title="Feedback completed for ${emp.fullName}">
+                                            <i class="fas fa-check mr-1"></i>
+                                            ${emp.fullName} - ${emp.jobTitle}
+                                        </span>
+                                    `;
+                                });
+                                
+                                employeeListHTML += `</div></div>`;
+                            }
+                        } else {
+                            employeeListHTML = `
+                                <div class="mt-3">
+                                    <p class="text-sm text-gray-500 flex items-center">
+                                        <i class="fas fa-info-circle mr-1"></i>
+                                        No employees available for feedback in this period.
+                                    </p>
+                                </div>
+                            `;
+                        }
+                        
+                        periodsHTML += `
+                            <div class="period-item active-period border-l-4 border-green-500 bg-green-50">
+                                <div class="period-header">
+                                    <span class="period-quarter text-green-700">${period.quarter} ${period.year || ''}</span>
+                                    <span class="period-status status-active">
+                                        <i class="fas fa-circle mr-1"></i>Active
+                                    </span>
+                                </div>
+                                <div class="period-dates">
+                                    <i class="fas fa-calendar mr-1"></i>
+                                    ${period.formattedStartDate} - ${period.formattedEndDate}
+                                </div>
+                                <div class="period-info">
+                                    <div class="period-progress">
+                                        <i class="fas fa-chart-pie mr-1"></i>
+                                        Progress: ${period.completedCount}/${period.participantCount}
+                                        <span class="ml-2 text-xs bg-white px-2 py-1 rounded">
+                                            ${period.completionPercentage || 0}%
+                                        </span>
+                                    </div>
+                                    <span class="period-countdown ${urgentClass} flex items-center">
+                                        <i class="fas fa-clock mr-1"></i>
+                                        ${period.daysRemaining} day${period.daysRemaining !== 1 ? 's' : ''} remaining
+                                    </span>
+                                </div>
+                                ${employeeListHTML}
+                                <div class="mt-3 p-3 bg-white rounded border border-green-200">
+                                    <p class="text-sm text-green-700 font-medium">
+                                        ✅ ${period.quarter} questionnaires are active - ${period.daysRemaining} days remaining
+                                    </p>
+                                    ${period.daysRemaining <= 3 ? 
+                                        `<p class="text-xs text-orange-600 mt-1">
+                                            ⚠️ Deadline approaching! Please complete pending reviews soon.
+                                        </p>` : ''
+                                    }
+                                </div>
+                            </div>
+                        `;
+                    });
+                    
+                    periodsHTML += `</div>`;
+                    
+                    if (otherPeriods.length > 0) {
+                        periodsHTML += `<hr class="my-4 border-gray-300">`;
+                    }
+                }
+                
+                // Display other periods
+                if (otherPeriods.length > 0) {
+                    periodsHTML += `
+                        <div class="other-periods-section">
+                            <h4 class="text-md font-medium text-gray-600 mb-3">
+                                Other Feedback Periods
+                            </h4>
+                    `;
+                    
+                    otherPeriods.forEach(period => {
+                        console.log(`📋 Processing other period: ${period.quarter}`, period);
+                        
+                        let statusClass = '';
+                        let statusText = '';
+                        let countdownHTML = '';
+                        
+                        switch(period.status) {
+                            case 'upcoming':
+                                statusClass = 'status-upcoming';
+                                statusText = 'Upcoming';
+                                if (period.daysRemaining !== null) {
+                                    countdownHTML = `<span class="period-countdown">
+                                        <i class="fas fa-calendar-plus mr-1"></i>
+                                        Starts in ${period.daysRemaining} day${period.daysRemaining !== 1 ? 's' : ''}
+                                    </span>`;
+                                }
+                                break;
+                            case 'expired':
+                                statusClass = 'status-expired';
+                                statusText = 'Expired';
+                                break;
+                        }
+                        
+                        // Generate employee summary for other periods
+                        let employeeSummaryHTML = '';
+                        if (period.employees && period.employees.length > 0) {
+                            const completedCount = period.employees.filter(emp => emp.feedbackSubmitted).length;
+                            const totalCount = period.employees.length;
+                            
+                            employeeSummaryHTML = `
+                                <div class="mt-2 text-xs text-gray-600">
+                                    <i class="fas fa-users mr-1"></i>
+                                    Employees: ${totalCount} | Completed by you: ${completedCount}
+                                </div>
+                            `;
+                            
+                            // Show employee names in a collapsed format
+                            const employeeNames = period.employees.map(emp => emp.fullName).join(', ');
+                            if (employeeNames.length > 100) {
+                                const truncated = employeeNames.substring(0, 100) + '...';
+                                employeeSummaryHTML += `
+                                    <div class="mt-1 text-xs text-gray-500" title="${employeeNames}">
+                                        ${truncated}
+                                    </div>
+                                `;
+                            } else {
+                                employeeSummaryHTML += `
+                                    <div class="mt-1 text-xs text-gray-500">
+                                        ${employeeNames}
+                                    </div>
+                                `;
+                            }
+                        }
+                        
+                        periodsHTML += `
+                            <div class="period-item">
+                                <div class="period-header">
+                                    <span class="period-quarter">${period.quarter} ${period.year || ''}</span>
+                                    <span class="period-status ${statusClass}">${statusText}</span>
+                                </div>
+                                <div class="period-dates">
+                                    <i class="fas fa-calendar mr-1"></i>
+                                    ${period.formattedStartDate} - ${period.formattedEndDate}
+                                </div>
+                                <div class="period-info">
+                                    <div class="period-progress">
+                                        <i class="fas fa-chart-pie mr-1"></i>
+                                        Progress: ${period.completedCount}/${period.participantCount} (${period.completionPercentage || 0}%)
+                                    </div>
+                                    ${countdownHTML}
+                                </div>
+                                ${employeeSummaryHTML}
+                            </div>
+                        `;
+                    });
+                    
+                    periodsHTML += `</div>`;
+                }
+                
+                console.log('✅ Setting periods HTML');
+                periodsContainer.innerHTML = periodsHTML;
+                
+            } else {
+                console.log('❌ No periods found or success=false');
+                periodsContainer.style.display = 'none';
+                noPeriodsMessage.style.display = 'block';
+                
+                // Update the no periods message to be more helpful
+                noPeriodsMessage.innerHTML = `
+                    <i class="fas fa-calendar-times text-4xl mb-4 text-gray-300"></i>
+                    <p class="text-lg font-medium text-gray-600 mb-2">No feedback periods available</p>
+                    <p class="text-sm text-gray-500">There are currently no employees in your department with available feedback questionnaires.</p>
+                `;
+            }
+        } catch (error) {
+            console.error('❌ Error loading feedback periods:', error);
+            periodsLoading.style.display = 'none';
+            noPeriodsMessage.style.display = 'block';
+            noPeriodsMessage.innerHTML = `
+                <i class="fas fa-exclamation-triangle text-4xl mb-4 text-red-300"></i>
+                <p class="text-lg font-medium text-red-600 mb-2">Error loading feedback periods</p>
+                <p class="text-sm text-red-500">Error: ${error.message}</p>
+                <p class="text-xs text-red-400 mt-2">Check browser console for more details</p>
+            `;
+        }
+    }
+
+    // Updated selectEmployee function to handle quarter selection
+    window.selectEmployee = function(userId, employeeName, targetQuarter) {
+        console.log(`Selecting employee: ${employeeName} (${userId}) for quarter ${targetQuarter}`);
+        
+        // Set the quarter dropdown to match the target quarter
+        const quarterDropdown = document.getElementById('quarter-dropdown');
+        if (quarterDropdown && targetQuarter) {
+            quarterDropdown.value = targetQuarter;
+            
+            // Trigger quarter change if needed
+            if (quarterDropdown.value !== activeQuarter) {
+                window.location.href = `/linemanager/staffFeedbackList?quarter=${targetQuarter}&preselect=${userId}`;
+                return;
+            }
+        }
+        
+        // Set the dropdown to the selected employee
+        const staffDropdown = document.getElementById('staff-dropdown');
+        staffDropdown.value = userId;
+        
+        // Trigger the change event to load the questionnaire
+        const event = new Event('change', { bubbles: true });
+        staffDropdown.dispatchEvent(event);
+        
+        // Scroll to the questionnaire section
+        document.getElementById('questionnaire-container').scrollIntoView({ 
+            behavior: 'smooth',
+            block: 'start'
+        });
+        
+        // Show a brief highlight effect
+        setTimeout(() => {
+            const container = document.getElementById('questionnaire-container');
+            container.style.boxShadow = '0 0 20px rgba(59, 130, 246, 0.3)';
+            container.style.transition = 'box-shadow 0.3s ease';
+            
+            setTimeout(() => {
+                container.style.boxShadow = '';
+            }, 1500);
+        }, 500);
+    };
+    
+    // **CRITICAL: Call loadFeedbackPeriods when page loads**
+    console.log('🚀 Page loaded, calling loadFeedbackPeriods...');
+    loadFeedbackPeriods();
     
     // Check if the current quarter has data
     function checkIfQuarterHasData() {
-        // Count the number of department members available in dropdown
         const staffOptions = document.querySelectorAll('#staff-dropdown option:not(:first-child)');
         
         if (staffOptions.length === 0) {
-            // No data available for this quarter, show message
             noDataQuarterSpan.textContent = activeQuarter;
             noQuarterDataMessage.style.display = 'block';
             
-            // Hide the department members dropdown card
             const staffDropdownCard = staffDropdown.closest('.card');
             staffDropdownCard.style.display = 'none';
             
-            // Reset the questionnaire container
             questionnaireContainer.innerHTML = `
                 <div class="h-full flex items-center justify-center bg-gray-50 rounded-lg p-8 border border-dashed border-gray-300">
                     <p class="text-gray-500 text-center">No feedback data is available for ${activeQuarter}</p>
                 </div>
             `;
             
-            // Reset progress bar
             progressBar.style.width = '0%';
             progressText.textContent = '0 of 0 completed';
             progressPercentage.textContent = '0%';
             
             return false;
         } else {
-            // Data is available, hide the message
             noQuarterDataMessage.style.display = 'none';
             
-            // Show the department members dropdown card
             const staffDropdownCard = staffDropdown.closest('.card');
             staffDropdownCard.style.display = 'block';
             
@@ -823,14 +1094,12 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     }
     
-    // Run the check on page load
     checkIfQuarterHasData();
     
     // Handle quarter selection change
     quarterDropdown.addEventListener('change', function() {
         const newQuarter = this.value;
         
-        // Show loading state before redirection
         questionnaireContainer.innerHTML = `
             <div class="h-full flex items-center justify-center">
                 <div class="text-center">
@@ -840,14 +1109,13 @@ document.addEventListener('DOMContentLoaded', function() {
             </div>
         `;
         
-        // Redirect to same page with new quarter parameter
         window.location.href = `/linemanager/staffFeedbackList?quarter=${newQuarter}`;
     });
     
     // Function to update the department progress bar
     function updateProgressBar() {
         const staffOptions = document.querySelectorAll('#staff-dropdown option');
-        const total = staffOptions.length > 1 ? staffOptions.length - 1 : 0; // Exclude the placeholder option
+        const total = staffOptions.length > 1 ? staffOptions.length - 1 : 0;
         const percentage = total > 0 ? Math.round((totalCompleted / total) * 100) : 0;
         
         progressBar.style.width = `${percentage}%`;
@@ -862,15 +1130,9 @@ document.addEventListener('DOMContentLoaded', function() {
             const data = await response.json();
             
             if (data.success) {
-                // Update the global tracking object
                 submittedFeedbacks[userId] = data.submitted;
-                
-                // Count total completed
                 totalCompleted = Object.values(submittedFeedbacks).filter(Boolean).length;
-                
-                // Update progress bar
                 updateProgressBar();
-                
                 return data.submitted;
             }
             return false;
@@ -883,7 +1145,6 @@ document.addEventListener('DOMContentLoaded', function() {
     // Initialize feedback status checks for all members
     async function initializeFeedbackStatus() {
         if (!checkIfQuarterHasData()) {
-            // If no data for quarter, don't proceed with checks
             return;
         }
         
@@ -900,19 +1161,19 @@ document.addEventListener('DOMContentLoaded', function() {
             }
         }
         
-        // Update progress bar after checking all members
         totalCompleted = completedCount;
         updateProgressBar();
     }
     
-    // Call the initialization function
     initializeFeedbackStatus();
+    
+    // ... (rest of your existing code for staff dropdown, questionnaire rendering, etc.)
+    
     // Handle staff member selection
     staffDropdown.addEventListener('change', function() {
         selectedMemberId = this.value;
         
         if (!selectedMemberId) {
-            // Reset container if no selection
             questionnaireContainer.innerHTML = `
                 <div class="h-full flex items-center justify-center bg-gray-50 rounded-lg p-8 border border-dashed border-gray-300">
                     <p class="text-gray-500 text-center">Select a department member to begin the 360 feedback process</p>
@@ -922,15 +1183,12 @@ document.addEventListener('DOMContentLoaded', function() {
             return;
         }
         
-        // Get the selected option's data
         const selectedOption = this.options[this.selectedIndex];
         const memberName = selectedOption.getAttribute('data-name');
         const memberJob = selectedOption.getAttribute('data-job');
         
-        // Check if feedback has already been submitted for this member
         const isSubmitted = submittedFeedbacks[selectedMemberId];
         
-        // Update status indicator
         if (isSubmitted) {
             statusIndicator.className = 'status-indicator status-submitted';
             statusIndicator.innerHTML = `
@@ -946,7 +1204,6 @@ document.addEventListener('DOMContentLoaded', function() {
         }
         statusIndicator.style.display = 'flex';
         
-        // Show loading state
         questionnaireContainer.innerHTML = `
             <div class="h-full flex items-center justify-center">
                 <div class="text-center">
@@ -956,7 +1213,6 @@ document.addEventListener('DOMContentLoaded', function() {
             </div>
         `;
         
-        // Fetch questionnaire data
         fetch(`/linemanager/api/getQuestionnaireData?userId=${selectedMemberId}&quarter=${activeQuarter}`)
             .then(response => response.json())
             .then(data => {
@@ -974,516 +1230,589 @@ document.addEventListener('DOMContentLoaded', function() {
                 `;
             });
     });
-        // Function to render the questionnaire
-        function renderQuestionnaire(data, employeeName, jobTitle, isSubmitted) {
-            const { feedback, objectives, hardSkills, softSkills } = data;
-            
-            // Format dates properly
-            const startDate = feedback.setStartDate ? new Date(feedback.setStartDate).toLocaleDateString() : 'Not set';
-            const endDate = feedback.setEndDate ? new Date(feedback.setEndDate).toLocaleDateString() : 'Not set';
-            
-            // Extract employee first and last name
-            const nameParts = employeeName.split(',');
-            const lastName = nameParts[0] ? nameParts[0].trim() : '';
-            const firstName = nameParts[1] ? nameParts[1].trim().split('\n')[0] : '';
-            
-            // Build the questionnaire HTML
-            let html = `
-                <form id="feedback-form" class="card">
-                    <div class="card-header bg-blue-50">
-                        <h2 class="card-title">
-                            <i class="fas fa-comment-dots mr-2"></i> 
-                            360 Degree Feedback Questionnaire ${isSubmitted ? '<span class="ml-2 text-green-600">(Submitted)</span>' : ''}
-                        </h2>
-                    </div>
-                    <div class="card-content p-6">
-                        <!-- Date Information -->
-                        <div class="flex flex-col md:flex-row gap-6 mb-6">
-                            <div class="flex-1">
-                                <label class="block text-sm font-medium mb-1">Start Date:</label>
-                                <div class="text-gray-900 p-2 bg-gray-50 rounded border">
-                                    ${startDate}
-                                </div>
-                            </div>
-                            <div class="flex-1">
-                                <label class="block text-sm font-medium mb-1">End Date:</label>
-                                <div class="text-gray-900 p-2 bg-gray-50 rounded border">
-                                    ${endDate}
-                                </div>
-                            </div>
-                        </div>
-    
-                        <!-- Employee Details -->
-                        <div class="bg-gray-50 p-4 rounded-lg mb-6 border">
-                            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                                <div><strong>Employee:</strong> ${lastName}, ${firstName}</div>
-                                <div><strong>Position:</strong> ${jobTitle || feedback.jobTitle || 'Employee'}</div>
-                                <div><strong>Company:</strong> Company ABC</div>
-                                <div><strong>Department:</strong> ${feedback.deptName || 'Department'}</div>
-                            </div>
-                        </div>
-    
-                        <hr class="my-6 border-gray-200" />
-    
-                        <!-- Hidden fields for form submission -->
-                        <input type="hidden" name="feedbackId" value="${feedback.id}">
-                        <input type="hidden" name="quarter" value="${feedback.quarter}">
-                        <input type="hidden" name="userId" value="${feedback.userId}">
-                        <input type="hidden" name="reviewerUserId" value="${'<%= user.userId %>'}">
 
-            `;
-            
-            // Objectives Section
-            html += `
-                <!-- Objectives Section -->
-                <div class="mb-8">
-                    <h3 class="text-xl font-semibold mb-4 text-blue-900">
-                        <i class="fas fa-bullseye mr-2"></i> Objective Setting Questions
-                    </h3>
-                    
-                    <div class="overflow-x-auto">
-                        <table class="min-w-full divide-y divide-gray-200">
-                            <thead class="bg-gray-50">
-                                <tr>
-                                    <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">KRA/Objectives</th>
-                                    <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">KPI</th>
-                                    <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Target</th>
-                                    <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">UOM</th>
-                                    <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Weight</th>
-                                    <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Feedback</th>
-                                </tr>
-                            </thead>
-                            <tbody class="bg-white divide-y divide-gray-200">
-            `;
-            
-            if (objectives && objectives.length > 0) {
-                objectives.forEach((objective, index) => {
-                    html += `
-                        <tr>
-                            <td class="px-4 py-4 whitespace-nowrap text-sm">${objective.description || objective.objectiveDescription}</td>
-                            <td class="px-4 py-4 whitespace-nowrap text-sm">${objective.kpi || ''}</td>
-                            <td class="px-4 py-4 whitespace-nowrap text-sm">${objective.target || ''}</td>
-                            <td class="px-4 py-4 whitespace-nowrap text-sm">${objective.uom || ''}</td>
-                            <td class="px-4 py-4 whitespace-nowrap text-sm">${objective.weight || ''}</td>
-                            <td class="px-4 py-4">
-                                <div class="space-y-2">
-                                    <div class="star-rating">
-                                        <input type="radio" id="objective${index}-star5" name="objectives[${index}][quantitative]" value="5" ${isSubmitted ? 'disabled' : ''} />
-                                        <label for="objective${index}-star5" title="5 stars"></label>
-                                        <input type="radio" id="objective${index}-star4" name="objectives[${index}][quantitative]" value="4" ${isSubmitted ? 'disabled' : ''} />
-                                        <label for="objective${index}-star4" title="4 stars"></label>
-                                        <input type="radio" id="objective${index}-star3" name="objectives[${index}][quantitative]" value="3" ${isSubmitted ? 'disabled' : ''} />
-                                        <label for="objective${index}-star3" title="3 stars"></label>
-                                        <input type="radio" id="objective${index}-star2" name="objectives[${index}][quantitative]" value="2" ${isSubmitted ? 'disabled' : ''} />
-                                        <label for="objective${index}-star2" title="2 stars"></label>
-                                        <input type="radio" id="objective${index}-star1" name="objectives[${index}][quantitative]" value="1" ${isSubmitted ? 'disabled' : ''} required />
-                                        <label for="objective${index}-star1" title="1 star"></label>
-                                    </div>
-                                    <textarea 
-                                        name="objectives[${index}][qualitative]"
-                                        class="w-full p-2 border rounded" 
-                                        rows="2"
-                                        placeholder="Qualitative feedback..."
-                                        required
-                                        ${isSubmitted ? 'disabled' : ''}
-                                    ></textarea>
-                                    <input 
-                                        type="hidden" 
-                                        name="objectives[${index}][objectiveId]" 
-                                        value="${objective.objectiveId}"
-                                    />
-                                </div>
-                            </td>
-                        </tr>
-                    `;
-                });
-            } else {
-                html += `
-                    <tr>
-                        <td colspan="6" class="px-4 py-4 text-center text-sm text-gray-500">
-                            No objectives found for this employee.
-                        </td>
-                    </tr>
-                `;
-            }
-            
-            html += `
-                            </tbody>
-                        </table>
-                    </div>
+    // Function to render the questionnaire
+    function renderQuestionnaire(data, employeeName, jobTitle, isSubmitted) {
+        const { feedback, objectives, hardSkills, softSkills } = data;
+        
+        const startDate = feedback.setStartDate ? new Date(feedback.setStartDate).toLocaleDateString() : 'Not set';
+        const endDate = feedback.setEndDate ? new Date(feedback.setEndDate).toLocaleDateString() : 'Not set';
+        
+        const nameParts = employeeName.split(',');
+        const lastName = nameParts[0] ? nameParts[0].trim() : '';
+        const firstName = nameParts[1] ? nameParts[1].trim().split('\n')[0] : '';
+        
+        let html = `
+            <form id="feedback-form" class="card">
+                <div class="card-header bg-blue-50">
+                    <h2 class="card-title">
+                        <i class="fas fa-comment-dots mr-2"></i> 
+                        360 Degree Feedback Questionnaire ${isSubmitted ? '<span class="ml-2 text-green-600">(Submitted)</span>' : ''}
+                    </h2>
                 </div>
-            `;
-            
-            // Hard Skills Section
-            html += `
-                <!-- Hard Skills Section -->
-                <div class="mb-8">
-                    <h3 class="text-xl font-semibold mb-4 text-blue-900">
-                        <i class="fas fa-cogs mr-2"></i> Hard Skills
-                    </h3>
-                    
-                    <div class="overflow-x-auto">
-                        <table class="min-w-full divide-y divide-gray-200">
-                            <thead class="bg-gray-50">
-                                <tr>
-                                    <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Skill Name</th>
-                                    <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Feedback</th>
-                                </tr>
-                            </thead>
-                            <tbody class="bg-white divide-y divide-gray-200">
-            `;
-            
-            if (hardSkills && hardSkills.length > 0) {
-                hardSkills.forEach((skill, index) => {
-                    html += `
-                        <tr>
-                            <td class="px-4 py-4 whitespace-nowrap text-sm">${skill.jobReqSkillName}</td>
-                            <td class="px-4 py-4">
-                                <div class="space-y-2">
-                                    <div class="star-rating">
-                                        <input type="radio" id="hardSkill${index}-star5" name="hardSkills[${index}][quantitative]" value="5" ${isSubmitted ? 'disabled' : ''} />
-                                        <label for="hardSkill${index}-star5" title="5 stars"></label>
-                                        <input type="radio" id="hardSkill${index}-star4" name="hardSkills[${index}][quantitative]" value="4" ${isSubmitted ? 'disabled' : ''} />
-                                        <label for="hardSkill${index}-star4" title="4 stars"></label>
-                                        <input type="radio" id="hardSkill${index}-star3" name="hardSkills[${index}][quantitative]" value="3" ${isSubmitted ? 'disabled' : ''} />
-                                        <label for="hardSkill${index}-star3" title="3 stars"></label>
-                                        <input type="radio" id="hardSkill${index}-star2" name="hardSkills[${index}][quantitative]" value="2" ${isSubmitted ? 'disabled' : ''} />
-                                        <label for="hardSkill${index}-star2" title="2 stars"></label>
-                                        <input type="radio" id="hardSkill${index}-star1" name="hardSkills[${index}][quantitative]" value="1" ${isSubmitted ? 'disabled' : ''} required />
-                                        <label for="hardSkill${index}-star1" title="1 star"></label>
-                                    </div>
-                                    <textarea 
-                                        name="hardSkills[${index}][qualitative]"
-                                        class="w-full p-2 border rounded" 
-                                        rows="2"
-                                        placeholder="Qualitative feedback..."
-                                        required
-                                        ${isSubmitted ? 'disabled' : ''}
-                                    ></textarea>
-                                    <input 
-                                        type="hidden" 
-                                        name="hardSkills[${index}][skillId]" 
-                                        value="${skill.jobReqSkillId}"
-                                    />
-                                </div>
-                            </td>
-                        </tr>
-                    `;
-                });
-            } else {
-                html += `
-                    <tr>
-                        <td colspan="2" class="px-4 py-4 text-center text-sm text-gray-500">
-                            No hard skills found for this employee.
-                        </td>
-                    </tr>
-                `;
-            }
-            
-            html += `
-                            </tbody>
-                        </table>
-                    </div>
-                </div>
-            `;
-            
-            // Soft Skills Section
-            html += `
-                <!-- Soft Skills Section -->
-                <div class="mb-8">
-                    <h3 class="text-xl font-semibold mb-4 text-blue-900">
-                        <i class="fas fa-comments mr-2"></i> Soft Skills
-                    </h3>
-                    
-                    <div class="overflow-x-auto">
-                        <table class="min-w-full divide-y divide-gray-200">
-                            <thead class="bg-gray-50">
-                                <tr>
-                                    <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Skill Name</th>
-                                    <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Feedback</th>
-                                </tr>
-                            </thead>
-                            <tbody class="bg-white divide-y divide-gray-200">
-            `;
-            
-            if (softSkills && softSkills.length > 0) {
-                softSkills.forEach((skill, index) => {
-                    html += `
-                        <tr>
-                            <td class="px-4 py-4 whitespace-nowrap text-sm">${skill.jobReqSkillName}</td>
-                            <td class="px-4 py-4">
-                                <div class="space-y-2">
-                                    <div class="star-rating">
-                                        <input type="radio" id="softSkill${index}-star5" name="softSkills[${index}][quantitative]" value="5" ${isSubmitted ? 'disabled' : ''} />
-                                        <label for="softSkill${index}-star5" title="5 stars"></label>
-                                        <input type="radio" id="softSkill${index}-star4" name="softSkills[${index}][quantitative]" value="4" ${isSubmitted ? 'disabled' : ''} />
-                                        <label for="softSkill${index}-star4" title="4 stars"></label>
-                                        <input type="radio" id="softSkill${index}-star3" name="softSkills[${index}][quantitative]" value="3" ${isSubmitted ? 'disabled' : ''} />
-                                        <label for="softSkill${index}-star3" title="3 stars"></label>
-                                        <input type="radio" id="softSkill${index}-star2" name="softSkills[${index}][quantitative]" value="2" ${isSubmitted ? 'disabled' : ''} />
-                                        <label for="softSkill${index}-star2" title="2 stars"></label>
-                                        <input type="radio" id="softSkill${index}-star1" name="softSkills[${index}][quantitative]" value="1" ${isSubmitted ? 'disabled' : ''} required />
-                                        <label for="softSkill${index}-star1" title="1 star"></label>
-                                    </div>
-                                    <textarea 
-                                        name="softSkills[${index}][qualitative]"
-                                        class="w-full p-2 border rounded" 
-                                        rows="2"
-                                        placeholder="Qualitative feedback..."
-                                        required
-                                        ${isSubmitted ? 'disabled' : ''}
-                                    ></textarea>
-                                    <input 
-                                        type="hidden" 
-                                        name="softSkills[${index}][skillId]" 
-                                        value="${skill.jobReqSkillId}"
-                                    />
-                                </div>
-                            </td>
-                        </tr>
-                    `;
-                });
-            } else {
-                html += `
-                    <tr>
-                        <td colspan="2" class="px-4 py-4 text-center text-sm text-gray-500">
-                            No soft skills found for this employee.
-                        </td>
-                    </tr>
-                `;
-            }
-            
-            html += `
-                            </tbody>
-                        </table>
-                    </div>
-                </div>
-            `;
-            
-            // Submit Button (only show if not already submitted)
-            if (!isSubmitted) {
-                html += `
-                    <!-- Submit Button -->
-                    <div class="flex justify-end mt-6">
-                        <button
-                            type="submit"
-                            class="bg-blue-600 hover:bg-blue-700 text-white font-medium py-2 px-6 rounded-md flex items-center"
-                        >
-                            <i class="fas fa-save mr-2"></i> Submit Feedback
-                        </button>
-                    </div>
-                `;
-            } else {
-                html += `
-                    <!-- Already Submitted Message -->
-                    <div class="flex justify-center mt-6">
-                        <div class="bg-green-100 text-green-700 px-4 py-3 rounded flex items-center">
-                            <i class="fas fa-check-circle mr-2"></i>
-                            You have already submitted feedback for this employee.
+                <div class="card-content p-6">
+                
+                    <!-- Questionnaire Periods Section -->
+                    <div id="questionnaire-periods" class="questionnaire-periods">
+                        <h4><i class="fas fa-calendar-check"></i> Current Questionnaire Period</h4>
+                        <div class="period-card">
+                            <div class="period-header">
+                                <span class="period-quarter">${feedback.quarter} ${feedback.year || ''}</span>
+                                <span class="period-status status-active">Active</span>
+                            </div>
+                            <div class="period-dates">
+                                <i class="fas fa-calendar mr-1"></i>
+                                ${startDate} - ${endDate}
+                            </div>
+                            <div id="period-notification-container">
+                                <!-- Notifications will be added here based on dates -->
+                            </div>
                         </div>
                     </div>
+                
+                    <!-- Date Information -->
+                    <div class="flex flex-col md:flex-row gap-6 mb-6">
+                        <div class="flex-1">
+                            <label class="block text-sm font-medium mb-1">Start Date:</label>
+                            <div class="text-gray-900 p-2 bg-gray-50 rounded border">
+                                ${startDate}
+                            </div>
+                        </div>
+                        <div class="flex-1">
+                            <label class="block text-sm font-medium mb-1">End Date:</label>
+                            <div class="text-gray-900 p-2 bg-gray-50 rounded border">
+                                ${endDate}
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Employee Details -->
+                    <div class="bg-gray-50 p-4 rounded-lg mb-6 border">
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            <div><strong>Employee:</strong> ${lastName}, ${firstName}</div>
+                            <div><strong>Position:</strong> ${jobTitle || feedback.jobTitle || 'Employee'}</div>
+                            <div><strong>Company:</strong> Company ABC</div>
+                            <div><strong>Department:</strong> ${feedback.deptName || 'Department'}</div>
+                        </div>
+                    </div>
+
+                    <hr class="my-6 border-gray-200" />
+
+                    <!-- Hidden fields for form submission -->
+                    <input type="hidden" name="feedbackId" value="${feedback.id}">
+                    <input type="hidden" name="quarter" value="${feedback.quarter}">
+                    <input type="hidden" name="userId" value="${feedback.userId}">
+                    <input type="hidden" name="reviewerUserId" value="${'<%= user.userId %>'}">
+        `;
+        
+        // Add date-based notifications
+        const today = new Date();
+        const startDateObj = new Date(feedback.setStartDate);
+        const endDateObj = new Date(feedback.setEndDate);
+        
+        let notificationHTML = '';
+        
+        if (today < startDateObj) {
+            const daysToStart = Math.ceil((startDateObj - today) / (1000 * 60 * 60 * 24));
+            notificationHTML = `
+                <div class="period-notification notification-upcoming">
+                    <i class="fas fa-info-circle"></i>
+                    <span>This questionnaire will be available in ${daysToStart} day${daysToStart !== 1 ? 's' : ''}</span>
+                </div>
+            `;
+        } else if (today >= startDateObj && today <= endDateObj) {
+            const daysRemaining = Math.ceil((endDateObj - today) / (1000 * 60 * 60 * 24));
+            if (daysRemaining <= 1) {
+                notificationHTML = `
+                    <div class="period-notification notification-urgent">
+                        <i class="fas fa-exclamation-triangle"></i>
+                        <span>⚠️ Deadline is ${daysRemaining === 0 ? 'today' : 'tomorrow'}! Submit your feedback soon.</span>
+                    </div>
+                `;
+            } else if (daysRemaining <= 3) {
+                notificationHTML = `
+                    <div class="period-notification notification-deadline">
+                        <i class="fas fa-clock"></i>
+                        <span>⏰ ${daysRemaining} days remaining to submit feedback</span>
+                    </div>
+                `;
+            } else {
+                notificationHTML = `
+                    <div class="period-notification notification-active">
+                        <i class="fas fa-check-circle"></i>
+                        <span>✅ Questionnaire is active - ${daysRemaining} days remaining</span>
+                    </div>
                 `;
             }
-            
-            html += `
-                    </div>
-                </form>
+        } else {
+            notificationHTML = `
+                <div class="period-notification notification-urgent">
+                    <i class="fas fa-times-circle"></i>
+                    <span>❌ This questionnaire period has ended</span>
+                </div>
             `;
-            
-            // Set the HTML and add event listener
-            questionnaireContainer.innerHTML = html;
-            
-            // Add form submission handler if not already submitted
-            if (!isSubmitted) {
-                document.getElementById('feedback-form').addEventListener('submit', function(event) {
-                    event.preventDefault();
-                    
-                    // Validate the form
-                    if (!validateForm()) {
-                        return;
+        }
+        
+        // Objectives Section
+        html += `
+            <!-- Objectives Section -->
+            <div class="mb-8">
+                <h3 class="text-xl font-semibold mb-4 text-blue-900">
+                    <i class="fas fa-bullseye mr-2"></i> Objective Setting Questions
+                </h3>
+                
+                <div class="overflow-x-auto">
+                    <table class="min-w-full divide-y divide-gray-200">
+                        <thead class="bg-gray-50">
+                            <tr>
+                                <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">KRA/Objectives</th>
+                                <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">KPI</th>
+                                <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Target</th>
+                                <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">UOM</th>
+                                <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Weight</th>
+                                <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Feedback</th>
+                            </tr>
+                        </thead>
+                        <tbody class="bg-white divide-y divide-gray-200">
+        `;
+        
+        if (objectives && objectives.length > 0) {
+            objectives.forEach((objective, index) => {
+                html += `
+                    <tr>
+                        <td class="px-4 py-4 whitespace-nowrap text-sm">${objective.description || objective.objectiveDescription}</td>
+                        <td class="px-4 py-4 whitespace-nowrap text-sm">${objective.kpi || ''}</td>
+                        <td class="px-4 py-4 whitespace-nowrap text-sm">${objective.target || ''}</td>
+                        <td class="px-4 py-4 whitespace-nowrap text-sm">${objective.uom || ''}</td>
+                        <td class="px-4 py-4 whitespace-nowrap text-sm">${objective.weight || ''}</td>
+                        <td class="px-4 py-4">
+                            <div class="space-y-2">
+                                <div class="star-rating">
+                                    <input type="radio" id="objective${index}-star5" name="objectives[${index}][quantitative]" value="5" ${isSubmitted ? 'disabled' : ''} />
+                                    <label for="objective${index}-star5" title="5 stars"></label>
+                                    <input type="radio" id="objective${index}-star4" name="objectives[${index}][quantitative]" value="4" ${isSubmitted ? 'disabled' : ''} />
+                                    <label for="objective${index}-star4" title="4 stars"></label>
+                                    <input type="radio" id="objective${index}-star3" name="objectives[${index}][quantitative]" value="3" ${isSubmitted ? 'disabled' : ''} />
+                                    <label for="objective${index}-star3" title="3 stars"></label>
+                                    <input type="radio" id="objective${index}-star2" name="objectives[${index}][quantitative]" value="2" ${isSubmitted ? 'disabled' : ''} />
+                                    <label for="objective${index}-star2" title="2 stars"></label>
+                                    <input type="radio" id="objective${index}-star1" name="objectives[${index}][quantitative]" value="1" ${isSubmitted ? 'disabled' : ''} required />
+                                    <label for="objective${index}-star1" title="1 star"></label>
+                                </div>
+                                <textarea 
+                                    name="objectives[${index}][qualitative]"
+                                    class="w-full p-2 border rounded" 
+                                    rows="2"
+                                    placeholder="Qualitative feedback..."
+                                    required
+                                    ${isSubmitted ? 'disabled' : ''}
+                                ></textarea>
+                                <input 
+                                    type="hidden" 
+                                    name="objectives[${index}][objectiveId]" 
+                                    value="${objective.objectiveId}"
+                                />
+                            </div>
+                        </td>
+                    </tr>
+                `;
+            });
+        } else {
+            html += `
+                <tr>
+                    <td colspan="6" class="px-4 py-4 text-center text-sm text-gray-500">
+                        No objectives found for this employee.
+                    </td>
+                </tr>
+            `;
+        }
+        
+        html += `
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        `;
+        
+        // Hard Skills Section
+        html += `
+            <!-- Hard Skills Section -->
+            <div class="mb-8">
+                <h3 class="text-xl font-semibold mb-4 text-blue-900">
+                    <i class="fas fa-cogs mr-2"></i> Hard Skills
+                </h3>
+                
+                <div class="overflow-x-auto">
+                    <table class="min-w-full divide-y divide-gray-200">
+                        <thead class="bg-gray-50">
+                            <tr>
+                                <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Skill Name</th>
+                                <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Feedback</th>
+                            </tr>
+                        </thead>
+                        <tbody class="bg-white divide-y divide-gray-200">
+        `;
+        
+        if (hardSkills && hardSkills.length > 0) {
+            hardSkills.forEach((skill, index) => {
+                html += `
+                    <tr>
+                        <td class="px-4 py-4 whitespace-nowrap text-sm">${skill.jobReqSkillName}</td>
+                        <td class="px-4 py-4">
+                            <div class="space-y-2">
+                                <div class="star-rating">
+                                    <input type="radio" id="hardSkill${index}-star5" name="hardSkills[${index}][quantitative]" value="5" ${isSubmitted ? 'disabled' : ''} />
+                                    <label for="hardSkill${index}-star5" title="5 stars"></label>
+                                    <input type="radio" id="hardSkill${index}-star4" name="hardSkills[${index}][quantitative]" value="4" ${isSubmitted ? 'disabled' : ''} />
+                                    <label for="hardSkill${index}-star4" title="4 stars"></label>
+                                    <input type="radio" id="hardSkill${index}-star3" name="hardSkills[${index}][quantitative]" value="3" ${isSubmitted ? 'disabled' : ''} />
+                                    <label for="hardSkill${index}-star3" title="3 stars"></label>
+                                    <input type="radio" id="hardSkill${index}-star2" name="hardSkills[${index}][quantitative]" value="2" ${isSubmitted ? 'disabled' : ''} />
+                                    <label for="hardSkill${index}-star2" title="2 stars"></label>
+                                    <input type="radio" id="hardSkill${index}-star1" name="hardSkills[${index}][quantitative]" value="1" ${isSubmitted ? 'disabled' : ''} required />
+                                    <label for="hardSkill${index}-star1" title="1 star"></label>
+                                </div>
+                                <textarea 
+                                    name="hardSkills[${index}][qualitative]"
+                                    class="w-full p-2 border rounded" 
+                                    rows="2"
+                                    placeholder="Qualitative feedback..."
+                                    required
+                                    ${isSubmitted ? 'disabled' : ''}
+                                ></textarea>
+                                <input 
+                                    type="hidden" 
+                                    name="hardSkills[${index}][skillId]" 
+                                    value="${skill.jobReqSkillId}"
+                                />
+                            </div>
+                        </td>
+                    </tr>
+                `;
+            });
+        } else {
+            html += `
+                <tr>
+                    <td colspan="2" class="px-4 py-4 text-center text-sm text-gray-500">
+                        No hard skills found for this employee.
+                    </td>
+                </tr>
+            `;
+        }
+        
+        html += `
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        `;
+        
+        // Soft Skills Section
+        html += `
+            <!-- Soft Skills Section -->
+            <div class="mb-8">
+                <h3 class="text-xl font-semibold mb-4 text-blue-900">
+                    <i class="fas fa-comments mr-2"></i> Soft Skills
+                </h3>
+                
+                <div class="overflow-x-auto">
+                    <table class="min-w-full divide-y divide-gray-200">
+                        <thead class="bg-gray-50">
+                            <tr>
+                                <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Skill Name</th>
+                                <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Feedback</th>
+                            </tr>
+                        </thead>
+                        <tbody class="bg-white divide-y divide-gray-200">
+        `;
+        
+        if (softSkills && softSkills.length > 0) {
+            softSkills.forEach((skill, index) => {
+                html += `
+                    <tr>
+                        <td class="px-4 py-4 whitespace-nowrap text-sm">${skill.jobReqSkillName}</td>
+                        <td class="px-4 py-4">
+                            <div class="space-y-2">
+                                <div class="star-rating">
+                                    <input type="radio" id="softSkill${index}-star5" name="softSkills[${index}][quantitative]" value="5" ${isSubmitted ? 'disabled' : ''} />
+                                    <label for="softSkill${index}-star5" title="5 stars"></label>
+                                    <input type="radio" id="softSkill${index}-star4" name="softSkills[${index}][quantitative]" value="4" ${isSubmitted ? 'disabled' : ''} />
+                                    <label for="softSkill${index}-star4" title="4 stars"></label>
+                                    <input type="radio" id="softSkill${index}-star3" name="softSkills[${index}][quantitative]" value="3" ${isSubmitted ? 'disabled' : ''} />
+                                    <label for="softSkill${index}-star3" title="3 stars"></label>
+                                    <input type="radio" id="softSkill${index}-star2" name="softSkills[${index}][quantitative]" value="2" ${isSubmitted ? 'disabled' : ''} />
+                                    <label for="softSkill${index}-star2" title="2 stars"></label>
+                                    <input type="radio" id="softSkill${index}-star1" name="softSkills[${index}][quantitative]" value="1" ${isSubmitted ? 'disabled' : ''} required />
+                                    <label for="softSkill${index}-star1" title="1 star"></label>
+                                </div>
+                                <textarea 
+                                    name="softSkills[${index}][qualitative]"
+                                    class="w-full p-2 border rounded" 
+                                    rows="2"
+                                    placeholder="Qualitative feedback..."
+                                    required
+                                    ${isSubmitted ? 'disabled' : ''}
+                                ></textarea>
+                                <input 
+                                    type="hidden" 
+                                    name="softSkills[${index}][skillId]" 
+                                    value="${skill.jobReqSkillId}"
+                                />
+                            </div>
+                        </td>
+                    </tr>
+                `;
+            });
+        } else {
+            html += `
+                <tr>
+                    <td colspan="2" class="px-4 py-4 text-center text-sm text-gray-500">
+                        No soft skills found for this employee.
+                    </td>
+                </tr>
+            `;
+        }
+        
+        html += `
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        `;
+        
+        // Submit Button (only show if not already submitted)
+        if (!isSubmitted) {
+            html += `
+                <!-- Submit Button -->
+                <div class="flex justify-end mt-6">
+                    <button
+                        type="submit"
+                        class="bg-blue-600 hover:bg-blue-700 text-white font-medium py-2 px-6 rounded-md flex items-center"
+                    >
+                        <i class="fas fa-save mr-2"></i> Submit Feedback
+                    </button>
+                </div>
+            `;
+        } else {
+            html += `
+                <!-- Already Submitted Message -->
+                <div class="flex justify-center mt-6">
+                    <div class="bg-green-100 text-green-700 px-4 py-3 rounded flex items-center">
+                        <i class="fas fa-check-circle mr-2"></i>
+                        You have already submitted feedback for this employee.
+                    </div>
+                </div>
+            `;
+        }
+        
+        html += `
+                </div>
+            </form>
+        `;
+        
+        // Set the HTML and add event listener
+        questionnaireContainer.innerHTML = html;
+        
+        // Add the notification to the period notification container
+        const notificationContainer = document.getElementById('period-notification-container');
+        if (notificationContainer && notificationHTML) {
+            notificationContainer.innerHTML = notificationHTML;
+        }
+        
+        // Add form submission handler if not already submitted
+        if (!isSubmitted) {
+            document.getElementById('feedback-form').addEventListener('submit', function(event) {
+                event.preventDefault();
+                
+                // Validate the form
+                if (!validateForm()) {
+                    return;
+                }
+                
+                // Get form data
+                const formData = new FormData(this);
+                const formDataObj = {};
+                
+                // Convert FormData to object
+                for (let [key, value] of formData.entries()) {
+                    if (key.includes('[') && key.includes(']')) {
+                        // Handle nested form data (arrays and objects)
+                        const parsedKey = parseFormDataKey(key);
+                        setNestedValue(formDataObj, parsedKey, value);
+                    } else {
+                        formDataObj[key] = value;
                     }
-                    
-                    // Get form data
-                    const formData = new FormData(this);
-                    const formDataObj = {};
-                    
-                    // Convert FormData to object
-                    for (let [key, value] of formData.entries()) {
-                        if (key.includes('[') && key.includes(']')) {
-                            // Handle nested form data (arrays and objects)
-                            const parsedKey = parseFormDataKey(key);
-                            setNestedValue(formDataObj, parsedKey, value);
-                        } else {
-                            formDataObj[key] = value;
-                        }
+                }
+                
+                // Clean up arrays (convert from objects to actual arrays)
+                ['objectives', 'hardSkills', 'softSkills'].forEach(key => {
+                    if (formDataObj[key]) {
+                        formDataObj[key] = Object.values(formDataObj[key]);
                     }
-                    
-                    // Clean up arrays (convert from objects to actual arrays)
-                    ['objectives', 'hardSkills', 'softSkills'].forEach(key => {
-                        if (formDataObj[key]) {
-                            formDataObj[key] = Object.values(formDataObj[key]);
-                        }
-                    });
-                    
-                    // Show submitting state
-                    const submitButton = document.querySelector('#feedback-form button[type="submit"]');
-                    if (submitButton) {
-                        submitButton.disabled = true;
-                        submitButton.innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i> Submitting...';
-                    }
-                    
-                    // Submit data
-                    fetch('/linemanager/api/submitFeedback', {
-                        method: 'POST',
-                        headers: {
-                            'Content-Type': 'application/json'
-                        },
-                        body: JSON.stringify(formDataObj)
-                    })
-                    .then(response => response.json())
-                    .then(data => {
-                        if (data.success) {
-                            // Update submission status
-                            submittedFeedbacks[selectedMemberId] = true;
-                            totalCompleted++;
-                            updateProgressBar();
-                            
-                            // Show success message
+                });
+                
+                // Show submitting state
+                const submitButton = document.querySelector('#feedback-form button[type="submit"]');
+                if (submitButton) {
+                    submitButton.disabled = true;
+                    submitButton.innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i> Submitting...';
+                }
+                
+                // Submit data
+                fetch('/linemanager/api/submitFeedback', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(formDataObj)
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        // Update submission status
+                        submittedFeedbacks[selectedMemberId] = true;
+                        totalCompleted++;
+                        updateProgressBar();
+                        
+                        // Show success message
+                        questionnaireContainer.innerHTML = `
+                            <div class="bg-green-100 border border-green-400 text-green-700 px-4 py-3 rounded">
+                                <p>Feedback submitted successfully!</p>
+                            </div>
+                        `;
+                        
+                        // Update status indicator
+                        statusIndicator.className = 'status-indicator status-submitted';
+                        statusIndicator.innerHTML = `
+                            <i class="fas fa-check-circle"></i>
+                            Feedback has been submitted for ${employeeName}
+                        `;
+                        
+                        // Reload feedback periods to update counts
+                        loadFeedbackPeriods();
+                        
+                        // Reload dropdown after delay
+                        setTimeout(() => {
+                            staffDropdown.value = '';
+                            statusIndicator.style.display = 'none';
                             questionnaireContainer.innerHTML = `
-                                <div class="bg-green-100 border border-green-400 text-green-700 px-4 py-3 rounded">
-                                    <p>Feedback submitted successfully!</p>
+                                <div class="h-full flex items-center justify-center bg-gray-50 rounded-lg p-8 border border-dashed border-gray-300">
+                                    <p class="text-gray-500 text-center">Select a department member to begin the 360 feedback process</p>
                                 </div>
                             `;
-                            
-                            // Update status indicator
-                            statusIndicator.className = 'status-indicator status-submitted';
-                            statusIndicator.innerHTML = `
-                                <i class="fas fa-check-circle"></i>
-                                Feedback has been submitted for ${employeeName}
-                            `;
-                            
-                            // Reload dropdown after delay
-                            setTimeout(() => {
-                                staffDropdown.value = '';
-                                statusIndicator.style.display = 'none';
-                                questionnaireContainer.innerHTML = `
-                                    <div class="h-full flex items-center justify-center bg-gray-50 rounded-lg p-8 border border-dashed border-gray-300">
-                                        <p class="text-gray-500 text-center">Select a department member to begin the 360 feedback process</p>
-                                    </div>
-                                `;
-                            }, 2000);
-                        } else {
-                            throw new Error(data.message || 'Failed to submit feedback');
-                        }
-                    })
-                    .catch(error => {
-                        // Show error message below form
-                        const errorDiv = document.createElement('div');
-                        errorDiv.className = 'bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded mt-4';
-                        errorDiv.innerHTML = `<p>${error.message}</p>`;
-                        document.getElementById('feedback-form').appendChild(errorDiv);
-                        
-                        // Reset submit button
-                        if (submitButton) {
-                            submitButton.disabled = false;
-                            submitButton.innerHTML = '<i class="fas fa-save mr-2"></i> Submit Feedback';
-                        }
-                    });
-                });
-            }
-        }
-        
-        // Function to validate the form
-        function validateForm() {
-            let isValid = true;
-            
-            // Check all required fields
-            const requiredFields = document.querySelectorAll('#feedback-form [required]');
-            requiredFields.forEach(field => {
-                if (!field.value.trim()) {
-                    field.classList.add('border-red-500');
-                    isValid = false;
-                } else {
-                    field.classList.remove('border-red-500');
-                }
-            });
-            
-            // Check star ratings
-            const starGroups = document.querySelectorAll('.star-rating');
-            starGroups.forEach(group => {
-                const checkedStar = group.querySelector('input:checked');
-                if (!checkedStar) {
-                    group.classList.add('border-red-500');
-                    isValid = false;
-                } else {
-                    group.classList.remove('border-red-500');
-                }
-            });
-            
-            if (!isValid) {
-                // Show error message
-                const errorDiv = document.createElement('div');
-                errorDiv.className = 'bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded mt-4';
-                errorDiv.innerHTML = `<p>Please complete all required fields and ratings.</p>`;
-                
-                // Remove existing error message if any
-                const existingError = document.querySelector('.bg-red-100');
-                if (existingError) {
-                    existingError.remove();
-                }
-                
-                document.getElementById('feedback-form').appendChild(errorDiv);
-                
-                // Scroll to the top of the form
-                document.getElementById('feedback-form').scrollIntoView({ behavior: 'smooth' });
-            }
-            
-            return isValid;
-        }
-        
-        // Helper function to parse complex form data keys like objectives[0][quantitative]
-        function parseFormDataKey(key) {
-            const keyParts = key.match(/([^\[\]]+)|\[([^\[\]]*)\]/g);
-            const parsedKey = [];
-            
-            if (keyParts) {
-                keyParts.forEach(part => {
-                    // Remove brackets and add to parsedKey array
-                    const cleanPart = part.replace(/\[|\]/g, '');
-                    if (cleanPart !== '') {
-                        parsedKey.push(cleanPart);
+                        }, 2000);
+                    } else {
+                        throw new Error(data.message || 'Failed to submit feedback');
+                    }
+                })
+                .catch(error => {
+                    // Show error message below form
+                    const errorDiv = document.createElement('div');
+                    errorDiv.className = 'bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded mt-4';
+                    errorDiv.innerHTML = `<p>${error.message}</p>`;
+                    document.getElementById('feedback-form').appendChild(errorDiv);
+                    
+                    // Reset submit button
+                    if (submitButton) {
+                        submitButton.disabled = false;
+                        submitButton.innerHTML = '<i class="fas fa-save mr-2"></i> Submit Feedback';
                     }
                 });
+            });
+        }
+    }
+    
+    // Function to validate the form
+    function validateForm() {
+        let isValid = true;
+        
+        // Check all required fields
+        const requiredFields = document.querySelectorAll('#feedback-form [required]');
+        requiredFields.forEach(field => {
+            if (!field.value.trim()) {
+                field.classList.add('border-red-500');
+                isValid = false;
+            } else {
+                field.classList.remove('border-red-500');
+            }
+        });
+        
+        // Check star ratings
+        const starGroups = document.querySelectorAll('.star-rating');
+        starGroups.forEach(group => {
+            const checkedStar = group.querySelector('input:checked');
+            if (!checkedStar) {
+                group.classList.add('border-red-500');
+                isValid = false;
+            } else {
+                group.classList.remove('border-red-500');
+            }
+        });
+        
+        if (!isValid) {
+            // Show error message
+            const errorDiv = document.createElement('div');
+            errorDiv.className = 'bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded mt-4';
+            errorDiv.innerHTML = `<p>Please complete all required fields and ratings.</p>`;
+            
+            // Remove existing error message if any
+            const existingError = document.querySelector('.bg-red-100');
+            if (existingError) {
+                existingError.remove();
             }
             
-            return parsedKey;
+            document.getElementById('feedback-form').appendChild(errorDiv);
+            
+            // Scroll to the top of the form
+            document.getElementById('feedback-form').scrollIntoView({ behavior: 'smooth' });
         }
         
-        // Helper function to set nested values in an object
-        function setNestedValue(obj, keyParts, value) {
-            let current = obj;
-            
-            for (let i = 0; i < keyParts.length; i++) {
-                const key = keyParts[i];
-                const isLast = i === keyParts.length - 1;
-                
-                if (isLast) {
-                    // Set the final value
-                    current[key] = value;
-                } else {
-                    // Create empty object/array for intermediate keys if they don't exist
-                    if (!current[key]) {
-                        // If next key is numeric, create an array, otherwise an object
-                        const nextKey = keyParts[i + 1];
-                        current[key] = !isNaN(parseInt(nextKey)) ? [] : {};
-                    }
-                    current = current[key];
+        return isValid;
+    }
+    
+    // Helper function to parse complex form data keys like objectives[0][quantitative]
+    function parseFormDataKey(key) {
+        const keyParts = key.match(/([^\[\]]+)|\[([^\[\]]*)\]/g);
+        const parsedKey = [];
+        
+        if (keyParts) {
+            keyParts.forEach(part => {
+                // Remove brackets and add to parsedKey array
+                const cleanPart = part.replace(/\[|\]/g, '');
+                if (cleanPart !== '') {
+                    parsedKey.push(cleanPart);
                 }
-            }
-            
-            return obj;
+            });
         }
-    });
+        
+        return parsedKey;
+    }
+    
+    // Helper function to set nested values in an object
+    function setNestedValue(obj, keyParts, value) {
+        let current = obj;
+        
+        for (let i = 0; i < keyParts.length; i++) {
+            const key = keyParts[i];
+            const isLast = i === keyParts.length - 1;
+            
+            if (isLast) {
+                // Set the final value
+                current[key] = value;
+            } else {
+                // Create empty object/array for intermediate keys if they don't exist
+                if (!current[key]) {
+                    // If next key is numeric, create an array, otherwise an object
+                    const nextKey = keyParts[i + 1];
+                    current[key] = !isNaN(parseInt(nextKey)) ? [] : {};
+                }
+                current = current[key];
+            }
+        }
+        
+        return obj;
+    }
+});
 </script>
 
 </body>

@@ -14593,9 +14593,10 @@ function confirmAccountSetup() {
   closeModal('accountSetupReminderModal');
 }
 
-function setInterviewAvailabilities() {
-  alert("Opening Calendly to set interview availabilities...");
-}
+        // Redirect to Calendly
+        function setInterviewAvailabilities() {
+            window.open('https://calendly.com/app/scheduling/meeting_types/user/me', '_blank');
+        }
 
 // ============================
 // TOGGLE STATUS FUNCTIONS

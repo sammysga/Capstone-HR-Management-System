@@ -4678,51 +4678,51 @@ document.addEventListener('DOMContentLoaded', function() {
     console.log("Enhanced performance tracker with Final-Year IDP support initialized successfully.");
 });
 
-// async function checkDepartmentResponseRates(userId, quarters, idpType) {
-//     console.log(`Checking department response rates for ${idpType} (${quarters})`);
+async function checkDepartmentResponseRates(userId, quarters, idpType) {
+    console.log(`Checking department response rates for ${idpType} (${quarters})`);
     
-//     try {
-//         const url = `/linemanager/check-department-response-rate/${userId}?quarters=${quarters}&year=${new Date().getFullYear()}`;
-//         console.log('Making request to:', url);
+    try {
+        const url = `/linemanager/check-department-response-rate/${userId}?quarters=${quarters}&year=${new Date().getFullYear()}`;
+        console.log('Making request to:', url);
         
-//         const response = await fetch(url);
-//         console.log('Response status:', response.status);
+        const response = await fetch(url);
+        console.log('Response status:', response.status);
         
-//         if (!response.ok) {
-//             const errorText = await response.text();
-//             console.error('Server error response:', errorText);
-//             throw new Error(`Server responded with status ${response.status}: ${errorText}`);
-//         }
+        if (!response.ok) {
+            const errorText = await response.text();
+            console.error('Server error response:', errorText);
+            throw new Error(`Server responded with status ${response.status}: ${errorText}`);
+        }
         
-//         const result = await response.json();
-//         console.log('Server response:', result);
+        const result = await response.json();
+        console.log('Server response:', result);
         
-//         if (result.success) {
-//             departmentValidationStatus[idpType] = {
-//                 canProceed: result.data.canProceed,
-//                 stats: result.data
-//             };
+        if (result.success) {
+            departmentValidationStatus[idpType] = {
+                canProceed: result.data.canProceed,
+                stats: result.data
+            };
             
-//             console.log(`Department validation for ${idpType}:`, result.data);
-//             return result.data;
-//         } else {
-//             throw new Error(result.message || 'Validation check failed');
-//         }
-//     } catch (error) {
-//         console.error(`Error checking department response rates for ${idpType}:`, error);
+            console.log(`Department validation for ${idpType}:`, result.data);
+            return result.data;
+        } else {
+            throw new Error(result.message || 'Validation check failed');
+        }
+    } catch (error) {
+        console.error(`Error checking department response rates for ${idpType}:`, error);
         
-//         // Return a safe fallback object
-//         return { 
-//             canProceed: false, 
-//             stats: null, 
-//             error: error.message,
-//             departmentName: 'Unknown Department',
-//             totalStaff: 0,
-//             responseStats: {},
-//             blockingMessage: `Error checking department status: ${error.message}`
-//         };
-//     }
-// }
+        // Return a safe fallback object
+        return { 
+            canProceed: false, 
+            stats: null, 
+            error: error.message,
+            departmentName: 'Unknown Department',
+            totalStaff: 0,
+            responseStats: {},
+            blockingMessage: `Error checking department status: ${error.message}`
+        };
+    }
+}
 
 
 
@@ -8646,8 +8646,7 @@ function filterAnswers() {
     });
 }
 
-
-function navigateToMidYearIDP() {
+async function navigateToMidYearIDP() {
     const midYearIDPButton = document.getElementById("midYearIDP");
     
     if (!midYearIDPButton || !midYearIDPButton.classList.contains('accessible')) {
@@ -8655,136 +8654,81 @@ function navigateToMidYearIDP() {
         return;
     }
     
-    console.log("Navigating to Mid-Year IDP with Q1-Q2 feedback...");
+    console.log("Checking Mid-Year IDP department validation...");
     
-    hideAllSections();
+    // Show loading state
+    const originalButtonContent = midYearIDPButton.innerHTML;
+    midYearIDPButton.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Checking...';
+    midYearIDPButton.disabled = true;
     
-    const midYearIDPForm = document.getElementById("midYearIDPForm");
-    if (!midYearIDPForm) {
-        console.error("Mid-Year IDP form not found.");
-        return;
-    }
-    
-    midYearIDPForm.style.display = "block";
-    midYearIDPForm.classList.remove("fade-out");
-    midYearIDPForm.classList.add("fade-in");
-    
-    // FIXED: Ensure we reset form to Mid-Year context
-    resetFormToMidYearContext();
-    
-    // Load Mid-Year feedback aggregates (Q1-Q2)
-    loadMidYearFeedbackAggregates();
-    
-    // Handle view-only mode
-    const isViewOnly = viewState && viewState.viewOnlyStatus && viewState.viewOnlyStatus.midyearidp;
-    
-    if (isViewOnly) {
-        if (window.savedMidYearIDPData) {
-            createViewOnlyMidYearIDPWithCategories(window.savedMidYearIDPData);
-        } else if (viewState && viewState.midYearData) {
-            createViewOnlyMidYearIDPWithCategories(viewState.midYearData);
+    try {
+        // Check department response rates for Q1 and Q2
+        const validationResult = await checkDepartmentResponseRates(userId, 'Q1,Q2', 'midYear');
+        
+        // Reset button
+        midYearIDPButton.innerHTML = originalButtonContent;
+        midYearIDPButton.disabled = false;
+        
+        if (!validationResult.canProceed) {
+            console.log("Mid-Year IDP blocked - showing modal");
+            showDepartmentBlockingModal(validationResult, 'midYear');
+            return;
+        }
+        
+        console.log("Department validation passed - proceeding to Mid-Year IDP");
+        
+        // Proceed with normal Mid-Year IDP navigation
+        hideAllSections();
+        
+        const midYearIDPForm = document.getElementById("midYearIDPForm");
+        if (!midYearIDPForm) {
+            console.error("Mid-Year IDP form not found.");
+            return;
+        }
+        
+        midYearIDPForm.style.display = "block";
+        midYearIDPForm.classList.remove("fade-out");
+        midYearIDPForm.classList.add("fade-in");
+        
+        // Add department stats display
+        const statsContainer = document.getElementById('midYearDepartmentStats') || createStatsContainer('midYearDepartmentStats');
+        displayDepartmentResponseStats(validationResult, 'midYearDepartmentStats');
+        
+        // Continue with existing Mid-Year IDP logic
+        resetFormToMidYearContext();
+        loadMidYearFeedbackAggregates();
+        
+        const isViewOnly = viewState && viewState.viewOnlyStatus && viewState.viewOnlyStatus.midyearidp;
+        
+        if (isViewOnly) {
+            if (window.savedMidYearIDPData) {
+                createViewOnlyMidYearIDPWithCategories(window.savedMidYearIDPData);
+            } else if (viewState && viewState.midYearData) {
+                createViewOnlyMidYearIDPWithCategories(viewState.midYearData);
+            } else {
+                loadMidYearIDPDataWithCategories(userId).then(() => {
+                    if (window.savedMidYearIDPData) {
+                        createViewOnlyMidYearIDPWithCategories(window.savedMidYearIDPData);
+                    }
+                });
+            }
         } else {
-            loadMidYearIDPDataWithCategories(userId).then(() => {
-                if (window.savedMidYearIDPData) {
-                    createViewOnlyMidYearIDPWithCategories(window.savedMidYearIDPData);
-                }
-            });
+            enableMidYearIDPForm();
+            if (typeof initializeTrainingCategories === 'function') {
+                initializeTrainingCategories();
+            }
         }
-    } else {
-        enableMidYearIDPForm();
-        if (typeof initializeTrainingCategories === 'function') {
-            initializeTrainingCategories();
-        }
+        
+        midYearIDPForm.scrollIntoView({ behavior: "smooth" });
+        console.log("Navigated to Mid-Year IDP form with department validation.");
+        
+    } catch (error) {
+        console.error("Error during Mid-Year IDP validation:", error);
+        midYearIDPButton.innerHTML = originalButtonContent;
+        midYearIDPButton.disabled = false;
+        alert("Error checking department status. Please try again.");
     }
-    
-    midYearIDPForm.scrollIntoView({ behavior: "smooth" });
-    console.log("Navigated to Mid-Year IDP form.");
 }
-
-// Enhanced Mid-Year IDP navigation with validation
-// async function navigateToMidYearIDP() {
-//     const midYearIDPButton = document.getElementById("midYearIDP");
-    
-//     if (!midYearIDPButton || !midYearIDPButton.classList.contains('accessible')) {
-//         alert("You must complete the previous steps first.");
-//         return;
-//     }
-    
-//     console.log("Checking Mid-Year IDP department validation...");
-    
-//     // Show loading state
-//     const originalButtonContent = midYearIDPButton.innerHTML;
-//     midYearIDPButton.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Checking...';
-//     midYearIDPButton.disabled = true;
-    
-//     try {
-//         // Check department response rates for Q1 and Q2
-//         const validationResult = await checkDepartmentResponseRates(userId, 'Q1,Q2', 'midYear');
-        
-//         // Reset button
-//         midYearIDPButton.innerHTML = originalButtonContent;
-//         midYearIDPButton.disabled = false;
-        
-//         if (!validationResult.canProceed) {
-//             console.log("Mid-Year IDP blocked - showing modal");
-//             showDepartmentBlockingModal(validationResult, 'midYear');
-//             return;
-//         }
-        
-//         console.log("Department validation passed - proceeding to Mid-Year IDP");
-        
-//         // Proceed with normal Mid-Year IDP navigation
-//         hideAllSections();
-        
-//         const midYearIDPForm = document.getElementById("midYearIDPForm");
-//         if (!midYearIDPForm) {
-//             console.error("Mid-Year IDP form not found.");
-//             return;
-//         }
-        
-//         midYearIDPForm.style.display = "block";
-//         midYearIDPForm.classList.remove("fade-out");
-//         midYearIDPForm.classList.add("fade-in");
-        
-//         // Add department stats display
-//         const statsContainer = document.getElementById('midYearDepartmentStats') || createStatsContainer('midYearDepartmentStats');
-//         displayDepartmentResponseStats(validationResult, 'midYearDepartmentStats');
-        
-//         // Continue with existing Mid-Year IDP logic
-//         resetFormToMidYearContext();
-//         loadMidYearFeedbackAggregates();
-        
-//         const isViewOnly = viewState && viewState.viewOnlyStatus && viewState.viewOnlyStatus.midyearidp;
-        
-//         if (isViewOnly) {
-//             if (window.savedMidYearIDPData) {
-//                 createViewOnlyMidYearIDPWithCategories(window.savedMidYearIDPData);
-//             } else if (viewState && viewState.midYearData) {
-//                 createViewOnlyMidYearIDPWithCategories(viewState.midYearData);
-//             } else {
-//                 loadMidYearIDPDataWithCategories(userId).then(() => {
-//                     if (window.savedMidYearIDPData) {
-//                         createViewOnlyMidYearIDPWithCategories(window.savedMidYearIDPData);
-//                     }
-//                 });
-//             }
-//         } else {
-//             enableMidYearIDPForm();
-//             if (typeof initializeTrainingCategories === 'function') {
-//                 initializeTrainingCategories();
-//             }
-//         }
-        
-//         midYearIDPForm.scrollIntoView({ behavior: "smooth" });
-//         console.log("Navigated to Mid-Year IDP form with department validation.");
-        
-//     } catch (error) {
-//         console.error("Error during Mid-Year IDP validation:", error);
-//         midYearIDPButton.innerHTML = originalButtonContent;
-//         midYearIDPButton.disabled = false;
-//         alert("Error checking department status. Please try again.");
-//     }
-// }
 
 function resetFormHeadersToMidYear() {
     // Check if we're in Final-Year context - if so, don't reset
@@ -12184,164 +12128,165 @@ function updateFinalYearTrainingLegendWithTop5() {
     console.log("=== FINAL-YEAR Q3-Q4 TOP 5 DEVELOPMENT AREAS UPDATE COMPLETE ===");
 }
 
-function navigateToFinalYearIDP() {
-    const finalYearIDPButton = document.getElementById("finalYearIDP");
-    
-    // Check if the button is accessible
-    if (!finalYearIDPButton || !finalYearIDPButton.classList.contains('accessible')) {
-        alert("You must complete the previous steps first.");
-        return;
-    }
-    
-    console.log("=== NAVIGATING TO FINAL-YEAR IDP WITH Q3-Q4 FEEDBACK ===");
-    console.log("Loading Final-Year IDP with Q3-Q4 feedback...");
-    
-    // Hide other sections
-    hideAllSections();
-    
-    // Show the Final-Year IDP form (reusing Mid-Year form structure)
-    const midYearIDPForm = document.getElementById("midYearIDPForm");
-    if (!midYearIDPForm) {
-        console.error("IDP form not found.");
-        return;
-    }
-    
-    midYearIDPForm.style.display = "block";
-    midYearIDPForm.classList.remove("fade-out");
-    midYearIDPForm.classList.add("fade-in");
-    
-    // CRITICAL: Set form to Final-Year context FIRST
-    updateFormForFinalYear();
-    
-    // CRITICAL: Protect against Mid-Year overwrites
-    preventMidYearOverwrite();
-    
-    // CRITICAL: Load Final-Year feedback aggregates (Q3-Q4 ONLY) - Wait for form update
-    setTimeout(() => {
-        loadFinalYearFeedbackAggregates();
-    }, 100);
-    
-    // ENHANCED: Check if Final-Year IDP is completed and handle accordingly
-    const isViewOnly = viewState && viewState.viewOnlyStatus && viewState.viewOnlyStatus.finalyearidp;
-    
-    console.log("Final-Year IDP completion status:", isViewOnly ? "Completed (View-Only)" : "Not Completed (Editable)");
-    
-    if (isViewOnly) {
-        console.log("✅ Final-Year IDP already completed - setting up view-only mode...");
-        
-        // Hide progress bar for completed IDP
-        hideProgressBarIfCompleted();
-        
-        // Load and display existing Final-Year IDP data
-        loadFinalYearIDPDataWithCategories(userId).then(() => {
-            if (window.savedFinalYearIDPData) {
-                createViewOnlyFinalYearIDPWithCategories(window.savedFinalYearIDPData);
-            } else {
-                console.error("Failed to load Final-Year IDP data");
-                alert("Error loading Final-Year IDP data. Please refresh the page.");
-            }
-        });
-    } else {
-        console.log("📝 Final-Year IDP not completed - setting up edit mode...");
-        
-        // Enable form for editing
-        enableFinalYearIDPForm();
-        
-        // Initialize training categories functionality for new input
-        if (typeof initializeTrainingCategories === 'function') {
-            initializeTrainingCategories();
-        }
-    }
-    
-    midYearIDPForm.scrollIntoView({ behavior: "smooth" });
-    console.log("=== FINAL-YEAR IDP NAVIGATION COMPLETE ===");
-    console.log(`Navigated to Final-Year IDP form. Status: ${isViewOnly ? "Completed (View-Only)" : "Not Completed (Editable)"}`);
-}
-// async function navigateToFinalYearIDP() {
+// function navigateToFinalYearIDP() {
 //     const finalYearIDPButton = document.getElementById("finalYearIDP");
     
+//     // Check if the button is accessible
 //     if (!finalYearIDPButton || !finalYearIDPButton.classList.contains('accessible')) {
 //         alert("You must complete the previous steps first.");
 //         return;
 //     }
     
-//     console.log("Checking Final-Year IDP department validation...");
+//     console.log("=== NAVIGATING TO FINAL-YEAR IDP WITH Q3-Q4 FEEDBACK ===");
+//     console.log("Loading Final-Year IDP with Q3-Q4 feedback...");
     
-//     // Show loading state
-//     const originalButtonContent = finalYearIDPButton.innerHTML;
-//     finalYearIDPButton.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Checking...';
-//     finalYearIDPButton.disabled = true;
+//     // Hide other sections
+//     hideAllSections();
     
-//     try {
-//         // Check department response rates for Q3 and Q4
-//         const validationResult = await checkDepartmentResponseRates(userId, 'Q3,Q4', 'finalYear');
-        
-//         // Reset button
-//         finalYearIDPButton.innerHTML = originalButtonContent;
-//         finalYearIDPButton.disabled = false;
-        
-//         if (!validationResult.canProceed) {
-//             console.log("Final-Year IDP blocked - showing modal");
-//             showDepartmentBlockingModal(validationResult, 'finalYear');
-//             return;
-//         }
-        
-//         console.log("Department validation passed - proceeding to Final-Year IDP");
-        
-//         // Proceed with normal Final-Year IDP navigation
-//         hideAllSections();
-        
-//         const midYearIDPForm = document.getElementById("midYearIDPForm");
-//         if (!midYearIDPForm) {
-//             console.error("IDP form not found.");
-//             return;
-//         }
-        
-//         midYearIDPForm.style.display = "block";
-//         midYearIDPForm.classList.remove("fade-out");
-//         midYearIDPForm.classList.add("fade-in");
-        
-//         // Add department stats display
-//         const statsContainer = document.getElementById('finalYearDepartmentStats') || createStatsContainer('finalYearDepartmentStats');
-//         displayDepartmentResponseStats(validationResult, 'finalYearDepartmentStats');
-        
-//         // Continue with existing Final-Year IDP logic
-//         updateFormForFinalYear();
-//         preventMidYearOverwrite();
-        
-//         setTimeout(() => {
-//             loadFinalYearFeedbackAggregates();
-//         }, 100);
-        
-//         const isViewOnly = viewState && viewState.viewOnlyStatus && viewState.viewOnlyStatus.finalyearidp;
-        
-//         if (isViewOnly) {
-//             hideProgressBarIfCompleted();
-//             loadFinalYearIDPDataWithCategories(userId).then(() => {
-//                 if (window.savedFinalYearIDPData) {
-//                     createViewOnlyFinalYearIDPWithCategories(window.savedFinalYearIDPData);
-//                 } else {
-//                     console.error("Failed to load Final-Year IDP data");
-//                     alert("Error loading Final-Year IDP data. Please refresh the page.");
-//                 }
-//             });
-//         } else {
-//             enableFinalYearIDPForm();
-//             if (typeof initializeTrainingCategories === 'function') {
-//                 initializeTrainingCategories();
-//             }
-//         }
-        
-//         midYearIDPForm.scrollIntoView({ behavior: "smooth" });
-//         console.log("Navigated to Final-Year IDP form with department validation.");
-        
-//     } catch (error) {
-//         console.error("Error during Final-Year IDP validation:", error);
-//         finalYearIDPButton.innerHTML = originalButtonContent;
-//         finalYearIDPButton.disabled = false;
-//         alert("Error checking department status. Please try again.");
+//     // Show the Final-Year IDP form (reusing Mid-Year form structure)
+//     const midYearIDPForm = document.getElementById("midYearIDPForm");
+//     if (!midYearIDPForm) {
+//         console.error("IDP form not found.");
+//         return;
 //     }
+    
+//     midYearIDPForm.style.display = "block";
+//     midYearIDPForm.classList.remove("fade-out");
+//     midYearIDPForm.classList.add("fade-in");
+    
+//     // CRITICAL: Set form to Final-Year context FIRST
+//     updateFormForFinalYear();
+    
+//     // CRITICAL: Protect against Mid-Year overwrites
+//     preventMidYearOverwrite();
+    
+//     // CRITICAL: Load Final-Year feedback aggregates (Q3-Q4 ONLY) - Wait for form update
+//     setTimeout(() => {
+//         loadFinalYearFeedbackAggregates();
+//     }, 100);
+    
+//     // ENHANCED: Check if Final-Year IDP is completed and handle accordingly
+//     const isViewOnly = viewState && viewState.viewOnlyStatus && viewState.viewOnlyStatus.finalyearidp;
+    
+//     console.log("Final-Year IDP completion status:", isViewOnly ? "Completed (View-Only)" : "Not Completed (Editable)");
+    
+//     if (isViewOnly) {
+//         console.log("✅ Final-Year IDP already completed - setting up view-only mode...");
+        
+//         // Hide progress bar for completed IDP
+//         hideProgressBarIfCompleted();
+        
+//         // Load and display existing Final-Year IDP data
+//         loadFinalYearIDPDataWithCategories(userId).then(() => {
+//             if (window.savedFinalYearIDPData) {
+//                 createViewOnlyFinalYearIDPWithCategories(window.savedFinalYearIDPData);
+//             } else {
+//                 console.error("Failed to load Final-Year IDP data");
+//                 alert("Error loading Final-Year IDP data. Please refresh the page.");
+//             }
+//         });
+//     } else {
+//         console.log("📝 Final-Year IDP not completed - setting up edit mode...");
+        
+//         // Enable form for editing
+//         enableFinalYearIDPForm();
+        
+//         // Initialize training categories functionality for new input
+//         if (typeof initializeTrainingCategories === 'function') {
+//             initializeTrainingCategories();
+//         }
+//     }
+    
+//     midYearIDPForm.scrollIntoView({ behavior: "smooth" });
+//     console.log("=== FINAL-YEAR IDP NAVIGATION COMPLETE ===");
+//     console.log(`Navigated to Final-Year IDP form. Status: ${isViewOnly ? "Completed (View-Only)" : "Not Completed (Editable)"}`);
 // }
+
+async function navigateToFinalYearIDP() {
+    const finalYearIDPButton = document.getElementById("finalYearIDP");
+    
+    if (!finalYearIDPButton || !finalYearIDPButton.classList.contains('accessible')) {
+        alert("You must complete the previous steps first.");
+        return;
+    }
+    
+    console.log("Checking Final-Year IDP department validation...");
+    
+    // Show loading state
+    const originalButtonContent = finalYearIDPButton.innerHTML;
+    finalYearIDPButton.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Checking...';
+    finalYearIDPButton.disabled = true;
+    
+    try {
+        // Check department response rates for Q3 and Q4
+        const validationResult = await checkDepartmentResponseRates(userId, 'Q3,Q4', 'finalYear');
+        
+        // Reset button
+        finalYearIDPButton.innerHTML = originalButtonContent;
+        finalYearIDPButton.disabled = false;
+        
+        if (!validationResult.canProceed) {
+            console.log("Final-Year IDP blocked - showing modal");
+            showDepartmentBlockingModal(validationResult, 'finalYear');
+            return;
+        }
+        
+        console.log("Department validation passed - proceeding to Final-Year IDP");
+        
+        // Proceed with normal Final-Year IDP navigation
+        hideAllSections();
+        
+        const midYearIDPForm = document.getElementById("midYearIDPForm");
+        if (!midYearIDPForm) {
+            console.error("IDP form not found.");
+            return;
+        }
+        
+        midYearIDPForm.style.display = "block";
+        midYearIDPForm.classList.remove("fade-out");
+        midYearIDPForm.classList.add("fade-in");
+        
+        // Add department stats display
+        const statsContainer = document.getElementById('finalYearDepartmentStats') || createStatsContainer('finalYearDepartmentStats');
+        displayDepartmentResponseStats(validationResult, 'finalYearDepartmentStats');
+        
+        // Continue with existing Final-Year IDP logic
+        updateFormForFinalYear();
+        preventMidYearOverwrite();
+        
+        setTimeout(() => {
+            loadFinalYearFeedbackAggregates();
+        }, 100);
+        
+        const isViewOnly = viewState && viewState.viewOnlyStatus && viewState.viewOnlyStatus.finalyearidp;
+        
+        if (isViewOnly) {
+            hideProgressBarIfCompleted();
+            loadFinalYearIDPDataWithCategories(userId).then(() => {
+                if (window.savedFinalYearIDPData) {
+                    createViewOnlyFinalYearIDPWithCategories(window.savedFinalYearIDPData);
+                } else {
+                    console.error("Failed to load Final-Year IDP data");
+                    alert("Error loading Final-Year IDP data. Please refresh the page.");
+                }
+            });
+        } else {
+            enableFinalYearIDPForm();
+            if (typeof initializeTrainingCategories === 'function') {
+                initializeTrainingCategories();
+            }
+        }
+        
+        midYearIDPForm.scrollIntoView({ behavior: "smooth" });
+        console.log("Navigated to Final-Year IDP form with department validation.");
+        
+    } catch (error) {
+        console.error("Error during Final-Year IDP validation:", error);
+        finalYearIDPButton.innerHTML = originalButtonContent;
+        finalYearIDPButton.disabled = false;
+        alert("Error checking department status. Please try again.");
+    }
+}
 
 // Helper function to create stats container
 function createStatsContainer(containerId) {

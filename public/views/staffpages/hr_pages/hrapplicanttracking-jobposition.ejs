@@ -2774,7 +2774,10 @@ function startP2GmailIntegrationFlow() {
     executeP2Finalization();
 }
 
-
+        // Redirect to Calendly
+        function setInterviewAvailabilities() {
+            window.open('https://calendly.com/app/scheduling/meeting_types/user/me', '_blank');
+        }
 // P2 pass function (for table buttons)
 function p2passApplicant(applicantId) {
     console.log(`🟢 [P2 Pass] Function called for applicantId: ${applicantId}`);
