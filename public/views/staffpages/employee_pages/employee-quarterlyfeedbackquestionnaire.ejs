@@ -735,7 +735,7 @@ document.addEventListener('DOMContentLoaded', function() {
     let submittedFeedbacks = {}; // Will store the userId of members with submitted feedback
     let totalCompleted = 0;
     
-     // Load feedback periods function
+    // Load feedback periods function
     async function loadFeedbackPeriods() {
         console.log('🔍 Starting loadFeedbackPeriods...');
         
@@ -1390,17 +1390,17 @@ document.addEventListener('DOMContentLoaded', function() {
                         <td class="px-4 py-4">
                             <div class="space-y-2">
                                 <div class="star-rating">
-                                    <input type="radio" id="objective${index}-star5" name="objectives[${index}][quantitative]" value="5" ${isSubmitted ? 'disabled' : ''} />
-                                    <label for="objective${index}-star5" title="5 stars"></label>
-                                    <input type="radio" id="objective${index}-star4" name="objectives[${index}][quantitative]" value="4" ${isSubmitted ? 'disabled' : ''} />
-                                    <label for="objective${index}-star4" title="4 stars"></label>
-                                    <input type="radio" id="objective${index}-star3" name="objectives[${index}][quantitative]" value="3" ${isSubmitted ? 'disabled' : ''} />
-                                    <label for="objective${index}-star3" title="3 stars"></label>
-                                    <input type="radio" id="objective${index}-star2" name="objectives[${index}][quantitative]" value="2" ${isSubmitted ? 'disabled' : ''} />
-                                    <label for="objective${index}-star2" title="2 stars"></label>
-                                    <input type="radio" id="objective${index}-star1" name="objectives[${index}][quantitative]" value="1" ${isSubmitted ? 'disabled' : ''} required />
-                                    <label for="objective${index}-star1" title="1 star"></label>
-                                </div>
+    <input type="radio" id="objective${index}-star1" name="objectives[${index}][quantitative]" value="1" ${isSubmitted ? 'disabled' : ''} required />
+    <label for="objective${index}-star1" title="1 star"></label>
+    <input type="radio" id="objective${index}-star2" name="objectives[${index}][quantitative]" value="2" ${isSubmitted ? 'disabled' : ''} />
+    <label for="objective${index}-star2" title="2 stars"></label>
+    <input type="radio" id="objective${index}-star3" name="objectives[${index}][quantitative]" value="3" ${isSubmitted ? 'disabled' : ''} />
+    <label for="objective${index}-star3" title="3 stars"></label>
+    <input type="radio" id="objective${index}-star4" name="objectives[${index}][quantitative]" value="4" ${isSubmitted ? 'disabled' : ''} />
+    <label for="objective${index}-star4" title="4 stars"></label>
+    <input type="radio" id="objective${index}-star5" name="objectives[${index}][quantitative]" value="5" ${isSubmitted ? 'disabled' : ''} />
+    <label for="objective${index}-star5" title="5 stars"></label>
+</div>
                                 <textarea 
                                     name="objectives[${index}][qualitative]"
                                     class="w-full p-2 border rounded" 
@@ -1455,42 +1455,42 @@ document.addEventListener('DOMContentLoaded', function() {
                         <tbody class="bg-white divide-y divide-gray-200">
         `;
         
-        if (hardSkills && hardSkills.length > 0) {
-            hardSkills.forEach((skill, index) => {
-                html += `
-                    <tr>
-                        <td class="px-4 py-4 whitespace-nowrap text-sm">${skill.jobReqSkillName || 'Skill name not available'}</td>
-                        <td class="px-4 py-4">
-                            <div class="space-y-2">
-                                <div class="star-rating">
-                                    <input type="radio" id="hardSkill${index}-star5" name="hardSkills[${index}][quantitative]" value="5" ${isSubmitted ? 'disabled' : ''} />
-                                    <label for="hardSkill${index}-star5" title="5 stars"></label>
-                                    <input type="radio" id="hardSkill${index}-star4" name="hardSkills[${index}][quantitative]" value="4" ${isSubmitted ? 'disabled' : ''} />
-                                    <label for="hardSkill${index}-star4" title="4 stars"></label>
-                                    <input type="radio" id="hardSkill${index}-star3" name="hardSkills[${index}][quantitative]" value="3" ${isSubmitted ? 'disabled' : ''} />
-                                    <label for="hardSkill${index}-star3" title="3 stars"></label>
-                                    <input type="radio" id="hardSkill${index}-star2" name="hardSkills[${index}][quantitative]" value="2" ${isSubmitted ? 'disabled' : ''} />
-                                    <label for="hardSkill${index}-star2" title="2 stars"></label>
-                                    <input type="radio" id="hardSkill${index}-star1" name="hardSkills[${index}][quantitative]" value="1" ${isSubmitted ? 'disabled' : ''} required />
-                                    <label for="hardSkill${index}-star1" title="1 star"></label>
-                                </div>
-                                <textarea 
-                                    name="hardSkills[${index}][qualitative]"
-                                    class="w-full p-2 border rounded" 
-                                    rows="2"
-                                    placeholder="Qualitative feedback..."
-                                    required
-                                    ${isSubmitted ? 'disabled' : ''}
-                                ></textarea>
-                                <input 
-                                    type="hidden" 
-                                    name="hardSkills[${index}][skillId]" 
-                                    value="${skill.jobReqSkillId || skill.skillId}"
-                                />
-                            </div>
-                        </td>
-                    </tr>
-                `;
+if (hardSkills && hardSkills.length > 0) {
+    hardSkills.forEach((skill, index) => {
+        html += `
+            <tr>
+                <td class="px-4 py-4 whitespace-nowrap text-sm">${skill.jobReqSkillName || 'Skill name not available'}</td>
+                <td class="px-4 py-4">
+                    <div class="space-y-2">
+                        <div class="star-rating">
+                            <input type="radio" id="hardSkill${index}-star1" name="hardSkills[${index}][quantitative]" value="1" ${isSubmitted ? 'disabled' : ''} required />
+                            <label for="hardSkill${index}-star1" title="1 star"></label>
+                            <input type="radio" id="hardSkill${index}-star2" name="hardSkills[${index}][quantitative]" value="2" ${isSubmitted ? 'disabled' : ''} />
+                            <label for="hardSkill${index}-star2" title="2 stars"></label>
+                            <input type="radio" id="hardSkill${index}-star3" name="hardSkills[${index}][quantitative]" value="3" ${isSubmitted ? 'disabled' : ''} />
+                            <label for="hardSkill${index}-star3" title="3 stars"></label>
+                            <input type="radio" id="hardSkill${index}-star4" name="hardSkills[${index}][quantitative]" value="4" ${isSubmitted ? 'disabled' : ''} />
+                            <label for="hardSkill${index}-star4" title="4 stars"></label>
+                            <input type="radio" id="hardSkill${index}-star5" name="hardSkills[${index}][quantitative]" value="5" ${isSubmitted ? 'disabled' : ''} />
+                            <label for="hardSkill${index}-star5" title="5 stars"></label>
+                        </div>
+                        <textarea 
+                            name="hardSkills[${index}][qualitative]"
+                            class="w-full p-2 border rounded" 
+                            rows="2"
+                            placeholder="Qualitative feedback..."
+                            required
+                            ${isSubmitted ? 'disabled' : ''}
+                        ></textarea>
+                        <input 
+                            type="hidden" 
+                            name="hardSkills[${index}][skillId]" 
+                            value="${skill.jobReqSkillId || skill.skillId}"
+                        />
+                    </div>
+                </td>
+            </tr>
+        `;
             });
         } else {
             html += `
@@ -1528,44 +1528,44 @@ document.addEventListener('DOMContentLoaded', function() {
                         <tbody class="bg-white divide-y divide-gray-200">
         `;
         
-        if (softSkills && softSkills.length > 0) {
-            softSkills.forEach((skill, index) => {
-                html += `
-                    <tr>
-                        <td class="px-4 py-4 whitespace-nowrap text-sm">${skill.jobReqSkillName || 'Skill name not available'}</td>
-                        <td class="px-4 py-4">
-                            <div class="space-y-2">
-                                <div class="star-rating">
-                                    <input type="radio" id="softSkill${index}-star5" name="softSkills[${index}][quantitative]" value="5" ${isSubmitted ? 'disabled' : ''} />
-                                    <label for="softSkill${index}-star5" title="5 stars"></label>
-                                    <input type="radio" id="softSkill${index}-star4" name="softSkills[${index}][quantitative]" value="4" ${isSubmitted ? 'disabled' : ''} />
-                                    <label for="softSkill${index}-star4" title="4 stars"></label>
-                                    <input type="radio" id="softSkill${index}-star3" name="softSkills[${index}][quantitative]" value="3" ${isSubmitted ? 'disabled' : ''} />
-                                    <label for="softSkill${index}-star3" title="3 stars"></label>
-                                    <input type="radio" id="softSkill${index}-star2" name="softSkills[${index}][quantitative]" value="2" ${isSubmitted ? 'disabled' : ''} />
-                                    <label for="softSkill${index}-star2" title="2 stars"></label>
-                                    <input type="radio" id="softSkill${index}-star1" name="softSkills[${index}][quantitative]" value="1" ${isSubmitted ? 'disabled' : ''} required />
-                                    <label for="softSkill${index}-star1" title="1 star"></label>
-                                </div>
-                                <textarea 
-                                    name="softSkills[${index}][qualitative]"
-                                    class="w-full p-2 border rounded" 
-                                    rows="2"
-                                    placeholder="Qualitative feedback..."
-                                    required
-                                    ${isSubmitted ? 'disabled' : ''}
-                                ></textarea>
-                                <input 
-                                    type="hidden" 
-                                    name="softSkills[${index}][skillId]" 
-                                    value="${skill.jobReqSkillId || skill.skillId}"
-                                />
-                            </div>
-                        </td>
-                    </tr>
-                `;
-            });
-        } else {
+if (softSkills && softSkills.length > 0) {
+    softSkills.forEach((skill, index) => {
+        html += `
+            <tr>
+                <td class="px-4 py-4 whitespace-nowrap text-sm">${skill.jobReqSkillName || 'Skill name not available'}</td>
+                <td class="px-4 py-4">
+                    <div class="space-y-2">
+                        <div class="star-rating">
+                            <input type="radio" id="softSkill${index}-star1" name="softSkills[${index}][quantitative]" value="1" ${isSubmitted ? 'disabled' : ''} required />
+                            <label for="softSkill${index}-star1" title="1 star"></label>
+                            <input type="radio" id="softSkill${index}-star2" name="softSkills[${index}][quantitative]" value="2" ${isSubmitted ? 'disabled' : ''} />
+                            <label for="softSkill${index}-star2" title="2 stars"></label>
+                            <input type="radio" id="softSkill${index}-star3" name="softSkills[${index}][quantitative]" value="3" ${isSubmitted ? 'disabled' : ''} />
+                            <label for="softSkill${index}-star3" title="3 stars"></label>
+                            <input type="radio" id="softSkill${index}-star4" name="softSkills[${index}][quantitative]" value="4" ${isSubmitted ? 'disabled' : ''} />
+                            <label for="softSkill${index}-star4" title="4 stars"></label>
+                            <input type="radio" id="softSkill${index}-star5" name="softSkills[${index}][quantitative]" value="5" ${isSubmitted ? 'disabled' : ''} />
+                            <label for="softSkill${index}-star5" title="5 stars"></label>
+                        </div>
+                        <textarea 
+                            name="softSkills[${index}][qualitative]"
+                            class="w-full p-2 border rounded" 
+                            rows="2"
+                            placeholder="Qualitative feedback..."
+                            required
+                            ${isSubmitted ? 'disabled' : ''}
+                        ></textarea>
+                        <input 
+                            type="hidden" 
+                            name="softSkills[${index}][skillId]" 
+                            value="${skill.jobReqSkillId || skill.skillId}"
+                        />
+                    </div>
+                </td>
+            </tr>
+        `;
+    });
+} else {
             html += `
                 <tr>
                     <td colspan="2" class="px-4 py-4 text-center text-sm text-gray-500">
@@ -1631,21 +1631,27 @@ document.addEventListener('DOMContentLoaded', function() {
             }
         }
     }
-    // Replace the handleFormSubmission function in your frontend with this fixed version:
-
 function handleFormSubmission(event) {
     event.preventDefault();
-    console.log("📝 Form submission started");
+    console.groupCollapsed("📝 Form Submission Debug");
+    console.log("=== FORM SUBMISSION STARTED ===");
     
-    // Validate the form
+    // Validate the form first
     if (!validateForm()) {
-        console.log("❌ Form validation failed");
+        console.error("❌ Form validation failed");
+        console.groupEnd();
         return;
     }
     
     // Get form data
     const formData = new FormData(event.target);
     const formDataObj = {};
+    
+    // Debug raw form data
+    console.log("🔍 Raw FormData entries:");
+    for (let [key, value] of formData.entries()) {
+        console.log(`  ${key}:`, value);
+    }
     
     // Convert FormData to object
     for (let [key, value] of formData.entries()) {
@@ -1657,14 +1663,7 @@ function handleFormSubmission(event) {
         }
     }
     
-    // Clean up arrays
-    ['objectives', 'hardSkills', 'softSkills'].forEach(key => {
-        if (formDataObj[key]) {
-            formDataObj[key] = Object.values(formDataObj[key]);
-        }
-    });
-    
-    console.log("📤 Raw form data:", formDataObj);
+    console.log("🔄 FormData converted to object:", formDataObj);
     
     // Transform the data to match backend expectations
     const submitData = {
@@ -1672,72 +1671,135 @@ function handleFormSubmission(event) {
         quarter: formDataObj.quarter,
         userId: formDataObj.userId,
         reviewerUserId: formDataObj.reviewerUserId,
-        feedbackResponses: {
-            generalRemarks: null, // Add this if you have a general remarks field
-            objectives: [],
-            skills: []
-        }
+        objectives: [],
+        hardSkills: [],
+        softSkills: []
     };
     
-    // Process objectives
-    if (formDataObj.objectives && formDataObj.objectives.length > 0) {
-        formDataObj.objectives.forEach((objective, index) => {
+    // Process objectives with detailed debugging
+    if (formDataObj.objectives) {
+        console.log("🔍 Processing objectives...");
+        const objectivesArray = Array.isArray(formDataObj.objectives) ? 
+            formDataObj.objectives : 
+            [formDataObj.objectives];
+        
+        objectivesArray.forEach((objective, index) => {
+            if (!objective) return;
+            
+            console.log(`  Objective ${index}:`, objective);
+            
             if (objective.quantitative && objective.qualitative && objective.objectiveId) {
-                submitData.feedbackResponses.objectives.push({
-                    questionId: objective.objectiveId, // This should map to the feedback question ID
+                const obj = {
                     objectiveId: objective.objectiveId,
                     quantitativeRating: parseInt(objective.quantitative),
                     qualitativeResponse: objective.qualitative.trim()
+                };
+                submitData.objectives.push(obj);
+                console.log(`  ✅ Added objective:`, obj);
+            } else {
+                console.warn(`  ⚠️ Incomplete objective ${index}:`, {
+                    hasQuantitative: !!objective.quantitative,
+                    hasQualitative: !!objective.qualitative,
+                    hasObjectiveId: !!objective.objectiveId
                 });
             }
         });
     }
     
-    // Process hard skills
-    if (formDataObj.hardSkills && formDataObj.hardSkills.length > 0) {
-        formDataObj.hardSkills.forEach((skill, index) => {
-            if (skill.quantitative && skill.qualitative && skill.skillId) {
-                submitData.feedbackResponses.skills.push({
-                    questionId: skill.skillId, // This should map to the feedback question ID
-                    skillId: skill.skillId,
+    // Process hard skills with detailed debugging
+    if (formDataObj.hardSkills) {
+        console.log("🔍 Processing hard skills...");
+        const hardSkillsArray = Array.isArray(formDataObj.hardSkills) ? 
+            formDataObj.hardSkills : 
+            [formDataObj.hardSkills];
+        
+        hardSkillsArray.forEach((skill, index) => {
+            if (!skill) return;
+            
+            console.log(`  Hard Skill ${index}:`, skill);
+            
+            // Use jobReqSkillId (new field name) or fallback to skillId
+            const skillId = skill.jobReqSkillId || skill.skillId;
+            if (skill.quantitative && skill.qualitative && skillId) {
+                const skillObj = {
+                    jobReqSkillId: skillId,  // Use the correct field name
                     skillType: 'Hard',
                     quantitativeRating: parseInt(skill.quantitative),
                     qualitativeResponse: skill.qualitative.trim()
+                };
+                submitData.hardSkills.push(skillObj);
+                console.log(`  ✅ Added hard skill:`, skillObj);
+            } else {
+                console.warn(`  ⚠️ Incomplete hard skill ${index}:`, {
+                    hasQuantitative: !!skill.quantitative,
+                    hasQualitative: !!skill.qualitative,
+                    hasJobReqSkillId: !!skillId,
+                    skillData: skill
                 });
             }
         });
     }
     
-    // Process soft skills
-    if (formDataObj.softSkills && formDataObj.softSkills.length > 0) {
-        formDataObj.softSkills.forEach((skill, index) => {
-            if (skill.quantitative && skill.qualitative && skill.skillId) {
-                submitData.feedbackResponses.skills.push({
-                    questionId: skill.skillId, // This should map to the feedback question ID
-                    skillId: skill.skillId,
+    // Process soft skills with detailed debugging
+    if (formDataObj.softSkills) {
+        console.log("🔍 Processing soft skills...");
+        const softSkillsArray = Array.isArray(formDataObj.softSkills) ? 
+            formDataObj.softSkills : 
+            [formDataObj.softSkills];
+        
+        softSkillsArray.forEach((skill, index) => {
+            if (!skill) return;
+            
+            console.log(`  Soft Skill ${index}:`, skill);
+            
+            // Use jobReqSkillId (new field name) or fallback to skillId
+            const skillId = skill.jobReqSkillId || skill.skillId;
+            if (skill.quantitative && skill.qualitative && skillId) {
+                const skillObj = {
+                    jobReqSkillId: skillId,  // Use the correct field name
                     skillType: 'Soft',
                     quantitativeRating: parseInt(skill.quantitative),
                     qualitativeResponse: skill.qualitative.trim()
+                };
+                submitData.softSkills.push(skillObj);
+                console.log(`  ✅ Added soft skill:`, skillObj);
+            } else {
+                console.warn(`  ⚠️ Incomplete soft skill ${index}:`, {
+                    hasQuantitative: !!skill.quantitative,
+                    hasQualitative: !!skill.qualitative,
+                    hasJobReqSkillId: !!skillId,
+                    skillData: skill
                 });
             }
         });
     }
     
-    console.log("📤 Transformed submit data:", submitData);
+    // Combine all skills into one array for backend
+    submitData.skills = [...submitData.hardSkills, ...submitData.softSkills];
     
-    // Validate that we have the required data
-    if (!submitData.feedbackId || !submitData.quarter || !submitData.userId || !submitData.reviewerUserId) {
-        console.error("❌ Missing required fields:", {
-            feedbackId: !!submitData.feedbackId,
-            quarter: !!submitData.quarter,
-            userId: !!submitData.userId,
-            reviewerUserId: !!submitData.reviewerUserId
-        });
+    console.log("📊 Final submit data summary:", {
+        objectivesCount: submitData.objectives.length,
+        hardSkillsCount: submitData.hardSkills.length,
+        softSkillsCount: submitData.softSkills.length,
+        totalSkillsCount: submitData.skills.length
+    });
+    
+    console.log("📤 Final submit data:", JSON.stringify(submitData, null, 2));
+    
+    // Validate we have at least one feedback item
+    if (submitData.objectives.length === 0 && submitData.skills.length === 0) {
+        const errorMsg = "No valid objectives or skills found to submit";
+        console.error("❌", errorMsg);
         
         const errorDiv = document.createElement('div');
         errorDiv.className = 'bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded mt-4';
-        errorDiv.innerHTML = `<p>Missing required data for submission. Please try again.</p>`;
-        event.target.appendChild(errorDiv);
+        errorDiv.innerHTML = `
+            <p><strong>Error:</strong> ${errorMsg}</p>
+            <p class="text-sm mt-1">Please provide feedback for at least one objective or skill.</p>
+        `;
+        
+        document.getElementById('feedback-form').appendChild(errorDiv);
+        console.groupEnd();
         return;
     }
     
@@ -1748,7 +1810,8 @@ function handleFormSubmission(event) {
         submitButton.innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i> Submitting...';
     }
     
-    // Submit data
+    // Submit data with detailed debugging
+    console.log("📡 Sending data to /employee/api/submitFeedback");
     fetch('/employee/api/submitFeedback', {
         method: 'POST',
         headers: {
@@ -1756,11 +1819,19 @@ function handleFormSubmission(event) {
         },
         body: JSON.stringify(submitData)
     })
-    .then(response => response.json())
-    .then(data => {
-        console.log("📨 Submission response:", data);
-        
+    .then(response => {
+        console.log("📨 Received response, status:", response.status);
+        return response.json().then(data => {
+            console.log("📄 Response data:", data);
+            return { status: response.status, data };
+        });
+    })
+    .then(({ status, data }) => {
         if (data.success) {
+            console.log("✅ Feedback submitted successfully!");
+            console.log("Answer ID:", data.answerId);
+            
+            // Update UI for success
             submittedFeedbacks[selectedMemberId] = true;
             totalCompleted++;
             updateProgressBar();
@@ -1768,31 +1839,14 @@ function handleFormSubmission(event) {
             questionnaireContainer.innerHTML = `
                 <div class="bg-green-100 border border-green-400 text-green-700 px-4 py-3 rounded">
                     <p>✅ Feedback submitted successfully!</p>
+                    <p class="text-xs mt-1 text-green-600">Answer ID: ${data.answerId}</p>
                 </div>
             `;
             
-            if (statusIndicator) {
-                statusIndicator.className = 'status-indicator status-submitted';
-                statusIndicator.innerHTML = `
-                    <i class="fas fa-check-circle"></i>
-                    Feedback has been submitted
-                `;
-            }
-            
             // Reload feedback periods to update counts
             loadFeedbackPeriods();
-            
-            setTimeout(() => {
-                staffDropdown.value = '';
-                statusIndicator.style.display = 'none';
-                questionnaireContainer.innerHTML = `
-                    <div class="h-full flex items-center justify-center bg-gray-50 rounded-lg p-8 border border-dashed border-gray-300">
-                        <p class="text-gray-500 text-center">Select a department member to begin the 360 feedback process</p>
-                    </div>
-                `;
-            }, 2000);
         } else {
-            throw new Error(data.message || 'Failed to submit feedback');
+            throw new Error(data.message || `Server returned success: false (status ${status})`);
         }
     })
     .catch(error => {
@@ -1800,57 +1854,106 @@ function handleFormSubmission(event) {
         
         const errorDiv = document.createElement('div');
         errorDiv.className = 'bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded mt-4';
-        errorDiv.innerHTML = `<p>${error.message}</p>`;
+        errorDiv.innerHTML = `
+            <p><strong>Error:</strong> ${error.message}</p>
+            <p class="text-sm mt-1">Please check the console for more details and try again.</p>
+        `;
+        
+        // Remove existing error messages
+        const existingErrors = document.querySelectorAll('.bg-red-100');
+        existingErrors.forEach(err => err.remove());
+        
         event.target.appendChild(errorDiv);
         
         if (submitButton) {
             submitButton.disabled = false;
             submitButton.innerHTML = '<i class="fas fa-save mr-2"></i> Submit Feedback';
         }
+    })
+    .finally(() => {
+        console.log("=== FORM SUBMISSION COMPLETE ===");
+        console.groupEnd();
     });
 }
-    // Form validation function
-    function validateForm() {
-        let isValid = true;
-        
-        const requiredFields = document.querySelectorAll('#feedback-form [required]');
-        requiredFields.forEach(field => {
-            if (!field.value.trim()) {
-                field.classList.add('border-red-500');
-                isValid = false;
-            } else {
-                field.classList.remove('border-red-500');
-            }
-        });
-        
-        const starGroups = document.querySelectorAll('.star-rating');
-        starGroups.forEach(group => {
-            const checkedStar = group.querySelector('input:checked');
-            if (!checkedStar) {
-                group.classList.add('border-red-500');
-                isValid = false;
-            } else {
-                group.classList.remove('border-red-500');
-            }
-        });
-        
-        if (!isValid) {
-            const errorDiv = document.createElement('div');
-            errorDiv.className = 'bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded mt-4';
-            errorDiv.innerHTML = `<p>Please complete all required fields and ratings.</p>`;
+function validateForm() {
+    let isValid = true;
+    const errors = [];
+    
+    // Remove any existing error styling first
+    document.querySelectorAll('.border-red-500, .bg-red-100').forEach(el => {
+        el.classList.remove('border-red-500', 'bg-red-100');
+    });
+    
+    // Check required textarea fields
+    const requiredTextareas = document.querySelectorAll('#feedback-form textarea[required]');
+    requiredTextareas.forEach(field => {
+        if (!field.value.trim()) {
+            field.classList.add('border-red-500');
+            errors.push(`Please provide qualitative feedback for all sections`);
+            isValid = false;
+        }
+    });
+    
+    // Check star ratings with improved validation
+    const starGroups = document.querySelectorAll('.star-rating');
+    starGroups.forEach((group, index) => {
+        const checkedStar = group.querySelector('input:checked');
+        if (!checkedStar) {
+            // Find the section this belongs to
+            const row = group.closest('tr');
+            const sectionName = row ? row.querySelector('td:first-child')?.textContent?.trim() : `Item ${index + 1}`;
             
-            const existingError = document.querySelector('.bg-red-100');
-            if (existingError) {
-                existingError.remove();
-            }
+            // Highlight the star rating container
+            group.style.border = '2px solid #ef4444';
+            group.style.borderRadius = '4px';
+            group.style.padding = '4px';
             
-            document.getElementById('feedback-form').appendChild(errorDiv);
-            document.getElementById('feedback-form').scrollIntoView({ behavior: 'smooth' });
+            errors.push(`Please provide a rating for: ${sectionName}`);
+            isValid = false;
+        } else {
+            // Remove error styling if valid
+            group.style.border = '';
+            group.style.borderRadius = '';
+            group.style.padding = '';
+        }
+    });
+    
+    // Display validation errors
+    if (!isValid) {
+        // Remove existing error messages
+        const existingErrors = document.querySelectorAll('.validation-error');
+        existingErrors.forEach(err => err.remove());
+        
+        // Create and display new error message
+        const errorDiv = document.createElement('div');
+        errorDiv.className = 'validation-error bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded mt-4';
+        
+        const uniqueErrors = [...new Set(errors)]; // Remove duplicates
+        
+        errorDiv.innerHTML = `
+            <p class="font-semibold mb-2">Please complete all required fields:</p>
+            <ul class="list-disc ml-5">
+                ${uniqueErrors.map(error => `<li>${error}</li>`).join('')}
+            </ul>
+        `;
+        
+        document.getElementById('feedback-form').appendChild(errorDiv);
+        
+        // Scroll to the first error
+        const firstError = document.querySelector('.border-red-500, [style*="border: 2px solid"]');
+        if (firstError) {
+            firstError.scrollIntoView({ 
+                behavior: 'smooth', 
+                block: 'center' 
+            });
         }
         
-        return isValid;
+        console.log("❌ Form validation failed:", uniqueErrors);
     }
     
+    return isValid;
+}
+
     // Helper function to parse complex form data keys
     function parseFormDataKey(key) {
         const keyParts = key.match(/([^\[\]]+)|\[([^\[\]]*)\]/g);

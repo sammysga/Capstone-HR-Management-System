@@ -15378,250 +15378,6 @@ checkFeedbackStatus: async function(req, res) {
     }
 },
 
-submitFeedback: async function(req, res) {
-    const currentUserId = req.session?.user?.userId;
-    const { feedbackId, userId, quarter, reviewerUserId, feedbackResponses } = req.body;
-    
-    console.log("=== submitFeedback called ===");
-    console.log("📝 Current User ID:", currentUserId);
-    console.log("📝 Request body:", req.body);
-    
-    if (!currentUserId || !userId || !quarter || !feedbackResponses) {
-        console.error("❌ Missing required data:", {
-            currentUserId: !!currentUserId,
-            userId: !!userId,
-            quarter: !!quarter,
-            feedbackResponses: !!feedbackResponses
-        });
-        
-        return res.status(400).json({
-            success: false,
-            message: 'Missing required data for feedback submission',
-            debug: {
-                hasCurrentUserId: !!currentUserId,
-                hasUserId: !!userId,
-                hasQuarter: !!quarter,
-                hasFeedbackResponses: !!feedbackResponses,
-                receivedKeys: Object.keys(req.body)
-            }
-        });
-    }
-    
-    try {
-        // Get feedback table info
-        const feedbackTable = `feedbacks_${quarter}`;
-        const feedbackIdField = `feedbackq${quarter.substring(1)}_Id`;
-        
-        console.log(`📋 Using table: ${feedbackTable}, ID field: ${feedbackIdField}`);
-        
-        // Get the feedback record
-        const { data: feedbackData, error: feedbackError } = await supabase
-            .from(feedbackTable)
-            .select(`${feedbackIdField}`)
-            .eq('userId', userId)
-            .eq('quarter', quarter)
-            .single();
-            
-        if (feedbackError || !feedbackData) {
-            console.error("❌ Feedback record not found:", feedbackError);
-            return res.status(404).json({
-                success: false,
-                message: 'Feedback record not found',
-                debug: {
-                    table: feedbackTable,
-                    userId: userId,
-                    quarter: quarter,
-                    error: feedbackError?.message
-                }
-            });
-        }
-        
-        const actualFeedbackId = feedbackData[feedbackIdField];
-        console.log(`✅ Found feedback record with ID: ${actualFeedbackId}`);
-        
-        // Check if already submitted
-        const { data: existingSubmission, error: existingError } = await supabase
-            .from('feedbacks_answers')
-            .select('feedbackId_answerId')
-            .eq(feedbackIdField, actualFeedbackId)
-            .eq('reviewerUserId', currentUserId)
-            .limit(1);
-            
-        if (existingSubmission && existingSubmission.length > 0) {
-            console.log("⚠️ Feedback already submitted");
-            return res.status(409).json({
-                success: false,
-                message: 'Feedback already submitted for this user and quarter'
-            });
-        }
-        
-        console.log("✅ No existing submission found, proceeding with submission");
-        
-        // Create main feedback answer record
-        const answerInsertData = {
-            [feedbackIdField]: actualFeedbackId,
-            reviewerUserId: currentUserId,
-            userId: userId,
-            reviewDate: new Date().toISOString().split('T')[0],
-            remarks: feedbackResponses.generalRemarks || null
-        };
-        
-        console.log("📝 Inserting main answer record:", answerInsertData);
-        
-        const { data: answerRecord, error: answerError } = await supabase
-            .from('feedbacks_answers')
-            .insert(answerInsertData)
-            .select('feedbackId_answerId')
-            .single();
-            
-        if (answerError || !answerRecord) {
-            console.error('❌ Error creating feedback answer record:', answerError);
-            return res.status(500).json({
-                success: false,
-                message: 'Error saving feedback submission',
-                debug: {
-                    answerError: answerError?.message,
-                    insertData: answerInsertData
-                }
-            });
-        }
-        
-        const answerId = answerRecord.feedbackId_answerId;
-        console.log(`✅ Created main answer record with ID: ${answerId}`);
-        
-        let objectivesInserted = 0;
-        let skillsInserted = 0;
-        
-        // Save objective responses
-        if (feedbackResponses.objectives && feedbackResponses.objectives.length > 0) {
-            console.log(`📋 Processing ${feedbackResponses.objectives.length} objective responses`);
-            
-            // First, get the objective question IDs from the feedbacks_questions-objectives table
-            const { data: objectiveQuestions, error: objQuestionsError } = await supabase
-                .from('feedbacks_questions-objectives')
-                .select('feedback_qObjectivesId, objectiveId')
-                .eq(feedbackIdField, actualFeedbackId);
-                
-            if (objQuestionsError) {
-                console.error('❌ Error fetching objective questions:', objQuestionsError);
-            } else {
-                console.log(`📋 Found ${objectiveQuestions?.length || 0} objective questions in database`);
-                
-                const objectiveAnswers = [];
-                
-                feedbackResponses.objectives.forEach((obj, index) => {
-                    // Find the corresponding question ID
-                    const questionRecord = objectiveQuestions?.find(q => q.objectiveId == obj.objectiveId);
-                    
-                    if (questionRecord) {
-                        objectiveAnswers.push({
-                            feedback_answerObjectivesId: answerId,
-                            feedback_qObjectivesId: questionRecord.feedback_qObjectivesId,
-                            objectiveQualInput: obj.qualitativeResponse,
-                            objectiveQuantInput: obj.quantitativeRating
-                        });
-                        console.log(`  ✅ Mapped objective ${obj.objectiveId} to question ${questionRecord.feedback_qObjectivesId}`);
-                    } else {
-                        console.log(`  ⚠️ No question found for objective ${obj.objectiveId}`);
-                    }
-                });
-                
-                if (objectiveAnswers.length > 0) {
-                    console.log(`📝 Inserting ${objectiveAnswers.length} objective answers`);
-                    
-                    const { data: insertedObjectives, error: objError } = await supabase
-                        .from('feedbacks_answers-objectives')
-                        .insert(objectiveAnswers)
-                        .select('feedback_answerObjectivesId');
-                        
-                    if (objError) {
-                        console.error('❌ Error saving objective answers:', objError);
-                    } else {
-                        objectivesInserted = insertedObjectives?.length || 0;
-                        console.log(`✅ Inserted ${objectivesInserted} objective answers`);
-                    }
-                }
-            }
-        }
-        
-        // Save skill responses
-        if (feedbackResponses.skills && feedbackResponses.skills.length > 0) {
-            console.log(`🛠️ Processing ${feedbackResponses.skills.length} skill responses`);
-            
-            // Get the skill question IDs from the feedbacks_questions-skills table
-            const { data: skillQuestions, error: skillQuestionsError } = await supabase
-                .from('feedbacks_questions-skills')
-                .select('feedback_qSkillsId, jobReqSkillId')
-                .eq(feedbackIdField, actualFeedbackId);
-                
-            if (skillQuestionsError) {
-                console.error('❌ Error fetching skill questions:', skillQuestionsError);
-            } else {
-                console.log(`🛠️ Found ${skillQuestions?.length || 0} skill questions in database`);
-                
-                const skillAnswers = [];
-                
-                feedbackResponses.skills.forEach((skill, index) => {
-                    // Find the corresponding question ID
-                    const questionRecord = skillQuestions?.find(q => q.jobReqSkillId == skill.skillId);
-                    
-                    if (questionRecord) {
-                        skillAnswers.push({
-                            feedback_answerSkillsId: answerId,
-                            feedback_qSkillsId: questionRecord.feedback_qSkillsId,
-                            skillsQualInput: skill.qualitativeResponse,
-                            skillsQuantInput: skill.quantitativeRating
-                        });
-                        console.log(`  ✅ Mapped skill ${skill.skillId} to question ${questionRecord.feedback_qSkillsId}`);
-                    } else {
-                        console.log(`  ⚠️ No question found for skill ${skill.skillId}`);
-                    }
-                });
-                
-                if (skillAnswers.length > 0) {
-                    console.log(`📝 Inserting ${skillAnswers.length} skill answers`);
-                    
-                    const { data: insertedSkills, error: skillError } = await supabase
-                        .from('feedbacks_answers-skills')
-                        .insert(skillAnswers)
-                        .select('feedback_answerSkillsId');
-                        
-                    if (skillError) {
-                        console.error('❌ Error saving skill answers:', skillError);
-                    } else {
-                        skillsInserted = insertedSkills?.length || 0;
-                        console.log(`✅ Inserted ${skillsInserted} skill answers`);
-                    }
-                }
-            }
-        }
-        
-        console.log(`✅ Feedback submission complete:`, {
-            answerId: answerId,
-            objectivesInserted: objectivesInserted,
-            skillsInserted: skillsInserted
-        });
-        
-        return res.json({
-            success: true,
-            message: 'Feedback submitted successfully',
-            answerId: answerId,
-            details: {
-                objectivesInserted: objectivesInserted,
-                skillsInserted: skillsInserted
-            }
-        });
-        
-    } catch (error) {
-        console.error('❌ Error in submitFeedback:', error);
-        return res.status(500).json({
-            success: false,
-            message: 'Server error while submitting feedback',
-            error: error.message
-        });
-    }
-},
-
 // Function to fix the relationship between feedback answers and detailed responses
 fixFeedbackAnswerRelationships: async function(feedbackId, feedbackIdField, quarter) {
     try {
@@ -15679,229 +15435,337 @@ fixFeedbackAnswerRelationships: async function(feedbackId, feedbackIdField, quar
     }
 },
 
-// API endpoint to submit feedback
-submitFeedback: async function (req, res) {
+submitFeedback: async function(req, res) {
     const currentUserId = req.session?.user?.userId;
     const { 
         feedbackId, 
         quarter,
-        userId, // This is the TARGET user (employee being reviewed)
+        userId, 
         objectives = [], 
         hardSkills = [], 
         softSkills = [] 
     } = req.body;
     
     console.log("Submit feedback request received:", {
-        reviewerUserId: currentUserId, // This should be the line manager
-        targetUserId: userId,          // This is the employee being reviewed
+        reviewerUserId: currentUserId,
+        targetUserId: userId,
         quarter,
         feedbackId,
         objectivesCount: objectives.length,
         hardSkillsCount: hardSkills.length,
         softSkillsCount: softSkills.length
     });
-    
+
     if (!currentUserId || !feedbackId || !quarter || !userId) {
         return res.status(400).json({ 
             success: false, 
             message: 'Missing required parameters.'
         });
     }
-    
+
     try {
-        // Determine which feedback ID field to use based on quarter
         const quarterNum = quarter.charAt(1);
         const idField = `feedbackq${quarterNum}_Id`;
-        
-        // Check if feedback was already submitted by THIS reviewer (line manager)
+
+        console.log(`🔍 Checking for existing feedback - idField: ${idField}, feedbackId: ${feedbackId}, reviewerUserId: ${currentUserId}`);
+
+        // Check for existing feedback answers
         const { data: existingFeedback, error: existingFeedbackError } = await supabase
             .from('feedbacks_answers')
             .select('feedbackId_answerId')
             .eq(idField, feedbackId)
-            .eq('reviewerUserId', currentUserId) // Check by reviewer, not target user
-            .limit(1);
-            
+            .eq('reviewerUserId', currentUserId);
+
         if (existingFeedbackError) {
-            console.error("Error checking existing feedback:", existingFeedbackError);
-        } else if (existingFeedback && existingFeedback.length > 0) {
-            console.log("Feedback already submitted by this reviewer");
-            return res.json({
+            console.error("❌ Error checking existing feedback:", existingFeedbackError);
+            return res.status(500).json({
                 success: false,
-                message: 'You have already submitted feedback for this user.'
+                message: 'Error checking existing feedback'
             });
         }
-        
-        // Insert feedback answers record - FIXED: Use currentUserId for the reviewer
-        const { data: answerData, error: answerError } = await supabase
-            .from('feedbacks_answers')
-            .insert({
-                [idField]: feedbackId,
-                reviewerUserId: currentUserId,  // This is the line manager answering
-                userId: userId,                 // This is the employee being reviewed
-                reviewDate: new Date().toISOString().split('T')[0],
-                created_at: new Date()
-            })
-            .select();
-            
-        if (answerError || !answerData || answerData.length === 0) {
-            console.error("Error inserting feedback answer:", answerError);
-            return res.status(500).json({ 
-                success: false, 
-                message: 'Error saving feedback answer.'
-            });
-        }
-        
-        const feedbackAnswerId = answerData[0].feedbackId_answerId;
-        console.log(`Created feedback answer record with ID ${feedbackAnswerId}`);
-        
-        // Also insert into the reviewer tracking table
-        try {
-            const { error: reviewerError } = await supabase
-                .from(`feedbacks_reviewer_${quarter}`)
+
+        console.log(`📊 Existing feedback check result:`, existingFeedback);
+
+        let feedbackAnswerId;
+        let isExistingFeedback = false;
+
+        if (existingFeedback?.length > 0) {
+            // Update existing feedback
+            feedbackAnswerId = existingFeedback[0].feedbackId_answerId;
+            isExistingFeedback = true;
+            console.log(`🔄 Updating existing feedback with answer ID: ${feedbackAnswerId}`);
+        } else {
+            console.log("✅ No existing feedback found, proceeding with insert");
+
+            // Insert new feedback answer
+            const { data: answerData, error: answerError } = await supabase
+                .from('feedbacks_answers')
                 .insert({
                     [idField]: feedbackId,
-                    reviewerId: currentUserId,  // Line manager who provided the feedback
+                    reviewerUserId: currentUserId,
+                    userId: userId,
                     reviewDate: new Date().toISOString().split('T')[0],
                     created_at: new Date()
+                })
+                .select('feedbackId_answerId')
+                .single();
+
+            if (answerError || !answerData) {
+                console.error("❌ Error inserting feedback answer:", answerError);
+                return res.status(500).json({ 
+                    success: false, 
+                    message: 'Error saving feedback answer.',
+                    debug: answerError
                 });
+            }
+
+            feedbackAnswerId = answerData.feedbackId_answerId;
+            console.log(`✅ Created feedback answer record with ID ${feedbackAnswerId}`);
+        }
+
+        // --- OBJECTIVES ---
+        if (objectives.length > 0) {
+            console.log("🎯 Processing objectives...");
+            
+            // STEP 1: Clear only THIS user's existing objectives for THIS feedback
+            if (isExistingFeedback) {
+                console.log("🧹 Clearing existing objectives for THIS feedback answer only...");
+                const { error: clearObjError } = await supabase
+                    .from('feedbacks_answers-objectives')
+                    .delete()
+                    .eq('feedback_answerObjectivesId', feedbackAnswerId);
                 
-            if (reviewerError) {
-                console.error("Error inserting reviewer record:", reviewerError);
-                // Don't fail the entire operation for this
+                if (clearObjError) {
+                    console.log("⚠️ Error clearing objectives:", clearObjError);
+                } else {
+                    console.log("✅ Cleared existing objectives for this feedback only");
+                }
+            }
+            
+            const { data: qObjectives, error: qObjError } = await supabase
+                .from('feedbacks_questions-objectives')
+                .select('feedback_qObjectivesId, objectiveId')
+                .eq(idField, feedbackId);
+
+            if (qObjError) {
+                console.error("❌ Error fetching question-objectives:", qObjError);
+                return res.status(500).json({
+                    success: false,
+                    message: 'Error fetching objective questions'
+                });
+            }
+
+            const objectiveQuestionMap = {};
+            qObjectives.forEach(qObj => {
+                objectiveQuestionMap[qObj.objectiveId] = qObj.feedback_qObjectivesId;
+            });
+
+            console.log("📋 Objective mapping:", objectiveQuestionMap);
+
+            const objectiveAnswers = objectives
+                .filter(obj => {
+                    const hasMapping = objectiveQuestionMap[obj.objectiveId];
+                    if (!hasMapping) {
+                        console.warn(`⚠️ No question mapping found for objective ID: ${obj.objectiveId}`);
+                    }
+                    return hasMapping;
+                })
+                .map(obj => ({
+                    feedback_answerObjectivesId: feedbackAnswerId,
+                    feedback_qObjectivesId: objectiveQuestionMap[obj.objectiveId],
+                    objectiveQuantInput: parseInt(obj.quantitativeRating) || 0,
+                    objectiveQualInput: obj.qualitativeResponse || '',
+                    created_at: new Date()
+                }));
+
+            console.log("📝 Prepared objective answers:", objectiveAnswers);
+
+            if (objectiveAnswers.length > 0) {
+                // Use simple INSERT since we cleared existing data first
+                const { error: objAnswerError } = await supabase
+                    .from('feedbacks_answers-objectives')
+                    .insert(objectiveAnswers);
+
+                if (objAnswerError) {
+                    console.error("❌ Error inserting objective answers:", objAnswerError);
+                    return res.status(500).json({ 
+                        success: false, 
+                        message: 'Error saving objective feedback.',
+                        debug: {
+                            error: objAnswerError,
+                            feedbackAnswerId,
+                            objectiveAnswers
+                        }
+                    });
+                }
+                console.log(`✅ Saved ${objectiveAnswers.length} objective answers`);
             } else {
-                console.log("Successfully recorded reviewer entry");
+                console.warn("⚠️ No valid objective answers to save");
             }
-        } catch (reviewerInsertError) {
-            console.error("Error with reviewer table:", reviewerInsertError);
-            // Continue with the rest of the process
         }
-        
-        // Get question-objective relationships for this feedback
-        const { data: qObjectives, error: qObjError } = await supabase
-            .from('feedbacks_questions-objectives')
-            .select('feedback_qObjectivesId, objectiveId')
-            .eq(idField, feedbackId);
-            
-        if (qObjError) {
-            console.error("Error fetching question-objectives:", qObjError);
-        }
-        
-        // Process objective answers
-        if (objectives.length > 0 && qObjectives && qObjectives.length > 0) {
-            console.log(`Processing ${objectives.length} objectives`);
-            
-            try {
-                const objectiveMap = {};
-                qObjectives.forEach(qObj => {
-                    objectiveMap[qObj.objectiveId] = qObj.feedback_qObjectivesId;
+
+        // --- SKILLS ---
+        const allSkills = [...hardSkills, ...softSkills];
+        if (allSkills.length > 0) {
+            console.log("🛠️ Processing skills...");
+
+            const { data: staffData, error: staffError } = await supabase
+                .from('staffaccounts')
+                .select('jobId')
+                .eq('userId', userId)
+                .single();
+
+            if (staffError || !staffData) {
+                console.error("❌ Error fetching user jobId:", staffError);
+                return res.status(500).json({
+                    success: false,
+                    message: 'Error fetching user job information'
                 });
-                
-                const objectiveAnswers = objectives
-                    .filter(obj => objectiveMap[obj.objectiveId])
-                    .map(obj => ({
-                        feedback_answerObjectivesId: feedbackAnswerId, // Link to the main answer record
-                        feedback_qObjectivesId: objectiveMap[obj.objectiveId],
-                        objectiveQuantInput: parseInt(obj.quantitative) || 0,
-                        objectiveQualInput: obj.qualitative || '',
-                        created_at: new Date()
-                    }));
-                
-                if (objectiveAnswers.length > 0) {
-                    const { error: objAnswerError } = await supabase
-                        .from('feedbacks_answers-objectives')
-                        .insert(objectiveAnswers);
-                        
-                    if (objAnswerError) {
-                        console.error("Error inserting objective answers:", objAnswerError);
-                        return res.status(500).json({ 
-                            success: false, 
-                            message: 'Error saving objective feedback.'
-                        });
-                    }
-                    
-                    console.log(`Saved ${objectiveAnswers.length} objective answers`);
+            }
+
+            console.log("👤 User jobId:", staffData.jobId);
+
+            const { data: qSkills, error: qSkillsError } = await supabase
+                .from('feedbacks_questions-skills')
+                .select('feedback_qSkillsId, jobReqSkillId')
+                .eq(idField, feedbackId);
+
+            if (qSkillsError) {
+                console.error("❌ Error fetching question-skills:", qSkillsError);
+                return res.status(500).json({
+                    success: false,
+                    message: 'Error fetching skill questions'
+                });
+            }
+
+            console.log("📊 Raw qSkills from database:", JSON.stringify(qSkills, null, 2));
+
+            const skillQuestionMap = {};
+            qSkills.forEach(qSkill => {
+                skillQuestionMap[qSkill.jobReqSkillId] = qSkill.feedback_qSkillsId;
+            });
+
+            console.log("🗺️ Skill question mapping:", JSON.stringify(skillQuestionMap, null, 2));
+
+            // STEP 1: Clear only THIS user's existing skills for THIS feedback answer
+            if (isExistingFeedback) {
+                console.log("🧹 Clearing existing skills for THIS feedback answer only...");
+                const { error: clearSkillsError } = await supabase
+                    .from('feedbacks_answers-skills')
+                    .delete()
+                    .eq('feedback_answerSkillsId', feedbackAnswerId);
+
+                if (clearSkillsError) {
+                    console.log("⚠️ Error clearing existing skills:", clearSkillsError);
+                } else {
+                    console.log("✅ Successfully cleared existing skills for this feedback only");
                 }
-            } catch (insertError) {
-                console.error("Error processing objective answers:", insertError);
-                return res.status(500).json({ 
-                    success: false, 
-                    message: 'Error processing objective feedback.'
-                });
-            }
-        }
-        
-        // Get question-skills relationships
-        const { data: qSkills, error: qSkillsError } = await supabase
-            .from('feedbacks_questions-skills')
-            .select('feedback_qSkillsId, jobReqSkillId')
-            .eq(idField, feedbackId);
-            
-        if (qSkillsError) {
-            console.error("Error fetching question-skills:", qSkillsError);
-        }
-        
-        // Process skills answers
-        if (qSkills && qSkills.length > 0) {
-            const allSkills = [...hardSkills, ...softSkills];
-            console.log(`Processing ${allSkills.length} total skills`);
-            
-            try {
-                const skillMap = {};
-                qSkills.forEach(qSkill => {
-                    skillMap[qSkill.jobReqSkillId] = qSkill.feedback_qSkillsId;
-                });
+
+                // Verify clearance
+                const { data: remainingSkills } = await supabase
+                    .from('feedbacks_answers-skills')
+                    .select('*')
+                    .eq('feedback_answerSkillsId', feedbackAnswerId);
                 
-                const skillAnswers = allSkills
-                    .filter(skill => skillMap[skill.skillId])
-                    .map(skill => ({
-                        feedback_answerSkillsId: feedbackAnswerId, // Link to the main answer record
-                        feedback_qSkillsId: skillMap[skill.skillId],
-                        skillsQuantInput: parseInt(skill.quantitative) || 0,
-                        skillsQualInput: skill.qualitative || '',
+                console.log(`🔍 Remaining skills after clear: ${remainingSkills?.length || 0}`);
+            }
+
+            // STEP 2: Process and prepare new skills
+            const skillAnswers = [];
+            allSkills.forEach((skill, index) => {
+                const skillKey = skill.jobReqSkillId || skill.skillId;
+                const hasMapping = skillQuestionMap[skillKey];
+                
+                console.log(`🔍 Processing skill ${index}:`);
+                console.log(`  - skillKey: ${skillKey}`);
+                console.log(`  - hasMapping: ${hasMapping}`);
+                console.log(`  - quantitativeRating: ${skill.quantitativeRating}`);
+                console.log(`  - qualitativeResponse: "${skill.qualitativeResponse}"`);
+                
+                if (hasMapping && skill.quantitativeRating && skill.qualitativeResponse) {
+                    const skillAnswer = {
+                        feedback_answerSkillsId: feedbackAnswerId,
+                        feedback_qSkillsId: skillQuestionMap[skillKey],
+                        skillsQuantInput: parseInt(skill.quantitativeRating) || 0,
+                        skillsQualInput: skill.qualitativeResponse || '',
                         created_at: new Date()
-                    }));
-                
-                if (skillAnswers.length > 0) {
-                    const { error: skillAnswerError } = await supabase
-                        .from('feedbacks_answers-skills')
-                        .insert(skillAnswers);
-                        
-                    if (skillAnswerError) {
-                        console.error("Error inserting skill answers:", skillAnswerError);
-                        return res.status(500).json({ 
-                            success: false, 
-                            message: 'Error saving skills feedback.'
-                        });
-                    }
-                    
-                    console.log(`Saved ${skillAnswers.length} skill answers`);
+                    };
+                    skillAnswers.push(skillAnswer);
+                    console.log(`  ✅ Added skill answer:`, JSON.stringify(skillAnswer, null, 2));
+                } else {
+                    console.log(`  ❌ Skill ${index} failed validation:`);
+                    console.log(`    - hasMapping: ${hasMapping}`);
+                    console.log(`    - has quantitativeRating: ${!!skill.quantitativeRating}`);
+                    console.log(`    - has qualitativeResponse: ${!!skill.qualitativeResponse}`);
                 }
-            } catch (insertError) {
-                console.error("Error processing skill answers:", insertError);
-                return res.status(500).json({ 
-                    success: false, 
-                    message: 'Error processing skills feedback.'
-                });
+            });
+
+            console.log("📝 Final prepared skill answers:", JSON.stringify(skillAnswers, null, 2));
+            console.log(`📊 About to insert ${skillAnswers.length} skill answers for feedback answer ID: ${feedbackAnswerId}`);
+
+            // STEP 3: Insert new skills (since we cleared existing ones first)
+            if (skillAnswers.length > 0) {
+                console.log("💾 Inserting all skills...");
+                
+                const { data: insertedSkills, error: skillInsertError } = await supabase
+                    .from('feedbacks_answers-skills')
+                    .insert(skillAnswers)
+                    .select('*');
+
+                if (skillInsertError) {
+                    console.error("❌ Error inserting skills:", skillInsertError);
+                    console.error("❌ Failed skill data:", JSON.stringify(skillAnswers, null, 2));
+                    
+                    return res.status(500).json({ 
+                        success: false, 
+                        message: 'Error saving skills feedback.',
+                        debug: {
+                            error: skillInsertError,
+                            feedbackAnswerId,
+                            skillAnswersCount: skillAnswers.length,
+                            skillAnswers: skillAnswers
+                        }
+                    });
+                } else {
+                    console.log(`✅ Successfully inserted ${skillAnswers.length} skills`);
+                    console.log("✅ Inserted skills data:", JSON.stringify(insertedSkills, null, 2));
+                }
+                
+                // Final verification
+                const { data: verifySkills, error: verifyError } = await supabase
+                    .from('feedbacks_answers-skills')
+                    .select('*')
+                    .eq('feedback_answerSkillsId', feedbackAnswerId);
+                
+                if (verifyError) {
+                    console.error("❌ Error verifying skills:", verifyError);
+                } else {
+                    console.log(`✅ Final verification: Found ${verifySkills.length} skills in database for feedbackAnswerId ${feedbackAnswerId}`);
+                    console.log("✅ Final verified skills:", JSON.stringify(verifySkills, null, 2));
+                }
+            } else {
+                console.warn("⚠️ No valid skill answers to save");
             }
         }
-        
-        console.log(`✅ Successfully submitted feedback from reviewer ${currentUserId} for employee ${userId}`);
-        
+
+        console.log(`🎉 Feedback submission completed successfully for answer ID: ${feedbackAnswerId}`);
+
         return res.json({
             success: true,
-            message: 'Feedback submitted successfully.'
+            message: 'Feedback submitted successfully.',
+            answerId: feedbackAnswerId
         });
-        
+
     } catch (error) {
-        console.error('Error in submitFeedback:', error);
+        console.error('❌ Error in submitFeedback:', error);
         return res.status(500).json({ 
             success: false, 
             message: 'An error occurred while submitting feedback.',
-            error: error.message
+            error: error.message,
+            stack: process.env.NODE_ENV === 'development' ? error.stack : undefined
         });
     }
 },
-
 generatePDFReport: async function(data) {
         return new Promise((resolve, reject) => {
             try {

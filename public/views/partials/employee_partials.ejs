@@ -400,8 +400,7 @@ body {
         console.log('Floating Action Button clicked - default handler');
         window.location.href = '/employee/leaverequest';
     };
-    
-    // Function to fetch 360 feedback data and update notification panel
+// Function to fetch 360 feedback data and update notification panel
     async function fetch360Feedback() {
         try {
             console.log("Fetching 360 feedback data...");
@@ -422,11 +421,11 @@ body {
             console.log("Received 360 feedback response:", data);
             
             if (data.success && data.feedback) {
-    // Get the feedback data
-    const feedback = data.feedback;
-    const quarter = data.quarter || '';
-    console.log('Active quarter detected:', quarter); // Debug statement
-    activeFeedbackQuarter = quarter;
+                // Get the feedback data
+                const feedback = data.feedback;
+                const quarter = data.quarter || '';
+                console.log('Active quarter detected:', quarter);
+                activeFeedbackQuarter = quarter;
                 
                 // Format dates for display
                 const startDate = new Date(feedback.setStartDate).toLocaleDateString('en-US', {
@@ -459,9 +458,9 @@ body {
                     
                     // Insert at the top of recent-notifications
                     const recentNotifications = document.getElementById('recent-notifications');
-                    if (recentNotifications.firstChild) {
+                    if (recentNotifications && recentNotifications.firstChild) {
                         recentNotifications.insertBefore(feedbackSection, recentNotifications.firstChild);
-                    } else {
+                    } else if (recentNotifications) {
                         recentNotifications.appendChild(feedbackSection);
                     }
                 }
@@ -470,8 +469,8 @@ body {
                 feedbackSection.innerHTML = `
                     <h4>REQUIRED 360 Degree Feedback</h4>
                     <div class="notification-item">
-                        <div class="headline">360 Feedback Answers Required</div>
-                        <div class="content">The 360-Degree Quarterly Feedback (${quarter}) must be accomplished from 
+                        <div class="headline">Active Feedback Questionnaires</div>
+                        <div class="content">There are active feedback questionnaires available for ${quarter} from 
                             <span id="feedback-start-date">${startDate}</span> up until 
                             <span id="feedback-end-date">${endDate}</span>. 
                             Your participation is required.
@@ -481,35 +480,46 @@ body {
                     </div>
                 `;
                 
-// In your notification bell script
-document.getElementById('feedback-action-btn').addEventListener('click', function() {
-    console.log('Feedback action button clicked');
-    console.log('Quarter value:', activeFeedbackQuarter);
-    console.log('Redirecting to:', `/employee/staffFeedbackList?quarter=${activeFeedbackQuarter}`);
-    window.location.href = `/employee/staffFeedbackList?quarter=${activeFeedbackQuarter}`;
-});
-                // Update the FAB to point to the feedback page
-                fab.innerHTML = '<i class="fas fa-clipboard-list"></i>';
+                // Add event listener to the feedback action button
+                const feedbackActionBtn = document.getElementById('feedback-action-btn');
+                if (feedbackActionBtn) {
+                    feedbackActionBtn.addEventListener('click', function() {
+                        console.log('Feedback action button clicked');
+                        console.log('Quarter value:', activeFeedbackQuarter);
+                        console.log('Redirecting to:', `/employee/staffFeedbackList?quarter=${activeFeedbackQuarter}`);
+                        window.location.href = `/employee/staffFeedbackList?quarter=${activeFeedbackQuarter}`;
+                    });
+                }
                 
-                // Remove any existing click handlers from FAB
-                const oldFab = fab.cloneNode(true);
-                fab.parentNode.replaceChild(oldFab, fab);
-                fab = oldFab;
-                
-                // Add new click handler
-                fab.addEventListener('click', function() {
-                    window.location.href = `/employee/staffFeedbackList?quarter=${quarter}`;
-                });
+                // FIXED: Check if FAB exists before modifying it
+                if (fab) {
+                    // Update the FAB to point to the feedback page
+                    fab.innerHTML = '<i class="fas fa-clipboard-list"></i>';
+                    
+                    // Remove any existing click handlers from FAB
+                    const oldFab = fab.cloneNode(true);
+                    fab.parentNode.replaceChild(oldFab, fab);
+                    fab = oldFab;
+                    
+                    // Add new click handler
+                    fab.addEventListener('click', function() {
+                        window.location.href = `/employee/staffFeedbackList?quarter=${quarter}`;
+                    });
+                }
                 
                 // Add a pulse animation to notification bell
-                notificationBell.classList.add('pulse-animation');
-                setTimeout(() => {
-                    notificationBell.classList.remove('pulse-animation');
-                }, 3000);
+                if (notificationBell) {
+                    notificationBell.classList.add('pulse-animation');
+                    setTimeout(() => {
+                        notificationBell.classList.remove('pulse-animation');
+                    }, 3000);
+                }
                 
                 // Increment notification count for the feedback
-                const currentCount = parseInt(notificationCount.textContent || '0');
-                notificationCount.textContent = currentCount + 1;
+                if (notificationCount) {
+                    const currentCount = parseInt(notificationCount.textContent || '0');
+                    notificationCount.textContent = currentCount + 1;
+                }
                 
                 hasActiveFeedback = true;
                 return true;
@@ -524,7 +534,6 @@ document.getElementById('feedback-action-btn').addEventListener('click', functio
             return false;
         }
     }
-
     // Function to fetch notifications from the server
     async function fetchNotifications() {
         try {
