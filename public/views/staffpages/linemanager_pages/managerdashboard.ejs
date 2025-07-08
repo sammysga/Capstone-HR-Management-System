@@ -1281,6 +1281,146 @@ window.notifications = <%- JSON.stringify(notifications || []) %>;
                 </div>
             </div>
 
+
+                        <div class="attendance-reports-section">
+                <div class="reports-section-header">
+                    <i class="fas fa-file-chart-line"></i>
+                    <h3>Department Reports</h3>
+                    <span class="department-badge" id="manager-department">Your Department</span>
+                </div>
+                
+                <div class="reports-grid">
+                    <!-- Daily Department Attendance Report -->
+                    <div class="report-item">
+                        <div class="report-header">
+                            <div class="report-icon">
+                                <i class="fas fa-calendar-day"></i>
+                            </div>
+                            <div class="report-info">
+                                <h4>Daily Department Attendance</h4>
+                                <p>Daily attendance overview for your department with detailed employee lists and metrics</p>
+                            </div>
+                        </div>
+                        
+                        <form class="report-form" id="lm-daily-attendance-form">
+                            <div class="form-group">
+                                <label for="lm-daily-attendance-date">Select Date</label>
+                                <input type="date" id="lm-daily-attendance-date" name="attendanceDate" required>
+                            </div>
+                            
+                            <div class="form-actions">
+                                <button type="button" class="btn-report btn-primary" onclick="generateDepartmentReport('daily-attendance', 'view')">
+                                    <i class="fas fa-eye"></i> View Report
+                                </button>
+                                <button type="button" class="btn-report btn-secondary" onclick="generateDepartmentReport('daily-attendance', 'pdf')">
+                                    <i class="fas fa-file-pdf"></i> PDF
+                                </button>
+                            </div>
+                        </form>
+                        
+                        <div class="report-results" id="lm-daily-attendance-results"></div>
+                    </div>
+                    
+                    <!-- Individual Employee Report (Department) -->
+                    <div class="report-item">
+                        <div class="report-header">
+                            <div class="report-icon">
+                                <i class="fas fa-user-clock"></i>
+                            </div>
+                            <div class="report-info">
+                                <h4>Individual Employee Report</h4>
+                                <p>Weekly or monthly report for department employees with attendance and leave details</p>
+                            </div>
+                        </div>
+                        
+                        <form class="report-form" id="lm-employee-report-form">
+                            <div class="form-group">
+                                <label for="lm-employee-select">Select Employee</label>
+                                <select id="lm-employee-select" name="employeeId" required>
+                                    <option value="">Choose a team member...</option>
+                                    <!-- Options will be populated dynamically -->
+                                </select>
+                            </div>
+                            
+                            <div class="form-group">
+                                <label for="lm-employee-report-type">Report Period</label>
+                                <select id="lm-employee-report-type" name="reportType" required>
+                                    <option value="weekly">Weekly Report</option>
+                                    <option value="monthly">Monthly Report</option>
+                                </select>
+                            </div>
+                            
+                            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
+                                <div class="form-group">
+                                    <label for="lm-employee-start-date">Start Date</label>
+                                    <input type="date" id="lm-employee-start-date" name="startDate" required>
+                                </div>
+                                <div class="form-group">
+                                    <label for="lm-employee-end-date">End Date</label>
+                                    <input type="date" id="lm-employee-end-date" name="endDate" required>
+                                </div>
+                            </div>
+                            
+                            <div class="form-actions">
+                                <button type="button" class="btn-report btn-primary" onclick="generateDepartmentReport('employee-report', 'view')">
+                                    <i class="fas fa-eye"></i> View Report
+                                </button>
+                                <button type="button" class="btn-report btn-secondary" onclick="generateDepartmentReport('employee-report', 'pdf')">
+                                    <i class="fas fa-file-pdf"></i> Download PDF
+                                </button>
+                            </div>
+                        </form>
+                        
+                        <div class="report-results" id="lm-employee-report-results"></div>
+                    </div>
+                    
+                    <!-- Department Leave Requests Report -->
+                    <div class="report-item">
+                        <div class="report-header">
+                            <div class="report-icon">
+                                <i class="fas fa-calendar-times"></i>
+                            </div>
+                            <div class="report-info">
+                                <h4>Department Leave Summary</h4>
+                                <p>Leave requests and balances overview for your department team members</p>
+                            </div>
+                        </div>
+                        
+                        <form class="report-form" id="lm-leave-report-form">
+                            <div class="form-group">
+                                <label for="lm-leave-requests-report-type">Report Period</label>
+                                <select id="lm-leave-requests-report-type" name="reportType" required>
+                                    <option value="weekly">Weekly Report</option>
+                                    <option value="monthly">Monthly Report</option>
+                                </select>
+                            </div>
+                            
+                            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
+                                <div class="form-group">
+                                    <label for="lm-leave-requests-start-date">Start Date</label>
+                                    <input type="date" id="lm-leave-requests-start-date" name="startDate" required>
+                                </div>
+                                <div class="form-group">
+                                    <label for="lm-leave-requests-end-date">End Date</label>
+                                    <input type="date" id="lm-leave-requests-end-date" name="endDate" required>
+                                </div>
+                            </div>
+                            
+                            <div class="form-actions">
+                                <button type="button" class="btn-report btn-primary" onclick="generateDepartmentReport('leave-report', 'view')">
+                                    <i class="fas fa-eye"></i> View Report
+                                </button>
+                                <button type="button" class="btn-report btn-secondary" onclick="generateDepartmentReport('leave-report', 'pdf')">
+                                    <i class="fas fa-file-pdf"></i> PDF
+                                </button>
+                            </div>
+                        </form>
+                        
+                        <div class="report-results" id="lm-leave-report-results"></div>
+                    </div>
+                </div>
+            </div>
+
             <!-- Department Reports Section (Line Manager) -->
 <section class="attendance-logs">
     <h3>Daily Department Attendance Logs</h3>
