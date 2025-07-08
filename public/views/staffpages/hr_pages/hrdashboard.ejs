@@ -1445,47 +1445,84 @@
                     </template>
                 </div>
             </div>
-            
-            <!-- Attendance Logs Section -->
             <section class="attendance-logs">
-                <h2>Attendance Logs</h2>
-                <table>
-                    <thead>
-                        <tr>
-                            <th>Last Name</th>
-                            <th>First Name</th>
-                            <th>Date</th>
-                            <th>Department</th>
-                            <th>Job Position</th>
-                            <th>Time In</th>
-                            <th>Time Out</th>
-                            <th>Location</th>
-                            <th>Active Working Hours</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        <% if (attendanceLogs && attendanceLogs.length) { %>
-                            <% attendanceLogs.forEach(log => { %>
-                                <tr>
-                                    <td><%= log.lastName %></td>
-                                    <td><%= log.firstName %></td>
-                                    <td><%= log.date %></td>
-                                    <td><%= log.department %></td>
-                                    <td><%= log.jobTitle %></td>
-                                    <td><%= log.timeIn %></td>
-                                    <td><%= log.timeOut %></td>
-                                    <td><%= log.city || 'Unknown' %></td>
-                                    <td><%= log.activeWorkingHours %></td>
-                                </tr>
-                            <% }); %>
-                        <% } else { %>
-                            <tr>
-                                <td colspan="9">No attendance logs available.</td>
-                            </tr>
-                        <% } %>
-                    </tbody>
-                </table>
-            </section>
+    <h2>Daily Attendance Logs</h2>
+    
+    <!-- Filter Controls -->
+    <div style="margin-bottom: 20px; display: flex; justify-content: center; align-items: center; flex-wrap: wrap; gap: 15px; padding: 15px; background-color: #f8f9fa; border-radius: 8px; border: 1px solid #dee2e6;">
+        <div style="display: flex; align-items: center; gap: 10px; flex-wrap: wrap; justify-content: center;">
+            <input type="text" id="dailyAttendanceSearchInput" placeholder="Search by name, department, or location..." style="padding: 8px 12px; border: 1px solid #ddd; border-radius: 4px; font-size: 14px; width: 280px; min-width: 200px;" />
+            
+            <select id="dailyAttendanceDepartmentFilter" style="padding: 8px 12px; border: 1px solid #ddd; border-radius: 4px; font-size: 14px; min-width: 150px;">
+                <option value="">All Departments</option>
+                <% if (departments && departments.length) { %>
+                    <% departments.forEach(dept => { %>
+                        <option value="<%= dept %>"><%= dept %></option>
+                    <% }); %>
+                <% } %>
+            </select>
+            
+            <select id="dailyAttendanceJobPositionFilter" style="padding: 8px 12px; border: 1px solid #ddd; border-radius: 4px; font-size: 14px; min-width: 150px;">
+                <option value="">All Job Positions</option>
+                <% if (positions && positions.length) { %>
+                    <% positions.forEach(position => { %>
+                        <option value="<%= position %>"><%= position %></option>
+                    <% }); %>
+                <% } %>
+            </select>
+            
+            <button id="dailyAttendanceClearFilters" style="padding: 8px 16px; background-color: #2385B0; color: white; border: 1px solid #2385B0; border-radius: 4px; cursor: pointer; font-size: 14px; transition: background-color 0.3s;">Clear Filters</button>
+        </div>
+    </div>
+    
+    <!-- Results Summary -->
+    <div style="margin-bottom: 10px; color: #666; font-size: 14px;">
+        <span id="dailyAttendanceRecordCount">Showing all records</span>
+    </div>
+    
+    <table id="dailyAttendanceTable">
+        <thead>
+            <tr>
+                <th>Last Name</th>
+                <th>First Name</th>
+                <th>Date</th>
+                <th>Department</th>
+                <th>Job Position</th>
+                <th>Time In</th>
+                <th>Time Out</th>
+                <th>Location</th>
+                <th>Active Working Hours</th>
+            </tr>
+        </thead>
+        <tbody id="dailyAttendanceTableBody">
+            <% if (attendanceLogs && attendanceLogs.length) { %>
+                <% attendanceLogs.forEach(log => { %>
+                    <tr class="daily-attendance-row" style="display: table-row;" 
+                        data-lastname="<%= log.lastName.toLowerCase() %>"
+                        data-firstname="<%= log.firstName.toLowerCase() %>"
+                        data-department="<%= log.department %>"
+                        data-jobposition="<%= log.jobTitle %>"
+                        data-location="<%= (log.city || 'Unknown').toLowerCase() %>">
+                        <td><%= log.lastName %></td>
+                        <td><%= log.firstName %></td>
+                        <td><%= log.date %></td>
+                        <td><%= log.department %></td>
+                        <td><%= log.jobTitle %></td>
+                        <td><%= log.timeIn %></td>
+                        <td><%= log.timeOut %></td>
+                        <td><%= log.city || 'Unknown' %></td>
+                        <td><%= log.activeWorkingHours %></td>
+                    </tr>
+                <% }); %>
+            <% } else { %>
+                <tr id="dailyAttendanceNoDataRow">
+                    <td colspan="9">No attendance logs available.</td>
+                </tr>
+            <% } %>
+        </tbody>
+    </table>
+</section>
+
         </div>
         
         <!-- Leaves Tab Content -->
@@ -1745,7 +1782,91 @@
 
         <script>
             // Add this to your JavaScript
-            const MAX_ROWS = 5; // Show only 5 rows by default
+            const MAX_ROWS = 5; // Show only 5 rows by defaultdocument.addEventListener('DOMContentLoaded', function() {
+    document.addEventListener('DOMContentLoaded', function() {
+    const dailyAttendanceSearchInput = document.getElementById('dailyAttendanceSearchInput');
+    const dailyAttendanceDepartmentFilter = document.getElementById('dailyAttendanceDepartmentFilter');
+    const dailyAttendanceJobPositionFilter = document.getElementById('dailyAttendanceJobPositionFilter');
+    const dailyAttendanceClearFiltersBtn = document.getElementById('dailyAttendanceClearFilters');
+    const dailyAttendanceRows = document.querySelectorAll('.daily-attendance-row');
+    const dailyAttendanceRecordCount = document.getElementById('dailyAttendanceRecordCount');
+    const dailyAttendanceNoDataRow = document.getElementById('dailyAttendanceNoDataRow');
+    
+    // Total records count
+    const totalRecords = dailyAttendanceRows.length;
+    
+    function updateDailyAttendanceRecordCount() {
+        const visibleRows = document.querySelectorAll('.daily-attendance-row[style="display: table-row;"]');
+        const count = visibleRows.length;
+        
+        if (count === totalRecords) {
+            dailyAttendanceRecordCount.textContent = `Showing all ${totalRecords} records`;
+        } else {
+            dailyAttendanceRecordCount.textContent = `Showing ${count} of ${totalRecords} records`;
+        }
+        
+        // Show/hide no data message
+        if (dailyAttendanceNoDataRow) {
+            if (count === 0 && totalRecords > 0) {
+                dailyAttendanceNoDataRow.style.display = 'table-row';
+                dailyAttendanceNoDataRow.querySelector('td').textContent = 'No records match your filters.';
+            } else {
+                dailyAttendanceNoDataRow.style.display = 'none';
+            }
+        }
+    }
+    
+    function filterDailyAttendanceTable() {
+        const searchTerm = dailyAttendanceSearchInput.value.toLowerCase().trim();
+        const selectedDepartment = dailyAttendanceDepartmentFilter.value;
+        const selectedJobPosition = dailyAttendanceJobPositionFilter.value;
+        
+        dailyAttendanceRows.forEach(row => {
+            const lastName = row.dataset.lastname;
+            const firstName = row.dataset.firstname;
+            const department = row.dataset.department;
+            const jobPosition = row.dataset.jobposition;
+            const location = row.dataset.location;
+            
+            // Search filter (checks name, department, and location)
+            const matchesSearch = !searchTerm || 
+                lastName.includes(searchTerm) || 
+                firstName.includes(searchTerm) ||
+                department.toLowerCase().includes(searchTerm) ||
+                location.includes(searchTerm);
+            
+            // Department filter
+            const matchesDepartment = !selectedDepartment || department === selectedDepartment;
+            
+            // Job position filter
+            const matchesJobPosition = !selectedJobPosition || jobPosition === selectedJobPosition;
+            
+            // Show/hide row based on all filters
+            if (matchesSearch && matchesDepartment && matchesJobPosition) {
+                row.style.display = 'table-row';
+            } else {
+                row.style.display = 'none';
+            }
+        });
+        
+        updateDailyAttendanceRecordCount();
+    }
+    
+    // Event listeners
+    dailyAttendanceSearchInput.addEventListener('input', filterDailyAttendanceTable);
+    dailyAttendanceDepartmentFilter.addEventListener('change', filterDailyAttendanceTable);
+    dailyAttendanceJobPositionFilter.addEventListener('change', filterDailyAttendanceTable);
+    
+    dailyAttendanceClearFiltersBtn.addEventListener('click', function() {
+        dailyAttendanceSearchInput.value = '';
+        dailyAttendanceDepartmentFilter.value = '';
+        dailyAttendanceJobPositionFilter.value = '';
+        filterDailyAttendanceTable();
+    });
+    
+    // Initial count
+    updateDailyAttendanceRecordCount();
+});
 
             document.querySelectorAll('table tbody').forEach(tbody => {
                 const rows = tbody.querySelectorAll('tr');
