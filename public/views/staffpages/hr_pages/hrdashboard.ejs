@@ -1604,48 +1604,89 @@
                 <canvas id="manpowerRequisitionChart"></canvas>
             </div>
             
-            <!-- Manpower Requisition Forms Section -->
-            <div class="manpower-requisition">
-                <h3>Manpower Requisition Forms</h3>
-                <table>
-                    <thead>
-                        <tr>
-                            <th>Requisitioner</th>
-                            <th>Department</th>
-                            <th>Job Position</th>
-                            <th>Request Date</th>
-                            <th>Status</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        <% if (manpowerRequisitions && manpowerRequisitions.length > 0) { %>
-                            <% manpowerRequisitions.forEach(req => { %>
-                                <tr>
-                                    <td><%= req.requisitioner %></td>
-                                    <td><%= req.department %></td>
-                                    <td><%= req.jobPosition %></td>
-                                    <td><%= req.requestDate %></td>
-                                    <td>
-                                        <!-- Show button for pending requisitions -->
-                                        <% if (req.status === 'Pending') { %>
-                                            <!-- Button for pending requisition -->
-                                            <button class="action-required-btn" data-mrfid="<%= req.mrfId %>"><%= req.actionButtonText %></button>
-                                        <% } else { %>
-                                            <!-- Display status for approved/disapproved requisition -->
-                                            <%= req.status %>
-                                        <% } %>
-                                    </td>
-                                </tr>
-                            <% }); %>
+<!-- Manpower Requisition Forms Section -->
+<div class="manpower-requisition">
+    <h3>Manpower Requisition Forms</h3>
+
+    <!-- Filter Section -->
+    <div class="filters" style="margin-bottom: 1em;">
+        <label>Department:
+            <select id="filter-department">
+                <option value="">All</option>
+                <% departments.forEach(dept => { %>
+                    <option value="<%= dept %>"><%= dept %></option>
+                <% }); %>
+            </select>
+        </label>
+
+        <label>Job Position:
+            <select id="filter-position">
+                <option value="">All</option>
+                <% positions.forEach(pos => { %>
+                    <option value="<%= pos %>"><%= pos %></option>
+                <% }); %>
+            </select>
+        </label>
+
+        <label>Status:
+            <select id="filter-status">
+                <option value="">All</option>
+                <option value="Pending">Pending</option>
+                <option value="Approved">Approved</option>
+                <option value="Disapproved">Disapproved</option>
+            </select>
+        </label>
+
+        <label>From:
+            <input type="date" id="filter-from">
+        </label>
+
+        <label>To:
+            <input type="date" id="filter-to">
+        </label>
+
+        <button onclick="applyMRFFilters()">Apply</button>
+        <button onclick="resetMRFFilters()">Reset</button>
+    </div>
+
+    <!-- Table -->
+    <table id="mrf-table">
+        <thead>
+            <tr>
+                <th>Requisitioner</th>
+                <th>Department</th>
+                <th>Job Position</th>
+                <th>Request Date</th>
+                <th>Status</th>
+            </tr>
+        </thead>
+        <tbody id="mrf-body">
+            <% manpowerRequisitions
+                .sort((a, b) => new Date(b.requestDate) - new Date(a.requestDate)) // Initial sort by date
+                .forEach(req => { %>
+                <tr data-department="<%= req.department %>"
+                    data-position="<%= req.jobPosition %>"
+                    data-status="<%= req.status %>"
+                    data-date="<%= req.requestDate %>">
+                    <td><%= req.requisitioner %></td>
+                    <td><%= req.department %></td>
+                    <td><%= req.jobPosition %></td>
+                    <td><%= req.requestDate %></td>
+                    <td>
+                        <% if (req.status === 'Pending') { %>
+                            <button class="action-required-btn" data-mrfid="<%= req.mrfId %>">
+                                <%= req.actionButtonText %>
+                            </button>
                         <% } else { %>
-                            <tr>
-                                <td colspan="5">No manpower requisition forms available.</td>
-                            </tr>
+                            <%= req.status %>
                         <% } %>
-                    </tbody>                
-                </table>
-            </div>
-        </div>
+                    </td>
+                </tr>
+            <% }); %>
+        </tbody>
+    </table>
+</div>
+
         
         <!-- Departments Tab Content -->
         <div class="tab-content" id="departments-tab">
@@ -2266,7 +2307,40 @@
                     console.log('✅ Set leave report dates to current month');
                 }
             }
+function applyMRFFilters() {
+        const dept = document.getElementById('filter-department').value.toLowerCase();
+        const pos = document.getElementById('filter-position').value.toLowerCase();
+        const status = document.getElementById('filter-status').value.toLowerCase();
+        const fromDate = new Date(document.getElementById('filter-from').value);
+        const toDate = new Date(document.getElementById('filter-to').value);
+        const rows = document.querySelectorAll('#mrf-body tr');
 
+        rows.forEach(row => {
+            const rowDept = row.getAttribute('data-department').toLowerCase();
+            const rowPos = row.getAttribute('data-position').toLowerCase();
+            const rowStatus = row.getAttribute('data-status').toLowerCase();
+            const rowDate = new Date(row.getAttribute('data-date'));
+
+            let show = true;
+
+            if (dept && rowDept !== dept) show = false;
+            if (pos && rowPos !== pos) show = false;
+            if (status && rowStatus !== status) show = false;
+            if (!isNaN(fromDate) && rowDate < fromDate) show = false;
+            if (!isNaN(toDate) && rowDate > toDate) show = false;
+
+            row.style.display = show ? '' : 'none';
+        });
+    }
+
+    function resetMRFFilters() {
+        document.getElementById('filter-department').value = '';
+        document.getElementById('filter-position').value = '';
+        document.getElementById('filter-status').value = '';
+        document.getElementById('filter-from').value = '';
+        document.getElementById('filter-to').value = '';
+        applyMRFFilters();
+    }
             // Load employees for the employee report dropdown
             async function loadEmployeesForAttendanceReport() {
                 try {
