@@ -3159,7 +3159,6 @@ getJobPositionsList: async function() {
             res.status(500).json({ success: false, message: 'Internal server error', error: error.message });
         }
     },
-    
     saveScreeningScores: async function(userId, selectedPosition, screeningScores, resumeUrl = null) {
     try {
         console.log('💾 [Final Save] Starting scoring for user:', userId);
@@ -3172,7 +3171,6 @@ getJobPositionsList: async function() {
             .eq('userId', userId)
             .single();
 
-        // Use session URLs if available, otherwise use existing database values
         const degreeUrl = this.req?.session?.degreeUrl || existingData?.degree_url || null;
         const certUrl = this.req?.session?.certificationUrl || existingData?.cert_url || null;
         const finalResumeUrl = resumeUrl || this.req?.session?.resumeUrl || existingData?.resume_url || null;
@@ -3188,7 +3186,6 @@ getJobPositionsList: async function() {
         let hardSkillsScore = 0, softSkillsScore = 0;
         let workSetupScore = false, availabilityScore = false;
         
-        // Count questions by type for proper scoring
         let degreeCount = 0, experienceCount = 0, certificationCount = 0;
         let hardSkillCount = 0, softSkillCount = 0;
         
@@ -3228,7 +3225,6 @@ getJobPositionsList: async function() {
             hardSkillsScore, softSkillsScore, workSetupScore, availabilityScore
         });
 
-        // Get job details
         const jobDetails = await applicantController.getJobDetailsbyTitle(selectedPosition);
         if (!jobDetails) {
             throw new Error('Job details not found');
@@ -3237,7 +3233,6 @@ getJobPositionsList: async function() {
         const jobId = jobDetails.jobId;
         console.log('💾 [Final Save] Job ID:', jobId);
 
-        // Prepare assessment data with ALL required fields including URLs
         const assessmentData = {
             userId: parseInt(userId),
             jobId: parseInt(jobId),
@@ -3251,15 +3246,14 @@ getJobPositionsList: async function() {
             totalScore: degreeScore + experienceScore + certificationScore + 
                       hardSkillsScore + softSkillsScore + (workSetupScore ? 1 : 0) + (availabilityScore ? 1 : 0),
             totalScoreCalculatedAt: new Date().toISOString().split('T')[0],
-            degree_url: degreeUrl,          // Added degree URL
-            cert_url: certUrl,              // Added certification URL
-            resume_url: finalResumeUrl,     // Added resume URL
+            degree_url: degreeUrl,
+            cert_url: certUrl,
+            resume_url: finalResumeUrl,
             created_at: new Date().toISOString()
         };
 
         console.log('💾 [Final Save] Complete assessment data:', assessmentData);
 
-        // Check if record exists
         const { data: existingRecord } = await supabase
             .from('applicant_initialscreening_assessment')
             .select('initialScreeningId')
@@ -3269,14 +3263,12 @@ getJobPositionsList: async function() {
 
         let saveResult;
         if (existingRecord) {
-            // Update existing record
             saveResult = await supabase
                 .from('applicant_initialscreening_assessment')
                 .update(assessmentData)
                 .eq('userId', userId)
                 .eq('jobId', jobId);
         } else {
-            // Insert new record
             saveResult = await supabase
                 .from('applicant_initialscreening_assessment')
                 .insert([assessmentData]);
@@ -3289,10 +3281,8 @@ getJobPositionsList: async function() {
 
         console.log('✅ [Final Save] Assessment saved with document URLs');
 
-        // Determine pass/fail (rest of your existing logic)
-        const totalQuestions = screeningScores.length;
-        const passingThreshold = Math.ceil(totalQuestions * 0.7);
-        const passes = assessmentData.totalScore >= passingThreshold;
+        // ✅ Only fail if work setup or availability is false
+        const passes = workSetupScore && availabilityScore;
 
         if (!passes) {
             await supabase
@@ -3304,11 +3294,11 @@ getJobPositionsList: async function() {
         return {
             success: true,
             score: assessmentData.totalScore,
-            totalQuestions: totalQuestions,
+            totalQuestions: screeningScores.length,
             passes: passes,
             message: passes ? 
                 'Congratulations! You have successfully completed the initial screening process. To proceed with your application, please upload your resume for us to review.' : 
-                'Thank you for completing the screening. Unfortunately...'
+                'Thank you for taking the time to complete the screening. Unfortunately, we require both availability and a suitable work setup to proceed. We appreciate your interest and encourage you to apply again in the future.'
         };
 
     } catch (error) {
