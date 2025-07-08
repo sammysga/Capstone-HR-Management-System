@@ -956,236 +956,328 @@ const lineManagerController = {
     //TODO: should display all approved leave requests of the day - current sol here is not the current date
     // ++ should arrange this part by respective department 
     getLineManagerDashboard: async function(req, res) {
-        if (req.session.user && req.session.user.userRole === 'Line Manager') {
-            try {
-                // Common function to fetch and format leave data
-                const fetchAndFormatLeaves = async (statusFilter = null) => {
-                    const query = supabase
-                        .from('leaverequests')
-                        .select(`
-                            leaveRequestId, 
-                            userId, 
-                            created_at, 
-                            leaveTypeId, 
-                            fromDate, 
-                            untilDate, 
-                            status,
-                            useraccounts (
-                                userId, 
-                                userEmail,
-                                staffaccounts (
-                                    departments (deptName), 
-                                    lastName, 
-                                    firstName
-                                )
-                            ), 
-                            leave_types (
-                                typeName
-                            )
-                        `)
-                        .order('created_at', { ascending: false });
-    
-                    if (statusFilter) query.eq('status', statusFilter);
-    
-                    const { data, error } = await query;
-                    if (error) throw error;
-    
-                    return data.map(leave => ({
+    if (req.session.user && req.session.user.userRole === 'Line Manager') {
+        try {
+            // Get the Line Manager's department ID from their staff account
+            const { data: managerStaff, error: managerError } = await supabase
+                .from('staffaccounts')
+                .select('departmentId')
+                .eq('userId', req.session.user.userId)
+                .single();
+
+            if (managerError || !managerStaff) {
+                console.error('Error fetching manager department:', managerError);
+                throw new Error('Error fetching manager department information.');
+            }
+
+            const managerDepartmentId = managerStaff.departmentId;
+            console.log('🔍 Line Manager Department ID:', managerDepartmentId);
+
+            // Common function to fetch and format leave data (filtered by department)
+            const fetchAndFormatLeaves = async (statusFilter = null) => {
+                // Step 1: Get all staff in manager's department first
+                const { data: departmentStaff, error: deptStaffError } = await supabase
+                    .from('staffaccounts')
+                    .select('userId, firstName, lastName, departmentId')
+                    .eq('departmentId', managerDepartmentId);
+
+                if (deptStaffError) {
+                    console.error('Error fetching department staff for leaves:', deptStaffError);
+                    return [];
+                }
+
+                if (!departmentStaff || departmentStaff.length === 0) {
+                    console.log('⚠️ No staff found in department for leaves:', managerDepartmentId);
+                    return [];
+                }
+
+                const departmentUserIds = departmentStaff.map(staff => staff.userId);
+                console.log('👥 Department staff user IDs for leaves:', departmentUserIds);
+
+                // Step 2: Get department name
+                const { data: deptInfo, error: deptInfoError } = await supabase
+                    .from('departments')
+                    .select('deptName')
+                    .eq('departmentId', managerDepartmentId)
+                    .single();
+
+                const departmentName = deptInfo?.deptName || 'Unknown Department';
+
+                // Step 3: Get leave requests for department staff
+                let query = supabase
+                    .from('leaverequests')
+                    .select(`
+                        leaveRequestId, 
+                        userId, 
+                        created_at, 
+                        leaveTypeId, 
+                        fromDate, 
+                        untilDate, 
+                        status,
+                        leave_types (
+                            typeName
+                        )
+                    `)
+                    .in('userId', departmentUserIds)
+                    .order('created_at', { ascending: false });
+
+                if (statusFilter) {
+                    query = query.eq('status', statusFilter);
+                }
+
+                const { data, error } = await query;
+                if (error) {
+                    console.error('Error fetching leave requests:', error);
+                    return [];
+                }
+
+                console.log('📋 Fetched leave requests for department:', data?.length || 0);
+
+                // Step 4: Combine leave data with staff information
+                return (data || []).map(leave => {
+                    const staffMember = departmentStaff.find(staff => staff.userId === leave.userId);
+                    
+                    return {
                         userId: leave.userId,
-                        lastName: leave.useraccounts?.staffaccounts[0]?.lastName || 'N/A',
-                        firstName: leave.useraccounts?.staffaccounts[0]?.firstName || 'N/A',
-                        department: leave.useraccounts?.staffaccounts[0]?.departments?.deptName || 'N/A',
+                        leaveRequestId: leave.leaveRequestId,
+                        lastName: staffMember?.lastName || 'N/A',
+                        firstName: staffMember?.firstName || 'N/A',
+                        department: departmentName,
                         filedDate: leave.created_at ? new Date(leave.created_at).toISOString().split('T')[0] : 'N/A',
                         type: leave.leave_types?.typeName || 'N/A',
                         startDate: leave.fromDate || 'N/A',
                         endDate: leave.untilDate || 'N/A',
                         status: leave.status || 'Pending'
-                    }));
-                };
-    
-                // Function to fetch attendance logs
-                const fetchAttendanceLogs = async () => {
-                    const { data: attendanceLogs, error: attendanceError } = await supabase
-                        .from('attendance')
-                        .select(`
-                            userId, 
-                            attendanceDate, 
-                            attendanceAction, 
-                            attendanceTime, 
-                            city,
-                            useraccounts (
-                                userId, 
-                                staffaccounts (
-                                    staffId,
-                                    firstName, 
-                                    lastName,
-                                    departmentId, 
-                                    jobId,
-                                    departments: departmentId ("deptName"),
-                                    jobpositions: jobId ("jobTitle")
-                                )
-                            )
-                        `)
-                        .order('attendanceDate', { ascending: false });
-    
-                    if (attendanceError) {
-                        console.error('Error fetching attendance logs:', attendanceError);
-                        throw new Error('Error fetching attendance logs.');
-                    }
-    
-                    return attendanceLogs;
-                };
-    
-                // Fetch applicant statuses for line manager actions
-                const fetchPendingApprovals = async () => {
-                    const { data, error } = await supabase
-                        .from('applicantaccounts')
-                        .select('applicantStatus')
-                        .eq('applicantStatus', 'P1 - Awaiting for Line Manager Action; HR PASSED');
-    
-                    if (error) throw error;
-    
-                    return data.length > 0 ? 'P1 - Awaiting for Line Manager Action; HR PASSED' : null;
-                };
-    
-                // ✅ Fetch notifications
-                const fetchNotifications = async () => {
-                    const { data: applicants, error } = await supabase
-                        .from('applicantaccounts')
-                        .select('firstName, lastName, applicantStatus, created_at')
-                        .order('created_at', { ascending: false });
-    
-                    if (error) {
-                        console.error('Error fetching notifications:', error);
-                        throw new Error('Error retrieving notifications.');
-                    }
-    
-                    return applicants.map(applicant => ({
-                        firstName: applicant.firstName,
-                        lastName: applicant.lastName,
-                        applicantStatus: applicant.applicantStatus,
-                        date: applicant.created_at,
-                        employeePhoto: "/images/profile.png", // Placeholder image
-                        headline: applicant.applicantStatus === "P1 - Awaiting for Line Manager Action; HR PASSED"
-                            ? "Awaiting Your Approval"
-                            : "New Application Received",
-                        content: applicant.applicantStatus === "P1 - Awaiting for Line Manager Action; HR PASSED"
-                            ? `Required Line Manager Action for ${applicant.firstName} ${applicant.lastName}`
-                            : `${applicant.firstName} ${applicant.lastName} submitted an application.`
-                    }));
-                };
-    
-                // Function to format attendance logs
-                const formatAttendanceLogs = (attendanceLogs, selectedDate = null) => {
-                    const filterDate = selectedDate || new Date().toISOString().split('T')[0];
-                
-                    const formattedAttendanceLogs = attendanceLogs
-                        .filter(attendance => attendance.attendanceDate === filterDate) 
-                        .reduce((acc, attendance) => {
-                            const attendanceDate = attendance.attendanceDate;
-                            const attendanceTime = attendance.attendanceTime || '00:00:00';
-                            const [hours, minutes, seconds] = attendanceTime.split(':').map(Number);
-                            const localDate = new Date(attendanceDate);
-                            localDate.setHours(hours, minutes, seconds);
-                
-                            const userId = attendance.userId;
-                            const existingEntry = acc.find(log => log.userId === userId && log.date === attendanceDate);
-                            const city = attendance.city || 'N/A'
-                
-                            if (attendance.attendanceAction === 'Time In') {
-                                if (existingEntry) {
-                                    existingEntry.timeIn = localDate;
-                                } else {
-                                    acc.push({
-                                        userId,
-                                        date: attendanceDate,
-                                        timeIn: localDate,
-                                        timeOut: null,
-                                        city,
-                                        useraccounts: attendance.useraccounts
-                                    });
+                    };
+                });
+            };
+
+            // Function to fetch attendance logs (simplified approach)
+            const fetchAttendanceLogs = async () => {
+                // Step 1: Get all staff in manager's department
+                const { data: departmentStaff, error: deptStaffError } = await supabase
+                    .from('staffaccounts')
+                    .select('userId, firstName, lastName, jobId')
+                    .eq('departmentId', managerDepartmentId);
+
+                if (deptStaffError) {
+                    console.error('Error fetching department staff:', deptStaffError);
+                    throw new Error('Error fetching department staff.');
+                }
+
+                if (!departmentStaff || departmentStaff.length === 0) {
+                    console.log('⚠️ No staff found in department:', managerDepartmentId);
+                    return [];
+                }
+
+                const departmentUserIds = departmentStaff.map(staff => staff.userId);
+                console.log('👥 Department staff user IDs:', departmentUserIds);
+
+                // Step 2: Get attendance logs for these users
+                const { data: attendanceLogs, error: attendanceError } = await supabase
+                    .from('attendance')
+                    .select('*')
+                    .in('userId', departmentUserIds)
+                    .order('attendanceDate', { ascending: false });
+
+                if (attendanceError) {
+                    console.error('Error fetching attendance logs:', attendanceError);
+                    throw new Error('Error fetching attendance logs.');
+                }
+
+                console.log('⏰ Fetched attendance logs for department:', attendanceLogs?.length || 0);
+
+                // Step 3: Get department info
+                const { data: deptInfo, error: deptInfoError } = await supabase
+                    .from('departments')
+                    .select('deptName')
+                    .eq('departmentId', managerDepartmentId)
+                    .single();
+
+                const departmentName = deptInfo?.deptName || 'Unknown Department';
+
+                // Step 4: Get job positions
+                const jobIds = [...new Set(departmentStaff.map(staff => staff.jobId).filter(id => id))];
+                const { data: jobPositions } = await supabase
+                    .from('jobpositions')
+                    .select('jobId, jobTitle')
+                    .in('jobId', jobIds);
+
+                // Step 5: Combine data
+                const enrichedLogs = (attendanceLogs || []).map(log => {
+                    const staffMember = departmentStaff.find(staff => staff.userId === log.userId);
+                    const jobPosition = jobPositions?.find(job => job.jobId === staffMember?.jobId);
+
+                    return {
+                        ...log,
+                        useraccounts: {
+                            staffaccounts: {
+                                firstName: staffMember?.firstName || 'N/A',
+                                lastName: staffMember?.lastName || 'N/A',
+                                departments: {
+                                    deptName: departmentName
+                                },
+                                jobpositions: {
+                                    jobTitle: jobPosition?.jobTitle || 'N/A'
                                 }
-                            } else if (attendance.attendanceAction === 'Time Out') {
-                                if (existingEntry) {
-                                    existingEntry.timeOut = localDate;
-                                } else {
-                                    acc.push({
-                                        userId,
-                                        date: attendanceDate,
-                                        timeIn: null,
-                                        timeOut: localDate,
-                                        city,
-                                        useraccounts: attendance.useraccounts
-                                    });
-                                }
-                            }
-                
-                            return acc;
-                        }, []);
-                
-                    return formattedAttendanceLogs.map(log => {
-                        let activeWorkingHours = 0;
-                        let timeOutMessage = '';
-                        const now = new Date();
-                
-                        if (log.timeIn) {
-                            const endOfDay = new Date(log.date);
-                            endOfDay.setHours(23, 59, 59, 999); // End of the day
-                            const endTime = log.timeOut || now;
-                
-                            if (!log.timeOut && endTime <= endOfDay) {
-                                timeOutMessage = `(In Work)`;
-                                activeWorkingHours = (endTime - log.timeIn) / 3600000; // Calculate hours
-                            } else if (!log.timeOut && endTime > endOfDay) {
-                                timeOutMessage = `(User did not Record Time Out)`;
-                                activeWorkingHours = (endOfDay - log.timeIn) / 3600000; // Up to end of day
-                            } else {
-                                activeWorkingHours = (log.timeOut - log.timeIn) / 3600000; // Normal calculation
                             }
                         }
-                
-                        return {
-                            department: log.useraccounts?.staffaccounts[0]?.departments?.deptName || 'N/A',
-                            firstName: log.useraccounts?.staffaccounts[0]?.firstName || 'N/A',
-                            lastName: log.useraccounts?.staffaccounts[0]?.lastName || 'N/A',
-                            jobTitle: log.useraccounts?.staffaccounts[0]?.jobpositions?.jobTitle || 'N/A',
-                            date: log.timeIn ? new Date(log.timeIn).toISOString().split('T')[0] : 'N/A',
-                            timeIn: log.timeIn ? log.timeIn.toLocaleTimeString() : 'N/A',
-                            timeOut: log.timeOut ? log.timeOut.toLocaleTimeString() : timeOutMessage,
-                            city: log.city || 'N/A',
-                            activeWorkingHours: activeWorkingHours.toFixed(2)
-                        };
-                    });
-                };
-    
-                // ✅ Fetch data
-                const formattedAllLeaves = await fetchAndFormatLeaves();
-                const formattedApprovedLeaves = await fetchAndFormatLeaves('Approved');
-                const attendanceLogs = await fetchAttendanceLogs();
-                const pendingApprovalStatus = await fetchPendingApprovals();
-                const formattedAttendanceDisplay = formatAttendanceLogs(attendanceLogs);
-                const notifications = await fetchNotifications(); // ✅ Notifications
-    
-                // ✅ Render with notifications
-                return res.render('staffpages/linemanager_pages/managerdashboard', { 
-                    allLeaves: formattedAllLeaves || [],
-                    approvedLeaves: formattedApprovedLeaves || [],
-                    pendingApprovalStatus: pendingApprovalStatus || '',
-                    attendanceLogs: formattedAttendanceDisplay || [],
-                    notifications: notifications || [], 
-                    successMessage: req.flash('success'),
-                    errorMessage: req.flash('errors')
+                    };
                 });
-    
-            } catch (err) {
-                console.error('Error fetching data for the dashboard:', err);
-                req.flash('errors', { dbError: 'An error occurred while loading the dashboard.' });
-                return res.redirect('/linemanager/dashboard');
-            }
-        } else {
-            return res.redirect('/staff/login');
+
+                return enrichedLogs;
+            };
+
+            // Fetch applicant statuses for line manager actions
+            const fetchPendingApprovals = async () => {
+                const { data, error } = await supabase
+                    .from('applicantaccounts')
+                    .select('applicantStatus')
+                    .eq('applicantStatus', 'P1 - Awaiting for Line Manager Action; HR PASSED');
+
+                if (error) throw error;
+
+                return data.length > 0 ? 'P1 - Awaiting for Line Manager Action; HR PASSED' : null;
+            };
+
+            // ✅ Fetch notifications
+            const fetchNotifications = async () => {
+                const { data: applicants, error } = await supabase
+                    .from('applicantaccounts')
+                    .select('firstName, lastName, applicantStatus, created_at')
+                    .order('created_at', { ascending: false });
+
+                if (error) {
+                    console.error('Error fetching notifications:', error);
+                    throw new Error('Error retrieving notifications.');
+                }
+
+                return applicants.map(applicant => ({
+                    firstName: applicant.firstName,
+                    lastName: applicant.lastName,
+                    applicantStatus: applicant.applicantStatus,
+                    date: applicant.created_at,
+                    employeePhoto: "/images/profile.png", // Placeholder image
+                    headline: applicant.applicantStatus === "P1 - Awaiting for Line Manager Action; HR PASSED"
+                        ? "Awaiting Your Approval"
+                        : "New Application Received",
+                    content: applicant.applicantStatus === "P1 - Awaiting for Line Manager Action; HR PASSED"
+                        ? `Required Line Manager Action for ${applicant.firstName} ${applicant.lastName}`
+                        : `${applicant.firstName} ${applicant.lastName} submitted an application.`
+                }));
+            };
+
+            // Function to format attendance logs
+            const formatAttendanceLogs = (attendanceLogs, selectedDate = null) => {
+                const filterDate = selectedDate || new Date().toISOString().split('T')[0];
+            
+                const formattedAttendanceLogs = attendanceLogs
+                    .filter(attendance => attendance.attendanceDate === filterDate) 
+                    .reduce((acc, attendance) => {
+                        const attendanceDate = attendance.attendanceDate;
+                        const attendanceTime = attendance.attendanceTime || '00:00:00';
+                        const [hours, minutes, seconds] = attendanceTime.split(':').map(Number);
+                        const localDate = new Date(attendanceDate);
+                        localDate.setHours(hours, minutes, seconds);
+            
+                        const userId = attendance.userId;
+                        const existingEntry = acc.find(log => log.userId === userId && log.date === attendanceDate);
+                        const city = attendance.city || 'N/A'
+            
+                        if (attendance.attendanceAction === 'Time In') {
+                            if (existingEntry) {
+                                existingEntry.timeIn = localDate;
+                            } else {
+                                acc.push({
+                                    userId,
+                                    date: attendanceDate,
+                                    timeIn: localDate,
+                                    timeOut: null,
+                                    city,
+                                    useraccounts: attendance.useraccounts
+                                });
+                            }
+                        } else if (attendance.attendanceAction === 'Time Out') {
+                            if (existingEntry) {
+                                existingEntry.timeOut = localDate;
+                            } else {
+                                acc.push({
+                                    userId,
+                                    date: attendanceDate,
+                                    timeIn: null,
+                                    timeOut: localDate,
+                                    city,
+                                    useraccounts: attendance.useraccounts
+                                });
+                            }
+                        }
+            
+                        return acc;
+                    }, []);
+            
+                return formattedAttendanceLogs.map(log => {
+                    let activeWorkingHours = 0;
+                    let timeOutMessage = '';
+                    const now = new Date();
+            
+                    if (log.timeIn) {
+                        const endOfDay = new Date(log.date);
+                        endOfDay.setHours(23, 59, 59, 999); // End of the day
+                        const endTime = log.timeOut || now;
+            
+                        if (!log.timeOut && endTime <= endOfDay) {
+                            timeOutMessage = `(In Work)`;
+                            activeWorkingHours = (endTime - log.timeIn) / 3600000; // Calculate hours
+                        } else if (!log.timeOut && endTime > endOfDay) {
+                            timeOutMessage = `(User did not Record Time Out)`;
+                            activeWorkingHours = (endOfDay - log.timeIn) / 3600000; // Up to end of day
+                        } else {
+                            activeWorkingHours = (log.timeOut - log.timeIn) / 3600000; // Normal calculation
+                        }
+                    }
+            
+                    return {
+                        department: log.useraccounts?.staffaccounts?.departments?.deptName || 'N/A',
+                        firstName: log.useraccounts?.staffaccounts?.firstName || 'N/A',
+                        lastName: log.useraccounts?.staffaccounts?.lastName || 'N/A',
+                        jobTitle: log.useraccounts?.staffaccounts?.jobpositions?.jobTitle || 'N/A',
+                        date: log.timeIn ? new Date(log.timeIn).toISOString().split('T')[0] : 'N/A',
+                        timeIn: log.timeIn ? log.timeIn.toLocaleTimeString() : 'N/A',
+                        timeOut: log.timeOut ? log.timeOut.toLocaleTimeString() : timeOutMessage,
+                        city: log.city || 'N/A',
+                        activeWorkingHours: activeWorkingHours.toFixed(2)
+                    };
+                });
+            };
+
+            // ✅ Fetch data
+            const formattedAllLeaves = await fetchAndFormatLeaves();
+            const formattedApprovedLeaves = await fetchAndFormatLeaves('Approved');
+            const attendanceLogs = await fetchAttendanceLogs();
+            const pendingApprovalStatus = await fetchPendingApprovals();
+            const formattedAttendanceDisplay = formatAttendanceLogs(attendanceLogs);
+            const notifications = await fetchNotifications(); // ✅ Notifications
+
+            // ✅ Render with notifications
+            return res.render('staffpages/linemanager_pages/managerdashboard', { 
+                allLeaves: formattedAllLeaves || [],
+                approvedLeaves: formattedApprovedLeaves || [],
+                pendingApprovalStatus: pendingApprovalStatus || '',
+                attendanceLogs: formattedAttendanceDisplay || [],
+                notifications: notifications || [], 
+                successMessage: req.flash('success'),
+                errorMessage: req.flash('errors')
+            });
+
+        } catch (err) {
+            console.error('Error fetching data for the dashboard:', err);
+            req.flash('errors', { dbError: 'An error occurred while loading the dashboard.' });
+            return res.redirect('/linemanager/dashboard');
         }
-    },
+    } else {
+        return res.redirect('/staff/login');
+    }
+},
 
     
     

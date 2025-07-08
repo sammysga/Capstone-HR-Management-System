@@ -1282,186 +1282,57 @@ window.notifications = <%- JSON.stringify(notifications || []) %>;
             </div>
 
             <!-- Department Reports Section (Line Manager) -->
-            <div class="attendance-reports-section">
-                <div class="reports-section-header">
-                    <i class="fas fa-file-chart-line"></i>
-                    <h3>Department Reports</h3>
-                    <span class="department-badge" id="manager-department">Your Department</span>
-                </div>
-                
-                <div class="reports-grid">
-                    <!-- Daily Department Attendance Report -->
-                    <div class="report-item">
-                        <div class="report-header">
-                            <div class="report-icon">
-                                <i class="fas fa-calendar-day"></i>
-                            </div>
-                            <div class="report-info">
-                                <h4>Daily Department Attendance</h4>
-                                <p>Daily attendance overview for your department with detailed employee lists and metrics</p>
-                            </div>
-                        </div>
-                        
-                        <form class="report-form" id="lm-daily-attendance-form">
-                            <div class="form-group">
-                                <label for="lm-daily-attendance-date">Select Date</label>
-                                <input type="date" id="lm-daily-attendance-date" name="attendanceDate" required>
-                            </div>
-                            
-                            <div class="form-actions">
-                                <button type="button" class="btn-report btn-primary" onclick="generateDepartmentReport('daily-attendance', 'view')">
-                                    <i class="fas fa-eye"></i> View Report
-                                </button>
-                                <button type="button" class="btn-report btn-secondary" onclick="generateDepartmentReport('daily-attendance', 'pdf')">
-                                    <i class="fas fa-file-pdf"></i> PDF
-                                </button>
-                            </div>
-                        </form>
-                        
-                        <div class="report-results" id="lm-daily-attendance-results"></div>
-                    </div>
-                    
-                    <!-- Individual Employee Report (Department) -->
-                    <div class="report-item">
-                        <div class="report-header">
-                            <div class="report-icon">
-                                <i class="fas fa-user-clock"></i>
-                            </div>
-                            <div class="report-info">
-                                <h4>Individual Employee Report</h4>
-                                <p>Weekly or monthly report for department employees with attendance and leave details</p>
-                            </div>
-                        </div>
-                        
-                        <form class="report-form" id="lm-employee-report-form">
-                            <div class="form-group">
-                                <label for="lm-employee-select">Select Employee</label>
-                                <select id="lm-employee-select" name="employeeId" required>
-                                    <option value="">Choose a team member...</option>
-                                    <!-- Options will be populated dynamically -->
-                                </select>
-                            </div>
-                            
-                            <div class="form-group">
-                                <label for="lm-employee-report-type">Report Period</label>
-                                <select id="lm-employee-report-type" name="reportType" required>
-                                    <option value="weekly">Weekly Report</option>
-                                    <option value="monthly">Monthly Report</option>
-                                </select>
-                            </div>
-                            
-                            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
-                                <div class="form-group">
-                                    <label for="lm-employee-start-date">Start Date</label>
-                                    <input type="date" id="lm-employee-start-date" name="startDate" required>
-                                </div>
-                                <div class="form-group">
-                                    <label for="lm-employee-end-date">End Date</label>
-                                    <input type="date" id="lm-employee-end-date" name="endDate" required>
-                                </div>
-                            </div>
-                            
-                            <div class="form-actions">
-                                <button type="button" class="btn-report btn-primary" onclick="generateDepartmentReport('employee-report', 'view')">
-                                    <i class="fas fa-eye"></i> View Report
-                                </button>
-                                <button type="button" class="btn-report btn-secondary" onclick="generateDepartmentReport('employee-report', 'pdf')">
-                                    <i class="fas fa-file-pdf"></i> Download PDF
-                                </button>
-                            </div>
-                        </form>
-                        
-                        <div class="report-results" id="lm-employee-report-results"></div>
-                    </div>
-                    
-                    <!-- Department Leave Requests Report -->
-                    <div class="report-item">
-                        <div class="report-header">
-                            <div class="report-icon">
-                                <i class="fas fa-calendar-times"></i>
-                            </div>
-                            <div class="report-info">
-                                <h4>Department Leave Summary</h4>
-                                <p>Leave requests and balances overview for your department team members</p>
-                            </div>
-                        </div>
-                        
-                        <form class="report-form" id="lm-leave-report-form">
-                            <div class="form-group">
-                                <label for="lm-leave-requests-report-type">Report Period</label>
-                                <select id="lm-leave-requests-report-type" name="reportType" required>
-                                    <option value="weekly">Weekly Report</option>
-                                    <option value="monthly">Monthly Report</option>
-                                </select>
-                            </div>
-                            
-                            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
-                                <div class="form-group">
-                                    <label for="lm-leave-requests-start-date">Start Date</label>
-                                    <input type="date" id="lm-leave-requests-start-date" name="startDate" required>
-                                </div>
-                                <div class="form-group">
-                                    <label for="lm-leave-requests-end-date">End Date</label>
-                                    <input type="date" id="lm-leave-requests-end-date" name="endDate" required>
-                                </div>
-                            </div>
-                            
-                            <div class="form-actions">
-                                <button type="button" class="btn-report btn-primary" onclick="generateDepartmentReport('leave-report', 'view')">
-                                    <i class="fas fa-eye"></i> View Report
-                                </button>
-                                <button type="button" class="btn-report btn-secondary" onclick="generateDepartmentReport('leave-report', 'pdf')">
-                                    <i class="fas fa-file-pdf"></i> PDF
-                                </button>
-                            </div>
-                        </form>
-                        
-                        <div class="report-results" id="lm-leave-report-results"></div>
-                    </div>
-                </div>
-            </div>
+<section class="attendance-logs">
+    <h3>Daily Department Attendance Logs</h3>
+    
+    <!-- Filter Controls -->
+    <div style="margin-bottom: 20px; display: flex; justify-content: center; align-items: center; flex-wrap: wrap; gap: 15px; padding: 15px; background-color: #f8f9fa; border-radius: 8px; border: 1px solid #dee2e6;">
+        <div style="display: flex; align-items: center; gap: 10px; flex-wrap: wrap; justify-content: center;">
+            <input type="text" id="dailyAttendanceSearchInput" placeholder="Search by employee name..." style="padding: 8px 12px; border: 1px solid #ddd; border-radius: 4px; font-size: 14px; width: 280px; min-width: 200px;" />
             
-            <!-- Attendance Logs Section -->
-            <section class="attendance-logs">
-                <h3>Today's Attendance Logs</h3>
-                <table id="attendance-table">
-                    <thead>
-                        <tr>
-                            <th>Name</th>
-                            <th>Department</th>
-                            <th>Time In</th>
-                            <th>Time Out</th>
-                            <th>Location</th>
-                            <th>Working Hours</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        <% if (attendanceLogs && attendanceLogs.length) { %>
-                            <% let counter = 0; %>
-                            <% attendanceLogs.forEach(log => { %>
-                                <tr class="<%= counter >= 5 ? 'hidden-row' : '' %>">
-                                    <td><%= log.lastName %>, <%= log.firstName %></td>
-                                    <td><%= log.department %></td>
-                                    <td><%= log.timeIn %></td>
-                                    <td><%= log.timeOut %></td>
-                                    <td><%= log.city || 'Unknown' %></td>
-                                    <td><%= log.activeWorkingHours %></td>
-                                </tr>
-                                <% counter++; %>
-                            <% }); %>
-                            <% if (attendanceLogs.length > 5) { %>
-                                <tr class="show-more-row" id="show-more-attendance">
-                                    <td colspan="6">Show more entries (<%= attendanceLogs.length - 5 %> more)</td>
-                                </tr>
-                            <% } %>
-                        <% } else { %>
-                            <tr>
-                                <td colspan="6">No attendance logs available.</td>
-                            </tr>
-                        <% } %>
-                    </tbody>
-                </table>
-            </section>
+            <button id="dailyAttendanceClearFilters" style="padding: 8px 16px; background-color: #2385B0; color: white; border: 1px solid #2385B0; border-radius: 4px; cursor: pointer; font-size: 14px; transition: background-color 0.3s;">Clear Search</button>
+        </div>
+    </div>
+    
+    <!-- Results Summary -->
+    <div style="margin-bottom: 10px; color: #666; font-size: 14px; text-align: center;">
+        <span id="dailyAttendanceRecordCount">Showing all records</span>
+    </div>
+    
+    <table id="dailyAttendanceTable">
+        <thead>
+            <tr>
+                <th>Name</th>
+                <th>Department</th>
+                <th>Time In</th>
+                <th>Time Out</th>
+                <th>Location</th>
+                <th>Working Hours</th>
+            </tr>
+        </thead>
+        <tbody id="dailyAttendanceTableBody">
+            <% if (attendanceLogs && attendanceLogs.length) { %>
+                <% attendanceLogs.forEach(log => { %>
+                    <tr class="daily-attendance-row" style="display: table-row;" 
+                        data-lastname="<%= log.lastName.toLowerCase() %>"
+                        data-firstname="<%= log.firstName.toLowerCase() %>"
+                        data-fullname="<%= (log.lastName + ', ' + log.firstName).toLowerCase() %>">
+                        <td><%= log.lastName %>, <%= log.firstName %></td>
+                        <td><%= log.department %></td>
+                        <td><%= log.timeIn %></td>
+                        <td><%= log.timeOut %></td>
+                        <td><%= log.city || 'Unknown' %></td>
+                        <td><%= log.activeWorkingHours %></td>
+                    </tr>
+                <% }); %>
+            <% } else { %>
+                <tr id="dailyAttendanceNoDataRow">
+                    <td colspan="6">No attendance logs available.</td>
+                </tr>
+            <% } %>
+        </tbody>
+    </table>
+</section>
         </div>
         
         <!-- Leaves Tab Content -->
@@ -1696,6 +1567,74 @@ window.notifications = <%- JSON.stringify(notifications || []) %>;
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script>
+
+        document.addEventListener('DOMContentLoaded', function() {
+    const dailyAttendanceSearchInput = document.getElementById('dailyAttendanceSearchInput');
+    const dailyAttendanceClearFiltersBtn = document.getElementById('dailyAttendanceClearFilters');
+    const dailyAttendanceRows = document.querySelectorAll('.daily-attendance-row');
+    const dailyAttendanceRecordCount = document.getElementById('dailyAttendanceRecordCount');
+    const dailyAttendanceNoDataRow = document.getElementById('dailyAttendanceNoDataRow');
+    
+    // Total records count
+    const totalRecords = dailyAttendanceRows.length;
+    
+    function updateDailyAttendanceRecordCount() {
+        const visibleRows = document.querySelectorAll('.daily-attendance-row[style="display: table-row;"]');
+        const count = visibleRows.length;
+        
+        if (count === totalRecords) {
+            dailyAttendanceRecordCount.textContent = `Showing all ${totalRecords} records`;
+        } else {
+            dailyAttendanceRecordCount.textContent = `Showing ${count} of ${totalRecords} records`;
+        }
+        
+        // Show/hide no data message
+        if (dailyAttendanceNoDataRow) {
+            if (count === 0 && totalRecords > 0) {
+                dailyAttendanceNoDataRow.style.display = 'table-row';
+                dailyAttendanceNoDataRow.querySelector('td').textContent = 'No records match your search.';
+            } else {
+                dailyAttendanceNoDataRow.style.display = 'none';
+            }
+        }
+    }
+    
+    function filterDailyAttendanceTable() {
+        const searchTerm = dailyAttendanceSearchInput.value.toLowerCase().trim();
+        
+        dailyAttendanceRows.forEach(row => {
+            const lastName = row.dataset.lastname;
+            const firstName = row.dataset.firstname;
+            const fullName = row.dataset.fullname;
+            
+            // Search filter (checks first name, last name, and full name)
+            const matchesSearch = !searchTerm || 
+                lastName.includes(searchTerm) || 
+                firstName.includes(searchTerm) ||
+                fullName.includes(searchTerm);
+            
+            // Show/hide row based on search filter
+            if (matchesSearch) {
+                row.style.display = 'table-row';
+            } else {
+                row.style.display = 'none';
+            }
+        });
+        
+        updateDailyAttendanceRecordCount();
+    }
+    
+    // Event listeners
+    dailyAttendanceSearchInput.addEventListener('input', filterDailyAttendanceTable);
+    
+    dailyAttendanceClearFiltersBtn.addEventListener('click', function() {
+        dailyAttendanceSearchInput.value = '';
+        filterDailyAttendanceTable();
+    });
+    
+    // Initial count
+    updateDailyAttendanceRecordCount();
+});
         document.addEventListener('DOMContentLoaded', function() {
 
         // Define global variables with safe defaults
