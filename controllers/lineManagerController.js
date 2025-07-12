@@ -22463,6 +22463,453 @@ getDeptPipelineReport: async function(req, res) {
     }
 },
 
+// Department-specific funnel data for line managers (HR LOGIC + DEPARTMENT STAGES)
+getDeptFunnelData: async function(req, res) {
+    if (!req.session.user || req.session.user.userRole !== 'Line Manager') {
+        return res.status(401).json({ success: false, message: 'Unauthorized access' });
+    }
+
+    try {
+        console.log('🔍 [Line Manager Funnel] Fetching department funnel analytics...');
+
+        // Get line manager's department
+        const { data: staffAccount, error: staffError } = await supabase
+            .from('staffaccounts')
+            .select('departmentId')
+            .eq('userId', req.session.user.userId)
+            .single();
+
+        if (staffError || !staffAccount) {
+            throw new Error('Could not find department for line manager');
+        }
+
+        const departmentId = staffAccount.departmentId;
+
+        // Get department applicants only
+        const { data: allApplicants, error: applicantsError } = await supabase
+            .from('applicantaccounts')
+            .select(`
+                applicantId,
+                applicantStatus,
+                created_at,
+                userId,
+                departmentId,
+                departments!inner(deptName)
+            `)
+            .eq('departmentId', departmentId);
+
+        if (applicantsError) {
+            console.error('❌ [Line Manager Funnel] Error fetching department applicants:', applicantsError);
+            throw applicantsError;
+        }
+
+        // Get assessment data (SAME AS HR)
+        const userIds = allApplicants.map(a => a.userId);
+        
+        const [initialAssessments, hrAssessments, panelAssessments] = await Promise.all([
+            supabase.from('applicant_initialscreening_assessment')
+                .select('userId, totalScore')
+                .in('userId', userIds),
+            supabase.from('applicant_hrscreening_assessment')
+                .select('applicantUserid, totalAssessmentRating')
+                .in('applicantUserid', userIds),
+            supabase.from('applicant_panelscreening_assessment')
+                .select('applicantUserId, totalAssessmentRating')
+                .in('applicantUserId', userIds)
+        ]);
+
+        // Create assessment lookup sets (SAME AS HR)
+        const hasInitialAssessment = new Set();
+        const hasHRAssessment = new Set();
+        const hasPanelAssessment = new Set();
+
+        if (initialAssessments.data) {
+            initialAssessments.data.forEach(assessment => {
+                hasInitialAssessment.add(assessment.userId);
+            });
+        }
+
+        if (hrAssessments.data) {
+            hrAssessments.data.forEach(assessment => {
+                hasHRAssessment.add(assessment.applicantUserid);
+            });
+        }
+
+        if (panelAssessments.data) {
+            panelAssessments.data.forEach(assessment => {
+                hasPanelAssessment.add(assessment.applicantUserId);
+            });
+        }
+
+        // Initialize DEPARTMENT-SPECIFIC funnel stages
+        const funnelStages = {
+            deptApplications: 0,
+            initialScreeningCompleted: 0,
+            hrInterviewCompleted: 0,
+            awaitingYourReview: 0,
+            yourReviewCompleted: 0,
+            hired: 0
+        };
+
+        // Analyze each applicant using HR's logic but with department stages
+        allApplicants.forEach(applicant => {
+            const status = (applicant.applicantStatus || '').toLowerCase();
+            
+            // Everyone starts as a department application
+            funnelStages.deptApplications++;
+
+            // Use HR's cumulative logic but for department stages
+            if (status.includes('hired') || status.includes('onboarding')) {
+                // Stage 6: Hired
+                funnelStages.hired++;
+                funnelStages.yourReviewCompleted++;
+                funnelStages.hrInterviewCompleted++;
+                funnelStages.initialScreeningCompleted++;
+            }
+            else if (status.includes('p3 - passed') || 
+                     status.includes('line manager passed') ||
+                     status.includes('panel passed') ||
+                     hasPanelAssessment.has(applicant.userId)) {
+                // Stage 5: Your Review Completed
+                funnelStages.yourReviewCompleted++;
+                funnelStages.hrInterviewCompleted++;
+                funnelStages.initialScreeningCompleted++;
+            }
+            else if (status.includes('p3') || 
+                     status.includes('awaiting line manager') ||
+                     status.includes('pending panel') ||
+                     status.includes('line manager interview') ||
+                     status.includes('panel interview')) {
+                // Stage 4: Awaiting Your Review
+                funnelStages.awaitingYourReview++;
+                funnelStages.hrInterviewCompleted++;
+                funnelStages.initialScreeningCompleted++;
+            }
+            else if (status.includes('p2') || 
+                     status.includes('hr') || 
+                     hasHRAssessment.has(applicant.userId) ||
+                     status.includes('p2 - passed') ||
+                     status.includes('p2 - failed')) {
+                // Stage 3: HR Interview Completed
+                funnelStages.hrInterviewCompleted++;
+                funnelStages.initialScreeningCompleted++;
+            }
+            else if (status.includes('p1') || 
+                     hasInitialAssessment.has(applicant.userId) ||
+                     status.includes('p1 - passed') ||
+                     status.includes('p1 - failed') ||
+                     status.includes('initial screening')) {
+                // Stage 2: Initial Screening Completed
+                funnelStages.initialScreeningCompleted++;
+            }
+            // If none of the above, they're just applications (Stage 1 already counted)
+        });
+
+        console.log('📊 [Line Manager Funnel] Department stage counts:', funnelStages);
+
+        // Calculate department-specific conversion rates
+        const conversionRates = {
+            applicationToScreening: funnelStages.deptApplications > 0 ? 
+                Math.round((funnelStages.initialScreeningCompleted / funnelStages.deptApplications) * 100) : 0,
+            screeningToHR: funnelStages.initialScreeningCompleted > 0 ? 
+                Math.round((funnelStages.hrInterviewCompleted / funnelStages.initialScreeningCompleted) * 100) : 0,
+            hrToYourReview: funnelStages.hrInterviewCompleted > 0 ? 
+                Math.round(((funnelStages.awaitingYourReview + funnelStages.yourReviewCompleted + funnelStages.hired) / funnelStages.hrInterviewCompleted) * 100) : 0,
+            yourReviewToHire: (funnelStages.yourReviewCompleted + funnelStages.hired) > 0 ? 
+                Math.round((funnelStages.hired / (funnelStages.yourReviewCompleted + funnelStages.hired)) * 100) : 0,
+            overallConversion: funnelStages.deptApplications > 0 ? 
+                Math.round((funnelStages.hired / funnelStages.deptApplications) * 100) : 0
+        };
+
+        // Find biggest drop-off stage
+        const dropOffRates = [
+            { stage: 'Application to Screening', rate: 100 - conversionRates.applicationToScreening },
+            { stage: 'Screening to HR', rate: 100 - conversionRates.screeningToHR },
+            { stage: 'HR to Your Review', rate: 100 - conversionRates.hrToYourReview },
+            { stage: 'Your Review to Hire', rate: 100 - conversionRates.yourReviewToHire }
+        ];
+
+        const biggestDropOff = dropOffRates.reduce((max, current) => 
+            current.rate > max.rate ? current : max
+        );
+
+        const result = {
+            funnelStages: {
+                labels: ['Department Applications', 'Initial Screening', 'HR Interview', 'Awaiting Your Review', 'Your Review Complete', 'Hired'],
+                values: [
+                    funnelStages.deptApplications,
+                    funnelStages.initialScreeningCompleted,
+                    funnelStages.hrInterviewCompleted,
+                    funnelStages.awaitingYourReview,
+                    funnelStages.yourReviewCompleted,
+                    funnelStages.hired
+                ]
+            },
+            conversionRates: conversionRates,
+            insights: {
+                biggestDropOff: {
+                    name: biggestDropOff.stage,
+                    dropOffRate: Math.round(biggestDropOff.rate)
+                },
+                performanceLevel: conversionRates.overallConversion >= 20 ? 'Excellent' : 
+                                conversionRates.overallConversion >= 15 ? 'Good' : 
+                                conversionRates.overallConversion >= 10 ? 'Average' : 'Needs Improvement',
+                pendingYourAction: funnelStages.awaitingYourReview,
+                yourReviewSuccessRate: (funnelStages.yourReviewCompleted + funnelStages.hired) > 0 ? 
+                    Math.round((funnelStages.hired / (funnelStages.yourReviewCompleted + funnelStages.hired)) * 100) : 0
+            }
+        };
+
+        console.log('📊 [Line Manager Funnel] Department analysis complete:', result);
+
+        return res.json({
+            success: true,
+            deptFunnelData: result
+        });
+
+    } catch (error) {
+        console.error('❌ [Line Manager Funnel] Error:', error);
+        return res.status(500).json({ 
+            success: false, 
+            message: 'Error fetching department funnel data: ' + error.message 
+        });
+    }
+},
+
+// Department-specific time-to-hire data for line managers
+getDeptTimeToHireData: async function(req, res) {
+    if (!req.session.user || req.session.user.userRole !== 'Line Manager') {
+        return res.status(401).json({ success: false, message: 'Unauthorized access' });
+    }
+
+    try {
+        console.log('🔍 [Line Manager Time-to-Hire] Fetching department time-to-hire analytics...');
+
+        // Get line manager's department
+        const { data: staffAccount, error: staffError } = await supabase
+            .from('staffaccounts')
+            .select('departmentId')
+            .eq('userId', req.session.user.userId)
+            .single();
+
+        if (staffError || !staffAccount) {
+            throw new Error('Could not find department for line manager');
+        }
+
+        const departmentId = staffAccount.departmentId;
+
+        // Get hired department applicants only
+        const { data: hiredApplicants, error: applicantsError } = await supabase
+            .from('applicantaccounts')
+            .select(`
+                applicantId,
+                applicantStatus,
+                created_at,
+                userId,
+                departmentId,
+                departments!inner(deptName),
+                jobpositions!inner(jobTitle)
+            `)
+            .eq('departmentId', departmentId)
+            .order('created_at', { ascending: false });
+
+        if (applicantsError) {
+            console.error('❌ [Line Manager Time-to-Hire] Error fetching department applicants:', applicantsError);
+            throw applicantsError;
+        }
+
+        // Filter for actually hired candidates in this department
+        const hired = hiredApplicants.filter(applicant => {
+            const status = (applicant.applicantStatus || '').toLowerCase();
+            return status.includes('hired') || status.includes('onboarding');
+        });
+
+        console.log(`📊 [Line Manager Time-to-Hire] Found ${hired.length} hired candidates in department for analysis`);
+
+        if (hired.length === 0) {
+            return res.json({
+                success: true,
+                timeToHireData: {
+                    averageDurations: {
+                        applicationToScreening: 0,
+                        screeningToHR: 0,
+                        hrToYourReview: 0,
+                        yourReviewToHire: 0,
+                        totalTimeToHire: 0
+                    },
+                    stageBreakdown: {
+                        labels: ['App to Screening', 'Screening to HR', 'HR to Your Review', 'Your Review to Hire'],
+                        values: [0, 0, 0, 0],
+                        targets: [3, 5, 7, 5]
+                    },
+                    bottlenecks: [],
+                    insights: {
+                        totalAverageTimeToHire: 0,
+                        slowestStage: { name: 'No data', days: 0 },
+                        performanceLevel: 'No Data'
+                    }
+                }
+            });
+        }
+
+        // Get assessment timestamps to calculate stage durations
+        const hiredUserIds = hired.map(h => h.userId);
+        
+        const [initialAssessments, hrAssessments, panelAssessments] = await Promise.all([
+            supabase.from('applicant_initialscreening_assessment')
+                .select('userId, created_at')
+                .in('userId', hiredUserIds),
+            supabase.from('applicant_hrscreening_assessment')
+                .select('applicantUserid, created_at')
+                .in('applicantUserid', hiredUserIds),
+            supabase.from('applicant_panelscreening_assessment')
+                .select('applicantUserId, created_at')
+                .in('applicantUserId', hiredUserIds)
+        ]);
+
+        // Create timestamp maps
+        const initialTimestamps = new Map();
+        const hrTimestamps = new Map();
+        const panelTimestamps = new Map();
+
+        if (initialAssessments.data) {
+            initialAssessments.data.forEach(assessment => {
+                initialTimestamps.set(assessment.userId, new Date(assessment.created_at));
+            });
+        }
+
+        if (hrAssessments.data) {
+            hrAssessments.data.forEach(assessment => {
+                hrTimestamps.set(assessment.applicantUserid, new Date(assessment.created_at));
+            });
+        }
+
+        if (panelAssessments.data) {
+            panelAssessments.data.forEach(assessment => {
+                panelTimestamps.set(assessment.applicantUserId, new Date(assessment.created_at));
+            });
+        }
+
+        // Calculate stage durations for department hires
+        let stageDurations = {
+            applicationToScreening: [],
+            screeningToHR: [],
+            hrToYourReview: [],
+            yourReviewToHire: [],
+            totalTimeToHire: []
+        };
+
+        hired.forEach(applicant => {
+            const applicationDate = new Date(applicant.created_at);
+            const currentDate = new Date();
+            
+            const initialDate = initialTimestamps.get(applicant.userId);
+            const hrDate = hrTimestamps.get(applicant.userId);
+            const panelDate = panelTimestamps.get(applicant.userId);
+
+            // Calculate days between stages (with reasonable bounds checking)
+            if (initialDate) {
+                const appToScreening = Math.floor((initialDate - applicationDate) / (1000 * 60 * 60 * 24));
+                if (appToScreening >= 0 && appToScreening <= 30) {
+                    stageDurations.applicationToScreening.push(appToScreening);
+                }
+            }
+
+            if (initialDate && hrDate) {
+                const screeningToHR = Math.floor((hrDate - initialDate) / (1000 * 60 * 60 * 24));
+                if (screeningToHR >= 0 && screeningToHR <= 30) {
+                    stageDurations.screeningToHR.push(screeningToHR);
+                }
+            }
+
+            if (hrDate && panelDate) {
+                const hrToYourReview = Math.floor((panelDate - hrDate) / (1000 * 60 * 60 * 24));
+                if (hrToYourReview >= 0 && hrToYourReview <= 30) {
+                    stageDurations.hrToYourReview.push(hrToYourReview);
+                }
+            }
+
+            if (panelDate) {
+                const yourReviewToHire = Math.floor((currentDate - panelDate) / (1000 * 60 * 60 * 24));
+                if (yourReviewToHire >= 0 && yourReviewToHire <= 30) {
+                    stageDurations.yourReviewToHire.push(yourReviewToHire);
+                }
+            }
+
+            // Total time to hire
+            const totalDays = Math.floor((currentDate - applicationDate) / (1000 * 60 * 60 * 24));
+            if (totalDays >= 0 && totalDays <= 120) {
+                stageDurations.totalTimeToHire.push(totalDays);
+            }
+        });
+
+        // Calculate averages with fallbacks
+        const calculateAverage = (arr) => arr.length > 0 ? Math.round(arr.reduce((sum, val) => sum + val, 0) / arr.length) : 5;
+
+        const averageDurations = {
+            applicationToScreening: calculateAverage(stageDurations.applicationToScreening),
+            screeningToHR: calculateAverage(stageDurations.screeningToHR),
+            hrToYourReview: calculateAverage(stageDurations.hrToYourReview),
+            yourReviewToHire: calculateAverage(stageDurations.yourReviewToHire),
+            totalTimeToHire: calculateAverage(stageDurations.totalTimeToHire)
+        };
+
+        // Identify bottlenecks for department hiring
+        const stageAnalysis = [
+            { stage: 'Application to Screening', days: averageDurations.applicationToScreening, target: 3 },
+            { stage: 'Screening to HR Interview', days: averageDurations.screeningToHR, target: 5 },
+            { stage: 'HR to Your Review', days: averageDurations.hrToYourReview, target: 7 },
+            { stage: 'Your Review to Hire Decision', days: averageDurations.yourReviewToHire, target: 5 }
+        ];
+
+        const bottlenecks = stageAnalysis.filter(stage => stage.days > stage.target * 1.5);
+
+        // Find slowest stage
+        const slowestStage = stageAnalysis.reduce((slowest, current) => 
+            current.days > slowest.days ? current : slowest
+        );
+
+        const result = {
+            averageDurations: averageDurations,
+            stageBreakdown: {
+                labels: ['App to Screening', 'Screening to HR', 'HR to Your Review', 'Your Review to Hire'],
+                values: [
+                    averageDurations.applicationToScreening,
+                    averageDurations.screeningToHR,
+                    averageDurations.hrToYourReview,
+                    averageDurations.yourReviewToHire
+                ],
+                targets: [3, 5, 7, 5]
+            },
+            bottlenecks: bottlenecks,
+            insights: {
+                totalAverageTimeToHire: averageDurations.totalTimeToHire,
+                slowestStage: {
+                    name: slowestStage.stage,
+                    days: slowestStage.days
+                },
+                performanceLevel: averageDurations.totalTimeToHire <= 20 ? 'Excellent' : 
+                                averageDurations.totalTimeToHire <= 35 ? 'Good' : 
+                                averageDurations.totalTimeToHire <= 50 ? 'Average' : 'Needs Improvement'
+            }
+        };
+
+        console.log('📊 [Line Manager Time-to-Hire] Department analysis complete:', result);
+
+        return res.json({
+            success: true,
+            timeToHireData: result
+        });
+
+    } catch (error) {
+        console.error('❌ [Line Manager Time-to-Hire] Error:', error);
+        return res.status(500).json({ 
+            success: false, 
+            message: 'Error fetching department time-to-hire data: ' + error.message 
+        });
+    }
+},
+
 getOffboardingReports: async function(req, res) {
     if (!req.session.user || req.session.user.userRole !== 'Line Manager') {
         return res.status(401).json({ success: false, message: 'Unauthorized access' });

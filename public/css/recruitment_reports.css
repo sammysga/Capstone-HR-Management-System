@@ -3909,3 +3909,764 @@ body {
         break-inside: avoid;
     }
 }
+/* CSS-only Funnel Visualization */
+.css-funnel {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 8px; /* Increase gap between stages */
+    padding: 20px;
+    min-height: 350px; /* Increase height for 6 stages */
+    justify-content: center;
+}
+
+.funnel-stage {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: white;
+    font-weight: bold;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    border-radius: 25px; /* More rounded for better look */
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    position: relative;
+    min-height: 45px; /* Ensure minimum height */
+    padding: 12px 15px; /* Better padding */
+    margin: 2px 0; /* Small margin between stages */
+}
+
+.funnel-stage:hover {
+    transform: scale(1.02);
+    box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+    z-index: 5;
+}
+
+.stage-text {
+    text-align: center;
+    padding: 0 10px;
+    white-space: nowrap; /* Prevent text wrapping */
+    overflow: hidden;
+    text-overflow: ellipsis;
+    display: flex;
+    align-items: center;
+    gap: 12px; /* Space between name and value */
+}
+
+.stage-name {
+    font-size: 13px; /* Slightly smaller for 6 stages */
+    font-weight: 600;
+    line-height: 1.2;
+}
+
+.stage-value {
+    font-size: 18px; /* Prominent value */
+    font-weight: bold;
+    background: rgba(255,255,255,0.2);
+    padding: 4px 10px;
+    border-radius: 12px;
+    border: 1px solid rgba(255,255,255,0.3);
+    min-width: 35px;
+    text-align: center;
+}
+
+.stage-conversion {
+    position: absolute;
+    bottom: -25px; /* Move further down */
+    left: 50%;
+    transform: translateX(-50%);
+    font-size: 10px;
+    color: #6c757d;
+    font-weight: 500;
+    background: rgba(255,255,255,0.9);
+    padding: 2px 8px;
+    border-radius: 10px;
+    border: 1px solid #dee2e6;
+    white-space: nowrap;
+    z-index: 10;
+}
+
+/* Stage Modal */
+.stage-modal {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0,0,0,0.5);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 1000;
+    animation: fadeIn 0.3s ease;
+}
+
+/* Specific widths for 6-stage funnel */
+.funnel-stage:nth-child(1) { width: 100%; }
+.funnel-stage:nth-child(2) { width: 85%; }
+.funnel-stage:nth-child(3) { width: 70%; }
+.funnel-stage:nth-child(4) { width: 55%; } /* Awaiting Your Review - narrower */
+.funnel-stage:nth-child(5) { width: 40%; } /* Your Review Complete */
+.funnel-stage:nth-child(6) { width: 25%; } /* Hired */
+
+@keyframes fadeIn {
+    from { opacity: 0; }
+    to { opacity: 1; }
+}
+
+.stage-modal-content {
+    background: white;
+    border-radius: 8px;
+    box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+    width: 90%;
+    max-width: 400px;
+    animation: slideIn 0.3s ease;
+}
+
+@keyframes slideIn {
+    from { 
+        opacity: 0;
+        transform: translateY(-50px);
+    }
+    to { 
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.stage-modal-header {
+    background: #2385B0;
+    color: white;
+    padding: 15px 20px;
+    border-radius: 8px 8px 0 0;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.stage-modal-header h4 {
+    margin: 0;
+    font-size: 18px;
+    font-weight: 600;
+}
+
+.stage-modal-header button {
+    background: none;
+    border: none;
+    color: white;
+    font-size: 24px;
+    cursor: pointer;
+    padding: 0;
+    width: 30px;
+    height: 30px;
+    border-radius: 50%;
+    transition: background 0.2s ease;
+}
+
+.stage-modal-header button:hover {
+    background: rgba(255,255,255,0.2);
+}
+
+.stage-modal-body {
+    padding: 20px;
+}
+
+.stage-modal-body p {
+    margin: 10px 0;
+    font-size: 14px;
+    line-height: 1.5;
+}
+
+.stage-modal-body/* Add these styles to your existing recruitment_reports.css file */
+
+/* Enhanced Charts Container */
+.charts-container {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(450px, 1fr));
+    gap: 25px;
+    margin-top: 30px;
+}
+
+/* Funnel Chart Canvas Styling */
+.funnel-chart canvas {
+    max-height: 300px !important;
+    cursor: pointer;
+    border-radius: 8px;
+    background: linear-gradient(135deg, #f8f9fa 0%, #ffffff 100%);
+    box-shadow: inset 0 1px 3px rgba(0,0,0,0.1);
+    transition: all 0.3s ease;
+}
+
+.funnel-chart canvas:hover {
+    box-shadow: inset 0 2px 6px rgba(0,0,0,0.15);
+    transform: scale(1.02);
+}
+
+/* Alternative: CSS-only Funnel if you prefer */
+.css-funnel {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 20px;
+    gap: 2px;
+}
+
+.funnel-stage {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: white;
+    font-weight: bold;
+    font-size: 14px;
+    text-align: center;
+    padding: 15px 10px;
+    position: relative;
+    transition: all 0.3s ease;
+    cursor: pointer;
+}
+
+.funnel-stage:hover {
+    transform: scale(1.05);
+    box-shadow: 0 4px 15px rgba(0,0,0,0.3);
+}
+
+.funnel-stage-1 {
+    background: #2385B0;
+    width: 100%;
+    clip-path: polygon(0 0, 100% 0, 95% 100%, 5% 100%);
+}
+
+.funnel-stage-2 {
+    background: #1a73e8;
+    width: 85%;
+    clip-path: polygon(5% 0, 95% 0, 90% 100%, 10% 100%);
+}
+
+.funnel-stage-3 {
+    background: #17a2b8;
+    width: 70%;
+    clip-path: polygon(10% 0, 90% 0, 85% 100%, 15% 100%);
+}
+
+.funnel-stage-4 {
+    background: #20c997;
+    width: 55%;
+    clip-path: polygon(15% 0, 85% 0, 80% 100%, 20% 100%);
+}
+
+.funnel-stage-5 {
+    background: #ffc107;
+    width: 40%;
+    clip-path: polygon(20% 0, 80% 0, 75% 100%, 25% 100%);
+}
+
+.funnel-stage-6 {
+    background: #28a745;
+    width: 25%;
+    clip-path: polygon(25% 0, 75% 0, 70% 100%, 30% 100%);
+}
+
+.stage-text {
+    position: relative;
+    z-index: 2;
+    text-shadow: 0 1px 3px rgba(0,0,0,0.3);
+}
+
+.stage-value {
+    font-size: 18px;
+    margin-left: 10px;
+}
+
+.stage-conversion {
+    position: absolute;
+    bottom: -20px;
+    left: 50%;
+    transform: translateX(-50%);
+    background: rgba(0,0,0,0.7);
+    color: white;
+    padding: 2px 8px;
+    border-radius: 12px;
+    font-size: 11px;
+    font-weight: normal;
+}
+
+/* Responsive fixes */
+@media (max-width: 768px) {
+    .stage-text {
+        flex-direction: column;
+        gap: 4px;
+    }
+    
+    .stage-name {
+        font-size: 11px;
+    }
+    
+    .stage-value {
+        font-size: 16px;
+        padding: 3px 8px;
+    }
+    
+    .stage-conversion {
+        font-size: 9px;
+        bottom: -20px;
+    }
+}
+
+/* Funnel Chart Canvas Styling */
+.funnel-chart {
+    grid-column: span 2; /* Make funnel chart wider */
+    min-height: 450px;
+}
+
+.funnel-content {
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+}
+
+.funnel-metrics {
+    display: flex;
+    justify-content: space-around;
+    margin-bottom: 20px;
+    padding: 15px;
+    background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+    border-radius: 8px;
+    border: 1px solid #dee2e6;
+}
+
+.funnel-metric {
+    text-align: center;
+    padding: 0 15px;
+    position: relative;
+}
+
+.funnel-metric:not(:last-child)::after {
+    content: '';
+    position: absolute;
+    right: 0;
+    top: 50%;
+    transform: translateY(-50%);
+    height: 60%;
+    width: 1px;
+    background: #dee2e6;
+}
+
+.metric-label {
+    display: block;
+    font-size: 12px;
+    color: #6c757d;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    margin-bottom: 5px;
+}
+
+.metric-value {
+    display: block;
+    font-size: 24px;
+    font-weight: bold;
+    color: #2385B0;
+    line-height: 1;
+}
+
+.funnel-chart canvas {
+    max-height: 300px !important;
+}
+
+/* Conversion Rates Display */
+.conversion-rates {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 10px;
+    margin-top: 35px;
+    background: #f8f9fa;
+    border-radius: 8px;
+    padding: 15px;
+}
+
+.conversion-rate-item {
+    background: #ffffff;
+    border: 1px solid #dee2e6;
+    border-radius: 6px;
+    padding: 12px;
+    text-align: center;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+    position: relative;
+    overflow: hidden;
+}
+
+.conversion-rate-item::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 3px;
+    background: var(--rate-color, #dee2e6);
+}
+
+.conversion-rate-item:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+}
+
+.conversion-stage {
+    font-size: 11px;
+    color: #6c757d;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    margin-bottom: 6px;
+}
+
+.conversion-percentage {
+    font-size: 18px;
+    font-weight: bold;
+}
+
+.conversion-percentage.excellent { 
+    color: #28a745; 
+    --rate-color: #28a745;
+}
+.conversion-percentage.good { 
+    color: #17a2b8; 
+    --rate-color: #17a2b8;
+}
+.conversion-percentage.average { 
+    color: #ffc107; 
+    --rate-color: #ffc107;
+}
+.conversion-percentage.poor { 
+    color: #dc3545; 
+    --rate-color: #dc3545;
+}
+
+/* Time-to-Hire Chart Specific Styling */
+.time-to-hire-chart {
+    grid-column: span 2; /* Make time-to-hire chart wider */
+    min-height: 450px;
+}
+
+.time-to-hire-content {
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+}
+
+.time-metrics {
+    display: flex;
+    justify-content: space-around;
+    margin-bottom: 20px;
+    padding: 15px;
+    background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+    border-radius: 8px;
+    border: 1px solid #dee2e6;
+}
+
+.time-metric {
+    text-align: center;
+    padding: 0 15px;
+    position: relative;
+}
+
+.time-metric:not(:last-child)::after {
+    content: '';
+    position: absolute;
+    right: 0;
+    top: 50%;
+    transform: translateY(-50%);
+    height: 60%;
+    width: 1px;
+    background: #dee2e6;
+}
+
+.time-to-hire-chart canvas {
+    max-height: 280px !important;
+}
+
+/* Bottleneck Alerts */
+.bottleneck-alerts {
+    margin-top: 15px;
+    background: #f8f9fa;
+    border-radius: 8px;
+    padding: 15px;
+}
+
+.bottleneck-alert {
+    background: #fff3cd;
+    border: 1px solid #ffeeba;
+    border-left: 4px solid #ffc107;
+    border-radius: 6px;
+    padding: 12px;
+    margin-bottom: 8px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    transition: all 0.3s ease;
+}
+
+.bottleneck-alert:hover {
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+.bottleneck-alert.critical {
+    background: #f8d7da;
+    border-color: #f5c6cb;
+    border-left-color: #dc3545;
+}
+
+.bottleneck-alert i {
+    color: #856404;
+    font-size: 16px;
+}
+
+.bottleneck-alert.critical i {
+    color: #721c24;
+}
+
+.bottleneck-text {
+    font-size: 14px;
+    color: #856404;
+    line-height: 1.4;
+}
+
+.bottleneck-alert.critical .bottleneck-text {
+    color: #721c24;
+}
+
+/* Success Alert for No Bottlenecks */
+.bottleneck-alert:has(i.fa-check-circle) {
+    background: #d1edce;
+    border-color: #c3e6cb;
+    border-left-color: #28a745;
+}
+
+.bottleneck-alert:has(i.fa-check-circle) i {
+    color: #155724;
+}
+
+.bottleneck-alert:has(i.fa-check-circle) .bottleneck-text {
+    color: #155724;
+}
+
+/* Chart Card Enhancements */
+.chart-card {
+    background: #ffffff;
+    border-radius: 12px;
+    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.1);
+    padding: 25px;
+    transition: all 0.3s ease;
+    border: 1px solid #e9ecef;
+}
+
+.chart-card:hover {
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.15);
+    transform: translateY(-2px);
+}
+
+.chart-card h3 {
+    color: #2c3e50;
+    font-size: 18px;
+    font-weight: 600;
+    margin-bottom: 20px;
+    padding-bottom: 15px;
+    border-bottom: 2px solid #e9ecef;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.chart-card h3 i {
+    color: #2385B0;
+    font-size: 20px;
+}
+
+/* Loading State for Charts */
+.chart-loading {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 300px;
+    color: #6c757d;
+    font-size: 16px;
+}
+
+.chart-loading i {
+    margin-right: 10px;
+    animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+}
+
+/* Responsive Design for Charts */
+@media (max-width: 1200px) {
+    .charts-container {
+        grid-template-columns: 1fr;
+    }
+    
+    .funnel-chart,
+    .time-to-hire-chart {
+        grid-column: span 1;
+    }
+}
+
+@media (max-width: 768px) {
+    .charts-container {
+        gap: 15px;
+    }
+    
+    .chart-card {
+        padding: 20px;
+    }
+    
+    .funnel-metrics,
+    .time-metrics {
+        flex-direction: column;
+        gap: 15px;
+    }
+    
+    .funnel-metric:not(:last-child)::after,
+    .time-metric:not(:last-child)::after {
+        display: none;
+    }
+    
+    .conversion-rates {
+        grid-template-columns: 1fr;
+    }
+    
+    .metric-value {
+        font-size: 20px;
+    }
+    
+    .conversion-percentage {
+        font-size: 16px;
+    }
+}
+
+/* Animation for Chart Updates */
+.chart-card.updating {
+    opacity: 0.7;
+    pointer-events: none;
+}
+
+.chart-card.updating::after {
+    content: '';
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    width: 40px;
+    height: 40px;
+    border: 3px solid #f3f3f3;
+    border-top: 3px solid #2385B0;
+    border-radius: 50%;
+    animation: spin 1s linear infinite;
+}
+
+/* Time-to-Hire Chart Styles */
+.time-to-hire-chart {
+    position: relative;
+}
+
+.time-to-hire-content {
+    padding: 0;
+}
+
+.time-metrics {
+    display: flex;
+    justify-content: space-around;
+    padding: 15px;
+    background: #f8f9fa;
+    border-radius: 6px;
+    margin-bottom: 15px;
+}
+
+.time-metric {
+    text-align: center;
+}
+
+.time-metric .metric-label {
+    font-size: 12px;
+    color: #6c757d;
+    font-weight: 600;
+    margin-bottom: 5px;
+}
+
+.time-metric .metric-value {
+    font-size: 18px;
+    font-weight: bold;
+    color: #2385B0;
+}
+
+.bottleneck-alerts {
+    margin-top: 15px;
+    padding: 0 15px 15px;
+}
+
+.bottleneck-alert {
+    display: flex;
+    align-items: center;
+    padding: 12px;
+    border-radius: 6px;
+    margin-bottom: 8px;
+    background: #d1ecf1;
+    border-left: 4px solid #17a2b8;
+}
+
+.bottleneck-alert.critical {
+    background: #f8d7da;
+    border-left-color: #dc3545;
+}
+
+.bottleneck-alert i {
+    font-size: 16px;
+    margin-right: 10px;
+    color: #17a2b8;
+}
+
+.bottleneck-alert.critical i {
+    color: #dc3545;
+}
+
+.bottleneck-text {
+    flex: 1;
+    font-size: 13px;
+    line-height: 1.4;
+}
+
+.bottleneck-text strong {
+    color: #2c3e50;
+}
+
+/* Chart container heights */
+#deptFunnelChart {
+    height: 300px !important;
+}
+
+#deptTimeToHireChart {
+    height: 280px !important;
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+    .insights-grid {
+        grid-template-columns: 1fr;
+    }
+    
+    .time-metrics {
+        flex-direction: column;
+        gap: 10px;
+    }
+    
+    .bottleneck-alert {
+        flex-direction: column;
+        align-items: flex-start;
+    }
+    
+    .bottleneck-alert i {
+        margin-bottom: 5px;
+    }
+}

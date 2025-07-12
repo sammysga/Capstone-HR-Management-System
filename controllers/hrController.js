@@ -9467,6 +9467,474 @@ getApplicantAssessment: async function(req, res) {
         }
     },
 
+getFunnelData: async function(req, res) {
+    if (!req.session.user || req.session.user.userRole !== 'HR') {
+        return res.status(401).json({ success: false, message: 'Unauthorized access' });
+    }
+
+    try {
+        console.log('🔍 [Funnel Data] Fetching recruitment funnel analytics...');
+
+        // Get all applicants with their current status
+        const { data: allApplicants, error: applicantsError } = await supabase
+            .from('applicantaccounts')
+            .select(`
+                applicantId,
+                applicantStatus,
+                created_at,
+                userId,
+                departmentId,
+                departments!inner(deptName)
+            `);
+
+        if (applicantsError) {
+            console.error('❌ [Funnel Data] Error fetching applicants:', applicantsError);
+            throw applicantsError;
+        }
+
+        // Get assessment data to determine actual progression
+        const userIds = allApplicants.map(a => a.userId);
+        
+        const [initialAssessments, hrAssessments, panelAssessments] = await Promise.all([
+            supabase.from('applicant_initialscreening_assessment')
+                .select('userId, totalScore')
+                .in('userId', userIds),
+            supabase.from('applicant_hrscreening_assessment')
+                .select('applicantUserid, totalAssessmentRating')
+                .in('applicantUserid', userIds),
+            supabase.from('applicant_panelscreening_assessment')
+                .select('applicantUserId, totalAssessmentRating')
+                .in('applicantUserId', userIds)
+        ]);
+
+        // Create assessment lookup sets
+        const hasInitialAssessment = new Set();
+        const hasHRAssessment = new Set();
+        const hasPanelAssessment = new Set();
+
+        if (initialAssessments.data) {
+            initialAssessments.data.forEach(assessment => {
+                hasInitialAssessment.add(assessment.userId);
+            });
+        }
+
+        if (hrAssessments.data) {
+            hrAssessments.data.forEach(assessment => {
+                hasHRAssessment.add(assessment.applicantUserid);
+            });
+        }
+
+        if (panelAssessments.data) {
+            panelAssessments.data.forEach(assessment => {
+                hasPanelAssessment.add(assessment.applicantUserId);
+            });
+        }
+
+        // Initialize funnel stages
+        const funnelStages = {
+            totalApplications: 0,
+            initialScreeningCompleted: 0,
+            hrInterviewCompleted: 0,
+            panelInterviewCompleted: 0,
+            jobOffersSent: 0,
+            hired: 0
+        };
+
+        // Analyze each applicant and place them in their HIGHEST achieved stage
+        allApplicants.forEach(applicant => {
+            const status = (applicant.applicantStatus || '').toLowerCase();
+            
+            // Everyone starts as an application
+            funnelStages.totalApplications++;
+
+            // Determine highest stage reached (mutually exclusive)
+            if (status.includes('onboarding')) {
+                // Stage 6: Successfully Hired/Onboarding
+                funnelStages.hired++;
+                funnelStages.jobOffersSent++; // Must have had offer to get to onboarding
+                funnelStages.panelInterviewCompleted++; // Must have completed panel
+                funnelStages.hrInterviewCompleted++; // Must have completed HR
+                funnelStages.initialScreeningCompleted++; // Must have completed screening
+            }
+            else if (status.includes('job offer sent')) {
+                // Stage 5: Job Offer Sent
+                funnelStages.jobOffersSent++;
+                funnelStages.panelInterviewCompleted++; // Must have completed panel to get offer
+                funnelStages.hrInterviewCompleted++; // Must have completed HR
+                funnelStages.initialScreeningCompleted++; // Must have completed screening
+            }
+            else if (status.includes('p3') || 
+                     status.includes('line manager') || 
+                     hasPanelAssessment.has(applicant.userId) ||
+                     status.includes('p3 - passed') ||
+                     status.includes('p3 - failed')) {
+                // Stage 4: Panel/Line Manager Interview Completed
+                funnelStages.panelInterviewCompleted++;
+                funnelStages.hrInterviewCompleted++; // Must have completed HR to reach panel
+                funnelStages.initialScreeningCompleted++; // Must have completed screening
+            }
+            else if (status.includes('p2') || 
+                     status.includes('hr') || 
+                     hasHRAssessment.has(applicant.userId) ||
+                     status.includes('p2 - passed') ||
+                     status.includes('p2 - failed')) {
+                // Stage 3: HR Interview Completed
+                funnelStages.hrInterviewCompleted++;
+                funnelStages.initialScreeningCompleted++; // Must have completed screening to reach HR
+            }
+            else if (status.includes('p1') || 
+                     hasInitialAssessment.has(applicant.userId) ||
+                     status.includes('p1 - passed') ||
+                     status.includes('p1 - failed') ||
+                     status.includes('initial screening')) {
+                // Stage 2: Initial Screening Completed
+                funnelStages.initialScreeningCompleted++;
+            }
+            // If none of the above, they're just applications (Stage 1 already counted)
+        });
+
+        console.log('📊 [Funnel Data] Stage counts:', funnelStages);
+
+        // Calculate conversion rates
+        const conversionRates = {
+            applicationToScreening: funnelStages.totalApplications > 0 ? 
+                Math.round((funnelStages.initialScreeningCompleted / funnelStages.totalApplications) * 100) : 0,
+            screeningToHR: funnelStages.initialScreeningCompleted > 0 ? 
+                Math.round((funnelStages.hrInterviewCompleted / funnelStages.initialScreeningCompleted) * 100) : 0,
+            hrToPanel: funnelStages.hrInterviewCompleted > 0 ? 
+                Math.round((funnelStages.panelInterviewCompleted / funnelStages.hrInterviewCompleted) * 100) : 0,
+            panelToOffer: funnelStages.panelInterviewCompleted > 0 ? 
+                Math.round((funnelStages.jobOffersSent / funnelStages.panelInterviewCompleted) * 100) : 0,
+            offerToHire: funnelStages.jobOffersSent > 0 ? 
+                Math.round((funnelStages.hired / funnelStages.jobOffersSent) * 100) : 0,
+            overallConversion: funnelStages.totalApplications > 0 ? 
+                Math.round((funnelStages.hired / funnelStages.totalApplications) * 100) : 0
+        };
+
+        // Find biggest drop-off stage
+        const dropOffRates = [
+            { stage: 'Application to Screening', rate: 100 - conversionRates.applicationToScreening },
+            { stage: 'Screening to HR', rate: 100 - conversionRates.screeningToHR },
+            { stage: 'HR to Panel', rate: 100 - conversionRates.hrToPanel },
+            { stage: 'Panel to Offer', rate: 100 - conversionRates.panelToOffer },
+            { stage: 'Offer to Hire', rate: 100 - conversionRates.offerToHire }
+        ];
+
+        const biggestDropOff = dropOffRates.reduce((max, current) => 
+            current.rate > max.rate ? current : max
+        );
+
+        // Department-wise funnel analysis
+        const departmentFunnels = {};
+        allApplicants.forEach(applicant => {
+            const deptName = applicant.departments?.deptName || 'Unknown';
+            if (!departmentFunnels[deptName]) {
+                departmentFunnels[deptName] = {
+                    totalApplications: 0,
+                    hired: 0,
+                    conversionRate: 0
+                };
+            }
+            
+            departmentFunnels[deptName].totalApplications++;
+            
+            const status = (applicant.applicantStatus || '').toLowerCase();
+            if (status.includes('onboarding')) {
+                departmentFunnels[deptName].hired++;
+            }
+        });
+
+        // Calculate department conversion rates
+        Object.values(departmentFunnels).forEach(dept => {
+            dept.conversionRate = dept.totalApplications > 0 ? 
+                Math.round((dept.hired / dept.totalApplications) * 100) : 0;
+        });
+
+        const result = {
+            funnelStages: {
+                labels: ['Applications', 'Initial Screening', 'HR Interview', 'Panel Interview', 'Job Offers Sent', 'Hired/Onboarding'],
+                values: [
+                    funnelStages.totalApplications,
+                    funnelStages.initialScreeningCompleted,
+                    funnelStages.hrInterviewCompleted,
+                    funnelStages.panelInterviewCompleted,
+                    funnelStages.jobOffersSent,
+                    funnelStages.hired
+                ]
+            },
+            conversionRates: conversionRates,
+            departmentFunnels: departmentFunnels,
+            insights: {
+                biggestDropOff: {
+                    name: biggestDropOff.stage,
+                    dropOffRate: Math.round(biggestDropOff.rate)
+                },
+                performanceLevel: conversionRates.overallConversion >= 15 ? 'Excellent' : 
+                                conversionRates.overallConversion >= 10 ? 'Good' : 
+                                conversionRates.overallConversion >= 5 ? 'Average' : 'Needs Improvement'
+            }
+        };
+
+        console.log('📊 [Funnel Data] Analysis complete:', result);
+
+        return res.json({
+            success: true,
+            funnelData: result
+        });
+
+    } catch (error) {
+        console.error('❌ [Funnel Data] Error:', error);
+        return res.status(500).json({ 
+            success: false, 
+            message: 'Error fetching funnel data: ' + error.message 
+        });
+    }
+},
+
+getTimeToHireData: async function(req, res) {
+    if (!req.session.user || req.session.user.userRole !== 'HR') {
+        return res.status(401).json({ success: false, message: 'Unauthorized access' });
+    }
+
+    try {
+        console.log('🔍 [Time-to-Hire] Fetching hiring timeline analytics...');
+
+        // Get hired applicants only
+        const { data: hiredApplicants, error: applicantsError } = await supabase
+            .from('applicantaccounts')
+            .select(`
+                applicantId,
+                applicantStatus,
+                created_at,
+                userId,
+                departmentId,
+                departments!inner(deptName),
+                jobpositions!inner(jobTitle)
+            `)
+            .order('created_at', { ascending: false });
+
+        if (applicantsError) {
+            console.error('❌ [Time-to-Hire] Error fetching applicants:', applicantsError);
+            throw applicantsError;
+        }
+
+        // Filter for actually hired candidates
+        const hired = hiredApplicants.filter(applicant => {
+            const status = (applicant.applicantStatus || '').toLowerCase();
+            return status.includes('hired') || status.includes('onboarding');
+        });
+
+        console.log(`📊 [Time-to-Hire] Found ${hired.length} hired candidates for analysis`);
+
+        if (hired.length === 0) {
+            return res.json({
+                success: true,
+                timeToHireData: {
+                    averageDurations: {
+                        applicationToScreening: 0,
+                        screeningToHR: 0,
+                        hrToPanel: 0,
+                        panelToHire: 0,
+                        totalTimeToHire: 0
+                    },
+                    stageBreakdown: {
+                        labels: ['App to Screening', 'Screening to HR', 'HR to Panel', 'Panel to Hire'],
+                        values: [0, 0, 0, 0],
+                        targets: [3, 5, 7, 5]
+                    },
+                    bottlenecks: [],
+                    departmentComparison: [],
+                    insights: {
+                        totalAverageTimeToHire: 0,
+                        slowestStage: { name: 'No data', days: 0 },
+                        performanceLevel: 'No Data'
+                    }
+                }
+            });
+        }
+
+        // Get assessment timestamps to calculate stage durations
+        const hiredUserIds = hired.map(h => h.userId);
+        
+        const [initialAssessments, hrAssessments, panelAssessments] = await Promise.all([
+            supabase.from('applicant_initialscreening_assessment')
+                .select('userId, created_at')
+                .in('userId', hiredUserIds),
+            supabase.from('applicant_hrscreening_assessment')
+                .select('applicantUserid, created_at')
+                .in('applicantUserid', hiredUserIds),
+            supabase.from('applicant_panelscreening_assessment')
+                .select('applicantUserId, created_at')
+                .in('applicantUserId', hiredUserIds)
+        ]);
+
+        // Create timestamp maps
+        const initialTimestamps = new Map();
+        const hrTimestamps = new Map();
+        const panelTimestamps = new Map();
+
+        if (initialAssessments.data) {
+            initialAssessments.data.forEach(assessment => {
+                initialTimestamps.set(assessment.userId, new Date(assessment.created_at));
+            });
+        }
+
+        if (hrAssessments.data) {
+            hrAssessments.data.forEach(assessment => {
+                hrTimestamps.set(assessment.applicantUserid, new Date(assessment.created_at));
+            });
+        }
+
+        if (panelAssessments.data) {
+            panelAssessments.data.forEach(assessment => {
+                panelTimestamps.set(assessment.applicantUserId, new Date(assessment.created_at));
+            });
+        }
+
+        // Calculate stage durations
+        let stageDurations = {
+            applicationToScreening: [],
+            screeningToHR: [],
+            hrToPanel: [],
+            panelToHire: [],
+            totalTimeToHire: []
+        };
+
+        hired.forEach(applicant => {
+            const applicationDate = new Date(applicant.created_at);
+            const currentDate = new Date(); // Using current date as proxy for hire completion
+            
+            const initialDate = initialTimestamps.get(applicant.userId);
+            const hrDate = hrTimestamps.get(applicant.userId);
+            const panelDate = panelTimestamps.get(applicant.userId);
+
+            // Calculate days between stages (with reasonable bounds checking)
+            if (initialDate) {
+                const appToScreening = Math.floor((initialDate - applicationDate) / (1000 * 60 * 60 * 24));
+                if (appToScreening >= 0 && appToScreening <= 30) {
+                    stageDurations.applicationToScreening.push(appToScreening);
+                }
+            }
+
+            if (initialDate && hrDate) {
+                const screeningToHR = Math.floor((hrDate - initialDate) / (1000 * 60 * 60 * 24));
+                if (screeningToHR >= 0 && screeningToHR <= 30) {
+                    stageDurations.screeningToHR.push(screeningToHR);
+                }
+            }
+
+            if (hrDate && panelDate) {
+                const hrToPanel = Math.floor((panelDate - hrDate) / (1000 * 60 * 60 * 24));
+                if (hrToPanel >= 0 && hrToPanel <= 30) {
+                    stageDurations.hrToPanel.push(hrToPanel);
+                }
+            }
+
+            if (panelDate) {
+                const panelToHire = Math.floor((currentDate - panelDate) / (1000 * 60 * 60 * 24));
+                if (panelToHire >= 0 && panelToHire <= 30) {
+                    stageDurations.panelToHire.push(panelToHire);
+                }
+            }
+
+            // Total time to hire (application to current date as proxy)
+            const totalDays = Math.floor((currentDate - applicationDate) / (1000 * 60 * 60 * 24));
+            if (totalDays >= 0 && totalDays <= 120) {
+                stageDurations.totalTimeToHire.push(totalDays);
+            }
+        });
+
+        // Calculate averages with fallbacks
+        const calculateAverage = (arr) => arr.length > 0 ? Math.round(arr.reduce((sum, val) => sum + val, 0) / arr.length) : 5;
+
+        const averageDurations = {
+            applicationToScreening: calculateAverage(stageDurations.applicationToScreening),
+            screeningToHR: calculateAverage(stageDurations.screeningToHR),
+            hrToPanel: calculateAverage(stageDurations.hrToPanel),
+            panelToHire: calculateAverage(stageDurations.panelToHire),
+            totalTimeToHire: calculateAverage(stageDurations.totalTimeToHire)
+        };
+
+        // Identify bottlenecks
+        const stageAnalysis = [
+            { stage: 'Application to Screening', days: averageDurations.applicationToScreening, target: 3 },
+            { stage: 'Screening to HR Interview', days: averageDurations.screeningToHR, target: 5 },
+            { stage: 'HR to Panel Interview', days: averageDurations.hrToPanel, target: 7 },
+            { stage: 'Panel to Hire Decision', days: averageDurations.panelToHire, target: 5 }
+        ];
+
+        const bottlenecks = stageAnalysis.filter(stage => stage.days > stage.target * 1.5);
+
+        // Department comparison
+        const departmentTimeToHire = {};
+        hired.forEach(applicant => {
+            const deptName = applicant.departments?.deptName || 'Unknown';
+            if (!departmentTimeToHire[deptName]) {
+                departmentTimeToHire[deptName] = {
+                    department: deptName,
+                    totalDays: [],
+                    averageDays: 0
+                };
+            }
+            
+            const totalDays = Math.floor((new Date() - new Date(applicant.created_at)) / (1000 * 60 * 60 * 24));
+            if (totalDays >= 0 && totalDays <= 120) {
+                departmentTimeToHire[deptName].totalDays.push(totalDays);
+            }
+        });
+
+        // Calculate department averages
+        Object.values(departmentTimeToHire).forEach(dept => {
+            dept.averageDays = calculateAverage(dept.totalDays);
+        });
+
+        // Find slowest stage
+        const slowestStage = stageAnalysis.reduce((slowest, current) => 
+            current.days > slowest.days ? current : slowest
+        );
+
+        const result = {
+            averageDurations: averageDurations,
+            stageBreakdown: {
+                labels: ['App to Screening', 'Screening to HR', 'HR to Panel', 'Panel to Hire'],
+                values: [
+                    averageDurations.applicationToScreening,
+                    averageDurations.screeningToHR,
+                    averageDurations.hrToPanel,
+                    averageDurations.panelToHire
+                ],
+                targets: [3, 5, 7, 5]
+            },
+            bottlenecks: bottlenecks,
+            departmentComparison: Object.values(departmentTimeToHire),
+            insights: {
+                totalAverageTimeToHire: averageDurations.totalTimeToHire,
+                slowestStage: {
+                    name: slowestStage.stage,
+                    days: slowestStage.days
+                },
+                performanceLevel: averageDurations.totalTimeToHire <= 20 ? 'Excellent' : 
+                                averageDurations.totalTimeToHire <= 35 ? 'Good' : 
+                                averageDurations.totalTimeToHire <= 50 ? 'Average' : 'Needs Improvement'
+            }
+        };
+
+        console.log('📊 [Time-to-Hire] Analysis complete:', result);
+
+        return res.json({
+            success: true,
+            timeToHireData: result
+        });
+
+    } catch (error) {
+        console.error('❌ [Time-to-Hire] Error:', error);
+        return res.status(500).json({ 
+            success: false, 
+            message: 'Error fetching time-to-hire data: ' + error.message 
+        });
+    }
+},
+
     getOffboardingReports: async function(req, res) {
         if (!req.session.user || req.session.user.userRole !== 'HR') {
             return res.status(401).json({ success: false, message: 'Unauthorized access' });

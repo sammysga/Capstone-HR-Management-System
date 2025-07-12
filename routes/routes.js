@@ -132,6 +132,8 @@ router.get('/hr/recruitment/reports/applicant-status', hrController.getApplicant
 router.get('/hr/recruitment/reports/timeline', hrController.getTimelineReport);
 router.get('/hr/recruitment/reports/search-applicants', hrController.getSearchApplicants);
 router.get('/hr/recruitment/reports/mrf-efficiency', hrController.getMRFEfficiencyReport);
+router.get('/hr/recruitment/dashboard/funnel', hrController.getFunnelData);
+router.get('/hr/recruitment/dashboard/time-to-hire', hrController.getTimeToHireData);
 // Main recruitment reports page
 router.get('/line-manager/recruitment/reports', lineManagerController.getRecruitmentReports);
 router.get('/line-manager/recruitment/department-info', lineManagerController.getDepartmentInfo);
@@ -143,6 +145,8 @@ router.get('/line-manager/recruitment/reports/applicant-status', lineManagerCont
 router.get('/line-manager/recruitment/reports/mrf-performance', lineManagerController.getMRFPerformanceReport);
 router.get('/line-manager/recruitment/reports/pipeline', lineManagerController.getDeptPipelineReport);
 router.get('/line-manager/recruitment/reports/search-applicants', lineManagerController.getSearchDeptApplicants);
+router.get('/line-manager/recruitment/dashboard/funnel', lineManagerController.getDeptFunnelData);
+router.get('/line-manager/recruitment/dashboard/time-to-hire', lineManagerController.getDeptTimeToHireData);
 
 router.get('/logout', hrController.getLogoutButton);
 router.get('/logout', lineManagerController.getLogoutButton);
