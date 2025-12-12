@@ -13,8 +13,8 @@ This project enhances Company ABC Capital, Inc.'s HR operations by automating pr
 
 ## Tech Stack
 
-- **Frameworks**: Node.js, Express.js, React.js, Rasa
-- **Languages**: JavaScript, CSS, HTML, Python, TensorFlow
+- **Frameworks**: Node.js, Express.js, React.js
+- **Languages**: JavaScript, CSS, HTML
 - **Database**: Supabase
 
 ## Installed Modules for Reference
